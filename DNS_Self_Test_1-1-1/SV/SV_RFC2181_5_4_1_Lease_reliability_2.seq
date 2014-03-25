@@ -1,0 +1,2014 @@
+#!/usr/bin/perl
+#
+# Copyright (C) 2006 Yokogawa Electric Corporation.
+# All rights reserved.
+# 
+# Redistribution and use of this software in source and binary
+# forms, with or without modification, are permitted provided that
+# the following conditions and disclaimer are agreed and accepted
+# by the user:
+# 
+# 1. Redistributions of source code must retain the above copyright
+#    notice, this list of conditions and the following disclaimer.
+# 
+# 2. Redistributions in binary form must reproduce the above copyright
+#    notice, this list of conditions and the following disclaimer in
+#    the documentation and/or other materials provided with
+#    the distribution.
+# 
+# 3. Neither the names of the copyrighters, the name of the project
+#    which is related to this software (hereinafter referred to as
+#    "project") nor the names of the contributors may be used to
+#    endorse or promote products derived from this software without
+#    specific prior written permission.
+# 
+# 4. No merchantable use may be permitted without prior written
+#    notification to the copyrighters.
+# 
+# 5. The copyrighters, the project and the contributors may prohibit
+#    the use of this software at any time.
+# 
+# THIS SOFTWARE IS PROVIDED BY THE COPYRIGHTERS, THE PROJECT AND
+# CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING
+# BUT NOT LIMITED THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS
+# FOR A PARTICULAR PURPOSE, ARE DISCLAIMED.  IN NO EVENT SHALL THE
+# COPYRIGHTERS, THE PROJECT OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT,
+# INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
+# (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+# SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
+# HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT,
+# STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING
+# IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+# POSSIBILITY OF SUCH DAMAGE.
+#
+# $TAHI: ct-dns/dns/SV/SV_RFC2181_5_4_1_Lease_reliability_2.seq,v 1.1.1.1 2006/06/02 05:15:47 akisada Exp $
+# $Id: SV_RFC2181_5_4_1_Lease_reliability_2.seq,v 1.1.1.1 2006/06/02 05:15:47 akisada Exp $
+#
+######################################################################
+
+BEGIN {
+        $kCommon::TestVersion = '$Name: REL_1_1_1 $';
+        push( @INC, '/usr/local/koi/libdata' );
+        push( @INC, '..' );
+}
+
+END {
+}
+
+# use strict;
+use DNS;
+
+#------------------------------#
+# NUT configuration            #
+#------------------------------#
+my $NutConfig={ 
+##mode
+               'ModeRequiredTestMode' => 'recursive',
+               'ModeSetNamedConf' => 'yes',
+               'ModeSetZoneFiles' => 'yes',
+##named.conf
+               'ConfOptRecursion' => 'yes',
+               'ConfZone0Name' => 'example.com',
+               'ConfZone0Type' => 'master',
+               'ConfZone0AllowQuery' => 'any',
+               'ConfZone0AllowTransfer' => 'any',
+##zone
+#SOA
+               'ZoneZone0Name' => 'example.com',
+               'ZoneZone0Ttl' => 86400,
+               'ZoneZone0Type' => 'master',
+               'ZoneZone0Rec0Name' => 'example.com.',
+               'ZoneZone0Rec0Type' => 'SOA',
+               'ZoneZone0Rec0Class' => 'IN',
+               'ZoneZone0Rec0Ttl' => 86400,
+               'ZoneZone0Rec0Mname' => 'NS1.example.com.',
+               'ZoneZone0Rec0Rname' => 'root.example.com.',
+               'ZoneZone0Rec0Serial' => 2005081600,
+               'ZoneZone0Rec0Refresh' => 3600,
+               'ZoneZone0Rec0Retry' => 900,
+               'ZoneZone0Rec0Expire' => 604800,
+               'ZoneZone0Rec0Minimum' => 3600,
+#@ NS
+               'ZoneZone0Rec1Name' => 'example.com.',
+               'ZoneZone0Rec1Type' => 'NS',
+               'ZoneZone0Rec1Class' => 'IN',
+               'ZoneZone0Rec1Ttl' => 86400,
+               'ZoneZone0Rec1Value' => 'NS1.example.com.',
+#NS1 A
+               'ZoneZone0Rec2Name' => 'NS1',
+               'ZoneZone0Rec2Type' => 'A',
+               'ZoneZone0Rec2Class' => 'IN',
+               'ZoneZone0Rec2Ttl' => 86400,
+               'ZoneZone0Rec2Value' => '192.168.0.10',
+              };
+
+my $remoteRet = DNSRemote("setconfig.rmt",$NutConfig);
+unless ( defined($remoteRet) ) {
+        Debug_Print("ERROR:DNSRemote\n");
+        DNSExit($FAIL);
+}
+
+######################################################################
+# configuration                                                      #
+######################################################################
+my @dns_session_config = ();
+my $dns_param          = { 'dns_session_config' => \@dns_session_config };
+
+$dns_session_config[0] = {
+        'TN_INTERFACE'   => 'Link0',
+        'TN_ADDR'        => $TN_NET0_NODE2_ADDR,
+        'TN_ADDR_PORT'   => $TN_CL_PORT,
+        'TN_ADDR_PROTO'  => 'UDP',
+        'TN_ADDR_FAMILY' => $ADDR_FAMILY,
+        'NUT_ADDR'       => $NUT_ADDR_0,
+        'NUT_ADDR_PORT'  => $NUT_SV_PORT,
+};
+
+$dns_session_config[1] = {
+        'TN_INTERFACE'   => 'Link0',
+        'TN_ADDR'        => $TN_NET1_NODE2_ADDR,
+        'TN_ADDR_PORT'   => $TN_SV_PORT,
+        'TN_ADDR_PROTO'  => 'UDP',
+        'TN_ADDR_FAMILY' => $ADDR_FAMILY,
+        'NUT_ADDR'       => $NUT_ADDR_0,
+        'NUT_ADDR_PORT'  => $NUT_CL_PORT,
+};
+
+$dns_session_config[2] = {
+        'TN_INTERFACE'   => 'Link0',
+        'TN_ADDR'        => $TN_NET1_NODE3_ADDR,
+        'TN_ADDR_PORT'   => $TN_SV_PORT,
+        'TN_ADDR_PROTO'  => 'UDP',
+        'TN_ADDR_FAMILY' => $ADDR_FAMILY,
+        'NUT_ADDR'       => $NUT_ADDR_0,
+        'NUT_ADDR_PORT'  => $NUT_CL_PORT,
+};
+
+#--------------------
+# DNS Server1
+#--------------------
+my @dns_session   = ();
+my @gen_dns_msg_0 = ();
+my @exp_dns_msg_0 = ();
+my @gen_dns_msg_1 = ();
+my @exp_dns_msg_1 = ();
+my @gen_dns_msg_2 = ();
+my @exp_dns_msg_2 = ();
+my @gen_dns_msg_3 = ();
+my @exp_dns_msg_4 = ();
+
+$dns_session[0] = {
+        'socket_ref'      => undef,
+        'dns_one_session' => [
+                {
+                        'gen_dns_msg' => \@gen_dns_msg_0,
+                        'dec_dns_msg' => undef,
+                        'exp_dns_msg' => \@exp_dns_msg_0
+                },
+                {
+                        'gen_dns_msg' => \@gen_dns_msg_3,
+                        'dec_dns_msg' => undef,
+                        'exp_dns_msg' => undef
+                }
+        ]
+};
+
+$dns_session[1] = {
+        'socket_ref'      => undef,
+        'dns_one_session' => [
+                {
+                        'gen_dns_msg' => \@gen_dns_msg_1,
+                        'dec_dns_msg' => undef,
+                        'exp_dns_msg' => \@exp_dns_msg_1
+                },
+                {
+                        'gen_dns_msg' => undef,
+                        'dec_dns_msg' => undef,
+                        'exp_dns_msg' => \@exp_dns_msg_4
+                }
+        ]
+};
+
+$dns_session[2] = {
+        'socket_ref'      => undef,
+        'dns_one_session' => [
+                {
+                        'gen_dns_msg' => \@gen_dns_msg_2,
+                        'dec_dns_msg' => undef,
+                        'exp_dns_msg' => \@exp_dns_msg_2
+                }
+        ]
+};
+
+######################################################################
+# Send packet definition                                             #
+######################################################################
+#--------------------------------#
+# 1st packet (CL1(TN) -> NUT)    #
+#--------------------------------#
+# 1st packet DNS Header
+$gen_dns_msg_0[0]->{'header'} = {
+        'id'      => 0x1000,
+        'qr'      => 0,
+        'opcode'  => 0,
+        'aa'      => 0,
+        'tc'      => 0,
+        'rd'      => 1,
+        'ra'      => 0,
+        'z'       => 0,
+        'rcode'   => 0,
+        'qdcount' => 1,
+        'ancount' => 0,
+        'nscount' => 0,
+        'arcount' => 0,
+};
+
+# 1st packet DNS Question section
+$gen_dns_msg_0[0]->{'question'}->[0] = {
+        'qname'  => Gen_DNS_Name('A.example.org'),
+        'qtype'  => 0x0001,
+        'qclass' => 0x0001,
+};
+
+#--------------------------------#
+# 3rd packet (NS2(TN) -> NUT)    #
+#--------------------------------#
+# 3rd packet DNS Header
+$gen_dns_msg_1[0]->{'header'} = {
+        'id'      => undef,
+        'qr'      => 1,
+        'opcode'  => 0,
+        'aa'      => 0,
+        'tc'      => 0,
+        'rd'      => 0,
+        'ra'      => 0,
+        'z'       => 0,
+        'rcode'   => 0,
+        'qdcount' => 1,
+        'ancount' => 0,
+        'nscount' => 1,
+        'arcount' => 1,
+};
+
+# 3rd packet DNS Question section
+$gen_dns_msg_1[0]->{'question'}->[0] = {
+        'qname'  => Gen_DNS_Name('A.example.org'),
+        'qtype'  => 0x0001,
+        'qclass' => 0x0001,
+};
+
+# 3rd packet DNS Authority section
+$gen_dns_msg_1[0]->{'authority'}->[0] = {
+        'name'     => Gen_DNS_Name( '',    0xC016 ),
+        'type'     => 0x0002,
+        'class'    => 0x0001,
+        'ttl'      => 86400,
+        'rdlength' => 6,
+        'rdata'    => Gen_DNS_Name( 'NS3', 0xC00E ),
+};
+
+# 3rd packet DNS Additional section
+$gen_dns_msg_1[0]->{'additional'}->[0] = {
+        'name'     => Gen_DNS_Name( '', 0xC02B ),
+        'type'     => $ADDR_TYPE,
+        'class'    => 0x0001,
+        'ttl'      => 86400,
+        'rdlength' => $ADDR_LENGTH,
+        'rdata'    => Gen_DNS_RDATA_A($TN_NET1_NODE3_ADDR),
+};
+
+#--------------------------------#
+# 5th packet (NS3(TN) -> NUT)    #
+#--------------------------------#
+# 5th packet DNS Header
+$gen_dns_msg_2[0]->{'header'} = {
+        'id'      => undef,
+        'qr'      => 1,
+        'opcode'  => 0,
+        'aa'      => 0,
+        'tc'      => 0,
+        'rd'      => 0,
+        'ra'      => 0,
+        'z'       => 0,
+        'rcode'   => 0,
+        'qdcount' => 1,
+        'ancount' => 1,
+        'nscount' => 1,
+        'arcount' => 1,
+};
+
+# 5th packet DNS Question section
+$gen_dns_msg_2[0]->{'question'}->[0] = {
+        'qname'  => Gen_DNS_Name('A.example.org'),
+        'qtype'  => 0x0001,
+        'qclass' => 0x0001,
+};
+
+# 5th packet DNS Answer section
+$gen_dns_msg_2[0]->{'answer'}->[0] = {
+        'name'     => Gen_DNS_Name( '', 0xC00C ),
+        'type'     => 0x0001,
+        'class'    => 0x0001,
+        'ttl'      => 86400,
+        'rdlength' => 4,
+        'rdata'    => Gen_DNS_RDATA_A('192.168.1.10'),
+};
+
+# 5th packet DNS Authority section
+$gen_dns_msg_2[0]->{'authority'}->[0] = {
+        'name'     => Gen_DNS_Name( '',    0xC00E ),
+        'type'     => 0x0002,
+        'class'    => 0x0001,
+        'ttl'      => 86400,
+        'rdlength' => 6,
+        'rdata'    => Gen_DNS_Name( 'NS4', 0xC00E ),
+};
+
+# 5th packet DNS Additional section
+$gen_dns_msg_2[0]->{'additional'}->[0] = {
+        'name'     => Gen_DNS_Name( '', 0xC03B ),
+        'type'     => $ADDR_TYPE,
+        'class'    => 0x0001,
+        'ttl'      => 86400,
+        'rdlength' => $ADDR_LENGTH,
+        'rdata'    => Gen_DNS_RDATA_A($TN_NET1_NODE4_ADDR),
+};
+
+#--------------------------------#
+# 7th packet (CL1(TN) -> NUT)    #
+#--------------------------------#
+# 7th packet DNS Header
+$gen_dns_msg_3[0]->{'header'} = {
+        'id'      => 0x1001,
+        'qr'      => 0,
+        'opcode'  => 0,
+        'aa'      => 0,
+        'tc'      => 0,
+        'rd'      => 1,
+        'ra'      => 0,
+        'z'       => 0,
+        'rcode'   => 0,
+        'qdcount' => 1,
+        'ancount' => 0,
+        'nscount' => 0,
+        'arcount' => 0,
+};
+
+# 7th packet DNS Question section
+$gen_dns_msg_3[0]->{'question'}->[0] = {
+        'qname'  => Gen_DNS_Name('example.org'),
+        'qtype'  => 0x0002,
+        'qclass' => 0x0001,
+};
+
+######################################################################
+# expected packet definition                                         #
+######################################################################
+#--------------------------------#
+# 2nd packet (NUT -> NS2(TN))    #
+#--------------------------------#
+# 2nd packet DNS Header
+$exp_dns_msg_1[0]->{'header'} = {
+        'id'      => undef,
+        'qr'      => 0,
+        'opcode'  => 0,
+        'aa'      => undef,
+        'tc'      => 0,
+        'rd'      => 0,
+        'ra'      => undef,
+        'z'       => undef,
+        'rcode'   => undef,
+        'qdcount' => 1,
+        'ancount' => 0,
+        'nscount' => 0,
+        'arcount' => undef,
+};
+
+# 2nd packet DNS Question section
+$exp_dns_msg_1[0]->{'question'}->[0] = {
+        'qname'  => 'A.example.org.',
+        'qtype'  => 0x0001,
+        'qclass' => 0x0001,
+};
+
+#--------------------------------#
+# 4th packet (NUT -> NS3(TN))    #
+#--------------------------------#
+# 4th packet DNS Header
+$exp_dns_msg_2[0]->{'header'} = {
+        'id'      => undef,
+        'qr'      => 0,
+        'opcode'  => 0,
+        'aa'      => undef,
+        'tc'      => 0,
+        'rd'      => 0,
+        'ra'      => undef,
+        'z'       => undef,
+        'rcode'   => undef,
+        'qdcount' => 1,
+        'ancount' => 0,
+        'nscount' => 0,
+        'arcount' => undef,
+};
+
+# 4th packet DNS Question section
+$exp_dns_msg_2[0]->{'question'}->[0] = {
+        'qname'  => 'A.example.org.',
+        'qtype'  => 0x0001,
+        'qclass' => 0x0001,
+};
+
+#--------------------------------#
+# 6th packet (NUT -> CL1(TN))    #
+#--------------------------------#
+# 6th packet DNS Header
+$exp_dns_msg_0[0]->{'header'} = {
+        'id'      => 0x1000,
+        'qr'      => 1,
+        'opcode'  => 0,
+        'aa'      => 0,
+        'tc'      => 0,
+        'rd'      => 1,
+        'ra'      => 1,
+        'z'       => 0,
+        'rcode'   => 0,
+        'qdcount' => 1,
+        'ancount' => 1,
+        'nscount' => 1,
+        'arcount' => 1,
+};
+
+# 6th packet DNS Question section
+$exp_dns_msg_0[0]->{'question'}->[0] = {
+        'qname'  => 'A.example.org.',
+        'qtype'  => 0x0001,
+        'qclass' => 0x0001,
+};
+
+# 6th packet DNS Answer section
+$exp_dns_msg_0[0]->{'answer'}->[0] = {
+        'name'     => 'A.example.org.',
+        'type'     => 0x0001,
+        'class'    => 0x0001,
+        'ttl'      => 86400,
+        'rdlength' => 4,
+        'rdata'    => '192.168.1.10',
+};
+
+# 6th packet DNS Authority section
+$exp_dns_msg_0[0]->{'authority'}->[0] = {
+        'name'     => 'example.org.',
+        'type'     => 0x0002,
+        'class'    => 0x0001,
+        'ttl'      => 86400,
+        'rdlength' => 6,
+        'rdata'    => 'NS4.example.org.',
+};
+
+# 6th packet DNS Additional section
+$exp_dns_msg_0[0]->{'additional'}->[0] = {
+        'name'     => 'NS4.example.org.',
+        'type'     => $ADDR_TYPE,
+        'class'    => 0x0001,
+        'ttl'      => 86400,
+        'rdlength' => $ADDR_LENGTH,
+        'rdata'    => $TN_NET1_NODE4_ADDR,
+};
+
+#--------------------------------#
+# 8th packet (NUT -> NS4(TN))    #
+#--------------------------------#
+# 8th packet DNS Header
+$exp_dns_msg_4[0]->{'header'} = {
+        'id'      => undef,
+        'qr'      => 0,
+        'opcode'  => 0,
+        'aa'      => undef,
+        'tc'      => 0,
+        'rd'      => 0,
+        'ra'      => undef,
+        'z'       => undef,
+        'rcode'   => undef,
+        'qdcount' => 1,
+        'ancount' => 0,
+        'nscount' => 0,
+        'arcount' => 0,
+};
+
+# 8th packet DNS Question secyion
+$exp_dns_msg_4[0]->{'question'}->[0] = {
+        'qname'  => 'example.org.',
+        'qtype'  => 0x0002,
+        'qclass' => 0x0001,
+};
+
+######################################################################
+# start tests                                                        #
+######################################################################
+my $ret = DNSStartConnect( $dns_param, \@dns_session );
+unless ( defined($ret) ) {
+        Debug_Print("ERROR:DNSStartConnect\n");
+        DNSExit($FAIL);
+}
+
+#------------------------------#
+# 1st packet (send)            #
+#------------------------------#
+$ret = undef;
+$ret = DNSSend(
+        1,
+        $dns_session[0]->{'socket_ref'},
+        $dns_session[0]->{'dns_one_session'}->[0]
+);
+
+unless ( defined($ret) ) {
+        Debug_Print("ERROR: Can't send DNS message\n");
+        DNSExit($FAIL);
+}
+
+#Print_Message( "=", ["Send 1st message\n"] );
+
+#------------------------------#
+# 2nd packet (receive@NS2)     #
+#------------------------------#
+$ret = undef;
+$ret = DNSRecv(
+        1, 60,
+        $dns_session[1]->{'socket_ref'},
+        $dns_session[1]->{'dns_one_session'}->[0]
+);
+
+unless ( defined($ret) ) {
+        Debug_Print("ERROR: Can't receive DNS message\n");
+        DNSExit($FAIL);
+}
+
+#Print_Message( "=", ["Receive 2nd message\n"] );
+
+#------------------------------#
+# Judgment (2nd packet)        #
+#------------------------------#
+Print_Message(
+        "#",
+        [
+                "Judgment (2nd packet)\n",
+"2. Received standard query including QNAME=A.example.org, QTYPE=A.\n",
+        ]
+);
+
+my $recv_data = $dns_session[1]->{'dns_one_session'}->[0]->{'dec_dns_msg'}->[0];
+
+$ret = undef;
+$ret = JudgeDNSMsg( $recv_data, $exp_dns_msg_1[0] );
+
+unless ( defined($ret) ) {
+        DNSExit($FAIL);
+}
+
+Print_Message( "=", ["2nd packet PASS\n"] );
+
+#------------------------------#
+# 3rd packet (send From NS2)   #
+#------------------------------#
+# Copy Header RD and ID from NUT query
+$gen_dns_msg_1[0]->{'header'}->{'id'} = $recv_data->{'header'}->{'id'};
+$gen_dns_msg_1[0]->{'header'}->{'rd'} = $recv_data->{'header'}->{'rd'};
+
+$ret = undef;
+$ret = DNSSend(
+        1,
+        $dns_session[1]->{'socket_ref'},
+        $dns_session[1]->{'dns_one_session'}->[0]
+);
+
+unless ( defined($ret) ) {
+        Debug_Print("ERROR: Can't send DNS message\n");
+        DNSExit($FAIL);
+}
+
+#Print_Message( "=", ["Send 3rd message\n"] );
+
+#------------------------------#
+# 4th packet (receive@NS3)     #
+#------------------------------#
+$ret = undef;
+$ret = DNSRecv(
+        1, 60,
+        $dns_session[2]->{'socket_ref'},
+        $dns_session[2]->{'dns_one_session'}->[0]
+);
+
+unless ( defined($ret) ) {
+        Debug_Print("ERROR: Can't receive DNS message\n");
+        DNSExit($FAIL);
+}
+
+#Print_Message( "=", ["Receive 4th message\n"] );
+
+#------------------------------#
+# Judgment (4th packet)        #
+#------------------------------#
+Print_Message(
+        "#",
+        [
+                "Judgment (4th packet)\n",
+"4. Received standard query including QNAME=A.example.org, QTYPE=A.\n",
+        ]
+);
+
+$recv_data = undef;
+$recv_data = $dns_session[2]->{'dns_one_session'}->[0]->{'dec_dns_msg'}->[0];
+
+$ret = undef;
+$ret = JudgeDNSMsg( $recv_data, $exp_dns_msg_2[0] );
+
+unless ( defined($ret) ) {
+        DNSExit($FAIL);
+}
+
+Print_Message( "=", ["4th packet PASS\n"] );
+
+#------------------------------#
+# 5th packet (send from NS3)   #
+#------------------------------#
+# Copy Header RD and ID from NUT query
+$gen_dns_msg_2[0]->{'header'}->{'id'} = $recv_data->{'header'}->{'id'};
+$gen_dns_msg_2[0]->{'header'}->{'rd'} = $recv_data->{'header'}->{'rd'};
+
+$ret = undef;
+$ret = DNSSend(
+        1,
+        $dns_session[2]->{'socket_ref'},
+        $dns_session[2]->{'dns_one_session'}->[0]
+);
+
+unless ( defined($ret) ) {
+        Debug_Print("ERROR: Can't send DNS message\n");
+        DNSExit($FAIL);
+}
+
+#Print_Message( "=", ["Send 5th message\n"] );
+
+#------------------------------#
+# 6th packet (receive@CLIENT)  #
+#------------------------------#
+$ret = undef;
+$ret = DNSRecv(
+        1, 60,
+        $dns_session[0]->{'socket_ref'},
+        $dns_session[0]->{'dns_one_session'}->[0]
+);
+
+unless ( defined($ret) ) {
+        Debug_Print("ERROR: Can't receive DNS message\n");
+        DNSExit($FAIL);
+}
+
+#Print_Message( "=", ["Receive 6th message\n"] );
+
+#------------------------------#
+# Judgment (6th packet)        #
+#------------------------------#
+Print_Message(
+        "#",
+        [
+                "Judgment (6th packet)\n",
+                "6. Received standard query response.\n",
+        ]
+);
+
+$recv_data = undef;
+$recv_data = $dns_session[0]->{'dns_one_session'}->[0]->{'dec_dns_msg'}->[0];
+
+$ret = undef;
+$ret = JudgeDNSMsg( $recv_data, $exp_dns_msg_0[0] );
+
+unless ( defined($ret) ) {
+        DNSExit($FAIL);
+}
+
+Print_Message( "=", ["6th packet PASS\n"] );
+
+#------------------------------#
+# 7th packet (send from Client)#
+#------------------------------#
+$ret = undef;
+$ret = DNSSend(
+        1,
+        $dns_session[0]->{'socket_ref'},
+        $dns_session[0]->{'dns_one_session'}->[1]
+);
+
+unless ( defined($ret) ) {
+        Debug_Print("ERROR: Can't send DNS message\n");
+        DNSExit($FAIL);
+}
+
+#Print_Message( "=", ["Send 7th message\n"] );
+
+#------------------------------#
+# 8th packet                   #
+#------------------------------#
+$ret = undef;
+$ret = DNSRecv(
+        1, 10,
+        $dns_session[1]->{'socket_ref'},
+        $dns_session[1]->{'dns_one_session'}->[1]
+);
+
+if ( defined($ret) ) {
+        #------------------------------#
+        # Judgment (8th A packet)      #
+        #------------------------------#
+
+        #Print_Message( "=", ["Receive 8th A message\n"] );
+        Print_Message(
+                "#",
+                [
+                        "Judgment (8th A packet)\n",
+"8A. Received standard query including QNAME=example.org, QTYPE=NS.\n",
+                ]
+        );
+        $recv_data = undef;
+        $recv_data =
+        $dns_session[1]->{'dns_one_session'}->[1]->{'dec_dns_msg'}->[0];
+
+        $ret = undef;
+        $ret = JudgeDNSMsg( $recv_data, $exp_dns_msg_4[0] );
+
+        unless ( defined($ret) ) {
+                DNSExit($FAIL);
+        }
+
+        Print_Message( "=", ["8th A packet PASS\n"] );
+} else {
+
+        #------------------------------#
+        # Judgment (8th B packet)      #
+        #------------------------------#
+        Print_Message(
+                "#",
+                [
+                        "Judgment (8th B packet)\n",
+                        "8B. Not received standard query response.\n",
+                ]
+        );
+
+        $ret = undef;
+        $ret = DNSRecv(
+                1, 10,
+                $dns_session[0]->{'socket_ref'},
+                $dns_session[0]->{'dns_one_session'}->[1]
+        );
+
+        unless ( defined($ret) ) {
+                Print_Message( "=", ["PASS:not receive packet\n"] );
+        } else {
+                Print_Message( "=", ["FAIL:Receive 8th message\n"] );
+                DNSExit($FAIL);
+        }
+
+}
+
+DNSExit($OK);
+__END__
+######################################################################
+
+=head1 NAME
+
+	SV_RFC2181_5_4_1_Lease_reliability_2 - Least reliability data should not return as answer 
+	                                       (Authority section from a non-authoritative answer)
+
+=head1 VERIFICATION POINTS
+
+	Verify that a NUT doesn't use the least reliability data as answer.
+
+=begin html
+	<UL>
+	<li>
+	Unauthenticated RRs received and cached from the least trustworthy of
+	those groupings, that is data from the additional data section, and
+	data from the authority section of a non-authoritative answer, should
+	not be cached in such a way that they would ever be returned as
+	answers to a received query.  They may be returned as additional
+	information where appropriate.  Ignoring this would allow the
+	trustworthiness of relatively untrustworthy data to be increased
+	without cause or excuse.
+	</li>
+	</UL>
+
+=end html
+
+=head1 TARGET
+
+	Caching Server
+
+=head1 SYNOPSIS
+
+=begin html
+<PRE>
+	<A HREF="./SV_RFC2181_5_4_1_Lease_reliability_2.seq">SV_RFC2181_5_4_1_Lease_reliability_2.seq</A> [-tooloption ...]: KOI tool option
+	See also <A HREF="../DNSConfig.pm">DNSConfig.pm</A>
+</PRE>
+
+=end html
+
+=head1 INITIALIZATION
+
+=begin html
+	<UL>
+	<DD><LI><STRONG>Network Topology</STRONG></LI> 
+	<PRE>
+                                 . domain                 org domain               example.org domain
+        AP Server1 (TN)          DNS Server2              DNS Server3              DNS Server4
+          |A.example.org           |A.ROOT.NET              |NS3.example.org         |NS4.example.org
+          |3ffe:501:ffff:101::10   |3ffe:501:ffff:101::20   |3ffe:501:ffff:101::30   |3ffe:501:ffff:101::40 
+          |192.168.1.10            |192.168.1.20            |192.168.1.30            |192.168.1.40
+          |                        |                        |                        |
+Net-y   --+--------+---------------+------------------------+------------------------+-- 3ffe:501:ffff:101::/64
+                   |                                                                     192.168.1/24
+                   |
+                   |
+                 Router (TN)
+                   |3ffe:501:ffff:100::1
+                   |192.168.0.1
+                   |
+                   |
+                   |
+Net-z   --+--------+-----------------+-------- 3ffe:501:ffff:100::/64
+          |                          |          192.168.0/24
+          |                          |
+        DNS Server1 (NUT)          DNS Client1 (TN)
+           3ffe:501:ffff:100::XXXX    3ffe:501:ffff:100::20 
+           192.168.0.10               192.168.0.20
+	<BR>
+	XXXX: EUI64
+	</PRE>
+	<DD><LI><STRONG>Setup</STRONG></LI><BR>
+	<BR>
+	<DD>Set the DNS Server1's (NUT) address as above mentioned Network Topology.<BR>
+	<DD>Configure the Server1's (NUT) zone file to response query from TN.<BR>
+	<BR>
+	<DD>Example of root server list:</BR>
+	<BR>
+	<DD>&nbsp;&nbsp;For IPv4:
+	<PRE>
+.                       3600000         IN      NS      A.ROOT.NET.
+A.ROOT.NET.             3600000                 A       192.168.1.20
+	</PRE>
+	<DD>&nbsp;&nbsp;For IPv6:
+	<PRE>
+.                       3600000         IN      NS      A.ROOT.NET.
+A.ROOT.NET.             3600000                 AAAA    3ffe:501:ffff:101::20
+	</PRE>
+	<DD>Example of example.com zone file:<BR>
+	<PRE>
+$TTL    86400           ; TTL of 1 day
+@ IN SOA NS1.example.com. root.example.com. (
+	2005081600	; serial
+	3600		; refresh every 1 hr
+	900		; retry every 15 min
+	604800		; expire after a week
+	3600		; Minimum TTL of a 1 hr
+)
+;
+	IN	NS	NS1.example.com.
+NS1	IN	A	192.168.0.10
+;
+	</PRE>
+	</UL>
+
+=end html
+
+=head1 TEST PROCEDURE
+
+	This test sequence is following.
+
+                                                                    <-------------- TN --------------->
+
+    DNS Client1 (TN)             DNS Server1 (NUT)                  DNS Server2 DNS Server3 DNS Server4
+	|                              |                                 |           |           |
+	|----------------------------->|                                 |           |           |
+	| 1. Send standard query       |                                 |           |           |
+	|  QNAME=A.example.org         |                                 |           |           |
+	|  QTYPE=A                     |                                 |           |           |
+	|                              |                                 |           |           |
+	|                              |-------------------------------->|           |           |
+	|                              | 2. Recv standard query          |           |           |
+	|                              |  QNAME=A.example.org            |           |           |
+	|                              |  QTYPE=A                        |           |           |
+	|                              |                                 |           |           |
+	|                              |<--------------------------------|           |           |
+	|                              | 3. Send standard query response |           |           |
+	|                              |  QNAME=A.example.org            |           |           |
+	|                              |  QTYPE=A                        |           |           |
+	|                              |  AUTHORITY Name=org             |           |           |
+	|                              |  AUTHORITY Name Server          |           |           |
+	|                              |            =NS3.example.org     |           |           |
+	|                              |  ADDITIONAL Name                |           |           |
+	|                              |            =NS3.example.org     |           |           |
+	|                              |  ADDITIONAL Address             |           |           |
+	|                              |            =192.168.1.30        |           |           |
+	|                              |                                 |           |           |
+	|                              |                                 v           |           |
+	|                              |                                             |           |
+	|                              |-------------------------------------------->|           |
+	|                              |             4. Recv standard query          |           |
+	|                              |              QNAME=A.example.org            |           |
+	|                              |              QTYPE=A                        |           |
+	|                              |                                             |           |
+	|                              |<--------------------------------------------|           |
+	|                              |             5. Send standard query response |           |
+	|                              |              AA=0                           |           |
+	|                              |              QNAME=A.example.org            |           |
+	|                              |              QTYPE=A                        |           |
+	|                              |              ANSWER Name=A.example.org      |           |
+	|                              |              ANSWER Address=192.168.1.10    |           |
+	|                              |              AUTHORITY Name=example.org     |           |
+	|                              |              AUTHORITY Name Server          |           |
+	|                              |                     = NS4.example.org       |           |
+	|                              |              ADDITIONAL Name                |           |
+	|                              |                     = NS4.example.org       |           |
+	|                              |              ADDITIONAL Address             |           |
+	|                              |                     = 192.168.1.40          |           |
+	|                              |                                             |           |
+	|                              |                                             v           |
+	|                              |                                                         |
+	|                              |                                                         |
+	|<-----------------------------|                                                         |
+	| 6.Standard query response    |                                                         |
+	|  QNAME= A.example.org        |                                                         |
+	|  QTYPE=A                     |                                                         |
+	|  ANSWER Name=A.example.org   |                                                         |
+	|  ANSWER Address=192.168.1.10 |                                                         |
+	|  AUTHORITY Name=example.org  |                                                         |
+	|  AUTHORITY Name Server       |                                                         |
+	|   = NS4.example.org          |                                                         |
+	|  ADDITIONAL Name             |                                                         |
+	|   = NS4.example.org          |                                                         |
+	|  ADDITIONAL Address          |                                                         |
+	|   = 192.168.1.40             |                                                         |
+	|                              |                                                         |
+	|----------------------------->|                                                         |
+	| 7. Send standard query       |                                                         |
+	|  QNAME=example.org           |                                                         |
+	|  QTYPE=NS                    |                                                         |
+	|                              |                                                         |
+	|                              |-------------------------------->|                       |
+	|                              | 8A. Send standard query         |                       |
+	|                              |   QNAME=example.org             |                       |
+	|                              |   QTYPE=NS                      |                       |
+	|                              |                                 |                       |
+	|                              |                                 |                       |
+	| X <--------------------------|                                 |                       |
+	| 8B.Standard query response   |                                 |                       |
+	|  QNAME=example.org           |                                 |                       |
+	|  QTYPE=NS                    |                                 |                       |
+	|  ANSWER Name=example.org     |                                 |                       |
+	|  ANSWER NSDNAME              |                                 |                       |
+	|             =NS4.example.org |                                 |                       |
+	|                              |                                 |                       |
+	v                              v                                 v                       v
+
+	1. TN send standard query QNAME=A.example.org, QTYPE=A to NUT.
+        2. NUT transmits standard query to DNS Server2 (TN: root name server) (Judgment *2)
+        3. TN send query response to NUT w/ AUTHORITY Name=org, AUTHORITY Name Server=NS3.example.org.
+        4. NUT transmits standard query QNAME=A.example.org, QTYPE=A to DNS Server3 (TN: NS3.example.org) (Judgment *4)
+        5. TN send query response to ANSWER Name=A.example.org, ANSWER Address=192.168.1.10.
+        6. NUT transmits query response to DNS Client1 (TN). (Judgment *6)
+	7. TN send standard query QNAME=example.org, QTYPE=NS to NUT.
+        8A. NUT transmits standard query QNAME=example.org, QTYPE=NS to DNS Server2 (TN: NS2.example.org) (Judgment *8A)
+        8B. TN send query response to ANSWER Name=example.org, ANSWER Nsdname=NS4.example.org. (Judgment *8B)
+
+=begin html
+	<UL>
+	<DD><LI>Packet Description</LI><BR>
+	<BR>
+	<DD>1st packet.
+	<P></P>
+	<DD><TABLE BORDER="1">
+		<TBODY>
+		<TR>
+			<TD COLSPAN="3">
+			<CENTER>Standard query from DNS Client1 (TN) to Server1 (NUT)</CENTER>
+			</TD>
+		</TR>
+		<TR>
+			<TD ROWSPAN="2">IP Header</TD>
+			<TD>Source Address</TD>
+			<TD>CL1_NETZ</TD>
+		</TR>
+		<TR>
+			<TD>Destination Address</TD>
+			<TD>NUT_NETZ</TD>
+		</TR>
+		<TR>
+			<TD COLSPAN="1" ROWSPAN="2">UDP Header</TD>
+			<TD>Src Port</TD>
+			<TD>2000</TD>
+		</TR>
+		<TR>
+			<TD>Dst Port</TD>
+			<TD>53</TD>
+		</TR>
+		<TR>
+			<TD COLSPAN="1" ROWSPAN="13">DNS Header</TD>
+			<TD>ID</TD>
+			<TD>0x1000</TD>
+		</TR>
+		<TR>
+			<TD>QR</TD>
+			<TD>0</TD>
+		</TR>
+		<TR>
+			<TD>OPCODE</TD>
+			<TD>0</TD>
+		</TR>
+		<TR>
+			<TD>AA</TD>
+			<TD>0</TD>
+		</TR>
+		<TR>
+			<TD>TC</TD>
+			<TD>0</TD>
+		</TR>
+		<TR>
+			<TD>RD</TD>
+			<TD>1</TD>
+		</TR>
+		<TR>
+			<TD>RA</TD>
+			<TD>0</TD>
+		</TR>
+		<TR>
+			<TD>Z</TD>
+			<TD>0</TD>
+		</TR>
+		<TR>
+			<TD>RCODE</TD>
+			<TD>0</TD>
+		</TR>
+		<TR>
+			<TD>QDCOUNT</TD>
+			<TD>1</TD>
+		</TR>
+		<TR>
+			<TD>ANCOUNT</TD>
+			<TD>0</TD>
+		</TR>
+		<TR>
+			<TD>NSCOUNT</TD>
+			<TD>0</TD>
+		</TR>
+		<TR>
+			<TD>ARCOUNT</TD>
+			<TD>0</TD>
+		</TR>
+		<TR>
+			<TD COLSPAN="1" ROWSPAN="3">DNS Question section</TD>
+			<TD>QNAME</TD>
+			<TD>A.example.org</TD>
+		</TR>
+		<TR>
+			<TD>QTYPE</TD>
+			<TD>A (0x0001)</TD>
+		</TR>
+		<TR>
+			<TD>QCLASS</TD>
+			<TD>IN (0x0001)</TD>
+		</TR>
+		</TBODY>
+	</TABLE>
+	<BR>
+	<DD>2nd packet.
+	<P></P>
+	<DD><TABLE BORDER="1">
+		<TBODY>
+		<TR>
+			<TD COLSPAN="3">
+			<CENTER>Standard query from DNS Server1 (NUT) to Server2 (TN)</CENTER>
+			</TD>
+		</TR>
+		<TR>
+			<TD ROWSPAN="2">IP Header</TD>
+			<TD>Source Address</TD>
+			<TD>NUT_NETZ</TD>
+		</TR>
+		<TR>
+			<TD>Destination Address</TD>
+			<TD>SV2_NETY</TD>
+		</TR>
+		<TR>
+			<TD COLSPAN="1" ROWSPAN="2">UDP Header</TD>
+			<TD>Src Port</TD>
+			<TD>ANY</TD>
+		</TR>
+		<TR>
+			<TD>Dst Port</TD>
+			<TD>53</TD>
+		</TR>
+		<TR>
+			<TD COLSPAN="1" ROWSPAN="13">DNS Header</TD>
+			<TD>ID</TD>
+			<TD>ANY</TD>
+		</TR>
+		<TR>
+			<TD>QR</TD>
+			<TD>0</TD>
+		</TR>
+		<TR>
+			<TD>OPCODE</TD>
+			<TD>0</TD>
+		</TR>
+		<TR>
+			<TD>AA</TD>
+			<TD>ANY</TD>
+		</TR>
+		<TR>
+			<TD>TC</TD>
+			<TD>0</TD>
+		</TR>
+		<TR>
+			<TD>RD</TD>
+			<TD>0</TD>
+		</TR>
+		<TR>
+			<TD>RA</TD>
+			<TD>ANY</TD>
+		</TR>
+		<TR>
+			<TD>Z</TD>
+			<TD>ANY</TD>
+		</TR>
+		<TR>
+			<TD>RCODE</TD>
+			<TD>ANY</TD>
+		</TR>
+		<TR>
+			<TD>QDCOUNT</TD>
+			<TD>1</TD>
+		</TR>
+		<TR>
+			<TD>ANCOUNT</TD>
+			<TD>0</TD>
+		</TR>
+		<TR>
+			<TD>NSCOUNT</TD>
+			<TD>0</TD>
+		</TR>
+		<TR>
+			<TD>ARCOUNT</TD>
+			<TD>ANY</TD>
+		</TR>
+		<TR>
+			<TD COLSPAN="1" ROWSPAN="3">DNS Question section</TD>
+			<TD>QNAME</TD>
+			<TD>A.example.org</TD>
+		</TR>
+		<TR>
+			<TD>QTYPE</TD>
+			<TD>A (0x0001)</TD>
+		</TR>
+		<TR>
+			<TD>QCLASS</TD>
+			<TD>IN (0x0001)</TD>
+		</TR>
+		</TBODY>
+	</TABLE>
+	<BR>
+	<DD>3rd packet.
+	<P></P>
+	<DD><TABLE BORDER="1">
+		<TBODY>
+		<TR>
+			<TD COLSPAN="3">
+			<CENTER>Standard query response from DNS Server2 (TN) to Server1 (NUT) </CENTER>
+			</TD>
+		</TR>
+		<TR>
+			<TD ROWSPAN="2">IP Header</TD>
+			<TD>Source Address</TD>
+			<TD>SV2_NETY</TD>
+		</TR>
+		<TR>
+			<TD>Destination Address</TD>
+			<TD>NUT_NETZ</TD>
+		</TR>
+		<TR>
+			<TD COLSPAN="1" ROWSPAN="2">UDP Header</TD>
+			<TD>Src Port</TD>
+			<TD>53</TD>
+		</TR>
+		<TR>
+			<TD>Dst Port</TD>
+			<TD>Value that NUT uses</TD>
+		</TR>
+		<TR>
+			<TD COLSPAN="1" ROWSPAN="13">DNS Header</TD>
+			<TD>ID</TD>
+			<TD>Value that NUT uses</TD>
+		</TR>
+		<TR>
+			<TD>QR</TD>
+			<TD>1</TD>
+		</TR>
+		<TR>
+			<TD>OPCODE</TD>
+			<TD>0</TD>
+		</TR>
+		<TR>
+			<TD>AA</TD>
+			<TD>0</TD>
+		</TR>
+		<TR>
+			<TD>TC</TD>
+			<TD>0</TD>
+		</TR>
+		<TR>
+			<TD>RD</TD>
+			<TD>0</TD>
+		</TR>
+		<TR>
+			<TD>RA</TD>
+			<TD>0</TD>
+		</TR>
+		<TR>
+			<TD>Z</TD>
+			<TD>0</TD>
+		</TR>
+		<TR>
+			<TD>RCODE</TD>
+			<TD>0</TD>
+		</TR>
+		<TR>
+			<TD>QDCOUNT</TD>
+			<TD>1</TD>
+		</TR>
+		<TR>
+			<TD>ANCOUNT</TD>
+			<TD>0</TD>
+		</TR>
+		<TR>
+			<TD>NSCOUNT</TD>
+			<TD>1</TD>
+		</TR>
+		<TR>
+			<TD>ARCOUNT</TD>
+			<TD>1</TD>
+		</TR>
+		<TR>
+			<TD COLSPAN="1" ROWSPAN="3">DNS Question section</TD>
+			<TD>QNAME</TD>
+			<TD>
+			A.example.org
+			</TD>
+		</TR>
+		<TR>
+			<TD>QTYPE</TD>
+			<TD>A (0x0001)</TD>
+		</TR>
+		<TR>
+			<TD>QCLASS</TD>
+			<TD>IN (0x0001)</TD>
+		</TR>
+		<TR>
+			<TD COLSPAN="1" ROWSPAN="6">DNS Authority section</TD>
+			<TD>NAME</TD>
+			<TD>org (Pointer 0xC016)</TD>
+		</TR>
+		<TR>
+			<TD>TYPE</TD>
+			<TD>NS (0x0002)</TD>
+		</TR>
+		<TR>
+			<TD>CLASS</TD>
+			<TD>IN (0x0001)</TD>
+		</TR>
+		<TR>
+			<TD>TTL</TD>
+			<TD>1 day (86400)</TD>
+		</TR>
+		<TR>
+			<TD>RDLENGTH</TD>
+			<TD>6</TD>
+		</TR>
+		<TR>
+			<TD>NSDNAME</TD>
+			<TD>NS3.example.org (NS3 + Pointer 0xC00E)</TD>
+		</TR>
+		<TR>
+			<TD COLSPAN="1" ROWSPAN="6">DNS Additional section</TD>
+			<TD>NAME</TD>
+			<TD>NS3.example.org (Pointer 0xC02B)</TD>
+		</TR>
+		<TR>
+			<TD>TYPE<BR>
+			</TD>
+			<TD>A (0x0001)</TD>
+		</TR>
+		<TR>
+			<TD>CLASS</TD>
+			<TD>IN (0x0001)</TD>
+		</TR>
+		<TR>
+			<TD>TTL</TD>
+			<TD>1 day (86400)</TD>
+		</TR>
+		<TR>
+			<TD>RDLENGTH</TD>
+			<TD>4</TD>
+		</TR>
+		<TR>
+			<TD>ADDRESS</TD>
+			<TD>192.168.1.30</TD>
+		</TR>
+		</TBODY>
+	</TABLE>
+	<BR>
+	<DD>4th packet.
+	<P></P>
+	<DD><TABLE BORDER="1">
+		<TBODY>
+		<TR>
+			<TD COLSPAN="3">
+			<CENTER>Standard query from DNS Server1 (NUT) to Server3 (TN)</CENTER>
+			</TD>
+		</TR>
+		<TR>
+			<TD ROWSPAN="2">IP Header</TD>
+			<TD>Source Address</TD>
+			<TD>NUT_NETZ</TD>
+		</TR>
+		<TR>
+			<TD>Destination Address</TD>
+			<TD>SV3_NETY</TD>
+		</TR>
+		<TR>
+			<TD COLSPAN="1" ROWSPAN="2">UDP Header</TD>
+			<TD>Src Port</TD>
+			<TD>ANY</TD>
+		</TR>
+		<TR>
+			<TD>Dst Port</TD>
+			<TD>53</TD>
+		</TR>
+		<TR>
+			<TD COLSPAN="1" ROWSPAN="13">DNS Header</TD>
+			<TD>ID</TD>
+			<TD>ANY</TD>
+		</TR>
+		<TR>
+			<TD>QR</TD>
+			<TD>0</TD>
+		</TR>
+		<TR>
+			<TD>OPCODE</TD>
+			<TD>0</TD>
+		</TR>
+		<TR>
+			<TD>AA</TD>
+			<TD>ANY</TD>
+		</TR>
+		<TR>
+			<TD>TC</TD>
+			<TD>0</TD>
+		</TR>
+		<TR>
+			<TD>RD</TD>
+			<TD>0</TD>
+		</TR>
+		<TR>
+			<TD>RA</TD>
+			<TD>ANY</TD>
+		</TR>
+		<TR>
+			<TD>Z</TD>
+			<TD>ANY</TD>
+		</TR>
+		<TR>
+			<TD>RCODE</TD>
+			<TD>ANY</TD>
+		</TR>
+		<TR>
+			<TD>QDCOUNT</TD>
+			<TD>1</TD>
+		</TR>
+		<TR>
+			<TD>ANCOUNT</TD>
+			<TD>0</TD>
+		</TR>
+		<TR>
+			<TD>NSCOUNT</TD>
+			<TD>0</TD>
+		</TR>
+		<TR>
+			<TD>ARCOUNT</TD>
+			<TD>ANY</TD>
+		</TR>
+		<TR>
+			<TD COLSPAN="1" ROWSPAN="3">DNS Question section</TD>
+			<TD>QNAME</TD>
+			<TD>A.example.org</TD>
+		</TR>
+		<TR>
+			<TD>QTYPE</TD>
+			<TD>A (0x0001)</TD>
+		</TR>
+		<TR>
+			<TD>QCLASS</TD>
+			<TD>IN (0x0001)</TD>
+		</TR>
+		</TBODY>
+	</TABLE>
+	<BR>
+	<DD>5th packet.
+	<P></P>
+	<DD><TABLE BORDER="1">
+		<TBODY>
+		<TR>
+			<TD COLSPAN="3">
+			<CENTER>Standard query response from DNS Server3 (TN) to Server1 (NUT) </CENTER>
+			</TD>
+		</TR>
+		<TR>
+			<TD ROWSPAN="2">IP Header</TD>
+			<TD>Source Address</TD>
+			<TD>SV3_NETY</TD>
+		</TR>
+		<TR>
+			<TD>Destination Address</TD>
+			<TD>NUT_NETZ</TD>
+		</TR>
+		<TR>
+			<TD COLSPAN="1" ROWSPAN="2">UDP Header</TD>
+			<TD>Src Port</TD>
+			<TD>Value that NUT uses</TD>
+		</TR>
+		<TR>
+			<TD>Dst Port</TD>
+			<TD>53</TD>
+		</TR>
+		<TR>
+			<TD COLSPAN="1" ROWSPAN="13">DNS Header</TD>
+			<TD>ID</TD>
+			<TD>Value that NUT uses</TD>
+		</TR>
+		<TR>
+			<TD>QR</TD>
+			<TD>1</TD>
+		</TR>
+		<TR>
+			<TD>OPCODE</TD>
+			<TD>0</TD>
+		</TR>
+		<TR>
+			<TD>AA</TD>
+			<TD>0</TD>
+		</TR>
+		<TR>
+			<TD>TC</TD>
+			<TD>0</TD>
+		</TR>
+		<TR>
+			<TD>RD</TD>
+			<TD>0</TD>
+		</TR>
+		<TR>
+			<TD>RA</TD>
+			<TD>0</TD>
+		</TR>
+		<TR>
+			<TD>Z</TD>
+			<TD>0</TD>
+		</TR>
+		<TR>
+			<TD>RCODE</TD>
+			<TD>0</TD>
+		</TR>
+		<TR>
+			<TD>QDCOUNT</TD>
+			<TD>1</TD>
+		</TR>
+		<TR>
+			<TD>ANCOUNT</TD>
+			<TD>1</TD>
+		</TR>
+		<TR>
+			<TD>NSCOUNT</TD>
+			<TD>1</TD>
+		</TR>
+		<TR>
+			<TD>ARCOUNT</TD>
+			<TD>1</TD>
+		</TR>
+		<TR>
+			<TD COLSPAN="1" ROWSPAN="3">DNS Question section</TD>
+			<TD>QNAME</TD>
+			<TD>
+			A.example.org
+			</TD>
+		</TR>
+		<TR>
+			<TD>QTYPE</TD>
+			<TD>A (0x0001)</TD>
+		</TR>
+		<TR>
+			<TD>QCLASS</TD>
+			<TD>IN (0x0001)</TD>
+		</TR>
+		<TR>
+			<TD COLSPAN="1" ROWSPAN="6">DNS Answer section</TD>
+			<TD>NAME</TD>
+			<TD>A.example.org (Pointer 0xC00C)
+			</TD>
+		</TR>
+		<TR>
+			<TD>TYPE</TD>
+			<TD>A (0x0001)</TD>
+		</TR>
+		<TR>
+			<TD>CLASS</TD>
+			<TD>IN (0x0001)</TD>
+		</TR>
+		<TR>
+			<TD>TTL</TD>
+			<TD>1 day (86400)</TD>
+		</TR>
+		<TR>
+			<TD>RDLENGTH</TD>
+			<TD>4</TD>
+		</TR>
+		<TR>
+			<TD>ADDRESS</TD>
+			<TD>192.168.1.10</TD>
+		</TR>
+		<TR>
+			<TD COLSPAN="1" ROWSPAN="6">DNS Authority section</TD>
+			<TD>NAME</TD>
+			<TD>example.org (Pointer 0xC00E)</TD>
+		</TR>
+		<TR>
+			<TD>TYPE</TD>
+			<TD>NS (0x0002)</TD>
+		</TR>
+		<TR>
+			<TD>CLASS</TD>
+			<TD>IN (0x0001)</TD>
+		</TR>
+		<TR>
+			<TD>TTL</TD>
+			<TD>1 day (86400)</TD>
+		</TR>
+		<TR>
+			<TD>RDLENGTH</TD>
+			<TD>6</TD>
+		</TR>
+		<TR>
+			<TD>NSDNAME</TD>
+			<TD>NS4.example.org (NS4 + Pointer 0xC00E)</TD>
+		</TR>
+		<TR>
+			<TD COLSPAN="1" ROWSPAN="6">DNS Additional section</TD>
+			<TD>NAME</TD>
+			<TD>NS4.example.org (Pointer 0xC03B)</TD>
+		</TR>
+		<TR>
+			<TD>TYPE<BR>
+			</TD>
+			<TD>A (0x0001)</TD>
+		</TR>
+		<TR>
+			<TD>CLASS</TD>
+			<TD>IN (0x0001)</TD>
+		</TR>
+		<TR>
+			<TD>TTL</TD>
+			<TD>1 day (86400)</TD>
+		</TR>
+		<TR>
+			<TD>RDLENGTH</TD>
+			<TD>4</TD>
+		</TR>
+		<TR>
+			<TD>ADDRESS</TD>
+			<TD>192.168.1.40</TD>
+		</TR>
+		</TBODY>
+	</TABLE>
+	<BR>
+	<DD>6th packet.
+	<P></P>
+	<DD><TABLE BORDER="1">
+		<TBODY>
+		<TR>
+			<TD COLSPAN="3">
+			<CENTER>Standard query response from DNS Server1 (NUT) to Client1 (TN) </CENTER>
+			</TD>
+		</TR>
+		<TR>
+			<TD ROWSPAN="2">IP Header</TD>
+			<TD>Source Address</TD>
+			<TD>NUT_NETZ</TD>
+		</TR>
+		<TR>
+			<TD>Destination Address</TD>
+			<TD>CL1_NETZ</TD>
+		</TR>
+		<TR>
+			<TD COLSPAN="1" ROWSPAN="2">UDP Header</TD>
+			<TD>Src Port</TD>
+			<TD>53</TD>
+		</TR>
+		<TR>
+			<TD>Dst Port</TD>
+			<TD>2000</TD>
+		</TR>
+		<TR>
+			<TD COLSPAN="1" ROWSPAN="13">DNS Header</TD>
+			<TD>ID</TD>
+			<TD>0x1000</TD>
+		</TR>
+		<TR>
+			<TD>QR</TD>
+			<TD>1</TD>
+		</TR>
+		<TR>
+			<TD>OPCODE</TD>
+			<TD>0</TD>
+		</TR>
+		<TR>
+			<TD>AA</TD>
+			<TD>0</TD>
+		</TR>
+		<TR>
+			<TD>TC</TD>
+			<TD>0</TD>
+		</TR>
+		<TR>
+			<TD>RD</TD>
+			<TD>1</TD>
+		</TR>
+		<TR>
+			<TD>RA</TD>
+			<TD>1</TD>
+		</TR>
+		<TR>
+			<TD>Z</TD>
+			<TD>0</TD>
+		</TR>
+		<TR>
+			<TD>RCODE</TD>
+			<TD>0</TD>
+		</TR>
+		<TR>
+			<TD>QDCOUNT</TD>
+			<TD>1</TD>
+		</TR>
+		<TR>
+			<TD>ANCOUNT</TD>
+			<TD>1</TD>
+		</TR>
+		<TR>
+			<TD>NSCOUNT</TD>
+			<TD>1</TD>
+		</TR>
+		<TR>
+			<TD>ARCOUNT</TD>
+			<TD>1</TD>
+		</TR>
+		<TR>
+			<TD COLSPAN="1" ROWSPAN="3">DNS Question section</TD>
+			<TD>QNAME</TD>
+			<TD>A.example.org</TD>
+		</TR>
+		<TR>
+			<TD>QTYPE</TD>
+			<TD>A (0x0001)</TD>
+		</TR>
+		<TR>
+			<TD>QCLASS</TD>
+			<TD>IN (0x0001)</TD>
+		</TR>
+		<TR>
+			<TD COLSPAN="1" ROWSPAN="6">DNS Answer section</TD>
+			<TD>NAME</TD>
+			<TD>A.example.org (Pointer 0xC00C)
+			</TD>
+		</TR>
+		<TR>
+			<TD>TYPE</TD>
+			<TD>A (0x0001)</TD>
+		</TR>
+		<TR>
+			<TD>CLASS</TD>
+			<TD>IN (0x0001)</TD>
+		</TR>
+		<TR>
+			<TD>TTL</TD>
+			<TD>1 day (86400)</TD>
+		</TR>
+		<TR>
+			<TD>RDLENGTH</TD>
+			<TD>4</TD>
+		</TR>
+		<TR>
+			<TD>ADDRESS</TD>
+			<TD>192.168.1.10</TD>
+		</TR>
+		<TR>
+			<TD COLSPAN="1" ROWSPAN="6">DNS Authority section</TD>
+			<TD>NAME</TD>
+			<TD>example.org (Pointer 0xC00E)</TD>
+		</TR>
+		<TR>
+			<TD>TYPE</TD>
+			<TD>NS (0x0002)</TD>
+		</TR>
+		<TR>
+			<TD>CLASS</TD>
+			<TD>IN (0x0001)</TD>
+		</TR>
+		<TR>
+			<TD>TTL</TD>
+			<TD>1 day (86400)</TD>
+		</TR>
+		<TR>
+			<TD>RDLENGTH</TD>
+			<TD>6</TD>
+		</TR>
+		<TR>
+			<TD>NSDNAME</TD>
+			<TD>NS4.example.org (NS4 + Pointer 0xC00E)</TD>
+		</TR>
+		<TR>
+			<TD COLSPAN="1" ROWSPAN="6">DNS Additional section</TD>
+			<TD>NAME</TD>
+			<TD>NS4.example.org (Pointer 0xC03B)</TD>
+		</TR>
+		<TR>
+			<TD>TYPE<BR>
+			</TD>
+			<TD>A (0x0001)</TD>
+		</TR>
+		<TR>
+			<TD>CLASS</TD>
+			<TD>IN (0x0001)</TD>
+		</TR>
+		<TR>
+			<TD>TTL</TD>
+			<TD>1 day (86400)</TD>
+		</TR>
+		<TR>
+			<TD>RDLENGTH</TD>
+			<TD>4</TD>
+		</TR>
+		<TR>
+			<TD>ADDRESS</TD>
+			<TD>192.168.1.40</TD>
+		</TR>
+		</TBODY>
+	</TABLE>
+	<BR>
+	<DD>7th packet.
+	<P></P>
+	<DD><TABLE BORDER="1">
+		<TBODY>
+		<TR>
+			<TD COLSPAN="3">
+			<CENTER>Standard query from DNS Client1 (TN) to Server1 (NUT)</CENTER>
+			</TD>
+		</TR>
+		<TR>
+			<TD ROWSPAN="2">IP Header</TD>
+			<TD>Source Address</TD>
+			<TD>CL1_NETZ</TD>
+		</TR>
+		<TR>
+			<TD>Destination Address</TD>
+			<TD>NUT_NETZ</TD>
+		</TR>
+		<TR>
+			<TD COLSPAN="1" ROWSPAN="2">UDP Header</TD>
+			<TD>Src Port</TD>
+			<TD>2000</TD>
+		</TR>
+		<TR>
+			<TD>Dst Port</TD>
+			<TD>53</TD>
+		</TR>
+		<TR>
+			<TD COLSPAN="1" ROWSPAN="13">DNS Header</TD>
+			<TD>ID</TD>
+			<TD>0x1001</TD>
+		</TR>
+		<TR>
+			<TD>QR</TD>
+			<TD>0</TD>
+		</TR>
+		<TR>
+			<TD>OPCODE</TD>
+			<TD>0</TD>
+		</TR>
+		<TR>
+			<TD>AA</TD>
+			<TD>0</TD>
+		</TR>
+		<TR>
+			<TD>TC</TD>
+			<TD>0</TD>
+		</TR>
+		<TR>
+			<TD>RD</TD>
+			<TD>1</TD>
+		</TR>
+		<TR>
+			<TD>RA</TD>
+			<TD>0</TD>
+		</TR>
+		<TR>
+			<TD>Z</TD>
+			<TD>0</TD>
+		</TR>
+		<TR>
+			<TD>RCODE</TD>
+			<TD>0</TD>
+		</TR>
+		<TR>
+			<TD>QDCOUNT</TD>
+			<TD>1</TD>
+		</TR>
+		<TR>
+			<TD>ANCOUNT</TD>
+			<TD>0</TD>
+		</TR>
+		<TR>
+			<TD>NSCOUNT</TD>
+			<TD>0</TD>
+		</TR>
+		<TR>
+			<TD>ARCOUNT</TD>
+			<TD>0</TD>
+		</TR>
+		<TR>
+			<TD COLSPAN="1" ROWSPAN="3">DNS Question section</TD>
+			<TD>QNAME</TD>
+			<TD>example.org</TD>
+		</TR>
+		<TR>
+			<TD>QTYPE</TD>
+			<TD>NS (0x0002)</TD>
+		</TR>
+		<TR>
+			<TD>QCLASS</TD>
+			<TD>IN (0x0001)</TD>
+		</TR>
+		</TBODY>
+	</TABLE>
+	<BR>
+	<DD>8th packet (8A).
+	<P></P>
+	<DD><TABLE BORDER="1">
+		<TBODY>
+		<TR>
+			<TD COLSPAN="3">
+			<CENTER>Standard query from DNS Server1 (NUT) to DNS Server2 (TN)</CENTER>
+			</TD>
+		</TR>
+		<TR>
+			<TD ROWSPAN="2">IP Header</TD>
+			<TD>Source Address</TD>
+			<TD>NUT_NETZ</TD>
+		</TR>
+		<TR>
+			<TD>Destination Address</TD>
+			<TD>SV2_NETY</TD>
+		</TR>
+		<TR>
+			<TD COLSPAN="1" ROWSPAN="2">UDP Header</TD>
+			<TD>Src Port</TD>
+			<TD>ANY</TD>
+		</TR>
+		<TR>
+			<TD>Dst Port</TD>
+			<TD>53</TD>
+		</TR>
+		<TR>
+			<TD COLSPAN="1" ROWSPAN="13">DNS Header</TD>
+			<TD>ID</TD>
+			<TD>ANY</TD>
+		</TR>
+		<TR>
+			<TD>QR</TD>
+			<TD>0</TD>
+		</TR>
+		<TR>
+			<TD>OPCODE</TD>
+			<TD>0</TD>
+		</TR>
+		<TR>
+			<TD>AA</TD>
+			<TD>ANY</TD>
+		</TR>
+		<TR>
+			<TD>TC</TD>
+			<TD>0</TD>
+		</TR>
+		<TR>
+			<TD>RD</TD>
+			<TD>0</TD>
+		</TR>
+		<TR>
+			<TD>RA</TD>
+			<TD>ANY</TD>
+		</TR>
+		<TR>
+			<TD>Z</TD>
+			<TD>ANY</TD>
+		</TR>
+		<TR>
+			<TD>RCODE</TD>
+			<TD>ANY</TD>
+		</TR>
+		<TR>
+			<TD>QDCOUNT</TD>
+			<TD>1</TD>
+		</TR>
+		<TR>
+			<TD>ANCOUNT</TD>
+			<TD>0</TD>
+		</TR>
+		<TR>
+			<TD>NSCOUNT</TD>
+			<TD>0</TD>
+		</TR>
+		<TR>
+			<TD>ARCOUNT</TD>
+			<TD>0</TD>
+		</TR>
+		<TR>
+			<TD COLSPAN="1" ROWSPAN="3">DNS Question section</TD>
+			<TD>QNAME</TD>
+			<TD>example.org</TD>
+		</TR>
+		<TR>
+			<TD>QTYPE</TD>
+			<TD>NS (0x0002)</TD>
+		</TR>
+		<TR>
+			<TD>QCLASS</TD>
+			<TD>IN (0x0001)</TD>
+		</TR>
+		</TBODY>
+	</TABLE>
+	<BR>
+	<BR>
+	<DD>Exp.
+	<BR>
+	<DD><TABLE BORDER="1">
+		<TBODY>
+		<TR>
+			<TD>NUT_NETZ</TD>
+			<TD>DNS Server1's (NUT) Net-z address</TD>
+		</TR>
+		<TR>
+			<TD>CL1_NETZ</TD>
+			<TD>DNS Client1's (TN) Net-z address</TD>
+		</TR>
+		<TR>
+			<TD>SV2_NETY</TD>
+			<TD>DNS Server2's (TN) Net-y address</TD>
+		</TR>
+		<TR>
+			<TD>SV3_NETY</TD>
+			<TD>DNS Server3's (TN) Net-y address</TD>
+		</TR>
+		<TR>
+			<TD>SV4_NETY</TD>
+			<TD>DNS Server4's (TN) Net-y address</TD>
+		</TR>
+		</TBODY>
+	</TABLE>
+	</UL>
+
+=end html
+
+=head1 JUDGMENT
+
+	2. Received standard query including QNAME=A.example.org, QTYPE=A.
+	4. Received standard query including QNAME=A.example.org, QTYPE=A.
+	6. Received standard query response.
+	8A. Received standard query including QNAME=example.org, QTYPE=NS.
+	                        or
+	8B. Not received standard query response.
+	*8A or 8B is judged.
+
+=head1 TERMINATION
+
+	None
+
+=head1 REFERENCE
+
+	RFC2181 Clarifications to the DNS Specification
+	5.4.1. Ranking data
+
+=cut

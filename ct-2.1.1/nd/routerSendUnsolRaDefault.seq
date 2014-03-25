@@ -1,0 +1,238 @@
+#!/usr/bin/perl
+#
+# Copyright (C) 1999, 2000, 2001, 2002, 2003 Yokogawa Electric Corporation,
+# IPA (Information-technology Promotion Agency, Japan).
+# All rights reserved.
+# 
+# Redistribution and use of this software in source and binary forms, with 
+# or without modification, are permitted provided that the following 
+# conditions and disclaimer are agreed and accepted by the user:
+# 
+# 1. Redistributions of source code must retain the above copyright 
+# notice, this list of conditions and the following disclaimer.
+# 
+# 2. Redistributions in binary form must reproduce the above copyright 
+# notice, this list of conditions and the following disclaimer in the 
+# documentation and/or other materials provided with the distribution.
+# 
+# 3. Neither the names of the copyrighters, the name of the project which 
+# is related to this software (hereinafter referred to as "project") nor 
+# the names of the contributors may be used to endorse or promote products 
+# derived from this software without specific prior written permission.
+# 
+# 4. No merchantable use may be permitted without prior written 
+# notification to the copyrighters. However, using this software for the 
+# purpose of testing or evaluating any products including merchantable 
+# products may be permitted without any notification to the copyrighters.
+# 
+# 
+# 
+# THIS SOFTWARE IS PROVIDED BY THE COPYRIGHTERS, THE PROJECT AND 
+# CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING 
+# BUT NOT LIMITED THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS 
+# FOR A PARTICULAR PURPOSE, ARE DISCLAIMED.  IN NO EVENT SHALL THE 
+# COPYRIGHTERS, THE PROJECT OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, 
+# INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES 
+# (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR 
+# SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) 
+# HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN 
+# CONTRACT,STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) 
+# ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF 
+# THE POSSIBILITY OF SUCH DAMAGE.
+#
+# $TAHI: ct/nd/routerSendUnsolRaDefault.seq,v 1.8 2002/02/27 01:08:29 masaxmasa Exp $
+
+########################################################################
+BEGIN { $V6evalTool::TestVersion = '$Name: REL_2_1_1 $ '; }
+ 
+use V6evalTool;
+use nd;
+use ra;
+
+ndOptions(@ARGV);
+
+# The following generate debugging messages.
+$nd::debug=$ndOpt_v|$ndOpt_vv;
+
+# You can specifies debug options to a remote control program.
+# If you want to know more detail, please see the following:
+# - V6evalTool.pm: perldoc V6evalTool
+# - V6evalRemote.pm: perldoc V6evalRemote
+$nd::remote_debug="-o1" if $ndOpt_vv;
+
+$IF=Link0;
+$wait_ra=$nd::MAX_INITIAL_RTR_ADVER_INTERVAL*2;
+$max_ras=$nd::MAX_INITIAL_RTR_ADVERTISEMENTS*2;
+$ra_interval=$nd::MAX_INITIAL_RTR_ADVER_INTERVAL;
+$ra_advs=$nd::MAX_INITIAL_RTR_ADVERTISEMENTS;
+
+#
+#
+#
+$type=$V6evalTool::NutDef{Type};
+if($type eq host) {
+    vLogHTML("This test is for the router only<BR>");
+    exit $V6evalTool::exitRouterOnly;
+}
+
+$type=$V6evalTool::NutDef{Type};
+if($type ne router) {
+    vLogHTML(ndErrmsg("ERROR: $V6evalTool::NutDef{Type}: ".
+		      "Unknown target type<BR>"));
+    exit $V6evalTool::exitFail;
+}
+
+#
+#
+#
+raStartDefaultRA() || exit $V6evalTool::exitFail;
+
+#
+#
+#
+vCapture($IF);
+
+#
+#
+#
+vLogHTML("Wait for RA<BR>");
+for($i=0; $i<$max_ras; $i++) {
+#    $r=raRecvDefaultRA($IF, $wait_ra, 0, 0, %ret);
+    $r=raRecvAnyRA($IF, $wait_ra, 0, 0, %ret);
+    last if $ret{status} == 1; # timeout
+    if($ret{status} != 0) {
+	vLogHTML(ndErrmsg(vErrmsg(%ret))."<BR>");
+	goto end;
+    }
+    $exit_rtn=$V6evalTool::exitFail if $r == 0;
+    $n = $ret{recvCount};
+    $time[$i] = $ret{"recvTime$n"};
+}
+if($i == 0) {
+    vLogHTML(ndErrmsg("ERROR: Could not get any unsolicited RA<BR>"));
+    goto end;
+} elsif($i == 1) {
+    vLogHTML(ndErrmsg("ERROR: Got single RA, ".
+                      "could not test interval time<BR>"));
+    goto end;
+} elsif($i > $ra_advs) {
+    vLogHTML(ndErrmsg("ERROR: Too many multicast NS (> $ra_advs)<BR>"));
+    $exit_rtn=$V6evalTool::exitFail;
+}
+
+#
+# Check intervals of the RAs
+#
+for($j=0, $over=0, $mark=''; $j<$i-1; $j++, $mark='') {
+    #$delta = int(vRoundoff($time[$j+1] - $time[$j] + 0.5));
+    $delta = int($time[$j+1] - $time[$j] + 0.5);
+    if($delta < $ra_interval) {
+        #
+        # An interval > MAX_INITIAL_RTR_ADVER_INTERVAL
+        #
+        $over=1;
+        $mark=ndErrmsg('*');
+    }
+    vLogHTML("Retransmit interval[$j]: $mark$delta sec.<BR>");
+}
+if($over) {
+    vLogHTML(ndErrmsg("ERROR: Rate limit violation ".
+                      "(&lt; $ra_interval sec.)<BR>"));
+    $exit_rtn=$V6evalTool::exitFail;
+    goto end;
+}
+
+#
+#
+#
+end:
+    if($exit_rtn == $V6evalTool::exitPass) {
+	vLogHTML("OK<BR>");
+    } else {
+	vLogHTML(ndErrmsg("NG<BR>"));
+    }
+    exit $exit_rtn;
+
+########################################################################
+__END__
+
+=head1 NAME
+
+routerSendUnsolRaDefault - verify a host sending valid RSs
+
+=head1 TARGET
+
+  Router Only
+
+=head1 SYNOPSIS
+
+  routerSendUnsolRaDefault.seq [-tooloption ...] -p routerSendUnsolRaDefault.def
+
+=head1 INITIALIZATION
+
+=begin html
+  Start NUT advertising RAs whose parameters are as same as <A HREF="startDefaultRA.html#INITIALIZATION">those</A>.
+
+=end html
+
+=head1 TEST PROCEDURE
+
+B<routerSendUnsolRaDefault> verifies that a NUT send valid RSs by the rules.
+
+  - A host sends valid RSs whose interval is
+    MAX_INITIAL_RTR_ADVERT_INTERVAL(16 sec).
+
+  - A host sends the RSs at the most
+    MAX_INITIAL_RTR_ADVERTISEMENTS (3) times.
+
+=head1 JUDGMENT
+
+=begin html
+<PRE>
+  1. NUT throw valid RAs:
+     - whose parameter are as same as <A HREF="startDefaultRA.html#INITIALIZATION">those</A>.
+     - that may contain a source link-layer option.
+     - that may contain a MTU option.
+     - that may contain a Prefix option.
+<BR>
+  2. The interval between RAs is MAX_INITIAL_RTR_ADVERT_INTERVAL(16 sec).
+     Because MinRtrAdvInterval(600*0.33 sec) is greater than
+     MAX_INITIAL_RTR_ADVERT_INTERVAL(16 sec).
+<BR>
+  3. NUT throws the RAs at the most MAX_INITIAL_RTR_ADVERTISEMENTS (3) times.
+</PRE>
+
+=end html
+
+=head1 TERMINATION
+
+  N/A
+
+=head1 NOTE
+
+  TBD
+
+=head1 REFERENCE
+
+=begin html
+<PRE>
+6.2.4.  Sending Unsolicited Router Advertisements
+<BR>
+   <B>For the first few advertisements (up to
+   MAX_INITIAL_RTR_ADVERTISEMENTS) sent from an interface when it
+   becomes an advertising interface, if the randomly chosen interval is
+   greater than MAX_INITIAL_RTR_ADVERT_INTERVAL, the timer SHOULD be set
+   to MAX_INITIAL_RTR_ADVERT_INTERVAL instead.</B>  Using a smaller interval
+   for the initial advertisements increases the likelihood of a router
+   being discovered quickly when it first becomes available, in the
+   presence of possible packet loss.
+</PRE>
+
+=end html
+
+=head1 SEE ALSO
+
+  perldoc V6evalTool
+  perldoc V6evalRemote
+
+=cut

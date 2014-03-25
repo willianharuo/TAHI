@@ -1,0 +1,472 @@
+<HTML>
+<HEAD>
+<TITLE>FH_Normal - check Fragment Reassembly</TITLE>
+<LINK REV="made" HREF="mailto:hackers@FreeBSD.org">
+</HEAD>
+
+<BODY>
+
+<!-- INDEX BEGIN -->
+<!--
+
+<UL>
+
+	<LI><A HREF="#NAME">NAME</A>
+	<LI><A HREF="#TARGET">TARGET</A>
+	<LI><A HREF="#SYNOPSIS">SYNOPSIS</A>
+	<LI><A HREF="#INITIALIZATION">INITIALIZATION</A>
+	<LI><A HREF="#TEST_PROCEDURE">TEST PROCEDURE</A>
+	<LI><A HREF="#JUDGMENT">JUDGMENT</A>
+	<LI><A HREF="#REFERENCE">REFERENCE</A>
+	<LI><A HREF="#SEE_ALSO">SEE ALSO</A>
+</UL>
+-->
+<!-- INDEX END -->
+
+<P>
+<H1><A NAME="NAME">NAME</A></H1>
+<P>
+<PRE>  FH_Normal - check Fragment Reassembly (normal order)
+</PRE>
+<P>
+<HR>
+<H1><A NAME="TARGET">TARGET</A></H1>
+<P>
+<PRE>  Host and Router
+</PRE>
+<P>
+<HR>
+<H1><A NAME="SYNOPSIS">SYNOPSIS</A></H1>
+<PRE>
+  <A HREF="./FH_Normal.seq">FH_Normal.seq</A> [-tooloption ...] -pkt <A HREF="./Fragment.def">Fragment.def</A>
+    -tooloption : v6eval tool option
+</PRE>
+
+<P>
+<HR>
+<H1><A NAME="INITIALIZATION">INITIALIZATION</A></H1>
+<P>
+<PRE>  1. Ping to Target (create Neighbor Cache Entries, if not exist)
+  2. Override Neighbor Cache Entries
+</PRE>
+<P>
+<HR>
+<H1><A NAME="TEST_PROCEDURE">TEST PROCEDURE</A></H1>
+<P>
+<PRE>  Tester                      Target
+    |                           |
+    |--------------------------&gt;|
+    |   Echo Request (1st)      |
+    |                           |
+    |                           |
+    |--------------------------&gt;|
+    |   Echo Request (2nd)      |
+    |                           |
+    |                           |
+    |&lt;--------------------------|
+    |   Echo Reply              |
+    |                           |
+    |                           |
+    v                           v
+</PRE>
+<P>
+<PRE>  1. Send Echo Request (1st fragment)
+  2. Send Echo Request (2nd fragment)
+  3. Receive Echo Reply
+</PRE>
+<P>
+<PRE>  Echo Request Data (original) is:
+</PRE>
+<P>
+<PRE>        IPv6 Header
+            Version            = 6
+            Traffic Class      = 0
+            FlowLabel          = 0
+            PayloadLength      = 1032
+            NextHeader         = 58 (ICMP)
+            SourceAddress      = Tester Link Local Address
+            DestinationAddress = Target Link Local Address
+</PRE>
+<P>
+<PRE>        ICMP Echo Request
+            Type           = 128 (Echo Request)
+            Code           = 0
+            Checksum       = (auto)
+            Identifier     = (auto)
+            SequenceNumber = 0
+            PayloadData    = data repeat{0x1, 512}
+                             data repeat{0x2, 512}
+</PRE>
+<P>
+<PRE>  Echo Request Data (1st fragment) is:
+</PRE>
+<P>
+<PRE>        IPv6 Header
+            Version            = 6
+            Traffic Class      = 0
+            FlowLabel          = 0
+            PayloadLength      = 528
+            NextHeader         = 44 (Fragment Header)
+            SourceAddress      = Tester Link Local Address
+            DestinationAddress = Target Link Local Address
+</PRE>
+<P>
+<PRE>        Fragment Header
+            NextHeader         = 58 (ICMP)
+            FragmentOffset     = 0
+            MFlag              = 1
+            Identification     = 32bit (Automatic generation)
+</PRE>
+<P>
+<PRE>        Payload
+            data               = 520 octets from the head of ICMP Echo request
+</PRE>
+<P>
+<PRE>  Echo Request Data (2nd fragment) is:
+</PRE>
+<P>
+<PRE>        IPv6 Header
+            Version            = 6
+            Traffic Class      = 0
+            FlowLabel          = 0
+            PayloadLength      = 520
+            NextHeader         = 44 (Fragment Header)
+            SourceAddress      = Tester Link Local Address
+            DestinationAddress = Target Link Local Address
+</PRE>
+<P>
+<PRE>        Fragment Header
+            NextHeader         = 58 (ICMP)
+            FragmentOffset     = 65
+            MFlag              = 0
+            Identification     = 32bit (Automatic generation)
+</PRE>
+<P>
+<PRE>        Payload
+            data               = 512 octets from the back of ICMP Echo request
+</PRE>
+<P>
+<HR>
+<H1><A NAME="JUDGMENT">JUDGMENT</A></H1>
+<P>
+<PRE>  PASS: Echo Reply Received
+</PRE>
+<P>
+<PRE>        IPv6 Header
+            Version             = 6
+            Traffic Class       = 0
+            FlowLabel           = 0
+            PayloadLength       = 1032
+            NextHeader          = 58 (ICMP)
+            SourceAddress       = Target Link Local Address
+            Destination Address = Tester Link Local Address
+</PRE>
+<P>
+<PRE>        ICMP Echo Reply
+            Type           = 129 (Echo Reply)
+            Code           = 0
+            Checksum       = (auto)
+            Identifier     = (same as Echo Request)
+            SequenceNumber = (same as Echo Request)
+            PayloadData    = (same as Echo Request)
+</PRE>
+<P>
+<HR>
+<H1><A NAME="REFERENCE">REFERENCE</A></H1>
+<P>
+RFC2460
+
+<P>
+4.5 Fragment Header
+
+<P>
+<PRE>   The Fragment header is used by an IPv6 source to send a packet larger
+   than would fit in the path MTU to its destination.  (Note: unlike
+   IPv4, fragmentation in IPv6 is performed only by source nodes, not by
+   routers along a packet's delivery path -- see section 5.)  The
+   Fragment header is identified by a Next Header value of 44 in the
+   immediately preceding header, and has the following format:
+</PRE>
+<P>
+<PRE>   +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+   |  Next Header  |   Reserved    |      Fragment Offset    |Res|M|
+   +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+   |                         Identification                        |
+   +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+</PRE>
+<P>
+<PRE>   Next Header          8-bit selector.  Identifies the initial header
+                        type of the Fragmentable Part of the original
+                        packet (defined below).  Uses the same values as
+                        the IPv4 Protocol field [RFC-1700 et seq.].
+</PRE>
+<P>
+<PRE>   Reserved             8-bit reserved field.  Initialized to zero for
+                        transmission; ignored on reception.
+</PRE>
+<P>
+<PRE>   Fragment Offset      13-bit unsigned integer.  The offset, in 8-octet
+                        units, of the data following this header,
+                        relative to the start of the Fragmentable Part
+                        of the original packet.
+</PRE>
+<P>
+<PRE>   Res                  2-bit reserved field.  Initialized to zero for
+                        transmission; ignored on reception.
+</PRE>
+<P>
+<PRE>   M flag               1 = more fragments; 0 = last fragment.
+</PRE>
+<P>
+<PRE>   Identification       32 bits.  See description below.
+</PRE>
+<P>
+<PRE>   In order to send a packet that is too large to fit in the MTU of the
+   path to its destination, a source node may divide the packet into
+   fragments and send each fragment as a separate packet, to be
+   reassembled at the receiver.
+</PRE>
+<P>
+<PRE>   For every packet that is to be fragmented, the source node generates
+   an Identification value. The Identification must be different than
+   that of any other fragmented packet sent recently* with the same
+   Source Address and Destination Address.  If a Routing header is
+   present, the Destination Address of concern is that of the final
+   destination.
+</PRE>
+<P>
+<PRE>      * &quot;recently&quot; means within the maximum likely lifetime of a packet,
+        including transit time from source to destination and time spent
+        awaiting reassembly with other fragments of the same packet.
+        However, it is not required that a source node know the maximum
+        packet lifetime.  Rather, it is assumed that the requirement can
+        be met by maintaining the Identification value as a simple, 32-
+        bit, &quot;wrap-around&quot; counter, incremented each time a packet must
+        be fragmented.  It is an implementation choice whether to
+        maintain a single counter for the node or multiple counters,
+        e.g., one for each of the node's possible source addresses, or
+        one for each active (source address, destination address)
+        combination.
+</PRE>
+<P>
+<PRE>   The initial, large, unfragmented packet is referred to as the
+   &quot;original packet&quot;, and it is considered to consist of two parts, as
+   illustrated:
+</PRE>
+<P>
+<PRE>   original packet:
+</PRE>
+<P>
+<PRE>   +------------------+----------------------//-----------------------+
+   |  Unfragmentable  |                 Fragmentable                  |
+   |       Part       |                     Part                      |
+   +------------------+----------------------//-----------------------+
+</PRE>
+<P>
+<PRE>      The Unfragmentable Part consists of the IPv6 header plus any
+      extension headers that must be processed by nodes en route to the
+      destination, that is, all headers up to and including the Routing
+      header if present, else the Hop-by-Hop Options header if present,
+      else no extension headers.
+</PRE>
+<P>
+<PRE>      The Fragmentable Part consists of the rest of the packet, that is,
+      any extension headers that need be processed only by the final
+      destination node(s), plus the upper-layer header and data.
+</PRE>
+<P>
+<PRE>   The Fragmentable Part of the original packet is divided into
+   fragments, each, except possibly the last (&quot;rightmost&quot;) one, being an
+   integer multiple of 8 octets long.  The fragments are transmitted in
+   separate &quot;fragment packets&quot; as illustrated:
+</PRE>
+<P>
+<PRE>   original packet:
+</PRE>
+<P>
+<PRE>   +------------------+--------------+--------------+--//--+----------+
+   |  Unfragmentable  |    first     |    second    |      |   last   |
+   |       Part       |   fragment   |   fragment   | .... | fragment |
+   +------------------+--------------+--------------+--//--+----------+
+   fragment packets:
+</PRE>
+<P>
+<PRE>   +------------------+--------+--------------+
+   |  Unfragmentable  |Fragment|    first     |
+   |       Part       | Header |   fragment   |
+   +------------------+--------+--------------+
+</PRE>
+<P>
+<PRE>   +------------------+--------+--------------+
+   |  Unfragmentable  |Fragment|    second    |
+   |       Part       | Header |   fragment   |
+   +------------------+--------+--------------+
+                         o
+                         o
+                         o
+   +------------------+--------+----------+
+   |  Unfragmentable  |Fragment|   last   |
+   |       Part       | Header | fragment |
+   +------------------+--------+----------+
+</PRE>
+<P>
+<PRE>   Each fragment packet is composed of:
+</PRE>
+<P>
+<PRE>      (1) The Unfragmentable Part of the original packet, with the
+          Payload Length of the original IPv6 header changed to contain
+          the length of this fragment packet only (excluding the length
+          of the IPv6 header itself), and the Next Header field of the
+          last header of the Unfragmentable Part changed to 44.
+</PRE>
+<P>
+<PRE>      (2) A Fragment header containing:
+</PRE>
+<P>
+<PRE>               The Next Header value that identifies the first header of
+               the Fragmentable Part of the original packet.
+</PRE>
+<P>
+<PRE>               A Fragment Offset containing the offset of the fragment,
+               in 8-octet units, relative to the start of the
+               Fragmentable Part of the original packet.  The Fragment
+               Offset of the first (&quot;leftmost&quot;) fragment is 0.
+</PRE>
+<P>
+<PRE>               An M flag value of 0 if the fragment is the last
+               (&quot;rightmost&quot;) one, else an M flag value of 1.
+</PRE>
+<P>
+<PRE>               The Identification value generated for the original
+               packet.
+</PRE>
+<P>
+<PRE>      (3) The fragment itself.
+</PRE>
+<P>
+<PRE>   The lengths of the fragments must be chosen such that the resulting
+   fragment packets fit within the MTU of the path to the packets'
+   destination(s).
+</PRE>
+<P>
+<PRE>   At the destination, fragment packets are reassembled into their
+   original, unfragmented form, as illustrated:
+</PRE>
+<P>
+<PRE>   reassembled original packet:
+</PRE>
+<P>
+<PRE>   +------------------+----------------------//------------------------+
+   |  Unfragmentable  |                 Fragmentable                   |
+   |       Part       |                     Part                       |
+   +------------------+----------------------//------------------------+
+</PRE>
+<P>
+<PRE>   The following rules govern reassembly:
+</PRE>
+<P>
+<PRE>      An original packet is reassembled only from fragment packets that
+      have the same Source Address, Destination Address, and Fragment
+      Identification.
+</PRE>
+<P>
+<PRE>      The Unfragmentable Part of the reassembled packet consists of all
+      headers up to, but not including, the Fragment header of the first
+      fragment packet (that is, the packet whose Fragment Offset is
+      zero), with the following two changes:
+</PRE>
+<P>
+<PRE>         The Next Header field of the last header of the Unfragmentable
+         Part is obtained from the Next Header field of the first
+         fragment's Fragment header.
+</PRE>
+<P>
+<PRE>         The Payload Length of the reassembled packet is computed from
+         the length of the Unfragmentable Part and the length and offset
+         of the last fragment.  For example, a formula for computing the
+         Payload Length of the reassembled original packet is:
+</PRE>
+<P>
+<PRE>           PL.orig = PL.first - FL.first - 8 + (8 * FO.last) + FL.last
+</PRE>
+<P>
+<PRE>           where
+           PL.orig  = Payload Length field of reassembled packet.
+           PL.first = Payload Length field of first fragment packet.
+           FL.first = length of fragment following Fragment header of
+                      first fragment packet.
+           FO.last  = Fragment Offset field of Fragment header of
+                      last fragment packet.
+           FL.last  = length of fragment following Fragment header of
+                      last fragment packet.
+</PRE>
+<P>
+<PRE>      The Fragmentable Part of the reassembled packet is constructed
+      from the fragments following the Fragment headers in each of the
+      fragment packets.  The length of each fragment is computed by
+      subtracting from the packet's Payload Length the length of the
+      headers between the IPv6 header and fragment itself; its relative
+      position in Fragmentable Part is computed from its Fragment Offset
+      value.
+</PRE>
+<P>
+<PRE>      The Fragment header is not present in the final, reassembled
+      packet.
+</PRE>
+<P>
+<PRE>   The following error conditions may arise when reassembling fragmented
+   packets:
+</PRE>
+<P>
+<PRE>      If insufficient fragments are received to complete reassembly of a
+      packet within 60 seconds of the reception of the first-arriving
+      fragment of that packet, reassembly of that packet must be
+      abandoned and all the fragments that have been received for that
+      packet must be discarded.  If the first fragment (i.e., the one
+      with a Fragment Offset of zero) has been received, an ICMP Time
+      Exceeded -- Fragment Reassembly Time Exceeded message should be
+      sent to the source of that fragment.
+</PRE>
+<P>
+<PRE>      If the length of a fragment, as derived from the fragment packet's
+      Payload Length field, is not a multiple of 8 octets and the M flag
+      of that fragment is 1, then that fragment must be discarded and an
+      ICMP Parameter Problem, Code 0, message should be sent to the
+      source of the fragment, pointing to the Payload Length field of
+      the fragment packet.
+</PRE>
+<P>
+<PRE>      If the length and offset of a fragment are such that the Payload
+      Length of the packet reassembled from that fragment would exceed
+      65,535 octets, then that fragment must be discarded and an ICMP
+      Parameter Problem, Code 0, message should be sent to the source of
+      the fragment, pointing to the Fragment Offset field of the
+      fragment packet.
+</PRE>
+<P>
+<PRE>   The following conditions are not expected to occur, but are not
+   considered errors if they do:
+</PRE>
+<P>
+<PRE>      The number and content of the headers preceding the Fragment
+      header of different fragments of the same original packet may
+      differ.  Whatever headers are present, preceding the Fragment
+      header in each fragment packet, are processed when the packets
+      arrive, prior to queueing the fragments for reassembly.  Only
+      those headers in the Offset zero fragment packet are retained in
+      the reassembled packet.
+</PRE>
+<P>
+<PRE>      The Next Header values in the Fragment headers of different
+      fragments of the same original packet may differ.  Only the value
+      from the Offset zero fragment packet is used for reassembly.
+</PRE>
+<P>
+<HR>
+<H1><A NAME="SEE_ALSO">SEE ALSO</A></H1>
+<P>
+<PRE>  perldoc V6evalTool
+</PRE>
+</BODY>
+
+</HTML>

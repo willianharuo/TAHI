@@ -1,0 +1,211 @@
+<HTML>
+<HEAD>
+<TITLE>SendingDHAADandRegist - MN sends home registration Binding Update</TITLE>
+<LINK REV="made" HREF="mailto:hackers@FreeBSD.org">
+</HEAD>
+
+<BODY>
+
+<!-- INDEX BEGIN -->
+<!--
+
+<UL>
+
+	<LI><A HREF="#NAME">NAME</A>
+	<LI><A HREF="#TARGET">TARGET</A>
+	<LI><A HREF="#SYNOPSIS">SYNOPSIS</A>
+	<LI><A HREF="#TOPOLOGY">TOPOLOGY</A>
+	<LI><A HREF="#TEST_PROCEDURE">TEST PROCEDURE</A>
+	<LI><A HREF="#JUDGEMENT">JUDGEMENT</A>
+	<LI><A HREF="#REFERENCE">REFERENCE</A>
+</UL>
+-->
+<!-- INDEX END -->
+
+<P>
+<H1><A NAME="NAME">NAME</A></H1>
+<P>
+SendingDHAADandRegist - MN sends home registration Binding Update
+
+<P>
+<HR>
+<H1><A NAME="TARGET">TARGET</A></H1>
+<PRE>
+Host
+</PRE>
+
+<P>
+<HR>
+<H1><A NAME="SYNOPSIS">SYNOPSIS</A></H1>
+<PRE>
+<A HREF="./SendingDHAADandRegist.seq">SendingDHAADandRegist.seq</A> [-tooloption ...] -pkt <A HREF="./MN_Common.def">MN_Common.def</A>
+</PRE>
+<BLOCKQUOTE>
+<PRE>
+-tooloption: v6eval tool option
+</PRE>
+</BLOCKQUOTE>
+
+<P>
+<HR>
+<H1><A NAME="TOPOLOGY">TOPOLOGY</A></H1>
+<PRE>
+                                      |
+                                      R       TN
+                                      |       |
+                              --------+-------+--------------- LinkZ
+</PRE>
+<BR><BR><BR>
+<PRE>
+                                      |
+                                      R2             NUT2
+                                      |               |
+                              --------+---------------+------- LinkY
+</PRE>
+<BR><BR><BR>
+<PRE>
+                                      |       |
+                                      HA2     R1     NUT1
+                                      |       |       |
+                              --------+-------+-------+------- LinkX
+</PRE>
+<BR><BR><BR>
+<PRE>
+                          |           |
+             NUT0        HA1          HA0
+              |           |           |
+Link0 --------+-----------+-----------+-----------------------
+</PRE>
+<BLOCKQUOTE>
+<TABLE BORDER>
+<TR>
+<TD><TT>Link0</TT></TD>
+<TD><TT>3ffe:501:ffff:100::/64</TT></TD>
+<TD><TT>home link</TT></TD>
+</TR>
+<TR>
+<TD><TT>LinkX</TT></TD>
+<TD><TT>3ffe:501:ffff:102::/64</TT></TD>
+<TD><TT>&nbsp;</TT></TD>
+</TR>
+<TR>
+<TD><TT>LinkY</TT></TD>
+<TD><TT>3ffe:501:ffff:103::/64</TT></TD>
+<TD><TT>&nbsp;</TT></TD>
+</TR>
+<TR>
+<TD><TT>LinkZ</TT></TD>
+<TD><TT>3ffe:501:ffff:104::/64</TT></TD>
+<TD><TT>&nbsp;</TT></TD>
+</TR>
+<TR>
+<TD><TT>HA0(Link0)</TT></TD>
+<TD><TT>3ffe:501:ffff:100:200:ff:fe00:a1a1/64</TT></TD>
+<TD><TT>&nbsp;</TT></TD>
+</TR>
+<TR>
+<TD><TT>HA1(Link0)</TT></TD>
+<TD><TT>3ffe:501:ffff:100:200:ff:fe00:a2a2/64</TT></TD>
+<TD><TT>&nbsp;</TT></TD>
+</TR>
+<TR>
+<TD><TT>HA2(LinkX)</TT></TD>
+<TD><TT>3ffe:501:ffff:102:200:ff:fe00:a3a3</TT></TD>
+<TD><TT>&nbsp;</TT></TD>
+</TR>
+<TR>
+<TD><TT>R1(LinkX)</TT></TD>
+<TD><TT>3ffe:501:ffff:102:200:ff:fe00:a4a4</TT></TD>
+<TD><TT>&nbsp;</TT></TD>
+</TR>
+<TR>
+<TD><TT>R2(LinkY)</TT></TD>
+<TD><TT>3ffe:501:ffff:103:200:ff:fe00:a5a5</TT></TD>
+<TD><TT>&nbsp;</TT></TD>
+</TR>
+<TR>
+<TD><TT>TN(LinkZ)</TT></TD>
+<TD><TT>3ffe:501:ffff:104:200:ff:fe00:a6a6</TT></TD>
+<TD><TT>&nbsp;</TT></TD>
+</TR>
+</TABLE>
+</BLOCKQUOTE>
+
+<P>
+<HR>
+<H1><A NAME="TEST_PROCEDURE">TEST PROCEDURE</A></H1>
+<P>
+<PRE>
+<B>MN sends home registration Binding Update</B>
+</PRE>
+<P>
+<PRE>
+       NUT0     R1      HA0
+        |       |       |
+        | <---- |       | RA
+        |       |       |
+        | ------------> | Home Agent Address Discovery Request (*1)
+        | <------------ | Home Agent Address Discovery Reply
+        |       |       |
+        | ------------> | Binding Update (w/ home registration) (*2)
+        | <------------ | Binding Acknowledgement
+        |       |       |
+</PRE>
+<P>
+
+<P>
+<HR>
+<H1><A NAME="JUDGEMENT">JUDGEMENT</A></H1>
+<PRE>
+(*1) PASS: TN receives HAAD Request
+</PRE>
+<PRE>
+(*2) PASS: TN receives Binding Update
+</PRE>
+
+<P>
+<HR>
+<H1><A NAME="REFERENCE">REFERENCE</A></H1>
+<PRE>
+<A HREF="./draft-ietf-mobileip-ipv6-20.txt">draft-ietf-mobileip-ipv6-20.txt</A>
+</PRE>
+<PRE>
+   Sometimes, when the mobile node needs to send a Binding Update to its
+   home agent to register its new primary care-of address, as described
+   in Section 11.7.1, the mobile node may not know the address of any
+   router on its home link that can serve as a home agent for it.  For
+   example, some nodes on its home link may have been reconfigured while
+   the mobile node has been away from home, such that the router that
+   was operating as the mobile node's home agent has been replaced by a
+   different router serving this role.
+</PRE>
+<PRE>
+   In this case, the mobile node MAY attempt to discover the address of
+   a suitable home agent on its home link.  To do so, the mobile node
+   sends an ICMP Home Agent Address Discovery Request message to the
+   Mobile IPv6 Home-Agents anycast address [16] for its home subnet
+   prefix.  As described in Section 10.5, the home agent on its home
+   link that receives this Request message will return an ICMP Home
+   Agent Address Discovery Reply message, giving the global unicast IP
+   addresses for the home agents operating on the home link
+</PRE>
+<PRE>
+   The mobile node, upon receiving this Home Agent Address Discovery
+   Reply message, MAY then send its home registration Binding Update to
+   any of the unicast IP addresses listed in the Home Agent Addresses
+   field in the Reply.  For example, the mobile node MAY attempt its
+   home registration to each of these addresses, in turn, until its
+   registration is accepted.  The mobile node sends a Binding Update to
+   an address and waits for the matching Binding Acknowledgement, moving
+   on to the next address if there is no response.  The mobile node
+   MUST, however, wait at least InitialBindackTimeoutFirstReg seconds
+   (see Section 13) before sending a Binding Update to the next home
+   agent.  In trying each of the returned home agent addresses, the
+   mobile node SHOULD try each in the order listed in the Home Agent
+   Addresses field in the received Home Agent Address Discovery Reply
+   message.
+</PRE>
+
+</BODY>
+
+</HTML>

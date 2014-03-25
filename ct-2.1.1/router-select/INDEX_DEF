@@ -1,0 +1,135 @@
+#
+# $Name: REL_2_1_1 $
+#
+# Copyright (C) 2003 Yokogawa Electric Corporation, 
+# INTAP(Interoperability Technology Association
+# for Information Processing, Japan).  All rights reserved.
+# 
+# Redistribution and use of this software in source and binary forms, with 
+# or without modification, are permitted provided that the following 
+# conditions and disclaimer are agreed and accepted by the user:
+# 
+# 1. Redistributions of source code must retain the above copyright 
+# notice, this list of conditions and the following disclaimer.
+# 
+# 2. Redistributions in binary form must reproduce the above copyright 
+# notice, this list of conditions and the following disclaimer in the 
+# documentation and/or other materials provided with the distribution.
+# 
+# 3. Neither the names of the copyrighters, the name of the project which 
+# is related to this software (hereinafter referred to as "project") nor 
+# the names of the contributors may be used to endorse or promote products 
+# derived from this software without specific prior written permission.
+# 
+# 4. No merchantable use may be permitted without prior written 
+# notification to the copyrighters. However, using this software for the 
+# purpose of testing or evaluating any products including merchantable 
+# products may be permitted without any notification to the copyrighters.
+# 
+# 
+# 
+# THIS SOFTWARE IS PROVIDED BY THE COPYRIGHTERS, THE PROJECT AND 
+# CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING 
+# BUT NOT LIMITED THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS 
+# FOR A PARTICULAR PURPOSE, ARE DISCLAIMED.  IN NO EVENT SHALL THE 
+# COPYRIGHTERS, THE PROJECT OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, 
+# INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES 
+# (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR 
+# SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) 
+# HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN 
+# CONTRACT,STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) 
+# ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF 
+# THE POSSIBILITY OF SUCH DAMAGE.
+#
+# $TAHI: ct/router-select/INDEX_DEF,v 1.5 2003/04/22 04:21:22 akisada Exp $
+# $TINY: INDEX_RA,v 1.9 2002/03/05 03:04:55 masaxmasa Exp $
+#
+# INDEX_hostrouter
+#   autorun INDEX for stateless-addrconf test (Test for a Host and Router)
+#
+
+#####################################################################
+&print: Test for Default route preference 
+#####################################################################
+#############################################
+#############################################
+## Default Router Preference
+###################################
+
+&print: <B>NUT with One Router</B>
+#
+./DR_1RT.seq	:ROUTE.def	:addrconf=reboot::NUT receives multiple RAs with Different Preference value from a router
+
+#
+#
+################################ done #######################
+&print: <B>Different Preference for Default Router</B>
+./Def_HIGH_MED.seq	:ROUTE.def	:::Default Router HIGH vs. MED
+./Def_HIGH_LOW.seq	:ROUTE.def	:::Default Router HIGH vs. LOW
+./Def_HIGH_UNSPEC.seq	:ROUTE.def	:::Default Router HIGH vs. UNSPEC
+./Def_MED_LOW.seq	:ROUTE.def	:::Default Router MED  vs. LOW
+./Def_MED_UNSPEC.seq	:ROUTE.def	:::Default Router MED  vs. UNSPEC
+./Def_LOW_UNSPEC.seq	:ROUTE.def	:::Default Router LOW  vs. UNSPEC
+./Def_LOW_HIGHwRTRLIFE0.seq:ROUTE.def	:::Default Router LOW  vs. HIGH with ROUTER_LIFETIME=0
+./Def_LOW_HIGH_RTRLIFE_EXPIRE.seq:ROUTE.def	:::Default Router LOW  vs. HIGH with Shorter ROUTER_LIFETIME
+#
+#
+&print: <B>Same Preference for Default Router</B>
+./Def_MED_MED.seq	:ROUTE.def	:addrconf=reboot::NUT receives RAs from 2 routers with Same Preference value
+&print: <B>Higher Preference Default Router gets unreachable</B>
+Def_HIGH_LOW_UNREACH.seq:ROUTE.def:::Default Router gets unreachable
+
+&print: <B>Specific Route A vs. Specific Route B
+&#./DiffPX_HIGH.seq:RTINFO.def:::Route Info for Net-A(HIGH) and Route Info for Net-B(HIGH)
+&#./DiffPX_MED.seq	:RTINFO.def:::Route Info for Net-A(MED) and Route Info for Net-B(MED)
+&#./DiffPX_LOW.seq:RTINFO.def:::Route Info for Net-A(LOW) and Route Info for Net-B(LOW)
+#############################################################################
+########### It seems not to be required #####################################
+## &#./DiffPX_UNSPEC.seq:RTINFO.def:::Route Info for Net-A(UNSPEC) and Route Info for Net-B(UNSPEC)
+#############################################################################
+
+&print: <B>Specific Route A vs. Specific Route A</B>
+&#./SamePX_HIGH_LOW.seq:RTINFO.def:::Route Info HIGH vs. Route Info LOW
+&#./SamePX_HIGH_MED.seq:RTINFO.def:::Route Info HIGH vs. Route Info MED
+&#./SamePX_MED_LOW.seq:RTINFO.def:::Route Info MED vs. Route Info LOW
+&#./SamePX_UNSPEC_HIGH.seq:RTINFO.def:::Route Info UNSPEC vs. Route Info HIGH
+&#./SamePX_UNSPEC_MED.seq:RTINFO.def:::Route Info UNSPEC vs. Route Info MED
+&#./SamePX_UNSPEC_LOW.seq:RTINFO.def:::Route Info UNSPEC vs. Route Info LOW
+
+&print: <B>Default Router vs. Specific Route </B>
+&#./raHIGH_rtinfoHIGH.seq:RTINFO.def:::Defalut Router HIGH vs. Route Info HIGH
+&#./raHIGH_rtinfoMED.seq:RTINFO.def:::Defalut Router HIGH vs. Route Info MED
+&#./raHIGH_rtinfoLOW.seq:RTINFO.def:::Defalut Router HIGH vs. Route Info LOW
+&#./raLOW_rtinfoUNSPEC.seq:RTINFO.def:::Defalut Router LOW vs. Route Info UNSPEC
+&#./raLOW_rtinfoLIFE0.seq:RTINFO.def:::Defalut Router LOW vs. Route Info HIGH(Lifetime=0)
+#
+&print: <B>Default Router vs. Specific(&#58;&#58;/0) Route</B>
+&#./raHIGH_rtinfoHIGH_DEFAULT.seq:RTINFO.def:::Defalut Router HIGH vs. Route Info (&#58;&#58;/0) HIGH
+&#./raHIGH_rtinfoMED_DEFAULT.seq:RTINFO.def:::Defalut Router HIGH vs. Route Info (&#58;&#58;/0) MED
+&#./raHIGH_rtinfoLOW_DEFAULT.seq:RTINFO.def:::Defalut Router HIGH vs. Route Info (&#58;&#58;/0) LOW
+&#./raLOW_rtinfoUNSPEC_DEFAULT.seq:RTINFO.def:::Defalut Router LOW vs. Route Info (&#58;&#58;/0) UNSPEC
+&#./raLOW_rtinfoLIFE0_DEFAULT.seq:RTINFO.def:::Defalut Router LOW vs. Route Info (&#58;&#58;/0) HIGH(Lifetime=0)
+
+&print: <B>Prefix Length @ Route Info</B>
+&#./rtinfo_64_48.seq:RTINFO.def:::Route Info (PrefixLen=64) vs. Route Info (PrefixLen=48)
+&#./rtinfo_64_96.seq:RTINFO.def:::Route Info (PrefixLen=64) vs. Route Info (PrefixLen=96)
+
+&print: <B>Multiple Route Info Options in a RA</B>
+&#./rtinfo_2.seq:RTINFO.def:::2 Route Info Options in a RA
+&#./rtinfo_16.seq:RTINFO.def:::16 Route Info Options in a RA
+##############################################
+######## at this point it can't work #########
+##############################################
+##&print: <B>Invalid Length field @ Route Info</B>
+##./rtinfo_PXLEN48_Len1.seq:RTINFO.def:::PrefixLen=48 Length=1
+##./rtinfo_PXLEN96_Len2.seq:RTINFO.def:::PrefixLen=96 Length=2
+##&print: <B>Route Lifetime=0 from Different Router</B>
+##############################################
+##############################################
+&print: <B>Route Info Lifetime override Default router Lifetime</B>
+&#./rtinfo_RTRLIFE_gt_RTLIFE.seq:RTINFO.def:::Router Lifetime > Route Info Lifetime
+&#./rtinfo_RTRLIFE_lt_RTLIFE.seq:RTINFO.def:::Router Lifetime < Route Info Lifetime
+&print: <B>Expire Lifetime</B>
+&#./rtinfo_LOW_HIGH_RTLIFE_EXPIRE.seq:RTINFO.def:::Specific Route LOW  vs. HIGH with Shorter ROUTER_LIFETIME
+&print: <B>Router gets Unreachable</B>
+&#./rtinfo_LOW_HIGH_UNREACH.seq:RTINFO.def:::Specific Route LOW  vs. HIGH , HIGHer ROUTER gets UNREACHABLE

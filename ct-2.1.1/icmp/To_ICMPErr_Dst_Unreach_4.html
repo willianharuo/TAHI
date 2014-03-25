@@ -1,0 +1,131 @@
+<HTML>
+<HEAD>
+<TITLE>To_ICMPErr_Dst_Unreach_4.seq - check Message Processing Rules (ICMPv6
+	Destination Unreachable)</TITLE>
+<LINK REV="made" HREF="mailto:hackers@FreeBSD.org">
+</HEAD>
+
+<BODY>
+
+<!-- INDEX BEGIN -->
+<!--
+
+<UL>
+
+	<LI><A HREF="#NAME">NAME</A>
+	<LI><A HREF="#TARGET">TARGET</A>
+	<LI><A HREF="#SYNOPSIS">SYNOPSIS</A>
+	<LI><A HREF="#NETWORK_CONFIGURATION">NETWORK CONFIGURATION</A>
+	<LI><A HREF="#INITIALIZATION">INITIALIZATION</A>
+	<LI><A HREF="#TEST_PROCEDURE">TEST PROCEDURE</A>
+	<LI><A HREF="#JUDGMENT">JUDGMENT</A>
+	<LI><A HREF="#SEE_ALSO">SEE ALSO</A>
+</UL>
+-->
+<!-- INDEX END -->
+
+<P>
+<H1><A NAME="NAME">NAME</A></H1>
+<P>
+<PRE>        To_ICMPErr_Dst_Unreach_4.seq - check Message Processing Rules (ICMPv6
+        Destination Unreachable)
+</PRE>
+<P>
+<HR>
+<H1><A NAME="TARGET">TARGET</A></H1>
+<P>
+<PRE>        Router
+</PRE>
+<P>
+<HR>
+<H1><A NAME="SYNOPSIS">SYNOPSIS</A></H1>
+<P>
+<PRE>        To_ICMPErr_Dst_Unreach_4.seq [-tooloption ...] -p To_ICMPErr_Dst_Unreach_4.def
+</PRE>
+<P>
+<HR>
+<H1><A NAME="NETWORK_CONFIGURATION">NETWORK CONFIGURATION</A></H1>
+<P>
+<PRE>        This test is OFF-LINK Network Configuration test.
+        
+        Physical Network configuration
+        
+        ---------------------------------------
+                |               |
+                NUT             TN
+</PRE>
+<P>
+<PRE>        Logical Network Configuration
+</PRE>
+<P>
+<PRE>                                TN
+                                |
+        ----------------------------------
+                        |
+                        NUT
+                        |
+        ----------------------------------
+                | 
+                OFFLINKA Host
+</PRE>
+<P>
+<HR>
+<H1><A NAME="INITIALIZATION">INITIALIZATION</A></H1>
+<P>
+<PRE>        Make a Neighbor Cache Entry for TN's in NUT.
+</PRE>
+<P>
+<HR>
+<H1><A NAME="TEST_PROCEDURE">TEST PROCEDURE</A></H1>
+<P>
+<PRE>        This test verifies that the message processing rule ,
+        
+        (e) An ICMPv6 error message MUST NOT be sent as a result of
+        receiving:
+</PRE>
+<P>
+<PRE>         (e.1) an ICMPv6 error message, or
+</PRE>
+<P>
+<PRE>        TN                      NUT
+</PRE>
+<P>
+<PRE>        ---------------------------
+</PRE>
+<P>
+<PRE>        1.
+         === ICMPv6 Destination Unreachable  ===&gt;
+                src address : TN global address
+                dst address : OFFLINK address
+                code        : port unreachable
+        2.
+                NUT can't deliver to destination address.
+                (NUT have not route for the dst address.)
+        3.
+        &lt;&lt; JUDGMENT &gt;&gt;
+        
+         &lt;=== No packets ===
+                        or      
+         &lt;=== ICMPv6 Destination Unreachable ===
+             Code is 4
+</PRE>
+<P>
+<HR>
+<H1><A NAME="JUDGMENT">JUDGMENT</A></H1>
+<P>
+<PRE>        &lt;&lt; PASS &gt;&gt;
+                NUT do not send ICMPv6 Destination Unreachable.
+</PRE>
+<P>
+<PRE>        &lt;&lt; FAIL &gt;&gt;      
+                NUT send ICMPv6 Destination Unreachable.
+</PRE>
+<P>
+<HR>
+<H1><A NAME="SEE_ALSO">SEE ALSO</A></H1>
+<P>
+<PRE>          perldoc V6evalTool
+</PRE>
+</BODY>
+
+</HTML>

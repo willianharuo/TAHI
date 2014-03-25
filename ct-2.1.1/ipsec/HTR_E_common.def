@@ -1,0 +1,250 @@
+//
+// Copyright (C) 1999, 2000, 2001, 2002, 2003 Yokogawa Electric Corporation,
+// IPA (Information-technology Promotion Agency, Japan).
+// All rights reserved.
+// 
+// Redistribution and use of this software in source and binary forms, with 
+// or without modification, are permitted provided that the following 
+// conditions and disclaimer are agreed and accepted by the user:
+// 
+// 1. Redistributions of source code must retain the above copyright 
+// notice, this list of conditions and the following disclaimer.
+// 
+// 2. Redistributions in binary form must reproduce the above copyright 
+// notice, this list of conditions and the following disclaimer in the 
+// documentation and/or other materials provided with the distribution.
+// 
+// 3. Neither the names of the copyrighters, the name of the project which 
+// is related to this software (hereinafter referred to as "project") nor 
+// the names of the contributors may be used to endorse or promote products 
+// derived from this software without specific prior written permission.
+// 
+// 4. No merchantable use may be permitted without prior written 
+// notification to the copyrighters. However, using this software for the 
+// purpose of testing or evaluating any products including merchantable 
+// products may be permitted without any notification to the copyrighters.
+// 
+// 
+// 
+// THIS SOFTWARE IS PROVIDED BY THE COPYRIGHTERS, THE PROJECT AND 
+// CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING 
+// BUT NOT LIMITED THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS 
+// FOR A PARTICULAR PURPOSE, ARE DISCLAIMED.  IN NO EVENT SHALL THE 
+// COPYRIGHTERS, THE PROJECT OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, 
+// INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES 
+// (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR 
+// SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) 
+// HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN 
+// CONTRACT,STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) 
+// ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF 
+// THE POSSIBILITY OF SUCH DAMAGE.
+//
+// $Name: REL_2_1_1 $
+//
+// $TAHI: ct/ipsec/HTR_E_common.def,v 1.17 2003/05/05 12:29:15 ozoe Exp $
+//
+
+#ifndef IPSEC_ECHO_DATA
+#define IPSEC_ECHO_DATA echo_data
+#endif
+
+#include "./HTR_common.def"
+
+//======================================================================
+
+Payload echo_data {
+	data = {
+		0x50, 0x61, 0x64, 0x4c, 0x65, 0x6e, 0x20, 0x69,
+		0x73, 0x20, 0x5a, 0x65, 0x72, 0x6f
+	};
+}
+
+Payload echo_data_odd {
+	data = { 0x4f, 0x64, 0x64, 0x44, 0x61, 0x74, 0x61};
+}
+
+//======================================================================
+//
+// Algorithm predefinition
+//
+
+ESPAlgorithm ealgo_descbc_012 {
+	crypt = descbc("TAHITEST");
+}
+
+ESPAlgorithm ealgo_descbc_foo {
+	crypt = descbc("foo0foo1");
+}
+
+ESPAlgorithm ealgo_3descbc_foo {
+	crypt = des3cbc("foo0foo1foo2foo3foo4foo5");
+}
+
+ESPAlgorithm ealgo_rijndael128cbc_foo {
+	crypt = rijndael_128("foo0foo1foo2foo3");
+}
+
+ESPAlgorithm ealgo_descbc_012_hmacmd5_012 {
+	crypt = descbc("TAHITEST");
+	auth = hmacmd5("TAHITEST89ABCDEF");
+}
+
+ESPAlgorithm ealgo_descbc_012_hmacmd5_foo {
+	crypt = descbc("TAHITEST");
+	auth = hmacmd5("foo0foo1foo2foo3");
+}
+
+ESPAlgorithm ealgo_descbc_012_hmacsha1_012 {
+	crypt = descbc("TAHITEST");
+	auth = hmacsha1("TAHITEST89ABCDEF0123");
+}
+
+ESPAlgorithm ealgo_descbc_012_hmacsha1_foo {
+	crypt = descbc("TAHITEST");
+	auth = hmacsha1("foo0foo1foo2foo3foo4");
+}
+
+ESPAlgorithm ealgo_descbc_012_hmacsha2_256_012 {
+	crypt = descbc("TAHITEST");
+	auth = hmacsha2_256("TAHITEST89ABCDEFTAHITEST89ABCDEF");
+}
+
+ESPAlgorithm ealgo_descbc_012_hmacsha2_256_foo {
+	crypt = descbc("TAHITEST");
+	auth = hmacsha2_256("foo0foo1foo2foo3foo4foo5foo6foo7");
+}
+
+ESPAlgorithm ealgo_null {
+	crypt = null_crypt(4);
+}
+
+ESPAlgorithm ealgo_null_hmacmd5_012 {
+	crypt = null_crypt(4);
+	auth = hmacmd5("TAHITEST89ABCDEF");
+}
+
+ESPAlgorithm ealgo_null_hmacsha1_012 {
+	crypt = null_crypt(4);
+	auth = hmacsha1("TAHITEST89ABCDEF0123");
+}
+
+ESPAlgorithm ealgo_null_hmacsha2_256_012 {
+	crypt = null_crypt(4);
+	auth = hmacsha2_256("TAHITEST89ABCDEFTAHITEST89ABCDEF");
+}
+
+ESPAlgorithm ealgo_3descbc_012 {
+	crypt = des3cbc("TAHITEST89ABCDEFGHIJKLMN");
+}
+
+ESPAlgorithm ealgo_3descbc_012_hmacmd5_012 {
+	crypt = des3cbc("TAHITEST89ABCDEFGHIJKLMN");
+	auth = hmacmd5("TAHITEST89ABCDEF");
+}
+
+ESPAlgorithm ealgo_3descbc_012_hmacsha1_012 {
+	crypt = des3cbc("TAHITEST89ABCDEFGHIJKLMN");
+	auth = hmacsha1("TAHITEST89ABCDEF0123");
+}
+
+ESPAlgorithm ealgo_3descbc_012_hmacsha2_256_012 {
+	crypt = des3cbc("TAHITEST89ABCDEFGHIJKLMN");
+	auth = hmacsha2_256("TAHITEST89ABCDEFTAHITEST89ABCDEF");
+}
+
+ESPAlgorithm ealgo_rijndael128cbc_012 {
+	crypt = rijndael_128("TAHITEST89ABCDEF");
+}
+
+ESPAlgorithm ealgo_rijndael128cbc_012_hmacmd5_012 {
+	crypt = rijndael_128("TAHITEST89ABCDEF");
+	auth = hmacmd5("TAHITEST89ABCDEF");
+}
+
+ESPAlgorithm ealgo_rijndael128cbc_012_hmacsha1_012 {
+	crypt = rijndael_128("TAHITEST89ABCDEF");
+	auth = hmacsha1("TAHITEST89ABCDEF0123");
+}
+
+ESPAlgorithm ealgo_rijndael128cbc_012_hmacsha2_256_012 {
+	crypt = rijndael_128("TAHITEST89ABCDEF");
+	auth = hmacsha2_256("TAHITEST89ABCDEFTAHITEST89ABCDEF");
+}
+
+//======================================================================
+//
+// ESP definition (default use)
+//
+
+#ifndef EALGO_FROM_HOST1
+#define EALGO_FROM_HOST1 ealgo_descbc_012
+#endif
+
+Hdr_ESP esp_from_host {
+	SPI = 0x1000;
+	SequenceNumber = 1;
+	algorithm = EALGO_FROM_HOST1;
+}
+
+#ifndef EALGO_TO_HOST1
+#define EALGO_TO_HOST1 ealgo_descbc_012
+#endif
+
+Hdr_ESP esp_to_host {
+	SPI = 0x1000;
+	SequenceNumber = any;	// 1;
+	algorithm = EALGO_TO_HOST1;
+}
+
+//======================================================================
+//
+// Echo Request from Host1 IPsec ESP
+//
+
+#ifndef ESP_FROM_HOST1
+#define ESP_FROM_HOST1 esp_from_host
+#endif
+
+FEM_icmpX_echo_request_exth(
+	echo_request_from_host1_esp,
+	hether_router2nut,
+	{
+		_SRC(vX(IPSEC_HOST1_NET5_ADDR));
+		_DST(vX(IPSEC_NUT_NET3_ADDR));
+	},
+	{
+		header = _HDR_IPVX_NAME(echo_request_from_host1_esp);
+		exthdr = ESP_FROM_HOST1;
+		upper = _ICMPVX_NAME(echo_request_from_host1_esp);
+	},
+	{
+		payload = IPSEC_ECHO_DATA;
+	}
+)
+
+//======================================================================
+//
+// Echo Reply to Host1 IPsec ESP
+//
+
+#ifndef ESP_TO_HOST1
+#define ESP_TO_HOST1 esp_to_host
+#endif
+
+FEM_icmpX_echo_reply_exth(
+	echo_reply_to_host1_esp,
+	hether_nut2router,
+	{
+		_SRC(vX(IPSEC_NUT_NET3_ADDR));
+		_DST(vX(IPSEC_HOST1_NET5_ADDR));
+	},
+	{
+		header = _HDR_IPVX_NAME(echo_reply_to_host1_esp);
+		exthdr = ESP_TO_HOST1;
+		upper = _ICMPVX_NAME(echo_reply_to_host1_esp);
+	},
+	{
+		payload = IPSEC_ECHO_DATA;
+	}
+)
+

@@ -1,0 +1,57 @@
+#!/usr/bin/perl
+#
+# $Copyrigh$
+#
+# $TAHI: ct/icmp/FH_Pre.seq,v 1.1 2003/03/26 07:47:30 masaxmasa Exp $
+# import from ct/spec/FH_Pre.seq
+#----------------------------------------------------------------------
+
+BEGIN {
+    $V6evalTool::TestVersion = '$Name: REL_2_1_1 $';
+}
+
+use V6evalTool;
+use icmp;
+
+if (createIdDef()) {
+    vLogHTML('<FONT COLOR="#FF0000">NG</FONT>');
+    exit($V6evalTool::exitFatal);
+}
+vLogHTML('OK');
+exit($V6evalTool::exitPass);
+
+#----------------------------------------------------------------------
+
+__END__
+
+=head1 NAME
+
+FH_Pre.seq - Fragment Test Preparation
+
+=head1 TARGET
+
+NONE
+
+=head1 SYNOPSIS
+
+FH_Pre.seq [-tooloption ...] -pkt /dev/null
+
+  -tooloption : v6eval tool option
+
+=head1 INITIALIZATION
+
+NONE
+
+=head1 TEST PROCEDURE
+
+NONE
+
+=head1 JUDGMENT
+
+NONE
+
+=head1 SEE ALSO
+
+  perldoc V6evalTool
+
+=cut

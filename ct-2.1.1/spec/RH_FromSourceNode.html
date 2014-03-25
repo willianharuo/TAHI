@@ -1,0 +1,425 @@
+<HTML>
+<HEAD>
+<TITLE>RH_FromSourceNode - check Routing Header Processing</TITLE>
+<LINK REV="made" HREF="mailto:hackers@FreeBSD.org">
+</HEAD>
+
+<BODY>
+
+<!-- INDEX BEGIN -->
+<!--
+
+<UL>
+
+	<LI><A HREF="#NAME">NAME</A>
+	<LI><A HREF="#TARGET">TARGET</A>
+	<LI><A HREF="#SYNOPSIS">SYNOPSIS</A>
+	<LI><A HREF="#INITIALIZATION">INITIALIZATION</A>
+	<LI><A HREF="#TEST_PROCEDURE">TEST PROCEDURE</A>
+	<LI><A HREF="#JUDGMENT">JUDGMENT</A>
+	<LI><A HREF="#REFERENCE">REFERENCE</A>
+	<LI><A HREF="#SEE_ALSO">SEE ALSO</A>
+</UL>
+-->
+<!-- INDEX END -->
+
+<P>
+<H1><A NAME="NAME">NAME</A></H1>
+<P>
+<PRE>  RH_FromSourceNode - check Routing Header Processing (from Source Node)
+</PRE>
+<P>
+<HR>
+<H1><A NAME="TARGET">TARGET</A></H1>
+<P>
+<PRE>  Router
+</PRE>
+<P>
+<HR>
+<H1><A NAME="SYNOPSIS">SYNOPSIS</A></H1>
+<PRE>
+  <A HREF="./RH_FromSourceNode.seq">RH_FromSourceNode.seq</A> [-tooloption ...] -pkt <A HREF="./RH_FromSourceNode.def">RH_FromSourceNode.def</A>
+    -tooloption : v6eval tool option
+  See also <A HREF="./RH.def">RH.def</A>
+</PRE>
+
+<P>
+<HR>
+<H1><A NAME="INITIALIZATION">INITIALIZATION</A></H1>
+<P>
+<PRE>  None
+</PRE>
+<P>
+<HR>
+<H1><A NAME="TEST_PROCEDURE">TEST PROCEDURE</A></H1>
+<P>
+<PRE>  Tester                      Target                      Tester
+              (Link0)                     (Link1)
+    |                           |                           |
+    |--------------------------&gt;|                           |
+    |   Packet to Link0         |                           |
+    |                           |                           |
+    |                           |--------------------------&gt;|
+    |                           |   Neighbor Solicitation   |
+    |                           |                           |
+    |                           |&lt;--------------------------|
+    |                           |   Neighbor Advertisement  |
+    |                           |                           |
+    |                           |--------------------------&gt;|
+    |                           |   Packet from Link1       |
+    |                           |                           |
+    |                           |                           |
+    |                           |&lt;--------------------------|
+    |                           |   Packet to Link1         |
+    |                           |                           |
+    |&lt;--------------------------|                           |
+    |   Neighbor Solicitation   |                           |
+    |                           |                           |
+    |--------------------------&gt;|                           |
+    |   Neighbor Advertisement  |                           |
+    |                           |                           |
+    |&lt;--------------------------|                           |
+    |   Packet from Link0       |                           |
+    |                           |                           |
+    v                           v                           v
+</PRE>
+<P>
+<PRE>  1. Send Packet to Link0
+  2. Wait Packet from Link1 or NS from Link1
+  3. If NS received then send NA to Link1, and wait Packet form Link1 again
+  4. Receive Packet from Link1
+  5. Send Packet to Link1
+  6. Wait Packet from Link0 or NS from Link0
+  7. If NS received then send NA to Link0, and wait Packet form Link0 again
+  8. Receive Packet from Link0
+</PRE>
+<P>
+<PRE>  Network topology
+</PRE>
+<P>
+<PRE>          (Link0)        (Link1)
+    Tester       Target         Tester
+    Host1 ------ Router1 ------ Router2 ------ Router3 ------ Host2
+         Global 0       Global 1       Global 3       Global 5
+</PRE>
+<P>
+<PRE>  Packet to Link0 is:
+</PRE>
+<P>
+<PRE>        IPv6 Header
+            Version            = 6
+            Traffic Class      = 0
+            FlowLabel          = 0
+            PayloadLength      = 56
+            NextHeader         = 43 (Routing Header)
+            SourceAddress      = Global 0 Address (Host1)
+            DestinationAddress = Global 0 Address (Router1)
+</PRE>
+<P>
+<PRE>        Routing Header
+            NextHeader      = 59 (No Next Header)
+            HeaderExtLength = 6 
+            RoutingType     = 0 
+            SegmentsLeft    = 3 
+            Address[1]      = Global 1 Address (Router2)
+            Address[2]      = Global 3 Address (Router3)
+            Address[3]      = Global 5 Address (Host2)
+</PRE>
+<P>
+<PRE>  Packet to Link1 is:
+</PRE>
+<P>
+<PRE>        IPv6 Header
+            Version            = 6
+            Traffic Class      = 0
+            FlowLabel          = 0
+            PayloadLength      = 56
+            NextHeader         = 43 (Routing Header)
+            SourceAddress      = Global 5 Address (Host2)
+            DestinationAddress = Global 1 Address (Router1)
+</PRE>
+<P>
+<PRE>        Routing Header
+            NextHeader      = 59 (No Next Header)
+            HeaderExtLength = 6 
+            RoutingType     = 0 
+            SegmentsLeft    = 1 
+            Address[1]      = Global 5 Address (Router3)
+            Address[2]      = Global 3 Address (Router2)
+            Address[3]      = Global 0 Address (Host1)
+</PRE>
+<P>
+<PRE>  Neighbor Solicitation packet's IP source Address selection may be:
+    - Link Local Address
+    - Global Address
+  This test IS NOT the Neighbor Discovery test, so admit both implementation.
+</PRE>
+<P>
+<HR>
+<H1><A NAME="JUDGMENT">JUDGMENT</A></H1>
+<P>
+<PRE>  PASS: Packet from Link1 and Packet from Link0 Received
+</PRE>
+<P>
+<PRE>    Packet from Link1 is:
+</PRE>
+<P>
+<PRE>        IPv6 Header
+            Version            = 6
+            Traffic Class      = 0
+            FlowLabel          = 0
+            PayloadLength      = 56
+            NextHeader         = 43 (Routing Header)
+            SourceAddress      = Global 0 Address (Host1)
+            DestinationAddress = Global 1 Address (Router2) &lt;-+
+                                                              |
+        Routing Header                                        |
+            NextHeader      = 59 (No Next Header)             | (swapped)
+            HeaderExtLength = 6                               |
+            RoutingType     = 0                               |
+            SegmentsLeft    = 2 (decremented)                 |
+            Address[1]      = Global 0 Address (Router1) &lt;----+
+            Address[2]      = Global 3 Address (Router3)
+            Address[3]      = Global 5 Address (Host2)
+</PRE>
+<P>
+<PRE>    Packet from Link0 is:
+</PRE>
+<P>
+<PRE>        IPv6 Header
+            Version            = 6
+            Traffic Class      = 0
+            FlowLabel          = 0
+            PayloadLength      = 56
+            NextHeader         = 43 (Routing Header)
+            SourceAddress      = Global 5 Address (Host2)
+            DestinationAddress = Global 0 Address (Host1) &lt;---+
+                                                              |
+        Routing Header                                        |
+            NextHeader      = 59 (No Next Header)             | (swapped)
+            HeaderExtLength = 6                               |
+            RoutingType     = 0                               |
+            SegmentsLeft    = 0 (decremented)                 |
+            Address[1]      = Global 5 Address (Router3)      |
+            Address[2]      = Global 3 Address (Router2)      |
+            Address[3]      = Global 1 Address (Router1) &lt;----+
+</PRE>
+<P>
+<HR>
+<H1><A NAME="REFERENCE">REFERENCE</A></H1>
+<P>
+RFC2460
+
+<P>
+4.4 Routing Header
+
+<PRE>
+   <B>The Routing header is used by an IPv6 source to list one or more
+   intermediate nodes to be "visited" on the way to a packet's
+   destination.  This function is very similar to IPv4's Loose Source
+   and Record Route option.  The Routing header is identified by a Next
+   Header value of 43 in the immediately preceding header, and has the
+   following format:</B>
+</PRE>
+
+<P>
+<PRE>    +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+    |  Next Header  |  Hdr Ext Len  |  Routing Type | Segments Left |
+    +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+    |                                                               |
+    .                                                               .
+    .                       type-specific data                      .
+    .                                                               .
+    |                                                               |
+    +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+</PRE>
+<P>
+<PRE>   Next Header          8-bit selector.  Identifies the type of header
+                        immediately following the Routing header.  Uses
+                        the same values as the IPv4 Protocol field
+                        [RFC-1700 et seq.].
+</PRE>
+<P>
+<PRE>   Hdr Ext Len          8-bit unsigned integer.  Length of the Routing
+                        header in 8-octet units, not including the first
+                        8 octets.
+</PRE>
+<P>
+<PRE>   Routing Type         8-bit identifier of a particular Routing header
+                        variant.
+</PRE>
+<P>
+<PRE>   Segments Left        8-bit unsigned integer.  Number of route
+                        segments remaining, i.e., number of explicitly
+                        listed intermediate nodes still to be visited
+                        before reaching the final destination.
+</PRE>
+<P>
+<PRE>   type-specific data   Variable-length field, of format determined by
+                        the Routing Type, and of length such that the
+                        complete Routing header is an integer multiple
+                        of 8 octets long.
+</PRE>
+<P>
+<PRE>   If, while processing a received packet, a node encounters a Routing
+   header with an unrecognized Routing Type value, the required behavior
+   of the node depends on the value of the Segments Left field, as
+   follows:
+</PRE>
+<P>
+<PRE>      If Segments Left is zero, the node must ignore the Routing header
+      and proceed to process the next header in the packet, whose type
+      is identified by the Next Header field in the Routing header.
+</PRE>
+<P>
+<PRE>      If Segments Left is non-zero, the node must discard the packet and
+      send an ICMP Parameter Problem, Code 0, message to the packet's
+      Source Address, pointing to the unrecognized Routing Type.
+</PRE>
+<P>
+<PRE>   If, after processing a Routing header of a received packet, an
+   intermediate node determines that the packet is to be forwarded onto
+   a link whose link MTU is less than the size of the packet, the node
+   must discard the packet and send an ICMP Packet Too Big message to
+   the packet's Source Address.
+</PRE>
+<PRE>
+   <B>The Type 0 Routing header has the following format:</B>
+</PRE>
+
+<P>
+<PRE>    +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+    |  Next Header  |  Hdr Ext Len  | Routing Type=0| Segments Left |
+    +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+    |                            Reserved                           |
+    +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+    |                                                               |
+    +                                                               +
+    |                                                               |
+    +                           Address[1]                          +
+    |                                                               |
+    +                                                               +
+    |                                                               |
+    +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+    |                                                               |
+    +                                                               +
+    |                                                               |
+    +                           Address[2]                          +
+    |                                                               |
+    +                                                               +
+    |                                                               |
+    +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+    .                               .                               .
+    .                               .                               .
+    .                               .                               .
+    +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+    |                                                               |
+    +                                                               +
+    |                                                               |
+    +                           Address[n]                          +
+    |                                                               |
+    +                                                               +
+    |                                                               |
+    +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+</PRE>
+<P>
+<PRE>   Next Header          8-bit selector.  Identifies the type of header
+                        immediately following the Routing header.  Uses
+                        the same values as the IPv4 Protocol field
+                        [RFC-1700 et seq.].
+</PRE>
+<P>
+<PRE>   Hdr Ext Len          8-bit unsigned integer.  Length of the Routing
+                        header in 8-octet units, not including the first
+                        8 octets.  For the Type 0 Routing header, Hdr
+                        Ext Len is equal to two times the number of
+                        addresses in the header.
+</PRE>
+<P>
+<PRE>   Routing Type         0.
+</PRE>
+<P>
+<PRE>   Segments Left        8-bit unsigned integer.  Number of route
+                        segments remaining, i.e., number of explicitly
+                        listed intermediate nodes still to be visited
+                        before reaching the final destination.
+</PRE>
+<P>
+<PRE>   Reserved             32-bit reserved field.  Initialized to zero for
+                        transmission; ignored on reception.
+</PRE>
+<P>
+<PRE>   Address[1..n]        Vector of 128-bit addresses, numbered 1 to n.&lt;/B&gt;
+</PRE>
+<P>
+<PRE>   Multicast addresses must not appear in a Routing header of Type 0, or
+   in the IPv6 Destination Address field of a packet carrying a Routing
+   header of Type 0.
+</PRE>
+<PRE>
+   <B>A Routing header is not examined or processed until it reaches the
+   node identified in the Destination Address field of the IPv6 header.
+   In that node, dispatching on the Next Header field of the immediately
+   preceding header causes the Routing header module to be invoked,
+   which, in the case of Routing Type 0, performs the following
+   algorithm:</B>
+</PRE>
+
+<P>
+<PRE>   if Segments Left = 0 {
+      proceed to process the next header in the packet, whose type is
+      identified by the Next Header field in the Routing header
+   }
+   else if Hdr Ext Len is odd {
+         send an ICMP Parameter Problem, Code 0, message to the Source
+         Address, pointing to the Hdr Ext Len field, and discard the
+         packet
+   }
+   else {
+      compute n, the number of addresses in the Routing header, by
+      dividing Hdr Ext Len by 2
+</PRE>
+<P>
+<PRE>      if Segments Left is greater than n {
+         send an ICMP Parameter Problem, Code 0, message to the Source
+         Address, pointing to the Segments Left field, and discard the
+         packet
+      }
+      else {
+         decrement Segments Left by 1;
+         compute i, the index of the next address to be visited in
+         the address vector, by subtracting Segments Left from n
+</PRE>
+<P>
+<PRE>         if Address [i] or the IPv6 Destination Address is multicast {
+            discard the packet
+         }
+         else {
+            swap the IPv6 Destination Address and Address[i]
+</PRE>
+<P>
+<PRE>            if the IPv6 Hop Limit is less than or equal to 1 {
+               send an ICMP Time Exceeded -- Hop Limit Exceeded in
+               Transit message to the Source Address and discard the
+               packet
+            }
+            else {
+               decrement the Hop Limit by 1
+</PRE>
+<P>
+<PRE>               resubmit the packet to the IPv6 module for transmission
+               to the new destination
+            }
+         }
+      }
+   }
+</PRE>
+<P>
+<HR>
+<H1><A NAME="SEE_ALSO">SEE ALSO</A></H1>
+<P>
+<PRE>  perldoc V6evalTool
+</PRE>
+</BODY>
+
+</HTML>

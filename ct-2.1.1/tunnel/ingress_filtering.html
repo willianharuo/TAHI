@@ -1,0 +1,129 @@
+<HTML>
+<HEAD>
+<TITLE>ingress_filter.seq - Verify that the tunnel source address is 
+	acceptable or not</TITLE>
+<LINK REV="made" HREF="mailto:hackers@FreeBSD.org">
+</HEAD>
+
+<BODY>
+
+<!-- INDEX BEGIN -->
+<!--
+
+<UL>
+
+	<LI><A HREF="#NAME">NAME</A>
+	<LI><A HREF="#TARGET">TARGET</A>
+	<LI><A HREF="#SYNOPSIS">SYNOPSIS</A>
+	<LI><A HREF="#INITIALIZATION">INITIALIZATION</A>
+	<LI><A HREF="#TEST_PROCEDURE">TEST PROCEDURE</A>
+	<LI><A HREF="#JUDGMENT">JUDGMENT</A>
+	<LI><A HREF="#SEE_ALSO">SEE ALSO</A>
+</UL>
+-->
+<!-- INDEX END -->
+
+<P>
+<H1><A NAME="NAME">NAME</A></H1>
+<P>
+<PRE>        ingress_filter.seq - Verify that the tunnel source address is 
+        acceptable or not
+</PRE>
+<P>
+<HR>
+<H1><A NAME="TARGET">TARGET</A></H1>
+<P>
+<PRE>        Router
+</PRE>
+<P>
+<HR>
+<H1><A NAME="SYNOPSIS">SYNOPSIS</A></H1>
+<P>
+<PRE>        decapsulation_router.seq [-tooloption ...] -p 
+        decapsulation_router.def
+</PRE>
+<P>
+<HR>
+<H1><A NAME="INITIALIZATION">INITIALIZATION</A></H1>
+<PRE>
+	Before this test starts, run <A HREF="initialize.html">initialize.seq</A>.
+</PRE>
+
+<P>
+<HR>
+<H1><A NAME="TEST_PROCEDURE">TEST PROCEDURE</A></H1>
+<P>
+<PRE>        This test verifies that the tunnel source address is acceptable 
+        before forwarding decapsulated packets
+        
+        Network Topology
+</PRE>
+<P>
+<PRE>        Link0   
+        --------------------------
+            |               |
+           TN              NUT
+            |               |   
+        --------------------------
+        Link1
+</PRE>
+<P>
+<PRE>        
+        TN -- (Link0) -- NUT            TN -- (Link1) -- NUT
+</PRE>
+<P>
+<PRE>        ---------------------      ------------------------
+</PRE>
+<P>
+<PRE>        1.
+                                    ===================&gt;
+        IPv4 packet encapsulating IPv6 packet
+                Outer Header (IPv4)     
+                        src address : Off-link IPv4 address
+                        dst address : NUT Link1 IPv4 address        
+                Inner Header (IPv6)     
+                        src address : Off-link IPv6 global address
+                        dst address : TN LINK0 IPv6 global address        
+</PRE>
+<P>
+<PRE>        2.
+        In NUT, received IPv4 packet is decapsulated, and forward 
+        ICMPv6 Echo Request packet or not.   
+        3.
+        &lt;&lt; JUDGMENT &gt;&gt;
+        
+        NUT did not send ICMPv6 Echo Request
+                        or
+        &lt;===================
+        ICMPv6 Echo Request
+                IPv6 Header
+                        src address : Off-link IPv6 global address
+                        dst address : TN LINK0  IPv6 global address        
+</PRE>
+<P>
+<PRE>          
+</PRE>
+<P>
+<HR>
+<H1><A NAME="JUDGMENT">JUDGMENT</A></H1>
+<P>
+<PRE>        &lt;&lt; PASS &gt;&gt;
+</PRE>
+<P>
+<PRE>                NUT did not received ICMPv6 Echo Request
+</PRE>
+<P>
+<PRE>        &lt;&lt; FAIL &gt;&gt;      
+</PRE>
+<P>
+<PRE>                NUT received ICMPv6 Echo Request
+</PRE>
+<P>
+<HR>
+<H1><A NAME="SEE_ALSO">SEE ALSO</A></H1>
+<P>
+<PRE>          perldoc V6evalTool
+</PRE>
+</BODY>
+
+</HTML>

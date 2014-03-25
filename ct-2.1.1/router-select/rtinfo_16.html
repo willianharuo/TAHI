@@ -1,0 +1,358 @@
+<HTML>
+<HEAD>
+<TITLE>./rtinfo_16.seq</TITLE>
+<LINK REV="made" HREF="mailto:hackers@FreeBSD.org">
+</HEAD>
+
+<BODY>
+
+<!-- INDEX BEGIN -->
+<!--
+
+<UL>
+
+	<LI><A HREF="#NAME">NAME</A>
+	<LI><A HREF="#TARGET">TARGET</A>
+	<LI><A HREF="#SYNOPSIS">SYNOPSIS</A>
+	<LI><A HREF="#TOPOLOGY">TOPOLOGY</A>
+	<LI><A HREF="#INITIALIZATION">INITIALIZATION</A>
+	<LI><A HREF="#TEST_PROCEDURE">TEST PROCEDURE</A>
+	<LI><A HREF="#JUDGEMENT">JUDGEMENT</A>
+	<LI><A HREF="#SEE_ALSO">SEE ALSO</A>
+</UL>
+-->
+<!-- INDEX END -->
+
+<P>
+<H1><A NAME="NAME">NAME</A></H1>
+<PRE>
+RA w/ 16 Route Information Options
+</PRE>
+
+<P>
+<HR>
+<H1><A NAME="TARGET">TARGET</A></H1>
+<PRE>
+Host
+</PRE>
+
+<P>
+<HR>
+<H1><A NAME="SYNOPSIS">SYNOPSIS</A></H1>
+<PRE>
+<A HREF="./rtinfo_16.seq">rtinfo_16.seq</A> [-tooloption ...] -pkt <A HREF="./RTINFO.def">RTINFO.def</A>
+</PRE>
+<BLOCKQUOTE>
+<PRE>
+-tooloption: v6eval tool option
+</PRE>
+</BLOCKQUOTE>
+
+<P>
+<HR>
+<H1><A NAME="TOPOLOGY">TOPOLOGY</A></H1>
+<BLOCKQUOTE>
+<PRE>
+                                     HOST16
+                                       |
+            ---------------+-----------+--- Link16
+                           |
+                          RT17       HOST15
+                           |           |
+            -------+-------+-----------+--- Link15
+                   |
+                   :
+                (SNIP)
+                   :                 HOST2
+                   |                   |
+            -------+-------+-----------+--- Link2
+                           |
+                          RT3        HOST1
+                           |           |
+            -------+-------+-------+---+--- Link1
+                   |               |
+                   RT2            RT1
+                   |               |
+            -------+-------+-------+------- Link0
+                           |
+                          NUT
+</PRE>
+</BLOCKQUOTE>
+<BLOCKQUOTE>
+<TABLE BORDER>
+<TR>
+<TD><TT>Link0</TT></TD>
+<TD><TT>global</TT></TD>
+<TD><TT>3ffe:501:ffff:100::/64</TT></TD>
+<TD><TT>Testing link</TT></TD>
+</TR>
+<TR>
+<TD><TT>Link1</TT></TD>
+<TD><TT>global</TT></TD>
+<TD><TT>3ffe:501:ffff:101::/64</TT></TD>
+<TD><TT>other link</TT></TD>
+</TR>
+<TR>
+<TD><TT>Link2</TT></TD>
+<TD><TT>global</TT></TD>
+<TD><TT>3ffe:501:ffff:102::/64</TT></TD>
+<TD><TT>other link</TT></TD>
+</TR>
+<TR>
+<TD ROWSPAN="3"><TT>RT1(Link0)</TT></TD>
+<TD><TT>global</TT></TD>
+<TD><TT>3ffe:501:ffff:100::a0a0</TT></TD>
+<TD ROWSPAN="3"><TT>Alternative router</TT></TD>
+</TR>
+<TR>
+<TD><TT>link-local</TT></TD>
+<TD><TT>fe80::200:ff:fe00:a0a0</TT></TD>
+</TR>
+<TR>
+<TD><TT>ether</TT></TD>
+<TD><TT>00:00:00:00:a0:a0</TT></TD>
+</TR>
+<TR>
+<TD ROWSPAN="3"><TT>RT2(Link0)</TT></TD>
+<TD><TT>global</TT></TD>
+<TD><TT>3ffe:501:ffff:100::a1a1</TT></TD>
+<TD ROWSPAN="3"><TT>Alternative router</TT></TD>
+</TR>
+<TR>
+<TD><TT>link-local</TT></TD>
+<TD><TT>fe80::200:ff:fe00:a1a1</TT></TD>
+</TR>
+<TR>
+<TD><TT>ether</TT></TD>
+<TD><TT>00:00:00:00:a1:a1</TT></TD>
+</TR>
+<TR>
+<TD><TT>HOST1</TT></TD>
+<TD><TT>global</TT></TD>
+<TD><TT>3ffe:501:ffff:101::1</TT></TD>
+<TD><TT>Host on Link1</TT></TD>
+</TR>
+<TR>
+<TD><TT>HOST2</TT></TD>
+<TD><TT>global</TT></TD>
+<TD><TT>3ffe:501:ffff:102::1</TT></TD>
+<TD><TT>Host on Link2</TT></TD>
+</TR>
+<TR>
+<TD><TT><CENTER>:</CENTER></TT></TD>
+<TD><TT><CENTER>:</CENTER></TT></TD>
+<TD><TT><CENTER>:</CENTER></TT></TD>
+<TD><TT><CENTER>:</CENTER></TT></TD>
+</TR>
+<TR>
+<TD><TT><CENTER>(SNIP)</CENTER></TT></TD>
+<TD><TT><CENTER>(SNIP)</CENTER></TT></TD>
+<TD><TT><CENTER>(SNIP)</CENTER></TT></TD>
+<TD><TT><CENTER>(SNIP)</CENTER></TT></TD>
+</TR>
+<TR>
+<TD><TT><CENTER>:</CENTER></TT></TD>
+<TD><TT><CENTER>:</CENTER></TT></TD>
+<TD><TT><CENTER>:</CENTER></TT></TD>
+<TD><TT><CENTER>:</CENTER></TT></TD>
+</TR>
+<TR>
+<TD><TT>HOST15</TT></TD>
+<TD><TT>global</TT></TD>
+<TD><TT>3ffe:501:ffff:115::1</TT></TD>
+<TD><TT>Host on Link15</TT></TD>
+</TR>
+<TR>
+<TD><TT>HOST16</TT></TD>
+<TD><TT>global</TT></TD>
+<TD><TT>3ffe:501:ffff:116::1</TT></TD>
+<TD><TT>Host on Link16</TT></TD>
+</TR>
+</TABLE>
+</BLOCKQUOTE>
+
+<P>
+<HR>
+<H1><A NAME="INITIALIZATION">INITIALIZATION</A></H1>
+<BLOCKQUOTE>
+<PRE>
+Flush Default Router List
+Flush Routing Table
+Flush Neighbor Cache
+Flush Prefix List
+</PRE>
+</BLOCKQUOTE>
+
+<P>
+<HR>
+<H1><A NAME="TEST_PROCEDURE">TEST PROCEDURE</A></H1>
+<BLOCKQUOTE>
+<PRE>
+NUT             RT1             RT2    HOST[1~16]
+ |               |               |       |
+ ==================(INITIALIZE)===========
+ |               |               |       |
+ |Link16Pref=LOW |               |       |
+ |Link15Pref=HIGH|               |       |
+ |     :         |               |       |
+ | Link2Pref=LOW |               |       |
+ | Link1Pref=HIGH|               |       |
+ |       Pref=MED|               |       |
+ |<--------------+               |       | RA from RT1
+ |               | Link16Pref=MED|       |
+ |               | Link15Pref=MED|       |
+ |               |      :        |       |
+ |               |  Link2Pref=MED|       |
+ |               |  Link1Pref=MED|       |
+ |               |       Pref=MED|       |
+ |<------------------------------+       | RA from RT2
+ |               |               |       |
+ |<--------------#-----------------------+ Echo Request from HOST1(via RT1) 
+ +---------------#---------------------->| Echo Reply   to   HOST1(via RT1)(*1)
+ |               |               |       |
+ |<--------------#-----------------------+ Echo Request from HOST2(via RT1) 
+ +-------------------------------#------>| Echo Reply   to   HOST2(via RT2)(*2)
+ |               |               |       |
+ :               :               :       :
+                   (SNIP)
+ :               :               :       :
+ |               |               |       |
+ |<--------------#-----------------------+ Echo Request from HOST15(via RT1) 
+ +---------------#---------------------->| Echo Reply   to   HOST15(via RT1)(*15)
+ |               |               |       |
+ |<--------------#-----------------------+ Echo Request from HOST16(via RT1) 
+ +-------------------------------#------>| Echo Reply   to   HOST16(via RT2)(*16)
+ |               |               |       |
+ |               |               |       |
+ ==================(INITIALIZE)===========
+ |               |               |       |
+ | Link16Pref=MED|               |       |
+ | Link15Pref=MED|               |       |
+ |      :        |               |       |
+ |  Link2Pref=MED|               |       |
+ |  Link1Pref=MED|               |       |
+ |       Pref=MED|               |       |
+ |<--------------+               |       | RA from RT1
+ |               |Link16Pref=LOW |       |
+ |               |Link15Pref=HIGH|       |
+ |               |     :         |       |
+ |               | Link2Pref=LOW |       |
+ |               | Link1Pref=HIGH|       |
+ |               |       Pref=MED|       |
+ |<------------------------------+       | RA from RT2
+ |               |               |       |
+ |<--------------#-----------------------+ Echo Request from HOST1(via RT1) 
+ +-------------------------------#------>| Echo Reply   to   HOST1(via RT2)(*17)
+ |               |               |       |
+ |<--------------#-----------------------+ Echo Request from HOST2(via RT1) 
+ +---------------#---------------------->| Echo Reply   to   HOST2(via RT1)(*18)
+ |               |               |       |
+ :               :               :       :
+                   (SNIP)
+ :               :               :       :
+ |               |               |       |
+ |<--------------#-----------------------+ Echo Request from HOST15(via RT1) 
+ +-------------------------------#------>| Echo Reply   to   HOST15(via RT2)(*31)
+ |               |               |       |
+ |<--------------#-----------------------+ Echo Request from HOST16(via RT1) 
+ +---------------#---------------------->| Echo Reply   to   HOST16(via RT1)(*32)
+ |               |               |       |
+</PRE>
+</BLOCKQUOTE>
+<P>
+<PRE>
+(INITIALIZATION)
+1. RT1 Sends RA w/ 16 RouteInfoOptions
+2. RT2 Sends RA w/ 16 RouteInfoOptions
+3. HOST1 Sends Echo Request
+4. NUT Sends Echo Reply to HOST1 via RT1(*1)
+5. HOST2 Sends Echo Request
+6. NUT Sends Echo Reply to HOST2 via RT2(*2)
+(SNIP)
+31. HOST15 Sends Echo Request
+32. NUT Sends Echo Reply to HOST15 via RT1(*15)
+33. HOST16 Sends Echo Request
+34. NUT Sends Echo Reply to HOST16 via RT2(*16)
+(INITIALIZATION)
+35. RT1 Sends RA w/ 16 RouteInfoOptions
+36. RT2 Sends RA w/ 16 RouteInfoOptions
+37. HOST1 Sends Echo Request
+38. NUT Sends Echo Reply to HOST1 via RT2(*17)
+39. HOST2 Sends Echo Request
+40. NUT Sends Echo Reply to HOST2 via RT1(*18)
+(SNIP)
+65. HOST15 Sends Echo Request
+66. NUT Sends Echo Reply to HOST15 via RT2(*31)
+67. HOST16 Sends Echo Request
+68. NUT Sends Echo Reply to HOST16 via RT1(*32)
+</PRE>
+
+<P>
+<HR>
+<H1><A NAME="JUDGEMENT">JUDGEMENT</A></H1>
+<PRE>
+(*1)
+    PASS: HOST1 receives Echo Reply via RT1
+</PRE>
+<PRE>
+(*2)
+    PASS: HOST2 receives Echo Reply via RT2
+</PRE>
+<PRE>
+ :
+(SNIP)
+ :
+</PRE>
+<PRE>
+(*15)
+    PASS: HOST15 receives Echo Reply via RT1
+</PRE>
+<PRE>
+(*16)
+    PASS: HOST16 receives Echo Reply via RT2
+</PRE>
+<PRE>
+(*17)
+    PASS: HOST1 receives Echo Reply via RT2
+</PRE>
+<PRE>
+	(*1~16)
+	Echo reply to HOST(2n-1) via RT1
+	Echo reply to HOST(2n) via RT2
+	1<=n<=8
+</PRE>
+<PRE>
+(*18)
+    PASS: HOST2 receives Echo Reply via RT1
+</PRE>
+<PRE>
+ :
+(SNIP)
+ :
+</PRE>
+<PRE>
+(*31)
+    PASS: HOST15 receives Echo Reply via RT2
+</PRE>
+<PRE>
+(*32)
+    PASS: HOST16 receives Echo Reply via RT1
+</PRE>
+<PRE>
+	(*17~32)
+	Echo reply to HOST(2n-1) via RT2
+	Echo reply to HOST(2n) via RT1
+	9<=n<=16
+</PRE>
+
+<P>
+<HR>
+<H1><A NAME="SEE_ALSO">SEE ALSO</A></H1>
+<PRE>
+<A HREF="./ROUTE.pm">ROUTE.pm</A>
+<A HREF="./RTINFO.def">RTINFO.def</A>
+</PRE>
+
+</BODY>
+
+</HTML>

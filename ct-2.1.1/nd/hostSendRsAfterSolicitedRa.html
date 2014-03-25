@@ -1,0 +1,174 @@
+<HTML>
+<HEAD>
+<TITLE>hostSendRsAfterSolicitedRa - Verifying that NUT does not send an RS
+after receiving a solicited RA</TITLE>
+<LINK REV="made" HREF="mailto:hackers@FreeBSD.org">
+</HEAD>
+
+<BODY>
+
+<!-- INDEX BEGIN -->
+<!--
+
+<UL>
+
+	<LI><A HREF="#NAME">NAME</A>
+	<LI><A HREF="#TARGET">TARGET</A>
+	<LI><A HREF="#SYNOPSIS">SYNOPSIS</A>
+	<LI><A HREF="#INITIALIZATION">INITIALIZATION</A>
+	<LI><A HREF="#TEST_PROCEDURE">TEST PROCEDURE</A>
+	<UL>
+
+		<LI><A HREF="#After_receiving_a_valid_RA">After receiving a valid RA</A>
+		<LI><A HREF="#After_receiving_an_invalid_RA">After receiving an invalid RA</A>
+	</UL>
+
+	<LI><A HREF="#JUDGMENT">JUDGMENT</A>
+	<LI><A HREF="#TERMINATION">TERMINATION</A>
+	<LI><A HREF="#NOTE">NOTE</A>
+	<LI><A HREF="#SEE_ALSO">SEE ALSO</A>
+</UL>
+-->
+<!-- INDEX END -->
+
+<P>
+<H1><A NAME="NAME">NAME</A></H1>
+<P>
+hostSendRsAfterSolicitedRa - Verifying that NUT does not send an RS after
+receiving a solicited RA
+
+<P>
+<HR>
+<H1><A NAME="TARGET">TARGET</A></H1>
+<P>
+Host only
+
+<P>
+<HR>
+<H1><A NAME="SYNOPSIS">SYNOPSIS</A></H1>
+<P>
+<PRE>  hostSendRsAfterSolicitedRa.seq [-tooloption ...]
+                                    -p hostSendRsAfterSolicitedRa.def
+</PRE>
+<P>
+<HR>
+<H1><A NAME="INITIALIZATION">INITIALIZATION</A></H1>
+<P>
+<PRE>  Reboot NUT.
+</PRE>
+<P>
+<HR>
+<H1><A NAME="TEST_PROCEDURE">TEST PROCEDURE</A></H1>
+<P>
+<STRONG>hostSendRsAfterUnsolicitedRa</STRONG> verifies that NUT does not send a RS After receiving a solicited RA.
+
+<P>
+<HR>
+<H2><A NAME="After_receiving_a_valid_RA">After receiving a valid RA</A></H2>
+<PRE>
+<BR>
+  TN                     NUT
+  --------------------------
+<BR>
+  <=== <A HREF="#JDG1">Judgment #1</A>: RS ====
+       src=unspecified or NUT's link-local
+       dst=all-router
+       w/o or w/ SLLA
+<BR>
+  ==== <A HREF=#JDG2>Valid RA</A> ===>
+       src=link-local
+       dst=all-node
+       w/ or w/o SLLA
+       timeout=600 sec.
+<BR>
+  <A HREF="#JDG2">Judgment #2</A>: NUT does NOT captures any packet from NUT within 4 sec.
+<BR>
+</PRE>
+
+<P>
+<HR>
+<H2><A NAME="After_receiving_an_invalid_RA">After receiving an invalid RA</A></H2>
+<PRE>
+<BR>
+  TN                     NUT
+  --------------------------
+<BR>
+  <=== <A HREF="#JDG1">Judgment #1</A>: RS ====
+       src=unspecified or NUT's link-local
+       dst=all-router
+       w/o or w/ SLLA
+       timeout=600 sec.
+<BR>
+  ==== <A HREF=#JDG2>Invalid RA</A> ===>
+<BR>
+  <A HREF="#JDG2">Judgment #2</A>: NUT captures at the least one <A HREF="#JDG1">RS from NUT</A> within 4 sec.
+<BR>
+</PRE>
+
+<P>
+<HR>
+<H1><A NAME="JUDGMENT">JUDGMENT</A></H1>
+<PRE>
+<A NAME="JDG1">1. NUT sends a valid RS:</A>
+<BR>
+     A) src=unspecified, dst=all-router, w/o SLLA
+     B) src=NUT's link-local, dst=all-router, w/o SLLA
+     C) src=NUT's link-local, dst=all-router, w/ SLLA
+<BR>
+<A NAME="JDG2">2. Sending RSs</A>
+<HR>
+6.3.7.  Sending Router Solicitations
+<BR>
+   <B>Once the host sends a Router Solicitation, and receives a valid
+   Router Advertisement with a non-zero Router Lifetime, the host MUST
+   desist from sending additional solicitations on that interface, until
+   the next time one of the above events occurs.</B>  Moreover, a host
+   SHOULD send at least one solicitation in the case where an
+   advertisement is received prior to having sent a solicitation.
+   Unsolicited Router Advertisements may be incomplete (see Section
+   6.2.3); solicited advertisements are expected to contain complete
+   information.
+<HR>
+                 TABLE. Received a solicited RA vs. Sending a RS
+  =============================================================+=========
+  Received unsolicited RA by NUT                               | Send RS
+  -----------+----------+-------+-------------------+----------+ by the
+  Src        | Dst      | SLLA  | Other             | Validity | NUT ?
+  ===========+==========+=======+===================+==========+=========
+  link-local | all-node | none  |                   | valid    | no
+  -----------+----------+-------+-------------------+----------+---------
+  link-local | all-node | exist |                   | valid    | no
+  -----------+----------+-------+-------------------+----------+---------
+  *global    | all-node | none  |                   | invalid  | yes
+  -----------+----------+-------+-------------------+----------+---------
+  link-local | all-node | none  | *hop limit=2      | invalid  | yes
+  -----------+----------+-------+-------------------+----------+---------
+  link-local | all-node | none  | *invalid checksum | invalid  | yes
+  -----------+----------+-------+-------------------+----------+---------
+  link-local | all-node | none  | *icmp code=1      | invalid  | yes
+  ===========+==========+=======+===================+==========+=========
+</PRE>
+
+<P>
+<HR>
+<H1><A NAME="TERMINATION">TERMINATION</A></H1>
+<P>
+<PRE>  Send RA with RouterLifetime=0 to clear the Default Router List.
+</PRE>
+<P>
+<HR>
+<H1><A NAME="NOTE">NOTE</A></H1>
+<P>
+<PRE>  The test invokes the following command:
+  - reboot
+</PRE>
+<P>
+<HR>
+<H1><A NAME="SEE_ALSO">SEE ALSO</A></H1>
+<P>
+<PRE>  perldoc V6evalTool
+  perldoc V6evalRemote
+</PRE>
+</BODY>
+
+</HTML>

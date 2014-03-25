@@ -1,0 +1,450 @@
+//
+// Copyright (C) 1999, 2000, 2001, 2002, 2003 Yokogawa Electric Corporation,
+// IPA (Information-technology Promotion Agency, Japan).
+// All rights reserved.
+// 
+// Redistribution and use of this software in source and binary forms, with 
+// or without modification, are permitted provided that the following 
+// conditions and disclaimer are agreed and accepted by the user:
+// 
+// 1. Redistributions of source code must retain the above copyright 
+// notice, this list of conditions and the following disclaimer.
+// 
+// 2. Redistributions in binary form must reproduce the above copyright 
+// notice, this list of conditions and the following disclaimer in the 
+// documentation and/or other materials provided with the distribution.
+// 
+// 3. Neither the names of the copyrighters, the name of the project which 
+// is related to this software (hereinafter referred to as "project") nor 
+// the names of the contributors may be used to endorse or promote products 
+// derived from this software without specific prior written permission.
+// 
+// 4. No merchantable use may be permitted without prior written 
+// notification to the copyrighters. However, using this software for the 
+// purpose of testing or evaluating any products including merchantable 
+// products may be permitted without any notification to the copyrighters.
+// 
+// 
+// 
+// THIS SOFTWARE IS PROVIDED BY THE COPYRIGHTERS, THE PROJECT AND 
+// CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING 
+// BUT NOT LIMITED THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS 
+// FOR A PARTICULAR PURPOSE, ARE DISCLAIMED.  IN NO EVENT SHALL THE 
+// COPYRIGHTERS, THE PROJECT OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, 
+// INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES 
+// (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR 
+// SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) 
+// HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN 
+// CONTRACT,STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) 
+// ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF 
+// THE POSSIBILITY OF SUCH DAMAGE.
+//
+// $TAHI: ct/tunnel/fragment.def,v 1.5 2001/10/05 06:39:22 masaxmasa Exp $
+
+#include "tunnel.def"
+
+//
+// ICMPv6 Echo Request
+//
+
+FEM_icmp6_echo_request(
+	v6_echo_request_LINK0_tn2nut_OFFLINK,
+	_HETHER_tn2nut,
+		{
+		_SRC(TN_LINK0_GLOBAL_ADDRESS);
+		_DST(OFFLINK_GLOBAL_ADDRESS);
+	},
+		{
+		payload=ping_data;
+	}
+)
+
+FEM_icmp6_echo_request(
+	v6_echo_request_LINK0_tn2nut_OFFLINK_1480,
+	_HETHER_tn2nut,
+		{
+		_SRC(TN_LINK0_GLOBAL_ADDRESS);
+		_DST(OFFLINK_GLOBAL_ADDRESS);
+	},
+		{
+		payload=data_size_1432;
+	}
+)
+
+FEM_icmp6_echo_request(
+	v6_echo_request_LINK0_tn2nut_OFFLINK_1401,
+	_HETHER_tn2nut,
+		{
+		_SRC(TN_LINK0_GLOBAL_ADDRESS);
+		_DST(OFFLINK_GLOBAL_ADDRESS);
+	},
+		{
+		payload=data_size_1353;
+	}
+)
+
+FEM_icmp6_echo_request(
+	v6_echo_request_LINK0_tn2nut_OFFLINK_1400,
+	_HETHER_tn2nut,
+		{
+		_SRC(TN_LINK0_GLOBAL_ADDRESS);
+		_DST(OFFLINK_GLOBAL_ADDRESS);
+	},
+		{
+		payload=data_size_1352;
+	}
+)
+
+FEM_icmp6_echo_request(
+	v6_echo_request_LINK0_tn2nut_OFFLINK_1281,
+	_HETHER_tn2nut,
+		{
+		_SRC(TN_LINK0_GLOBAL_ADDRESS);
+		_DST(OFFLINK_GLOBAL_ADDRESS);
+	},
+		{
+		payload=data_size_1233;
+	}
+)
+
+FEM_icmp6_echo_request(
+	v6_echo_request_LINK0_tn2nut_OFFLINK_1281_hoplimit,
+	_HETHER_tn2nut,
+		{
+		//HopLimit=63;
+		_SRC(TN_LINK0_GLOBAL_ADDRESS);
+		_DST(OFFLINK_GLOBAL_ADDRESS);
+	},
+		{
+		payload=data_size_1233;
+	}
+)
+
+FEM_icmp6_echo_request(
+	v6_echo_request_LINK0_tn2nut_OFFLINK_1280,
+	_HETHER_tn2nut,
+		{
+		_SRC(TN_LINK0_GLOBAL_ADDRESS);
+		_DST(OFFLINK_GLOBAL_ADDRESS);
+	},
+		{
+		payload=data_size_1232;
+	}
+)
+
+FEM_icmp6_echo_request(
+	v6_echo_request_LINK0_tn2nut_OFFLINK_1000,
+	_HETHER_tn2nut,
+		{
+		_SRC(TN_LINK0_GLOBAL_ADDRESS);
+		_DST(OFFLINK_GLOBAL_ADDRESS);
+	},
+		{
+		payload=data_size_952;
+	}
+)
+
+//
+// IPv4 Packet encapsulating ICMPv6 Echo Request
+//
+
+FEM_v6overv4_icmp6_echo_request(
+	v6overv4_echo_request_LINK1_nut2tn,
+	_HETHER_nut2tn,
+	NUT_LINK1_V4_ADDRESS,
+	V4_OFFLINK0_ADDRESS,
+	 	{
+		_SRC(TN_LINK0_GLOBAL_ADDRESS);
+		_DST(OFFLINK_GLOBAL_ADDRESS);
+	},
+		{
+		payload=ping_data;
+	}
+)
+
+FEM_v6overv4_icmp6_echo_request(
+	v6overv4_echo_request_LINK1_nut2tn_1500,
+	_HETHER_nut2tn,
+	NUT_LINK1_V4_ADDRESS,
+	V4_OFFLINK0_ADDRESS,
+	 	{
+		_SRC(TN_LINK0_GLOBAL_ADDRESS);
+		_DST(OFFLINK_GLOBAL_ADDRESS);
+	},
+		{
+		payload=data_size_1432;
+	}
+)
+
+FEM_v6overv4_exth_icmp6_echo_request(
+	v6overv4_echo_request_LINK1_nut2tn_1500_DF,
+	_HETHER_nut2tn,
+		{
+		DF=1;
+		_SRC(NUT_LINK1_V4_ADDRESS);
+		_DST(V4_OFFLINK0_ADDRESS);
+	},
+	 	{
+		_SRC(TN_LINK0_GLOBAL_ADDRESS);
+		_DST(OFFLINK_GLOBAL_ADDRESS);
+	},
+		{
+		payload=data_size_1432;
+	}
+)
+
+FEM_v6overv4_icmp6_echo_request(
+	v6overv4_echo_request_LINK1_nut2tn_1421,
+	_HETHER_nut2tn,
+	NUT_LINK1_V4_ADDRESS,
+	V4_OFFLINK0_ADDRESS,
+	 	{
+		_SRC(TN_LINK0_GLOBAL_ADDRESS);
+		_DST(OFFLINK_GLOBAL_ADDRESS);
+	},
+		{
+		payload=data_size_1353;
+	}
+)
+
+FEM_v6overv4_icmp6_echo_request(
+	v6overv4_echo_request_LINK1_nut2tn_1420,
+	_HETHER_nut2tn,
+	NUT_LINK1_V4_ADDRESS,
+	V4_OFFLINK0_ADDRESS,
+	 	{
+		_SRC(TN_LINK0_GLOBAL_ADDRESS);
+		_DST(OFFLINK_GLOBAL_ADDRESS);
+	},
+		{
+		payload=data_size_1352;
+	}
+)
+
+FEM_v6overv4_exth_icmp6_echo_request(
+	v6overv4_echo_request_LINK1_nut2tn_1420_DF,
+	_HETHER_nut2tn,
+		{
+		DF=1;
+		_SRC(NUT_LINK1_V4_ADDRESS);
+		_DST(V4_OFFLINK0_ADDRESS);
+	},
+	 	{
+		_SRC(TN_LINK0_GLOBAL_ADDRESS);
+		_DST(OFFLINK_GLOBAL_ADDRESS);
+	},
+		{
+		payload=data_size_1352;
+	}
+)
+
+FEM_v6overv4_exth_icmp6_echo_request(
+	v6overv4_echo_request_LINK1_nut2tn_1420_noset_DF,
+	_HETHER_nut2tn,
+		{
+		_SRC(NUT_LINK1_V4_ADDRESS);
+		_DST(V4_OFFLINK0_ADDRESS);
+	},
+	 	{
+		_SRC(TN_LINK0_GLOBAL_ADDRESS);
+		_DST(OFFLINK_GLOBAL_ADDRESS);
+	},
+		{
+		payload=data_size_1352;
+	}
+)
+
+FEM_v6overv4_exth_icmp6_echo_request(
+	v6overv4_echo_request_LINK1_nut2tn_1301,
+	_HETHER_nut2tn,
+		{
+		_SRC(NUT_LINK1_V4_ADDRESS);
+		_DST(V4_OFFLINK0_ADDRESS);
+	},
+	 	{
+		_SRC(TN_LINK0_GLOBAL_ADDRESS);
+		_DST(OFFLINK_GLOBAL_ADDRESS);
+	},
+		{
+		payload=data_size_1233;
+	}
+)
+
+FEM_v6overv4_icmp6_echo_request(
+	v6overv4_echo_request_LINK1_nut2tn_1300,
+	_HETHER_nut2tn,
+	NUT_LINK1_V4_ADDRESS,
+	V4_OFFLINK0_ADDRESS,
+	 	{
+		_SRC(TN_LINK0_GLOBAL_ADDRESS);
+		_DST(OFFLINK_GLOBAL_ADDRESS);
+	},
+		{
+		payload=data_size_1232;
+	}
+)
+
+FEM_v6overv4_exth_icmp6_echo_request(
+	v6overv4_echo_request_LINK1_nut2tn_1300_DF,
+	_HETHER_nut2tn,
+		{
+		DF=1;
+		_SRC(NUT_LINK1_V4_ADDRESS);
+		_DST(V4_OFFLINK0_ADDRESS);
+	},
+	 	{
+		_SRC(TN_LINK0_GLOBAL_ADDRESS);
+		_DST(OFFLINK_GLOBAL_ADDRESS);
+	},
+		{
+		payload=data_size_1232;
+	}
+)
+
+FEM_v6overv4_exth_icmp6_echo_request(
+	v6overv4_echo_request_LINK1_nut2tn_1300_noset_DF,
+	_HETHER_nut2tn,
+		{
+		_SRC(NUT_LINK1_V4_ADDRESS);
+		_DST(V4_OFFLINK0_ADDRESS);
+	},
+	 	{
+		_SRC(TN_LINK0_GLOBAL_ADDRESS);
+		_DST(OFFLINK_GLOBAL_ADDRESS);
+	},
+		{
+		payload=data_size_1232;
+	}
+)
+
+//
+// ICMPv4 Packet Too Big message
+//
+
+FEM_icmp4_destination_unreachable (
+	icmp4_packet_too_big_LINK1_tn2nut_MTU_1420,
+	_HETHER_tn2nut,
+		{
+		DF=1;
+		_SRC(V4_OFFLINK_ADDRESS);
+		_DST(NUT_LINK1_V4_ADDRESS);
+	},
+		{
+		Code=4;
+		Unused=1420;
+		payload=v4_orignal_packet_1450;
+	}
+)
+
+FEM_icmp4_destination_unreachable (
+	icmp4_packet_too_big_LINK1_tn2nut_MTU_1300,
+	_HETHER_tn2nut,
+		{
+		DF=1;
+		_SRC(V4_OFFLINK_ADDRESS);
+		_DST(NUT_LINK1_V4_ADDRESS);
+	},
+		{
+		Code=4;
+		Unused=1300;
+		payload=v6overv4_orignal_packet_1500;
+	}
+)
+
+FEM_icmp4_destination_unreachable (
+	icmp4_packet_too_big_LINK1_tn2nut_MTU_1020,
+	_HETHER_tn2nut,
+		{
+		DF=1;
+		_SRC(V4_OFFLINK_ADDRESS);
+		_DST(NUT_LINK1_V4_ADDRESS);
+	},
+		{
+		Code=4;
+		Unused=1020;
+		payload=v6overv4_orignal_packet_1500;
+	}
+)
+
+
+//
+// ICMPv6 Packet Too Big message
+//
+
+FEM_icmp6_packet_too_big(
+	icmp6_TooBigMesg_LINK0_nut2tn_1400,
+	_HETHER_nut2tn,
+		{
+		_SRC(NUT_LINK0_GLOBAL_ADDRESS);
+		_DST(TN_LINK0_GLOBAL_ADDRESS); 
+	},
+		{
+		MTU=1400;
+		payload=any;
+	}
+)
+
+FEM_icmp6_packet_too_big(
+	icmp6_TooBigMesg_LINK0_nut2tn_1280,
+	_HETHER_nut2tn,
+		{
+		_SRC(NUT_LINK0_GLOBAL_ADDRESS);
+		_DST(TN_LINK0_GLOBAL_ADDRESS); 
+	},
+		{
+		MTU=1280;
+		payload=any;
+	}
+)
+////////////////////
+
+
+FEM_icmp4_echo_request(
+        echo_request_LINK1_v4_tn2nut_OFFLINK,
+        _HETHER_tn2nut,
+                {
+				DF=1;
+                SourceAddress=V4_OFFLINK0_ADDRESS;
+                DestinationAddress=NUT_LINK1_V4_ADDRESS;        
+        },
+                {
+                payload=data_size_1422;
+//                payload=ping_data;
+        }
+)
+
+FEM_icmp4_echo_reply(
+        echo_reply_LINK1_v4_nut2tn_OFFLINK,
+        _HETHER_nut2tn,
+                {
+				DF=1;
+                SourceAddress=NUT_LINK1_V4_ADDRESS;
+                DestinationAddress=V4_OFFLINK0_ADDRESS;        
+        },
+                {
+                payload=data_size_1422;
+//                payload=ping_data;
+        }
+)
+
+
+//
+// Payload
+//
+
+Payload v6overv4_orignal_packet {
+        data = substr(_PACKET_IPV4_NAME(v6overv4_echo_request_LINK1_nut2tn),0,74);
+}
+
+Payload v6overv4_orignal_packet_1500 {
+        data = substr(_PACKET_IPV4_NAME(v6overv4_echo_request_LINK1_nut2tn_1500),0,1472);
+}
+
+Payload v6_orignal_packet_1400 {
+        data = substr(_PACKET_IPV6_NAME(v6_echo_request_LINK0_tn2nut_OFFLINK_1400),0,1232);
+}
+
+Payload v4_orignal_packet_1450 {
+        data = right(_PACKET_IPV4_NAME(echo_request_LINK1_v4_tn2nut_OFFLINK),0);
+}
+

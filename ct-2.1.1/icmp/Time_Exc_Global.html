@@ -1,0 +1,105 @@
+<HTML>
+<HEAD>
+<TITLE>Time_Exc_Global.seq - check Message Processing Rules (ICMPv6
+	Time Exceeded , global address)</TITLE>
+<LINK REV="made" HREF="mailto:hackers@FreeBSD.org">
+</HEAD>
+
+<BODY>
+
+<!-- INDEX BEGIN -->
+<!--
+
+<UL>
+
+	<LI><A HREF="#NAME">NAME</A>
+	<LI><A HREF="#TARGET">TARGET</A>
+	<LI><A HREF="#SYNOPSIS">SYNOPSIS</A>
+	<LI><A HREF="#INITIALIZATION">INITIALIZATION</A>
+	<LI><A HREF="#TEST_PROCEDURE">TEST PROCEDURE</A>
+	<LI><A HREF="#JUDGMENT">JUDGMENT</A>
+	<LI><A HREF="#SEE_ALSO">SEE ALSO</A>
+</UL>
+-->
+<!-- INDEX END -->
+
+<P>
+<H1><A NAME="NAME">NAME</A></H1>
+<P>
+<PRE>        Time_Exc_Global.seq - check Message Processing Rules (ICMPv6
+        Time Exceeded , global address)
+</PRE>
+<P>
+<HR>
+<H1><A NAME="TARGET">TARGET</A></H1>
+<P>
+<PRE>        Host/Router
+</PRE>
+<P>
+<HR>
+<H1><A NAME="SYNOPSIS">SYNOPSIS</A></H1>
+<P>
+<PRE>        Time_Exc_Global.seq [-tooloption ...] -p Time_Exc_Global.def
+</PRE>
+<P>
+<HR>
+<H1><A NAME="INITIALIZATION">INITIALIZATION</A></H1>
+<P>
+<PRE>        Before starting test, check NUT's fragment reassembly function.
+        When test starts, states of Neighbor Cache Entry for TN's 
+        addresses are reachable.
+</PRE>
+<P>
+<HR>
+<H1><A NAME="TEST_PROCEDURE">TEST PROCEDURE</A></H1>
+<P>
+<PRE>        This test verifies that NUT sends valid ICMPv6 Time Exceeded (code 1)
+        in response to a packet which can not be reasemble.
+        And this test verifies that the message processing rule ,
+        
+        If the message is a response to a message sent to one of the
+        node's unicast addresses, the Source Address of the reply must
+        be that same address.
+</PRE>
+<P>
+<PRE>        TN                      NUT
+</PRE>
+<P>
+<PRE>        ---------------------------
+</PRE>
+<P>
+<PRE>        1.
+         === fragmented (1st) packet  ===&gt;
+                src address : TN global address
+                dst address : NUT global address             
+        
+        2.
+        &lt;&lt; JUDGMENT &gt;&gt;
+</PRE>
+<P>
+<PRE>         &lt;=== ICMPv6  Time Exceeded ===
+                src address : NUT global address
+                dst address : TN global address             
+             Code is 1
+</PRE>
+<P>
+<HR>
+<H1><A NAME="JUDGMENT">JUDGMENT</A></H1>
+<P>
+<PRE>        &lt;&lt; PASS &gt;&gt;
+                NUT send ICMPv6 Time Exceeded.
+                
+</PRE>
+<P>
+<PRE>        &lt;&lt; FAIL &gt;&gt;      
+                NUT do not send ICMPv6 Time Exceeded.
+</PRE>
+<P>
+<HR>
+<H1><A NAME="SEE_ALSO">SEE ALSO</A></H1>
+<P>
+<PRE>          perldoc V6evalTool
+</PRE>
+</BODY>
+
+</HTML>

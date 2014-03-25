@@ -1,0 +1,314 @@
+#!/usr/bin/perl
+#
+# Copyright (C) 1999, 2000, 2001, 2002, 2003 Yokogawa Electric Corporation,
+# IPA (Information-technology Promotion Agency, Japan).
+# All rights reserved.
+# 
+# Redistribution and use of this software in source and binary forms, with 
+# or without modification, are permitted provided that the following 
+# conditions and disclaimer are agreed and accepted by the user:
+# 
+# 1. Redistributions of source code must retain the above copyright 
+# notice, this list of conditions and the following disclaimer.
+# 
+# 2. Redistributions in binary form must reproduce the above copyright 
+# notice, this list of conditions and the following disclaimer in the 
+# documentation and/or other materials provided with the distribution.
+# 
+# 3. Neither the names of the copyrighters, the name of the project which 
+# is related to this software (hereinafter referred to as "project") nor 
+# the names of the contributors may be used to endorse or promote products 
+# derived from this software without specific prior written permission.
+# 
+# 4. No merchantable use may be permitted without prior written 
+# notification to the copyrighters. However, using this software for the 
+# purpose of testing or evaluating any products including merchantable 
+# products may be permitted without any notification to the copyrighters.
+# 
+# 
+# 
+# THIS SOFTWARE IS PROVIDED BY THE COPYRIGHTERS, THE PROJECT AND 
+# CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING 
+# BUT NOT LIMITED THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS 
+# FOR A PARTICULAR PURPOSE, ARE DISCLAIMED.  IN NO EVENT SHALL THE 
+# COPYRIGHTERS, THE PROJECT OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, 
+# INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES 
+# (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR 
+# SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) 
+# HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN 
+# CONTRACT,STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) 
+# ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF 
+# THE POSSIBILITY OF SUCH DAMAGE.
+#
+# $TAHI: ct/natpt/rfc2765_3.3_icmpv4error.seq,v 1.3 2001/10/11 01:41:47 akisada Exp $
+#
+
+BEGIN { $V6evalTool::TestVersion = '$Name: REL_2_1_1 $'; }
+use V6evalTool;
+use natpt;
+
+checkNUT(router);
+
+# Interface 
+$IF="Link0";
+$IF1="Link1";
+vCapture($IF);
+vCapture($IF1);
+
+%pktdesc = (
+  icmpv4_unreach_net        => 'Send ICMPv4 (Type 3, Code 0)',
+  icmpv4_unreach_host       => 'Send ICMPv4 (Type 3, Code 1)',
+  icmpv4_unreach_proto      => 'Send ICMPv4 (Type 3, Code 2)',
+  icmpv4_unreach_port       => 'Send ICMPv4 (Type 3, Code 3)',
+  icmpv4_unreach_mtu1000    => 'Send ICMPv4 (Type 3, Code 4, MTU 1000)',
+  icmpv4_unreach_mtu0       => 'Send ICMPv4 (Type 3, Code 4, MTU 0)',
+  icmpv4_unreach_source     => 'Send ICMPv4 (Type 3, Code 5)',
+  icmpv4_unreach_code6      => 'Send ICMPv4 (Type 3, Code 6)',
+  icmpv4_unreach_code7      => 'Send ICMPv4 (Type 3, Code 7)',
+  icmpv4_unreach_code8      => 'Send ICMPv4 (Type 3, Code 8)',
+  icmpv4_unreach_prohib9    => 'Send ICMPv4 (Type 3, Code 9)',
+  icmpv4_unreach_prohib10   => 'Send ICMPv4 (Type 3, Code 10)',
+  icmpv4_unreach_code11     => 'Send ICMPv4 (Type 3, Code 11)',
+  icmpv4_unreach_code12     => 'Send ICMPv4 (Type 3, Code 12)',
+  icmpv4_redirect           => 'Send ICMPv4 (Type 5, Code 0)',
+  icmpv4_source_quench      => 'Send ICMPv4 (Type 4, Code 0)',
+  icmpv4_time_exceeded      => 'Send ICMPv4 (Type 11, Code 1)',
+  icmpv4_par_prob_0         => 'Send ICMPv4 (Type 12, Code 0, Pointer 0)',
+  icmpv4_par_prob_2         => 'Send ICMPv4 (Type 12, Code 0, Pointer 2)',
+  icmpv4_par_prob_8         => 'Send ICMPv4 (Type 12, Code 0, Pointer 8)',
+  icmpv4_par_prob_9         => 'Send ICMPv4 (Type 12, Code 0, Pointer 9)',
+  icmpv4_par_prob_12        => 'Send ICMPv4 (Type 12, Code 0, Pointer 12)',
+  icmpv4_par_prob_16        => 'Send ICMPv4 (Type 12, Code 0, Pointer 16)',
+  icmpv4_par_prob_notdef => 'Send ICMPv4 (Type 12, Code 0, Pointer 1(TOS))',
+  icmpv6_time_exceeded      => 'Recv ICMPv6 (Type 3, Code 1)',
+  icmpv6_unreach_prohib     => 'Recv ICMPv6 (Type 1, Code 1)',
+  icmpv6_packet_too_big1006 => 'Recv ICMPv6 (Type 2, Code 0, MTU 1006)',
+  icmpv6_packet_too_big1028 => 'Recv ICMPv6 (Type 2, Code 0, MTU 1028)',
+  icmpv6_unreach_port       => 'Recv ICMPv6 (Type 1, Code 4)',
+  icmpv6_par_prob_protocol  => 'Recv ICMPv6 (Type 4, Code 1, Pointer 6)',
+  icmpv6_unreach_noroute    => 'Recv ICMPv6 (Type 1, Code 0)',
+  icmpv6_par_prob_0         => 'Recv ICMPv6 (Type 4, Code 0, Pointer 0)',
+  icmpv6_par_prob_4         => 'Recv ICMPv6 (Type 4, Code 0, Pointer 4)',
+  icmpv6_par_prob_7         => 'Recv ICMPv6 (Type 4, Code 0, Pointer 7)',
+  icmpv6_par_prob_6         => 'Recv ICMPv6 (Type 4, Code 0, Pointer 6)',
+  icmpv6_par_prob_8         => 'Recv ICMPv6 (Type 4, Code 0, Pointer 8)',
+  icmpv6_par_prob_24        => 'Recv ICMPv6 (Type 4, Code 0, Pointer 24)',
+  icmpv6_par_prob_notdef => 'Recv ICMPv6 (Type 4, Code 0, Pointer -1(notdef))',
+
+  arp_nut2tn_request => 'Recv ARP request on Link1 (TN IPv4addr)',
+  arp_tn2nut_reply   => 'Send ARP reply on Link1 (TN IPv4addr)',
+  ns_nut2tn_siit0    => 'Recv Neighbor Solicitation on Link0 (SIIT V6addr)',
+  na_tn2nut_siit0    => 'Send Neighbor Advertisement on Link0 (SIIT V6addr)',
+);
+
+$result = $V6evalTool::exitPass;
+$result += send_recv($IF1, 'icmpv4_unreach_net', $IF, 'icmpv6_unreach_noroute');
+#$result += send_recv($IF1, 'icmpv4_unreach_host', $IF, 'icmpv6_unreach_noroute');
+#$result += send_recv($IF1, 'icmpv4_unreach_proto', $IF, 'icmpv6_par_prob_protocol');
+#$result += send_recv($IF1, 'icmpv4_unreach_port', $IF, 'icmpv6_unreach_port');
+#$result += send_recv($IF1, 'icmpv4_unreach_mtu1000', $IF, 'icmpv6_packet_too_big1028');
+#$result += send_recv($IF1, 'icmpv4_unreach_mtu0', $IF, 'icmpv6_packet_too_big1006');
+#$result += send_recv($IF1, 'icmpv4_unreach_source', $IF, 'icmpv6_unreach_noroute');
+#$result += send_recv($IF1, 'icmpv4_unreach_code6', $IF, 'icmpv6_unreach_noroute');
+#$result += send_recv($IF1, 'icmpv4_unreach_code7', $IF, 'icmpv6_unreach_noroute');
+#$result += send_recv($IF1, 'icmpv4_unreach_code8', $IF, 'icmpv6_unreach_noroute');
+#$result += send_recv($IF1, 'icmpv4_unreach_prohib9', $IF, 'icmpv6_unreach_prohib');
+#$result += send_recv($IF1, 'icmpv4_unreach_prohib10', $IF, 'icmpv6_unreach_prohib');
+#$result += send_recv($IF1, 'icmpv4_unreach_code11', $IF, 'icmpv6_unreach_noroute');
+#$result += send_recv($IF1, 'icmpv4_unreach_code12', $IF, 'icmpv6_unreach_noroute');
+#$result += send_recv($IF1, 'icmpv4_redirect', $IF, '');
+#$result += send_recv($IF1, 'icmpv4_source_quench', $IF, '');
+#$result += send_recv($IF1, 'icmpv4_time_exceeded', $IF, 'icmpv6_time_exceeded');
+#$result += send_recv($IF1, 'icmpv4_par_prob_0', $IF, 'icmpv6_par_prob_0');
+#$result += send_recv($IF1, 'icmpv4_par_prob_2', $IF, 'icmpv6_par_prob_4');
+#$result += send_recv($IF1, 'icmpv4_par_prob_8', $IF, 'icmpv6_par_prob_7');
+#$result += send_recv($IF1, 'icmpv4_par_prob_9', $IF, 'icmpv6_par_prob_6');
+#$result += send_recv($IF1, 'icmpv4_par_prob_12', $IF, 'icmpv6_par_prob_8');
+#$result += send_recv($IF1, 'icmpv4_par_prob_16', $IF, 'icmpv6_par_prob_24');
+#$result += send_recv($IF1, 'icmpv4_par_prob_notdef', $IF, 'icmpv6_par_prob_notdef');
+
+if($result == $V6evalTool::exitPass) {
+    vLogHTML("<H3>OK</H3>");
+    exit $V6evalTool::exitPass;
+}
+
+error:
+vLogHTML("<FONT COLOR=#FF0000><H3>NG</H3></FONT>");
+exit $V6evalTool::exitFail;
+
+########################################################################
+__END__
+
+=head1 NAME
+
+	rfc2765_3.3_icmpv4error.seq - Verify IPv6 <-> IPv4 header 
+        translation in accordance with RFC2765 [SIIT]
+
+=head1 TARGET
+
+	Router
+
+=head1 SYNOPSIS
+
+	rfc2765_3.3_icmpv4error.seq [-tooloption ...] 
+        -p rfc2765_3.3_icmpv4error.def
+
+=head1 INITIALIZATION
+
+=begin html
+<PRE>
+	Before this test starts, run <A HREF="./initialize.html">initialize.seq</A>.
+</PRE>
+
+=end html
+
+=head1 TEST PROCEDURE
+
+        This test verifies that NUT can translates ICMPv4 error messages
+        in accordance to RFC2765.
+	
+	Network Topology
+
+	Link0
+	--------------------------
+	    |               |
+	   TN              NUT
+	    |               |
+	--------------------------
+	Link1
+
+	TN -- (Link0) -- NUT        NUT -- (Link1) -- TN
+	
+	---------------------      ------------------------
+
+   ICMPv6 (Type 1, Code 0)             <=  ICMPv4 (Type 3, Code 0)
+   ICMPv6 (Type 1, Code 0)             <=  ICMPv4 (Type 3, Code 1)
+   ICMPv6 (Type 4, Code 1)             <=  ICMPv4 (Type 3, Code 2)
+   ICMPv6 (Type 1, Code 4)             <=  ICMPv4 (Type 3, Code 3)
+   ICMPv6 (Type 2, Code 0, MTU 1028)   <=  ICMPv4 (Type 3, Code 4, MTU 1000)
+   ICMPv6 (Type 2, Code 0, MTU 1006)   <=  ICMPv4 (Type 3, Code 4, MTU 0)
+   ICMPv6 (Type 1, Code 0)             <=  ICMPv4 (Type 3, Code 5)
+   ICMPv6 (Type 1, Code 0)             <=  ICMPv4 (Type 3, Code 6)
+   ICMPv6 (Type 1, Code 0)             <=  ICMPv4 (Type 3, Code 7)
+   ICMPv6 (Type 1, Code 0)             <=  ICMPv4 (Type 3, Code 8)
+   ICMPv6 (Type 1, Code 1)             <=  ICMPv4 (Type 3, Code 9)
+   ICMPv6 (Type 1, Code 1)             <=  ICMPv4 (Type 3, Code 10)
+   ICMPv6 (Type 1, Code 0)             <=  ICMPv4 (Type 3, Code 11)
+   ICMPv6 (Type 1, Code 0)             <=  ICMPv4 (Type 3, Code 12)
+   Silently drop                       <=  ICMPv4 (Type 5, Code 0)
+   Silently drop                       <=  ICMPv4 (Type 4, Code 0)
+   ICMPv6 (Type 3, Code 1)             <=  ICMPv4 (Type 11, Code 1)
+   ICMPv6 (Type 4, Code 0, Pointer 0)  <=  ICMPv4 (Type 12, Code 0, Pointer 0)
+   ICMPv6 (Type 4, Code 0, Pointer 4)  <=  ICMPv4 (Type 12, Code 0, Pointer 2)
+   ICMPv6 (Type 4, Code 0, Pointer 7)  <=  ICMPv4 (Type 12, Code 0, Pointer 8)
+   ICMPv6 (Type 4, Code 0, Pointer 6)  <=  ICMPv4 (Type 12, Code 0, Pointer 9)
+   ICMPv6 (Type 4, Code 0, Pointer 8)  <=  ICMPv4 (Type 12, Code 0, Pointer 12)
+   ICMPv6 (Type 4, Code 0, Pointer 24) <=  ICMPv4 (Type 12, Code 0, Pointer 16)
+   ICMPv6 (Type 4, Code 0, Pointer -1) <=  ICMPv4 (Type 12, Code 0, Pointer 1)
+
+=head1 JUDGMENT
+
+	<< PASS >>
+		NUT translates ICMPv4 error messages in accordance with
+                RFC2765, including translating the inner IP-header.
+		
+	<< FAIL >>	
+                NUT fails to translate ICMPv4 errors correctly, or doesn't
+                drop untranslatable ICMPv4 error types. 
+
+=head1 NOTE
+
+=head1 REFERENCE
+
+B<RFC2765>
+
+3.3.  Translating ICMPv4 Headers into ICMPv6 Headers
+
+   All ICMP messages that are to be translated require that the ICMP
+   checksum field be updated as part of the translation since ICMPv6,
+   unlike ICMPv4, has a pseudo-header checksum just like UDP and TCP.
+
+   In addition all ICMP packets need to have the Type value translated
+   and for ICMP error messages the included IP header also needs
+   translation.
+
+   The actions needed to translate various ICMPv4 messages are:
+
+      ICMPv4 error messages:
+
+        Destination Unreachable (Type 3)
+           For all that are not explicitly listed below set the Type to
+           1.
+
+           Translate the code field as follows:
+              Code 0, 1 (net, host unreachable):
+                     Set Code to 0 (no route to destination).
+
+              Code 2 (protocol unreachable):
+                     Translate to an ICMPv6 Parameter Problem (Type 4,
+                     Code 1) and make the Pointer point to the IPv6 Next
+                     Header field.
+
+              Code 3 (port unreachable):
+                     Set Code to 4 (port unreachable).
+
+              Code 4 (fragmentation needed and DF set):
+                     Translate to an ICMPv6 Packet Too Big message (Type
+                     2) with code 0.  The MTU field needs to be adjusted
+                     for the difference between the IPv4 and IPv6 header
+                     sizes.  Note that if the IPv4 router did not set
+                     the MTU field i.e. the router does not implement
+                     [PMTUv4], then the translator must use the plateau
+                     values specified in [PMTUv4] to determine a likely
+                     path MTU and include that path MTU in the ICMPv6
+                     packet. (Use the greatest plateau value that is
+                     less than the returned Total Length field.)
+
+              Code 5 (source route failed):
+                     Set Code to 0 (no route to destination).  Note that
+                     this error is unlikely since source routes are not
+                     translated.
+
+              Code 6,7:
+                     Set Code to 0 (no route to destination).
+
+              Code 8:
+                     Set Code to 0 (no route to destination).
+
+              Code 9, 10 (communication with destination host
+              administratively prohibited):
+                     Set Code to 1 (communication with destination
+                     administratively prohibited)
+
+              Code 11, 12:
+                     Set Code to 0 (no route to destination).
+
+        Redirect (Type 5)
+           Single hop message.  Silently drop.
+
+        Source Quench (Type 4)
+           Obsoleted in ICMPv6.  Silently drop.
+
+        Time Exceeded (Type 11)
+           Set the Type field to 3.  The Code field is unchanged.
+
+        Parameter Problem (Type 12)
+           Set the Type field to 4.  The Pointer needs to be updated to
+           point to the corresponding field in the translated include
+           IP header.
+
+B<http://www.cs.washington.edu/research/networking/napt/reports/usenix98/>
+
+A.3 Translating ICMPv4 to ICMPv6
+
+     Parameter Problem (Type 12): set the Type field to 4 and translate 
+     the Pointer values as follows:
+     0-to-0, 2-to-4, 8-to-7, 9-to-6, 12-to-8, 16-to-24, and for all other 
+     ICMPv4 Pointer values set the ICMPv6 Pointer value to -1. 
+
+
+=head1 SEE ALSO
+
+	perldoc V6evalTool
+
+=cut

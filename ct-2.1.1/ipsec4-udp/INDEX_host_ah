@@ -1,0 +1,42 @@
+##
+## $Name: REL_2_1_1 $
+##
+## $TAHI: ct/ipsec4-udp/INDEX_host_ah,v 1.3 2001/10/05 06:39:01 masaxmasa Exp $
+##
+##<seq>:<def>:[<opt>]:[<log>]:<desc>
+##
+&print:<B>Host Transport AH Outbound</B>
+&print:Host Transport AH Outbound with authentication
+
+../ipsec/HTR_A_Out_hmacmd5.seq:./HTR_A_hmacmd5.def:-cpp="-include ./ipsecaddr.def"::Outbound AH packet (HMAC-MD5)
+../ipsec/HTR_A_Out_hmacsha1.seq:./HTR_A_hmacsha1.def:-cpp="-include ./ipsecaddr.def"::Outbound AH packet (HMAC-SHA1)
+
+&print:Host Transport AH Outbound Header Order
+&#../ipsec/HTR_A_Out_Fragment.seq:./HTR_A_Fragment.def:-cpp="-include ./ipsecaddr.def"::Outbound Header Order (Fragment Header vs AH)
+
+&print:Host Transport AH Outbound Connect SA bundles
+../ipsec/HTR_A_Out_2SA_DspiDipdst.seq :./HTR_A_2SA_DspiDip.def:-cpp="-include ./ipsecaddr.def"::Connect two SA bundles with different spi, different IPdst
+../ipsec/HTR_A_Out_2SA_SspiDipdst.seq :./HTR_A_2SA_SspiDip.def:-cpp="-include ./ipsecaddr.def"::Connect two SA bundles with same spi, different IPdst
+
+&print:<B>Host Transport AH Inbound</B>
+&print:Host Transport AH Inbound with authentication
+
+../ipsec/HTR_A_In_hmacmd5.seq:./HTR_A_hmacmd5.def:-cpp="-include ./ipsecaddr.def"::Inbound AH packet (HMAC-MD5)
+../ipsec/HTR_A_In_hmacsha1.seq:./HTR_A_hmacsha1.def:-cpp="-include ./ipsecaddr.def"::Inbound AH packet (HMAC-SHA1)
+
+&print:Host Transport AH Inbound Header Order
+&#../ipsec/HTR_A_In_Fragment.seq:./HTR_A_Fragment.def:-cpp="-include ./ipsecaddr.def"::Inbound Header Order (Fragment Header vs AH)
+
+
+&print:Host Transport AH Inbound Connect SA bundles
+../ipsec/HTR_A_In_2SA_DspiDipsrc.seq :./HTR_A_2SA_DspiDip.def:-cpp="-include ./ipsecaddr.def"::Connect two SA bundles with different spi, different IPsrc
+../ipsec/HTR_A_In_2SA_DspiSipsrc.seq :./HTR_A_2SA_DspiSip.def:-cpp="-include ./ipsecaddr.def"::Connect two SA bundles with different spi, same IPsrc
+
+&print:Host Transport AH Inbound, Detect modification of packet with AH
+./HTR_A_In_DM_IPv4H_dst.seq  :./HTR_A_DM_IPv4H.def:-cpp="-include ./ipsecaddr.def"::Detect modification of IPv4 header IP dst address with AH
+./HTR_A_In_DM_IPv4H_src.seq  :./HTR_A_DM_IPv4H.def:-cpp="-include ./ipsecaddr.def"::Detect modification of IPv4 header IP src address with AH
+./HTR_A_In_DM_IPv4H_ttl.seq  :./HTR_A_DM_IPv4H.def:-cpp="-include ./ipsecaddr.def"::Undetect modification of IPv4 header TTL with AH
+./HTR_A_In_DM_Payload.seq :./HTR_A_DM_Payload.def:-cpp="-include ./ipsecaddr.def"::Detect modification of payload with AH
+
+#
+#########################################################################

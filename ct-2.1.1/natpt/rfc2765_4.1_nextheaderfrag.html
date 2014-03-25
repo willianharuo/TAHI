@@ -1,0 +1,242 @@
+<HTML>
+<HEAD>
+<TITLE>rfc2765_4.1_nextheaderfrag.seq - Verify IPv6 <-> IPv4 header 
+        translation in accordance with RFC2765 [SIIT]</TITLE>
+<LINK REV="made" HREF="mailto:hackers@FreeBSD.org">
+</HEAD>
+
+<BODY>
+
+<!-- INDEX BEGIN -->
+<!--
+
+<UL>
+
+	<LI><A HREF="#NAME">NAME</A>
+	<LI><A HREF="#TARGET">TARGET</A>
+	<LI><A HREF="#SYNOPSIS">SYNOPSIS</A>
+	<LI><A HREF="#INITIALIZATION">INITIALIZATION</A>
+	<LI><A HREF="#TEST_PROCEDURE">TEST PROCEDURE</A>
+	<LI><A HREF="#JUDGMENT">JUDGMENT</A>
+	<LI><A HREF="#NOTE">NOTE</A>
+	<LI><A HREF="#REFERENCE">REFERENCE</A>
+	<LI><A HREF="#SEE_ALSO">SEE ALSO</A>
+</UL>
+-->
+<!-- INDEX END -->
+
+<P>
+<H1><A NAME="NAME">NAME</A></H1>
+<P>
+<PRE>        rfc2765_4.1_nextheaderfrag.seq - Verify IPv6 &lt;-&gt; IPv4 header 
+        translation in accordance with RFC2765 [SIIT]
+</PRE>
+<P>
+<HR>
+<H1><A NAME="TARGET">TARGET</A></H1>
+<P>
+<PRE>        Router
+</PRE>
+<P>
+<HR>
+<H1><A NAME="SYNOPSIS">SYNOPSIS</A></H1>
+<P>
+<PRE>        rfc2765_4.1_nextheaderfrag.seq [-tooloption ...] 
+        -p rfc2765_4.1_nextheaderfrag.def
+</PRE>
+<P>
+<HR>
+<H1><A NAME="INITIALIZATION">INITIALIZATION</A></H1>
+<PRE>
+	Before this test starts, run <A HREF="./initialize.html">initialize.seq</A>.
+</PRE>
+
+<P>
+<HR>
+<H1><A NAME="TEST_PROCEDURE">TEST PROCEDURE</A></H1>
+<P>
+<PRE>        This test verifies that NUT can translates IPv6 Next Header field
+        to IPv4 Protocol field.
+        
+        Network Topology
+</PRE>
+<P>
+<PRE>        Link0
+        --------------------------
+            |               |
+           TN              NUT
+            |               |
+        --------------------------
+        Link1
+</PRE>
+<P>
+<PRE>        TN -- (Link0) -- NUT        NUT -- (Link1) -- TN
+        
+        ---------------------      ------------------------
+</PRE>
+<HR WIDTH=80%>
+
+<P>
+<PRE>        1.1.
+        ===================&gt;
+        ICMPv6 Echo Request
+                IPv6 Header
+                        src address : TN LINK0 IPv4 embedded IPv6 address
+                        dst address : TN LINK1 IPv4 embedded IPv6 address
+                Fragment Header
+                        Next Header = 58
+                        Identification = 10000
+                ICMPv6 echo request
+</PRE>
+<P>
+<PRE>        1.2.
+        &lt;&lt;JUDGMENT&gt;&gt;
+                                   ===================&gt;
+        ICMPv4 Echo request
+                IPv4 Header
+                        src address : TN LINK0 IPv4 address
+                        dst address : TN LINK1 IPv4 address
+                        Don't Fragment = 0
+                        Protocol = 1
+                        Identifier = 10000
+                ICMPv4 echo request
+</PRE>
+<HR WIDTH=80%>
+
+<P>
+<PRE>        2.1.
+        ===================&gt;
+        IPv6 UDP packet
+                IPv6 Header
+                        src address : TN LINK0 IPv4 embedded IPv6 address
+                        dst address : TN LINK1 IPv4 embedded IPv6 address
+                Fragment Header
+                        Next Header = 17
+                        Identification = 20000
+                UDP packet
+                        Checksum including IPv6 pseudo header
+                        data = repeat(0xff,64)
+</PRE>
+<P>
+<PRE>        2.2.
+        &lt;&lt;JUDGMENT&gt;&gt;
+                                   ===================&gt;
+        IPv4 UDP packet
+                IPv4 Header
+                        src address : TN LINK0 IPv4 address
+                        dst address : TN LINK1 IPv4 address
+                        Don't Fragment = 1
+                        Protocol = 17
+                        Identifier = 20000
+                UDP packet
+                        Checksum including IPv4 pseudo header
+                        data = repeat(0xff,64)
+</PRE>
+<HR WIDTH=80%>
+
+<P>
+<PRE>        3.1.
+        ===================&gt;
+        IPv6 UDP packet
+                IPv6 Header
+                        src address : TN LINK0 IPv4 embedded IPv6 address
+                        dst address : TN LINK1 IPv4 embedded IPv6 address
+                Fragment Header
+                        Next Header = 6
+                        Identification = 30000
+                TCP packet
+                        Checksum including IPv6 pseudo header
+                        data = repeat(0xff,64)
+</PRE>
+<P>
+<PRE>        3.2.
+        &lt;&lt;JUDGMENT&gt;&gt;
+                                   ===================&gt;
+        IPv4 TCP packet
+                IPv4 Header
+                        src address : TN LINK0 IPv4 address
+                        dst address : TN LINK1 IPv4 address
+                        Don't Fragment = 0
+                        Protocol = 6
+                        Identifier = 30000
+                TCP packet
+                        Checksum including IPv4 pseudo header
+                        data = repeat(0xff,64)
+</PRE>
+<HR WIDTH=80%>
+
+<P>
+<PRE>        4.1.
+        ===================&gt;
+        IPv6 unknown protocol(255) packet
+                IPv6 Header
+                        src address : TN LINK0 IPv4 embedded IPv6 address
+                        dst address : TN LINK1 IPv4 embedded IPv6 address
+                Fragment Header
+                        Next Header = 255
+                        Identification = 40000
+                data = repeat(0xff,64)
+         
+</PRE>
+<P>
+<PRE>        4.2.
+        &lt;&lt;JUDGMENT&gt;&gt;
+                                   ===================&gt;
+        IPv4 unknown protocol(255) packet
+                IPv4 Header
+                        src address : TN LINK0 IPv4 address
+                        dst address : TN LINK1 IPv4 address
+                        Don't Fragment = 1
+                        Protocol = 255
+                        Identifier = 40000
+                data = repeat(0xff,64)
+</PRE>
+<P>
+<HR>
+<H1><A NAME="JUDGMENT">JUDGMENT</A></H1>
+<P>
+<PRE>        &lt;&lt; PASS &gt;&gt;
+                NUT translates ICMPv6 to ICMPv4, recalculates header
+                checksum for UDP and TCP, and let other protocols
+                pass through unchanged.
+                
+        &lt;&lt; FAIL &gt;&gt;      
+                TN (Link1) does not receive an ICMPv4, a UDP, a TCP
+                and an IPv6 packet with Next Header = 255.
+</PRE>
+<P>
+<HR>
+<H1><A NAME="NOTE">NOTE</A></H1>
+<P>
+<HR>
+<H1><A NAME="REFERENCE">REFERENCE</A></H1>
+<P>
+<STRONG>RFC2765</STRONG>
+
+
+
+<P>
+4.1. Translating IPv6 Headers into IPv4 Headers
+
+<P>
+<PRE>   If the IPv6 packet contains a Fragment header the header fields are
+   set as above with the following exceptions:
+</PRE>
+<P>
+<PRE>         Identification:
+                 Copied from the low-order 16-bits in the
+                 Identification field in the Fragment header.
+</PRE>
+<P>
+<PRE>         Protocol:
+                 Next Header value copied from Fragment header.
+</PRE>
+<P>
+<HR>
+<H1><A NAME="SEE_ALSO">SEE ALSO</A></H1>
+<P>
+<PRE>        perldoc V6evalTool
+</PRE>
+</BODY>
+
+</HTML>

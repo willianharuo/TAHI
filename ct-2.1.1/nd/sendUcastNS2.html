@@ -1,0 +1,225 @@
+<HTML>
+<HEAD>
+<TITLE>sendUcastNS2 - Verify that NUT sends unicast NSs by RetransTimer=3sec.</TITLE>
+<LINK REV="made" HREF="mailto:hackers@FreeBSD.org">
+</HEAD>
+
+<BODY>
+
+<!-- INDEX BEGIN -->
+<!--
+
+<UL>
+
+	<LI><A HREF="#NAME">NAME</A>
+	<LI><A HREF="#TARGET">TARGET</A>
+	<LI><A HREF="#SYNOPSIS">SYNOPSIS</A>
+	<LI><A HREF="#INITIALIZATION">INITIALIZATION</A>
+	<UL>
+
+		<LI><A HREF="#A_CASE_OF_A_HOST">A CASE OF A HOST</A>
+		<LI><A HREF="#A_CASE_OF_A_ROUTER">A CASE OF A ROUTER</A>
+	</UL>
+
+	<LI><A HREF="#TEST_PROCEDURE">TEST PROCEDURE</A>
+	<LI><A HREF="#JUDGMENT">JUDGMENT</A>
+	<LI><A HREF="#TERMINATION">TERMINATION</A>
+	<UL>
+
+		<LI><A HREF="#A_CASE_OF_A_HOST">A CASE OF A HOST</A>
+		<LI><A HREF="#A_CASE_OF_A_ROUTER">A CASE OF A ROUTER</A>
+	</UL>
+
+	<LI><A HREF="#NOTE">NOTE</A>
+	<LI><A HREF="#SEE_ALSO">SEE ALSO</A>
+</UL>
+-->
+<!-- INDEX END -->
+
+<P>
+<H1><A NAME="NAME">NAME</A></H1>
+<P>
+sendUcastNS2 - Verify that NUT sends unicast NSs by RetransTimer=3sec.
+
+<P>
+<HR>
+<H1><A NAME="TARGET">TARGET</A></H1>
+<P>
+Host and Router
+
+<P>
+Host only
+
+<P>
+<HR>
+<H1><A NAME="SYNOPSIS">SYNOPSIS</A></H1>
+<P>
+<PRE>  sendUcastNS2.seq [-tooloption ...] -p sendUcastNS2.def
+</PRE>
+<P>
+<HR>
+<H1><A NAME="INITIALIZATION">INITIALIZATION</A></H1>
+<P>
+<HR>
+<H2><A NAME="A_CASE_OF_A_HOST">A CASE OF A HOST</A></H2>
+<OL>
+  <LI> Send RA with RetransTimer=3sec to initiate NUT's retrans timer.
+  <LI> Clear NC state for TN
+</OL>
+
+<P>
+<PRE>  TN                   NUT
+  ------------------------
+  ==== unsolicited RA ===&gt;
+        src=X's link-local
+        dst=all-node
+        M=0, O=0
+        Lifetime=600, ReachableTime=0, RetransTimer=3000
+</PRE>
+<P>
+<HR>
+<H2><A NAME="A_CASE_OF_A_ROUTER">A CASE OF A ROUTER</A></H2>
+<P>
+<PRE>  Clear NC state for TN
+</PRE>
+<P>
+<HR>
+<H1><A NAME="TEST_PROCEDURE">TEST PROCEDURE</A></H1>
+<P>
+<STRONG>sendUcastNS2</STRONG> verifies NUT send unicast NSs by the rules that are configured by RA (in
+host case) or manual (in router cast).
+
+<PRE>
+  TN(or X)	  NUT
+  ---------------------
+<BR>
+  State: NONCE
+<BR>
+  ==== echo-request ===>
+  	src=TN's link-local
+  	dst=NUT's link-local
+<BR>
+  State: INCOMPLETE
+<BR>
+  <=== <A HREF="#JDG1">Judgment #1</A>: multicast NS ===
+  	src=NUT's link-local
+  	dst=solicited-node[TN's link-local]
+  	w/ SLLA
+  	timeout: 3 sec * MAX_MULTICAST_SOLICIT
+<BR>
+  ==== solicited NA ===>
+  	src=TN's link-local
+  	dst=NUT's link-local
+  	R=0, S=1, O=1
+  	w/ TLLA
+<BR>
+  State: REACHABLE
+<BR>
+  <=== <A HREF="#JDG2">Judgment #2</A>: echo-reply   ====
+  	src=NUT's link-local
+  	dst=TN's link-local
+<BR>
+  Wait (REACHABLE_TIME * MAX_RANDOM_FACTOR)
+<BR>
+  State: STALE
+<BR>
+  ==== echo-request ===>
+  	src=TN's link-local
+  	dst=NUT's link-local
+<BR>
+  <=== <A HREF="#JDG3">Judgment #3</A>: echo-reply   ====
+  	src=NUT's link-local
+  	dst=TN's link-local
+<BR>
+  Wait (DELAY_FIRST_PROBE_TIME)
+<BR>
+  State: PROBE
+<BR>
+  <=== <A HREF="#JDG4">Judgment #4:</A> unicast NS   ====
+  	src=NUT's link-local
+  	dst=TN's link-local
+  	w/ or w/o SLLA
+<BR>
+  <=== <A HREF="#JDG4">Judgment #4:</A> unicast NS   ====
+  	src=NUT's link-local
+  	dst=TN's link-local
+  	w/ or w/o SLLA
+<BR>
+  <=== <A HREF="#JDG4">Judgment #4</A>: unicast NS   ====
+  	src=NUT's link-local
+  	dst=TN's link-local
+  	w/ or w/o SLLA
+</PRE>
+
+<P>
+<HR>
+<H1><A NAME="JUDGMENT">JUDGMENT</A></H1>
+<PRE>
+<A NAME="JDG1"></A>
+  1. NUT must send at the least one multicast NS:
+     src=NUT's link-local, dst=solicited-node[TN's link-local], w/ SLLA
+<A NAME="JDG2"></A>
+  2. NUT must send an echo-reply:
+     src=NUT's link-local, dst=TN's link-local
+<A NAME="JDG3"></A>
+  3. NUT must send an echo-reply:
+     src=NUT's link-local, dst=TN's link-local
+<A NAME="JDG4"></A>
+  4. NUT must send multicast NSs:
+     src=NUT's link-local, dst=TN's link-local, w/ or w/o SLLA
+<BR>
+     4.1. The Number of the unicast NSs <= MAX_UNICAST_SOLICIT(3)
+<BR>
+     4.2. Intervals between the unicast NSs >= 3.0 sec.
+</PRE>
+
+<P>
+<HR>
+<H1><A NAME="TERMINATION">TERMINATION</A></H1>
+<P>
+<HR>
+<H2><A NAME="A_CASE_OF_A_HOST">A CASE OF A HOST</A></H2>
+<OL>
+  <LI> Set NUT's retrans time to the default (1 sec)
+       with RA with RetransTimer=1sec.
+  <LI> Send RA with RouterLifetime=0 to flush the Default Router List.
+</OL>
+
+<P>
+<PRE>  X                    NUT
+  ------------------------
+  ==== unsolicited RA ===&gt;
+        src=X's link-local
+        dst=all-node
+        M=0, O=0
+        Lifetime=600, ReachableTime=0, RetransTimer=1000
+</PRE>
+<P>
+<PRE>  ==== unsolicited RA ===&gt;
+        src=X's link-local
+        dst=all-node
+        M=0, O=0
+        Lifetime=0, ReachableTime=0, RetransTimer=0
+</PRE>
+<P>
+<HR>
+<H2><A NAME="A_CASE_OF_A_ROUTER">A CASE OF A ROUTER</A></H2>
+<P>
+<PRE>  N/A
+</PRE>
+<P>
+<HR>
+<H1><A NAME="NOTE">NOTE</A></H1>
+<P>
+<PRE>  The test does not invoke any remote command.
+</PRE>
+<P>
+<HR>
+<H1><A NAME="SEE_ALSO">SEE ALSO</A></H1>
+<P>
+<PRE>  perldoc V6evalTool
+  perldoc V6evalRemote
+</PRE>
+</BODY>
+
+</HTML>

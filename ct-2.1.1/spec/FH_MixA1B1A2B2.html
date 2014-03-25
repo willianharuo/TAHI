@@ -1,0 +1,367 @@
+<HTML>
+<HEAD>
+<TITLE>FH_MixA1B1A2B2 - check Mixed 2 Fragment Reassembly</TITLE>
+<LINK REV="made" HREF="mailto:hackers@FreeBSD.org">
+</HEAD>
+
+<BODY>
+
+<!-- INDEX BEGIN -->
+<!--
+
+<UL>
+
+	<LI><A HREF="#NAME">NAME</A>
+	<LI><A HREF="#TARGET">TARGET</A>
+	<LI><A HREF="#SYNOPSIS">SYNOPSIS</A>
+	<LI><A HREF="#INITIALIZATION">INITIALIZATION</A>
+	<LI><A HREF="#TEST_PROCEDURE">TEST PROCEDURE</A>
+	<LI><A HREF="#JUDGMENT">JUDGMENT</A>
+	<LI><A HREF="#REFERENCE">REFERENCE</A>
+	<LI><A HREF="#SEE_ALSO">SEE ALSO</A>
+</UL>
+-->
+<!-- INDEX END -->
+
+<P>
+<H1><A NAME="NAME">NAME</A></H1>
+<P>
+<PRE>  FH_MixA1B1A2B2 - check Mixed 2 Fragment Reassembly (A1-&gt;B1-&gt;A2-&gt;B2)
+</PRE>
+<P>
+<HR>
+<H1><A NAME="TARGET">TARGET</A></H1>
+<P>
+<PRE>  Host and Router
+</PRE>
+<P>
+<HR>
+<H1><A NAME="SYNOPSIS">SYNOPSIS</A></H1>
+<PRE>
+  <A HREF="./FH_MixA1B1A2B2.seq">FH_MixA1B1A2B2.seq</A> [-tooloption ...] -pkt <A HREF="./Fragment.def">Fragment.def</A>
+    -tooloption : v6eval tool option
+</PRE>
+
+<P>
+<HR>
+<H1><A NAME="INITIALIZATION">INITIALIZATION</A></H1>
+<P>
+<PRE>  1. Ping to Target (create Neighbor Cache Entries, if not exist)
+  2. Override Neighbor Cache Entries
+</PRE>
+<P>
+<HR>
+<H1><A NAME="TEST_PROCEDURE">TEST PROCEDURE</A></H1>
+<P>
+<PRE>  Tester                      Target
+    |                           |
+    |--------------------------&gt;|
+    |   Echo Request (1st A)    |
+    |                           |
+    |                           |
+    |--------------------------&gt;|
+    |   Echo Request (1st B)    |
+    |                           |
+    |                           |
+    |--------------------------&gt;|
+    |   Echo Request (2nd A)    |
+    |                           |
+    |                           |
+    |--------------------------&gt;|
+    |   Echo Request (2nd B)    |
+    |                           |
+    |                           |
+    |&lt;--------------------------|
+    |   Echo Reply (A or B)     |
+    |                           |
+    |                           |
+    |&lt;--------------------------|
+    |   Echo Reply (rest)       |
+    |                           |
+    |                           |
+    v                           v
+</PRE>
+<P>
+<PRE>  1. Send Echo Request (1st fragment of packet A)
+  2. Send Echo Request (1st fragment of packet B)
+  3. Send Echo Request (2nd fragment of packet A)
+  4. Send Echo Request (2nd fragment of packet B)
+  5. Receive Echo Reply (packet A)
+  6. Receive Echo Reply (packet B)
+</PRE>
+<P>
+<PRE>  Packet A: Echo Request Data (original) is:
+</PRE>
+<P>
+<PRE>        IPv6 Header
+            Version            = 6
+            Traffic Class      = 0
+            FlowLabel          = 0
+            PayloadLength      = 1032
+            NextHeader         = 58 (ICMP)
+            SourceAddress      = Tester Link Local Address
+            DestinationAddress = Target Link Local Address
+</PRE>
+<P>
+<PRE>        ICMP Echo Request
+            Type           = 128 (Echo Request)
+            Code           = 0
+            Checksum       = (auto)
+            Identifier     = (auto)
+            SequenceNumber = 0
+            PayloadData    = data repeat{0xa1, 512}
+                             data repeat{0xa2, 512}
+</PRE>
+<P>
+<PRE>  Packet A: Echo Request Data (1st fragment) is:
+</PRE>
+<P>
+<PRE>        IPv6 Header
+            Version            = 6
+            Traffic Class      = 0
+            FlowLabel          = 0
+            PayloadLength      = 528
+            NextHeader         = 44 (Fragment Header)
+            SourceAddress      = Tester Link Local Address
+            DestinationAddress = Target Link Local Address
+</PRE>
+<P>
+<PRE>        Fragment Header
+            NextHeader         = 58 (ICMP)
+            FragmentOffset     = 0
+            MFlag              = 1
+            Identification     = 32bit (Automatic generation)
+  
+        Payload
+            data               = 520 octets from the head of ICMP Echo request
+</PRE>
+<P>
+<PRE>  Packet A: Echo Request Data (2nd fragment) is:
+</PRE>
+<P>
+<PRE>        IPv6 Header
+            Version            = 6
+            Traffic Class      = 0
+            FlowLabel          = 0
+            PayloadLength      = 520 
+            NextHeader         = 44 (Fragment Header)
+            SourceAddress      = Tester Link Local Address
+            DestinationAddress = Target Link Local Address
+</PRE>
+<P>
+<PRE>        Fragment Header  
+            NextHeader         = 58 (ICMP)
+            FragmentOffset     = 65
+            MFlag              = 0
+            Identification     = 32bit (Automatic generation)
+</PRE>
+<P>
+<PRE>        Payload
+            data               = 512 octets from the back of ICMP Echo request
+</PRE>
+<P>
+<PRE>  Packet B: Echo Request Data (original) is:
+</PRE>
+<P>
+<PRE>        IPv6 Header
+            Version            = 6
+            Traffic Class      = 0
+            FlowLabel          = 0
+            PayloadLength      = 1032
+            NextHeader         = 58 (ICMP)
+            SourceAddress      = Tester Link Local Address
+            DestinationAddress = Target Link Local Address
+</PRE>
+<P>
+<PRE>        ICMP Echo Request
+            Type           = 128 (Echo Request)
+            Code           = 0
+            Checksum       = (auto)
+            Identifier     = (auto)
+            SequenceNumber = 0
+            PayloadData    = data repeat{0xb1, 512}
+                             data repeat{0xb2, 512}
+</PRE>
+<P>
+<PRE>  Packet B: Echo Request Data (1st fragment) is:
+</PRE>
+<P>
+<PRE>        IPv6 Header
+            Version            = 6
+            Traffic Class      = 0
+            FlowLabel          = 0
+            PayloadLength      = 528
+            NextHeader         = 44 (Fragment Header)
+            SourceAddress      = Tester Link Local Address
+            DestinationAddress = Target Link Local Address
+</PRE>
+<P>
+<PRE>        Fragment Header
+            NextHeader         = 58 (ICMP)
+            FragmentOffset     = 0
+            MFlag              = 1
+            Identification     = 32bit (Automatic generation)
+  
+        Payload
+            data               = 520 octets from the head of ICMP Echo request
+</PRE>
+<P>
+<PRE>  Packet B: Echo Request Data (2nd fragment) is:
+</PRE>
+<P>
+<PRE>        IPv6 Header
+            Version            = 6
+            Traffic Class      = 0
+            FlowLabel          = 0
+            PayloadLength      = 520 
+            NextHeader         = 44 (Fragment Header)
+            SourceAddress      = Tester Link Local Address
+            DestinationAddress = Target Link Local Address
+</PRE>
+<P>
+<PRE>        Fragment Header  
+            NextHeader         = 58 (ICMP)
+            FragmentOffset     = 65
+            MFlag              = 0
+            Identification     = 32bit (Automatic generation)
+</PRE>
+<P>
+<PRE>        Payload
+            data               = 512 octets from the back of ICMP Echo request
+</PRE>
+<P>
+<HR>
+<H1><A NAME="JUDGMENT">JUDGMENT</A></H1>
+<P>
+<PRE>  PASS: Both Echo Reply Received
+</PRE>
+<P>
+<PRE>    Echo Reply Received responding to Packet A
+</PRE>
+<P>
+<PRE>        IPv6 Header
+            Version             = 6
+            Traffic Class       = 0
+            FlowLabel           = 0
+            PayloadLength       = 1032
+            NextHeader          = 58 (ICMP)
+            SourceAddress       = Target Link Local Address
+            Destination Address = Tester Link Local Address
+</PRE>
+<P>
+<PRE>        ICMP Echo Reply
+            Type           = 129 (Echo Reply)
+            Code           = 0
+            Checksum       = (auto)
+            Identifier     = (same as Packet A (Echo Request))
+            SequenceNumber = (same as Packet A (Echo Request))
+            PayloadData    = (same as Packet A (Echo Request))
+</PRE>
+<P>
+<PRE>    Echo Reply Received responding to Packet B
+</PRE>
+<P>
+<PRE>        IPv6 Header
+            Version             = 6
+            Traffic Class       = 0
+            FlowLabel           = 0
+            PayloadLength       = 1032
+            NextHeader          = 58 (ICMP)
+            SourceAddress       = Target Link Local Address
+            Destination Address = Tester Link Local Address
+</PRE>
+<P>
+<PRE>        ICMP Echo Reply
+            Type           = 129 (Echo Reply)
+            Code           = 0
+            Checksum       = (auto)
+            Identifier     = (same as Packet B (Echo Request))
+            SequenceNumber = (same as Packet B (Echo Request))
+            PayloadData    = (same as Packet B (Echo Request))
+</PRE>
+<P>
+<HR>
+<H1><A NAME="REFERENCE">REFERENCE</A></H1>
+<P>
+RFC2460
+
+<P>
+4.5 Fragment Header
+
+<P>
+<PRE>                        :
+</PRE>
+<P>
+<PRE>   At the destination, fragment packets are reassembled into their
+   original, unfragmented form, as illustrated:
+</PRE>
+<P>
+<PRE>   reassembled original packet:
+</PRE>
+<P>
+<PRE>   +------------------+----------------------//------------------------+
+   |  Unfragmentable  | 2-bit reserved fFragmentablealized to zero for |
+   |       Part       | transmission; ignorePart                       |
+   +------------------+----------------------//------------------------+
+</PRE>
+<P>
+<PRE>   The following rules govern reassembly:
+</PRE>
+<P>
+<PRE>      An original packet is reassembled only from fragment packets that
+      have the same Source Address, Destination Address, and Fragment
+      Identification.
+</PRE>
+<P>
+<PRE>      The Unfragmentable Part of the reassembled packet consists of all
+      headers up to, but not including, the Fragment header of the first
+      fragment packet (that is, the packet whose Fragment Offset is
+      zero), with the following two changes:
+</PRE>
+<P>
+<PRE>         The Next Header field of the last header of the Unfragmentable
+         Part is obtained from the Next Header field of the first
+         fragment's Fragment header.
+</PRE>
+<P>
+<PRE>         The Payload Length of the reassembled packet is computed from
+         the length of the Unfragmentable Part and the length and offset
+         of the last fragment.  For example, a formula for computing the
+         Payload Length of the reassembled original packet is:
+</PRE>
+<P>
+<PRE>           PL.orig = PL.first - FL.first - 8 + (8 * FO.last) + FL.last
+</PRE>
+<P>
+<PRE>           where
+           PL.orig  = Payload Length field of reassembled packet.
+           PL.first = Payload Length field of first fragment packet.
+           FL.first = length of fragment following Fragment header of
+                      first fragment packet.
+           FO.last  = Fragment Offset field of Fragment header of
+                      last fragment packet.
+           FL.last  = length of fragment following Fragment header of
+                      last fragment packet.
+</PRE>
+<P>
+<PRE>      The Fragmentable Part of the reassembled packet is constructed
+      from the fragments following the Fragment headers in each of the
+      fragment packets.  The length of each fragment is computed by
+      subtracting from the packet's Payload Length the length of the
+      headers between the IPv6 header and fragment itself; its relative
+      position in Fragmentable Part is computed from its Fragment Offset
+      value.
+</PRE>
+<P>
+<PRE>      The Fragment header is not present in the final, reassembled
+      packet.
+</PRE>
+<P>
+<HR>
+<H1><A NAME="SEE_ALSO">SEE ALSO</A></H1>
+<P>
+<PRE>  perldoc V6evalTool
+</PRE>
+</BODY>
+
+</HTML>

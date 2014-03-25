@@ -1,0 +1,429 @@
+#!/usr/bin/perl
+#
+# Copyright (C) 1999, 2000, 2001, 2002, 2003 Yokogawa Electric Corporation,
+# IPA (Information-technology Promotion Agency, Japan).
+# All rights reserved.
+# 
+# Redistribution and use of this software in source and binary forms, with 
+# or without modification, are permitted provided that the following 
+# conditions and disclaimer are agreed and accepted by the user:
+# 
+# 1. Redistributions of source code must retain the above copyright 
+# notice, this list of conditions and the following disclaimer.
+# 
+# 2. Redistributions in binary form must reproduce the above copyright 
+# notice, this list of conditions and the following disclaimer in the 
+# documentation and/or other materials provided with the distribution.
+# 
+# 3. Neither the names of the copyrighters, the name of the project which 
+# is related to this software (hereinafter referred to as "project") nor 
+# the names of the contributors may be used to endorse or promote products 
+# derived from this software without specific prior written permission.
+# 
+# 4. No merchantable use may be permitted without prior written 
+# notification to the copyrighters. However, using this software for the 
+# purpose of testing or evaluating any products including merchantable 
+# products may be permitted without any notification to the copyrighters.
+# 
+# 
+# 
+# THIS SOFTWARE IS PROVIDED BY THE COPYRIGHTERS, THE PROJECT AND 
+# CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING 
+# BUT NOT LIMITED THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS 
+# FOR A PARTICULAR PURPOSE, ARE DISCLAIMED.  IN NO EVENT SHALL THE 
+# COPYRIGHTERS, THE PROJECT OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, 
+# INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES 
+# (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR 
+# SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) 
+# HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN 
+# CONTRACT,STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) 
+# ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF 
+# THE POSSIBILITY OF SUCH DAMAGE.
+#
+# $TAHI: ct/nd/routerRecvRa.seq,v 1.8 2002/02/27 01:08:28 masaxmasa Exp $
+
+########################################################################
+BEGIN { $V6evalTool::TestVersion = '$Name: REL_2_1_1 $ '; }
+ 
+use V6evalTool;
+use nd;
+use ra;
+
+ndOptions(@ARGV);
+
+# The following generate debugging messages.
+$nd::debug=$ndOpt_v|$ndOpt_vv;
+
+# You can specifies debug options to a remote control program.
+# If you want to know more detail, please see the following:
+# - V6evalTool.pm: perldoc V6evalTool
+# - V6evalRemote.pm: perldoc V6evalRemote
+$nd::remote_debug="-o1" if $ndOpt_vv;
+
+$IF=Link0;
+$exit_rtn=$V6evalTool::exitPass;
+
+#
+#
+#
+$type=$V6evalTool::NutDef{Type};
+if($type eq host) {
+    vLogHTML("This test is for the router only<BR>");
+    exit $V6evalTool::exitRouterOnly;
+}
+
+$type=$V6evalTool::NutDef{Type};
+if($type ne router) {
+    vLogHTML(ndErrmsg("ERROR: $V6evalTool::NutDef{Type}: ".
+                      "Unknown target type<BR>"));
+    exit $V6evalTool::exitFail;
+}
+
+# sub test definition:
+# - sending pattern,
+# - SLLA vs cached LLA
+# - expected state
+# - message
+#
+$idx_ptn=0;
+$idx_lla=1;
+$idx_exp=2;
+$idx_explla=3;
+$idx_msg=4;
+$idx_inc_ip=5;
+$idx_prb_ip=6;
+$idx_rpy_ip=7;
+$idx_ign_ip=8;
+$idx_non_n=9;
+$idx_rpy_n=10;
+$idx_ign_n=11;
+$idx_stl_sr=12;
+$idx_ign_sr=13;
+@null=();
+
+#
+@def_ra_tn2allnode=
+    (
+     ra_tn2allnode,
+     same,
+     NONCE,
+     unchanged,
+     'RA w/o SLL',
+     \@null, \@null, \@null, \@null,
+     \@null, \@null, \@null,
+     \@null, \@null
+     );
+
+#
+@def_ra_tn2allnode_sll=
+    (
+     ra_tn2allnode_sll,
+     same,
+     NONCE,
+     unchanged,
+     'RA w/ SLL',
+     \@null, \@null, \@null, \@null,
+     \@null, \@null, \@null,
+     \@null, \@null
+     );
+
+#
+@def_ra_tn2allnode_sll_invalid_src=
+    (
+     ra_tn2allnode_sll_invalid_src,
+     same,
+     NONCE,
+     unchanged,
+     'RA w/ SLL, src!=link-local (INVALID)',
+     \@null, \@null, \@null, \@null,
+     \@null, \@null, \@null,
+     \@null, \@null
+     );
+
+#
+@def_ra_tn2allnode_sll_invalid_hoplimit=
+    (
+     ra_tn2allnode_sll_invalid_hoplimit,
+     same,
+     NONCE,
+     unchanged,
+     'RA w/ SLL, hop limit!=255 (INVALID)',
+     \@null, \@null, \@null, \@null,
+     \@null, \@null, \@null,
+     \@null, \@null
+     );
+
+#
+@def_ra_tn2allnode_sll_invalid_chksum=
+    (
+     ra_tn2allnode_sll_invalid_chksum,
+     same,
+     NONCE,
+     unchanged,
+     'RA w/ SLL, check sum!=valid (INVALID)',
+     \@null, \@null, \@null, \@null,
+     \@null, \@null, \@null,
+     \@null, \@null
+     );
+
+#
+@def_ra_tn2allnode_sll_invalid_icmpcode=
+    (
+     ra_tn2allnode_sll_invalid_icmpcode,
+     same,
+     NONCE,
+     unchanged,
+     'RA w/ SLL, icmp code!=0 (INVALID)',
+     \@null, \@null, \@null, \@null,
+     \@null, \@null, \@null,
+     \@null, \@null
+     );
+
+#
+#
+#
+@defs=
+    (
+     \@def_ra_tn2allnode,
+     \@def_ra_tn2allnode_sll,
+     \@def_ra_tn2allnode_sll_invalid_src,
+     \@def_ra_tn2allnode_sll_invalid_hoplimit,
+     \@def_ra_tn2allnode_sll_invalid_chksum,
+     \@def_ra_tn2allnode_sll_invalid_icmpcode,
+     );
+
+#
+#
+#
+$wait_ra=$nd::MAX_INITIAL_RTR_ADVER_INTERVAL * 2;
+raStartDefaultRA3() || exit $V6evalTool::exitFail;
+
+#
+#
+#
+vCapture($IF);
+vLogHTML("Wait for initial RAs<BR>");
+for($i=0; $i<$nd::MAX_INITIAL_RTR_ADVERTISEMENTS; $i++) {
+    raRecvAnyRA($IF, $wait_ra, 0, 0, %ret) || last;
+}
+
+#
+#
+#
+$idx=0;
+foreach(@defs) {
+    $exp=@$_[$idx_exp];
+    $explla=@$_[$idx_explla];
+    $msg=@$_[$idx_msg];
+    vLogHTML("<HR>");
+    vLogHTML("<FONT SIZE=\"+2\">*** NONCE vs. $msg ***</FONT><BR>");
+    $s=checkState($_);
+    $c=ndCachedLLA($explla);
+    if($s =~ /$exp/ && $c eq $explla) {
+        $result{$idx}=$V6evalTool::exitPass;
+        vLogHTML("<A NAME=\"T$idx\">OK: The target was $s/$c</A><BR>");
+    } else {
+        $exit_rtn=$V6evalTool::exitFail;
+        $result{$idx}=$exit_rtn;
+        vLogHTML("<A NAME=\"T$idx\">".
+		 ndErrmsg("NG: The target was $s/$c")."</A><BR>");
+    }
+    $title{$idx}="<TD>$msg</TD><TD>exp:$exp/$explla</TD><TD>result:$s/$c</TD>";
+    $idx++;
+}
+$idx--;
+
+#
+#
+#
+@col=('PTN', 'EXP(State/Cached LLA)', 'RESULT(State/Cached LLA)');
+ndPrintSummaryHTML("*** Test Summary: NONCE vs. RA ***", @col,
+		   %title, %result, $idx);
+
+#
+#
+#
+vLogHTML("*** EOT ***<BR>");
+exit $exit_rtn;
+
+#
+#
+#
+sub checkState(\@) {
+    my($def)=@_;
+    my($ptn)=@$def[$idx_ptn];
+    my($lla)=@$def[$idx_lla];
+    my($exp)=@$def[$idx_exp];
+    my($msg)=@$def[$idx_msg];
+
+    my($inc_ip)=@$def[$idx_inc_ip];
+    my($prb_ip)=@$def[$idx_prb_ip];
+    my($rpy_ip)=@$def[$idx_rpy_ip];
+    my($ign_ip)=@$def[$idx_ign_ip];
+
+    my($non_n)=@$def[$idx_non_n];
+    my($rpy_n)=@$def[$idx_rpy_n];
+    my($ign_n)=@$def[$idx_ign_n];
+
+    my($stl_sr)=@$def[$idx_stl_sr];
+    my($ign_sr)=@$def[$idx_ign_sr];
+
+    vLogHTML("<FONT SIZE=\"+1\">Initialization</FONT><BR>");
+    goto error if nd2NoNce($IF) != 0;
+    vClear($IF);
+
+    vLogHTML("<FONT SIZE=\"+1\">Test</FONT><BR>");
+    $pktdesc{$ptn}="Send $msg";
+    my(%ret)=vSend($IF, $ptn);
+    my($s)=ndStatusNum2Str(ndStatus(
+                                    $IF, $ret{sentTime1},
+                                    @$inc_ip, @$prb_ip, @$rpy_ip, @$ign_ip,
+                                    @$non_n, @$rpy_n, @$ign_n,
+                                    @$stl_sr, @$ign_sr,
+                                    )
+                       );
+    return $s;
+
+error:
+    return("ERROR");
+}
+
+########################################################################
+__END__
+
+=head1 NAME
+
+routerRecvRa - TBD
+
+=head1 TARGET
+
+Router only
+
+=head1 SYNOPSIS
+
+  routerRecvRa.seq [-tooloption ...] -p routerRecvRa.def
+
+=head1 INITIALIZATION
+
+  Clear NC state for TN.
+
+=head1 TEST PROCEDURE
+
+B<routerRecvRa> verifies that state transition for a NUT
+in NONCE state when receiving a RA.
+
+=begin html
+<PRE>
+  TN               NUT
+  ----------------------
+<BR>
+  State: NONCE (for TN)
+<BR>
+  ==== RA ===>
+<BR>
+  <A HREF="#JDG1">Judgment</A>: <A HREF="nd.html">Examining NUT's neighbor cache state</A>
+</PRE>
+
+=end html
+
+=head1 JUDGMENT
+
+=begin html
+<A NAME="JDG1"></A>
+<PRE>
+<HR>
+  =================+=============================
+  RA               | Neighbor Cache                                
+                   +---------+-------+-----------
+                   | Current | New   | LLA       
+  =================+=========+=======+===========
+  w/o TLLA         | NONCE   | NONCE | unchanged 
+  -----------------+---------+-------+-----------
+  w/  TLLA         | NONCE   | NONCE | unchanged
+  -----------------+---------+-------+-----------
+  w/ TLLA          | NONCE   | NONCE | unchanged
+  src!=link-local  |         |       |
+  (INVALID)        |         |       |
+  -----------------+---------+-------+-----------
+  w/ TLLA          | NONCE   | NONCE | unchanged
+  hoplimit!=255    |         |       |
+  (INVALID)        |         |       |
+  -----------------+---------+-------+-----------
+  w/ TLLA          | NONCE   | NONCE | unchanged
+  invalid checksum |         |       |
+  (INVALID)        |         |       |
+  -----------------+---------+-------+-----------
+  w/ TLLA          | NONCE   | NONCE | unchanged
+  icmp code!=0     |         |       |
+  (INVALID)        |         |       |
+  =================+=========+=======+===========
+</PRE>
+
+=end html
+
+=head1 TERMINATION
+
+  N/A
+
+=head1 NOTE
+
+=begin html
+<PRE>
+  <A HREF="#REF1">RFC2461 does not describes an NCE state transition in a router when receiving RAs.</A>
+  However, it seems to be better that any RA should not affect the state.
+</PRE>
+
+=head1 REFERENCE
+
+=begin html
+<PRE>
+RFC2461
+<HR>
+6.2.7.  Router Advertisement Consistency
+<BR>
+   Routers SHOULD inspect valid Router Advertisements sent by other
+   routers and verify that the routers are advertising consistent
+   information on a link.  Detected inconsistencies indicate that one or
+   more routers might be misconfigured and SHOULD be logged to system or
+   network management.  The minimum set of information to check
+   includes:
+<BR>
+    - Cur Hop Limit values (except for the unspecified value of zero).
+<BR>
+    - Values of the M or O flags.
+<BR>
+    - Reachable Time values (except for the unspecified value of zero).
+<BR>
+    - Retrans Timer values (except for the unspecified value of zero).
+<BR>
+    - Values in the MTU options.
+<BR>
+    - Preferred and Valid Lifetimes for the same prefix.  If
+      AdvPreferredLifetime and/or AdvValidLifetime decrement in real
+      time as specified in section 6.2.7 then the comparison of the
+      lifetimes can not compare the content of the fields in the Router
+      Advertisement but must instead compare the time at which the
+      prefix will become deprecated and invalidated, respectively.  Due
+      to link propagation delays and potentially poorly synchronized
+      clocks between the routers such comparison SHOULD allow some time
+      skew.
+<BR>
+   Note that it is not an error for different routers to advertise
+   different sets of prefixes.  Also, some routers might leave some
+   fields as unspecified, i.e., with the value zero, while other routers
+   specify values.  The logging of errors SHOULD be restricted to
+   conflicting information that causes hosts to switch from one value to
+   another with each received advertisement.
+<BR>
+   <A NAME="REF1"><B>Any other action on reception of Router Advertisement messages by a
+   router is beyond the scope of this document.</B></A>
+</PRE>
+
+=end html
+
+=head1 SEE ALSO
+
+  perldoc V6evalTool
+  perldoc V6evalRemote
+
+=cut

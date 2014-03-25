@@ -1,0 +1,186 @@
+<HTML>
+<HEAD>
+<TITLE>ncStateByNa4Incomplete - Verifying State Machine: NA vs. INCOMPLETE</TITLE>
+<LINK REV="made" HREF="mailto:hackers@FreeBSD.org">
+</HEAD>
+
+<BODY>
+
+<!-- INDEX BEGIN -->
+<!--
+
+<UL>
+
+	<LI><A HREF="#NAME">NAME</A>
+	<LI><A HREF="#TARGET">TARGET</A>
+	<LI><A HREF="#SYNOPSIS">SYNOPSIS</A>
+	<LI><A HREF="#INITIALIZATION">INITIALIZATION</A>
+	<LI><A HREF="#TEST_PROCEDURE">TEST PROCEDURE</A>
+	<LI><A HREF="#JUDGMENT">JUDGMENT</A>
+	<LI><A HREF="#TERMINATION">TERMINATION</A>
+	<LI><A HREF="#NOTE">NOTE</A>
+	<LI><A HREF="#SEE_ALSO">SEE ALSO</A>
+</UL>
+-->
+<!-- INDEX END -->
+
+<P>
+<H1><A NAME="NAME">NAME</A></H1>
+<P>
+ncStateByNa4Incomplete - Verifying State Machine: NA vs. INCOMPLETE
+
+<P>
+<HR>
+<H1><A NAME="TARGET">TARGET</A></H1>
+<P>
+Host and Router
+
+<P>
+<HR>
+<H1><A NAME="SYNOPSIS">SYNOPSIS</A></H1>
+<P>
+<PRE>  ncStateByNa4Incomplete.seq [-tooloption ...] -p ncStateByNa4Incomplete.def
+</PRE>
+<P>
+<HR>
+<H1><A NAME="INITIALIZATION">INITIALIZATION</A></H1>
+<P>
+Set the state of neighbor cache entry to INCOMPLETE.
+
+<P>
+<PRE>  TN               NUT
+  ----------------------
+  State: NONCE (for TN)
+</PRE>
+<P>
+<PRE>  ==== echo-request ===&gt;
+        src=TN's link-local
+        dst=NUT's link-local
+</PRE>
+<P>
+<PRE>  State: INCOMPLETE (for TN)
+</PRE>
+<P>
+<HR>
+<H1><A NAME="TEST_PROCEDURE">TEST PROCEDURE</A></H1>
+<P>
+<STRONG>ncStateByNa4Incomplete</STRONG> verifies that state transition for a NUT in INCOMPLETE state when receiving
+a NA.
+
+<PRE>
+  TN               NUT
+  ----------------------
+<BR>
+  State: INCOMPLETE (for TN)
+<BR>
+  ==== <A HREF="#JDG1">NA</A> ===>
+	src=TN's link-local
+	dst=NUT's link-local or all-node
+	w/o or w/ TLLA
+	r=0, s=0/1, o=0/1
+<BR>
+  <A HREF="#JDG1">Judgment</A>: <A HREF="nd.html">Examining NUT's neighbor cache state</A>
+</PRE>
+
+<P>
+<HR>
+<H1><A NAME="JUDGMENT">JUDGMENT</A></H1>
+<A NAME="JDG1"></A>
+<PRE>
+<HR>
+7.2.5.  Receipt of Neighbor Advertisements
+<BR>
+   If the target's Neighbor Cache entry is in the INCOMPLETE state when
+   the advertisement is received, one of two things happens.
+   <A NAME="NO_TLLA"><B>IF(no TLLA option) {
+       If the link layer has addresses and no Target Link-Layer address
+       option is included,
+       the receiving node SHOULD silently discard the received advertisement.
+   }</A></B> ELSE {
+       Otherwise, the receiving node performs the following steps:
+        - <A NAME="UPDATE_TLLA"><B>It records the link-layer address in the Neighbor Cache entry.</A></B>
+<BR>
+        - <A NAME="S_1"><B>IF(Solicited flag == 1) {
+              If the advertisement's Solicited flag is set, 
+              the state of the entry is set to REACHABLE,
+          }</A></B> <A NAME="S_0"><B>ELSE {
+              otherwise it is set to STALE.
+          }</A></B>
+<BR>
+        - It sets the IsRouter flag in the cache entry based on the Router
+          flag in the received advertisement.
+<BR>
+        - It sends any packets queued for the neighbor awaiting address
+          resolution.
+   }
+<BR>
+   Note that the Override flag is ignored if the entry is in the
+   INCOMPLETE state.
+<HR>
+  ===============================+===============+=============
+  NA                             |New State      |cached LLA
+  --------------+-+--+-+---------+               |
+  Destination   |r| s|o|TLLA     |               |
+  ==============+=+==+=+=========+===============+=============
+  Unicast        0  0 0 none      <A HREF="#NO_TLLA">INCOMPLETE      unchanged</A>
+  --------------+-+--+-+---------+---------------+-------------
+  Unicast        0  0 1 none      <A HREF="#NO_TLLA">INCOMPLETE      unchanged</A>
+  --------------+-+--+-+---------+---------------+-------------
+  Unicast        0  1 0 none      <A HREF="#NO_TLLA">INCOMPLETE      unchanged</A>
+  --------------+-+--+-+---------+---------------+-------------
+  Unicast        0  1 1 none      <A HREF="#NO_TLLA">INCOMPLETE      unchanged</A>
+  ==============+=+==+=+=========+===============+=============
+  Unicast        0  0 0 exist     <A HREF="#S_0">STALE</A>           <A HREF="#UPDATE_TLLA">*updated</A>
+  --------------+-+--+-+---------+---------------+-------------
+  Unicast        0  0 1 exist     <A HREF="#S_0">STALE</A>           <A HREF="#UPDATE_TLLA">*updated</A>
+  --------------+-+--+-+---------+---------------+-------------
+  Unicast        0  1 0 exist     <A HREF="#S_1">REACHABLE</A>       <A HREF="#UPDATE_TLLA">*updated</A>
+  --------------+-+--+-+---------+---------------+-------------
+  Unicast        0  1 1 exist     <A HREF="#S_1">REACHABLE</A>       <A HREF="#UPDATE_TLLA">*updated</A>
+  ==============+=+==+=+=========+===============+=============
+  *Multicast     0  0 0 *none     INCOMPLETE      unchanged
+                 *invalid
+  --------------+-+--+-+---------+---------------+-------------
+  *Multicast     0  0 1 *none     INCOMPLETE      unchanged
+                 *invalid
+  --------------+-+--+-+---------+---------------+-------------
+  *Multicast     0 *1 0 *none     INCOMPLETE      unchanged
+                 *invalid
+  --------------+-+--+-+---------+---------------+-------------
+  *Multicast     0 *1 1 *none     INCOMPLETE      unchanged
+                 *invalid
+  ==============+=+==+=+=========+===============+=============
+  Multicast      0  0 0 exist     <A HREF="#S_0">STALE</A>           <A HREF="#UPDATE_TLLA">*updated</A>
+  --------------+-+--+-+---------+---------------+-------------
+  Multicast      0  0 1 exist     <A HREF="#S_0">STALE</A>           <A HREF="#UPDATE_TLLA">*updated</A>
+  --------------+-+--+-+---------+---------------+-------------
+  *Multicast     0 *1 0 exist     INCOMPLETE      unchanged
+                 *invalid
+  --------------+-+--+-+---------+---------------+-------------
+  *Multicast     0 *1 1 exist     INCOMPLETE      unchanged
+                 *invalid
+  ==============+=+==+=+=========+===============+=============
+</PRE>
+
+<P>
+<HR>
+<H1><A NAME="TERMINATION">TERMINATION</A></H1>
+<P>
+<PRE>  N/A
+</PRE>
+<P>
+<HR>
+<H1><A NAME="NOTE">NOTE</A></H1>
+<P>
+<PRE>  The test does not invoke any remote command.
+</PRE>
+<P>
+<HR>
+<H1><A NAME="SEE_ALSO">SEE ALSO</A></H1>
+<P>
+<PRE>  perldoc V6evalTool
+  perldoc V6evalRemote
+</PRE>
+</BODY>
+
+</HTML>

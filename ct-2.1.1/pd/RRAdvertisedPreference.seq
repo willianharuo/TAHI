@@ -1,0 +1,1102 @@
+#!/usr/bin/perl
+#
+# Copyright (C) 2003 Yokogawa Electric Corporation, 
+# INTAP(Interoperability Technology Association
+# for Information Processing, Japan).  All rights reserved.
+# 
+# Redistribution and use of this software in source and binary forms, with 
+# or without modification, are permitted provided that the following 
+# conditions and disclaimer are agreed and accepted by the user:
+# 
+# 1. Redistributions of source code must retain the above copyright 
+# notice, this list of conditions and the following disclaimer.
+# 
+# 2. Redistributions in binary form must reproduce the above copyright 
+# notice, this list of conditions and the following disclaimer in the 
+# documentation and/or other materials provided with the distribution.
+# 
+# 3. Neither the names of the copyrighters, the name of the project which 
+# is related to this software (hereinafter referred to as "project") nor 
+# the names of the contributors may be used to endorse or promote products 
+# derived from this software without specific prior written permission.
+# 
+# 4. No merchantable use may be permitted without prior written 
+# notification to the copyrighters. However, using this software for the 
+# purpose of testing or evaluating any products including merchantable 
+# products may be permitted without any notification to the copyrighters.
+# 
+# 
+# 
+# THIS SOFTWARE IS PROVIDED BY THE COPYRIGHTERS, THE PROJECT AND 
+# CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING 
+# BUT NOT LIMITED THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS 
+# FOR A PARTICULAR PURPOSE, ARE DISCLAIMED.  IN NO EVENT SHALL THE 
+# COPYRIGHTERS, THE PROJECT OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, 
+# INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES 
+# (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR 
+# SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) 
+# HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN 
+# CONTRACT,STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) 
+# ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF 
+# THE POSSIBILITY OF SUCH DAMAGE.
+#
+# $TAHI: ct/pd/RRAdvertisedPreference.seq,v 1.4 2003/06/11 09:31:13 ozoe Exp $
+#
+######################################################################
+BEGIN { $V6evalTool::TestVersion = '$Name: REL_2_1_1 $ '; }
+
+use V6evalTool;
+use pd;
+
+%pktdesc = (
+	echo_request    => 'Send Echo Request (Link-Local Address)',
+	echo_reply      => 'Recv Echo Reply (Link-Local Address)',
+	ns              => 'Recv Neighbor Solicitation',
+	na              => 'Send Neighbor Advertisement',
+	na_other        => 'Send Neighbor Advertisement another PE',
+	na_other1       => 'Send Neighbor Advertisement another PE1',
+	dhcp_sol		=> 'Recv DHCP Solicit message w/o Option Request option',
+	dhcp_sol_any		=> 'Recv DHCP Solicit message',
+	dhcp_adv_pref1		=> 'Send DHCP Advertise message w/ preference 200',
+	dhcp_adv_pref2		=> 'Send DHCP Advertise message w/ preference 100',
+	dhcp_adv_pref3		=> 'Send DHCP Advertise message w/ preference 1',
+        dhcp_req                => 'Recv DHCP Request message w/o Option Request option',
+        dhcp_req_any            => 'Recv DHCP Request message',
+        dhcp_req_any1           => 'Recv DHCP Request message w/o Option Request and IA_PD prefix option',
+        dhcp_req_any2           => 'Recv DHCP Request message w/o IA_PD prefix option',
+	dhcp_rep		=> 'Send DHCP Reply message',
+);
+
+pdOptions(@ARGV);
+
+# The following generate debugging messages.
+$pd::debug=$pdOpt_v|$pdOpt_vv;
+
+# You can specifies debug options to a remote control program.
+# If you want to know more detail, please see the following:
+# - V6evalTool.pm: perldoc V6evalTool
+# - V6evalRemote.pm: perldoc V6evalRemote
+$pd::remote_debug="-o1" if $pdOpt_vv;
+
+#
+#
+$IF = Link0;
+$IF1 = Link1;
+$exit_rtn=$V6evalTool::exitPass;
+$idx=0;
+$wait_ras=$pd::MIN_DELAY_BETWEEN_RAS+1;
+
+#
+#
+$delegateprefix="3ffe:501:fffd::";
+$preferredlifetime="600";
+$validlifetime="1200";
+#
+$wait_time=16;
+$maxcount = 4;
+# time is Jan 1, 2000 (UTC), modulo 2^32
+$t64 = time() - 946684800;
+foreach($count = 0; $count < $maxcount; $count++){
+    $sid_duid_time[$count] = ($t64 & 0xffffffff);
+    $t64 = $t64 + 86400; #1 day after
+}
+
+@sid_link_addr = (
+    "00:00:00:00:a0:a0",
+    "00:00:00:00:a1:a1",
+    "00:00:00:00:a2:a2",
+    "00:00:00:00:a3:a3",
+);
+
+#
+#
+#
+$type=$V6evalTool::NutDef{Type};
+if($type eq host) {
+    vLogHTML("This test is for the router only<BR>");
+    exit $V6evalTool::exitRouterOnly;
+}
+
+$type=$V6evalTool::NutDef{Type};
+if($type ne router) {
+    vLogHTML(pdErrmsg("ERROR: $V6evalTool::NutDef{Type}: ".
+                      "Unknown target type<BR>"));
+    exit $V6evalTool::exitFail;
+}
+
+#
+#
+#
+vLogHTML("<FONT SIZE=\"+1\">Initialization</FONT><BR>");
+vLogHTML("Trying to setup NUT<BR>");
+pdStartDefaultRA() || exit $V6evalTool::exitFail;
+pdStopDHCP6Client() || exit $V6evalTool::exitFail;
+$vcpp = pdSetVCPP($pd::INITIAL, $delegateprefix, 0, 0,
+        $maxcount, @sid_duid_time, @sid_link_addr, %ret);
+vCPP($vcpp);
+#
+pdStartDHCP6Client() || exit $V6evalTool::exitFail;
+#
+vCapture($IF);
+#
+#
+%ret = vRecv($IF, $wait_time, 0, 0, dhcp_sol, dhcp_sol_any);
+
+if($ret{status} != 0) {
+        vLogHTML('No response from NUT, Configuration Problem ?<BR>');
+        vLogHTML('<FONT COLOR="#FF0000">NG</FONT>');
+	pdAsyncWait() || exit $V6evalTool::exitFatal;
+        exit $V6evalTool::exitFail;
+}
+
+if($ret{status} == 0) {
+        vLogHTML("OK: Receive DHCP Solicit message<BR>");
+
+        $vcpp = pdSetVCPP($pd::SOLICIT, $delegateprefix, $preferredlifetime, $validlifetime,
+                $maxcount, @sid_duid_time, @sid_link_addr, %ret);
+        vCPP($vcpp);
+
+	vLogHTML("<FONT SIZE=\"+1\">Test</FONT><BR>");
+
+        $irt = $pd::SOL_TIMEOUT;
+        $mrt = $pd::SOL_MAX_RT;
+        $rt = 0;
+        $msgtyp = $pd::SOLICIT;
+
+        $rt = pdRetransmitTimer($irt, $mrt, $rt);
+        $vcpp = pdSetVCPP($pd::SOLICIT, $delegateprefix, $preferredlifetime, $validlifetime,
+		        $maxcount, @sid_duid_time, @sid_link_addr, %ret);
+        vCPP($vcpp);
+        vSend($IF, dhcp_adv_pref3, dhcp_adv_pref1, dhcp_adv_pref2);
+
+        %ret = vRecv($IF, $rt, 0, 0, dhcp_req, dhcp_req_any, dhcp_req_any1, dhcp_req_any2);
+
+        $title{$idx}="<TD>$pktdesc{'dhcp_req'}</TD><TD>exp:sending DHCP Request message</TD>";
+        if ($ret{recvFrame} eq 'dhcp_req' || $ret{recvFrame} eq 'dhcp_req_any' ||
+	    $ret{recvFrame} eq 'dhcp_req_any1'|| $ret{recvFrame} eq 'dhcp_req_any2') {
+                $title{$idx}.="<TD>result:sent DHCP Request message</TD>";
+                $result{$idx}=$V6evalTool::exitPass;
+                vLogHTML("<A NAME=\"T$idx\">OK: sent DHCP Request message to the Server with high preference value</A><BR>");
+        }
+        else{
+                vLogHTML('Cannot receive DHCP Request message<BR>');
+                vLogHTML('<FONT COLOR="#FF0000">NG</FONT>');
+		pdAsyncWait() || exit $V6evalTool::exitFatal;
+                exit $V6evalTool::exitFail;
+        }
+
+        $vcpp = pdSetVCPP($pd::REQUEST, $delegateprefix, $preferredlifetime, $validlifetime,
+			$maxcount, @sid_duid_time, @sid_link_addr, %ret);
+        vCPP($vcpp);
+
+        vSend($IF, dhcp_rep);
+        %ret = vRecv($IF, $wait_time/2, 0, ns);
+	if($ret{status} == 0) {
+                vSend($IF, na);
+        }
+}
+else{
+	vLogHTML('Cannot receive DHCP Solicit message<BR>');
+	vLogHTML('<FONT COLOR="#FF0000">NG</FONT>');
+	pdAsyncWait() || exit $V6evalTool::exitFatal;
+	exit $V6evalTool::exitFail;
+}
+
+pdAsyncWait() || exit $V6evalTool::exitFatal;
+
+vSleep($wait_time);
+
+#
+#
+#
+@col=('PTN', 'EXP', 'RESULT');
+pdPrintSummaryHTML("*** Test Summary: PE vs CPE ***", @col,
+                   %title, %result, $idx);
+
+#
+#
+#
+exit $exit_rtn;
+
+######################################################################
+__END__
+
+=head1 NAME
+
+=begin html
+  &nbsp;&nbsp;RRAdvertisedPreference.seq - Requesting Router chooses PE based on preference value of Preference option 
+
+=end html
+
+=head1 TARGET
+
+  Router for DHCP client
+
+=head1 SYNOPSIS
+
+=begin html
+  &nbsp;&nbsp;<A HREF="./RRAdvertisedPreference.seq">RRAdvertisedPreference.seq</A> [-tooloption ...] -pkt <A HREF="./RRAdvertisedPreference.def">RRAdvertisedPreference.def</A> -tooloption : v6eval tool option
+
+=end html
+
+=head1 TOPOLOGY
+
+=begin html
+<BLOCKQUOTE>
+<PRE>
+   TN       TN1 TN2
+    |        |   |        ISP site
+  --+----+---+---+------- Link0   
+         |
+        NUT     Host
+         |       |        Customer site
+  -------+-------+------- Link1 3ffe:501:fffd:XXXX::/64
+</PRE>
+</BLOCKQUOTE>
+<BLOCKQUOTE>
+<TABLE border=1>
+    <TBODY>
+    <TR>
+      <TD rowSpan=4><TT>TN (Preference 1)</TT></TD>
+      <TD><TT>Link-local</TT></TD>
+      <TD><TT>fe80::200:ff:fe00:a2a2</TT></TD>
+    </TR>
+    <TR>
+      <TD><TT>Ether</TT></TD>
+      <TD><TT>00:00:00:00:a2:a2</TT></TD>
+    </TR>
+    <TR>
+      <TD><TT>Delegate Prefix</TT></TD>
+      <TD><TT>3ffe:501:fffd::</TT></TD>
+    </TR>
+    <TR>
+      <TD><TT>Prefix Length</TT></TD>
+      <TD><TT>48</TT></TD>
+    </TR>
+    <TR>
+      <TD rowSpan=4><TT>TN1 (Preference 200)</TT></TD>
+      <TD><TT>Link-local</TT></TD>
+      <TD><TT>fe80::200:ff:fe00:a0a0</TT></TD>
+    </TR>
+    <TR>
+      <TD><TT>Ether</TT></TD>
+      <TD><TT>00:00:00:00:a0:a0</TT></TD>
+    </TR>
+    <TR>
+      <TD><TT>Delegate Prefix</TT></TD>
+      <TD><TT>3ffe:501:fffd::</TT></TD>
+    </TR>
+    <TR>
+      <TD><TT>Prefix Length</TT></TD>
+      <TD><TT>48</TT></TD>
+    </TR>
+    <TR>
+      <TD rowSpan=4><TT>TN2 (Preference 100)</TT></TD>
+      <TD><TT>Link-local</TT></TD>
+      <TD><TT>fe80::200:ff:fe00:a1a1</TT></TD>
+    </TR>
+    <TR>
+      <TD><TT>Ether</TT></TD>
+      <TD><TT>00:00:00:00:a1:a1</TT></TD>
+    </TR>
+    <TR>
+      <TD><TT>Delegate Prefix</TT></TD>
+      <TD><TT>3ffe:501:fffd::</TT></TD>
+    </TR>
+    <TR>
+      <TD><TT>Prefix Length</TT></TD>
+      <TD><TT>48</TT></TD>
+    </TR>
+    <TR>
+      <TD rowspan="2"><TT>Host</TT></TD>
+      <TD><TT>Link-local</TT></TD>
+      <TD><TT>fe80::200:ff:fe00:101</TT></TD>
+    </TR>
+    <TR>
+      <TD><TT>ether</TT></TD>
+      <TD><TT>00:00:00:00:01:01</TT></TD></TR></TBODY>
+  </TABLE>
+</BLOCKQUOTE>
+
+=end html
+
+=head1 INITIALIZATION
+
+=begin html
+<OL>
+  <LI>NUT sets up Prefix Delegation.
+</OL>
+<BR>
+<PRE>
+Tester as Server          Target as Client        Tester as Host
+    |                           |                           |
+    |<--------------------------|                           |
+    |   DHCP Solicit message    |                           |
+    |                           |                           |
+<BR>
+  1. Wait DHCP Solicit message
+<BR>
+<b>Addresse</b>
+<BLOCKQUOTE>
+Solicit messages<BR>
+<TABLE border=1>
+    <TBODY>
+    <TR>
+      <TD>Src</TD>
+      <TD>NUT link-local address</TD>
+    </TR>
+    <TR>
+      <TD>Dst</TD>
+      <TD>All_DHCP_Relay_Agents_and_Servers</TD>
+    </TR>
+    </TBODY>
+  </TABLE>
+<BR>
+All_DHCP_Relay_Agents_and_Servers FF02::1:2<BR>
+</BLOCKQUOTE>
+<b>UDP Ports</b><BR>
+      Clients listen for DHCP messages on UDP port 546
+      Server listen for DHCP messages on UDP port 547<BR>
+<b>DHCP Message</b>
+<BLOCKQUOTE>
+DHCP Solicit message<BR>
+<TABLE border=1>
+    <TR>
+      <TD colspan="2">msg-type</TD>
+      <TD><b>SOLICIT</b>(1)</TD>
+    </TR>
+    <tr>
+      <TD colspan="2">transaction-id</TD>
+      <TD>The transaction ID for this message exchange</TD>
+    </tr>
+    <TR>
+      <TD colspan="3">options</TD>
+    </TR>
+    <TR>
+      <TD colspan="3"><b>Client Identifier Option</b> (MUST)</TD>
+    </TR>
+    <tr>
+      <TD colspan="3"><b>IA_PD Option </b>(MUST)</TD> 
+    </tr>
+    <tr>
+      <TD>&nbsp;</TD>
+      <TD>Code</TD>
+      <TD>33 (TBD)</TD>
+    </tr>
+    <tr>
+      <TD>&nbsp;</TD>
+      <TD>IAID</TD>
+      <TD>The unique identifier which client specified</TD>
+    </tr>
+    <tr>
+      <TD>&nbsp;</TD>
+      <TD>T1</TD>
+      <TD>ANY</TD>
+    </tr>
+    <tr>
+      <TD>&nbsp;</TD>
+      <TD>T2</TD>
+      <TD>ANY</TD>
+    </tr>
+    <tr>
+      <TD colspan="3">Elapsed Time Option (MUST)</TD>
+    </tr>
+    <tr>
+      <TD>&nbsp;</TD>
+      <TD>elapsed-time</TD>
+      <TD>ANY</TD>
+    </tr>
+    <TR>
+      <TD colspan="3">Option Request Option (Optional)</TD>
+    </TR>
+</TABLE>
+</BLOCKQUOTE>
+</PRE>
+
+=end html
+
+=head1 TEST PROCEDURE
+
+=begin html
+<PRE>
+Tester as Server          Target as Client        Tester as Host
+    |                           |                           |
+    |-------------------------->|                           |
+    |   DHCP Advertise messages |                           |
+    |   with Preference option  |                           |
+    |   containing preference   |                           |
+    |   value: 1                |                           |
+    |                           |                           |
+    |-------------------------->|                           |
+    |   DHCP Advertise messages |                           |
+    |   with Preference option  |                           |
+    |   containing preference   |                           |
+    |   value: 200              |                           |
+    |                           |                           |
+    |-------------------------->|                           |
+    |   DHCP Advertise messages |                           |
+    |   with Preference option  |                           |
+    |   containing preference   |                           |
+    |   value: 100              |                           |
+    |                           |                           |
+    |<--------------------------|                           |
+    |   <A HREF="#JDG1">Judgment #1</A>             |                           |
+    |   DHCP Request message    |                           |
+    |  using SID with preference|                           |
+    |  value: 200               |                           |
+    |                           |                           |
+    |-------------------------->|                           |
+    |   DHCP Reply message      |                           |
+    |                           |                           |
+    |                           |                           |
+    v                           v                           v
+<BR>
+  1. Send DHCP Advertise messages with preference value 1
+  2. Send DHCP Advertise messages with preference value 200
+  3. Send DHCP Advertise messages with preference value 100
+  4. Wait DHCP Request message using SID of the server which has transmitted the preference value 200.
+  5. Send DHCP Reply message
+<BR>
+<b>Addresses</b>
+<BLOCKQUOTE>
+Request messages<BR>
+<TABLE border=1>
+    <TBODY>
+    <TR>
+      <TD>Src</TD>
+      <TD>NUT link-local address</TD>
+    </TR>
+    <TR>
+      <TD>Dst</TD>
+      <TD>All_DHCP_Relay_Agents_and_Servers</TD>
+    </TR>
+    </TBODY>
+  </TABLE>
+<BR>
+All_DHCP_Relay_Agents_and_Servers FF02::1:2<BR>
+Advertise message 1<BR>
+<TABLE border=1>
+    <TBODY>
+    <TR>
+      <TD>Src</TD>
+      <TD>fe80::200:ff:fe00:a2a2</TD>
+    </TR>
+    <TR>
+      <TD>Dst</TD>
+      <TD>NUT link-local address</TD>
+    </TR>
+    </TBODY>
+  </TABLE>
+<BR>
+Advertise message 2, Reply message<BR>
+<TABLE border=1>
+    <TBODY>
+    <TR>
+      <TD>Src</TD>
+      <TD>fe80::200:ff:fe00:a0a0</TD>
+    </TR>
+    <TR>
+      <TD>Dst</TD>
+      <TD>NUT link-local address</TD>
+    </TR>
+    </TBODY>
+  </TABLE>
+<BR>
+Advertise message 3<BR>
+<TABLE border=1>
+    <TBODY>
+    <TR>
+      <TD>Src</TD>
+      <TD>fe80::200:ff:fe00:a1a1</TD>
+    </TR>
+    <TR>
+      <TD>Dst</TD>
+      <TD>NUT link-local address</TD>
+    </TR>
+    </TBODY>
+  </TABLE>
+</BLOCKQUOTE>
+<b>UDP Ports</b><BR>
+      Clients listen for DHCP messages on UDP port 546
+      Server listen for DHCP messages on UDP port 547<BR>
+<b>DHCP Messages</b>
+<BLOCKQUOTE>
+DHCP Advertise message 1, 2 and 3 include preference option.                            
+As for the message, Server Identifier Option differ. <BR>
+DHCP Advertise message 1 with Preference option including pref-value 1<BR>
+<TABLE border=1>
+    <tr>
+      <TD colspan="3">msg-type</TD>
+      <TD><b>ADVERTISE</b>(2)</TD>
+    </tr>
+    <TR>
+      <TD colspan="3">transaction-id</TD>
+      <TD>The same transaction ID previous message</TD>
+    </TR>
+    <TR>
+      <TD colspan="4">options</TD>
+    </TR>
+    <TR>
+      <TD colspan="4">Client Identifier Option</TD>
+    </TR>
+    <TR>
+      <TD colspan="4">Server Identifier Option</TD>
+    </TR>
+    <TR>
+      <TD>&nbsp;</TD>
+      <TD colspan="2">DUID Contents type</TD>                    
+      <TD>1 Link-layer address plus time</TD> 
+    </TR>
+    <TR>
+      <TD>&nbsp;</TD>
+      <TD colspan="2">hardware type</TD>   
+      <TD>1 Ether</TD></TR>
+    <TR>
+      <TD>&nbsp;</TD>
+      <TD colspan="2">time</TD>
+      <TD>Time which the server included</TD> 
+    </TR>
+    <TR>
+      <TD>&nbsp;</TD>
+      <TD colspan="2">link-layer address</TD>   
+      <TD><B>00:00:00:00:a2:a2</B></TD></TR>
+    <tr>
+      <TD colspan="4"><b>Preference Option</b></TD> 
+    </tr>
+    <tr>
+      <TD>&nbsp;</TD>
+      <TD colspan="2">pref-value</TD>                   
+      <TD><b>1</b></TD> 
+    </tr>
+    <TR>
+      <TD colspan="4">IA_PD Option</TD>
+    </TR>
+    <TR>
+      <TD>&nbsp;</TD>
+      <TD colspan="2">Code</TD>
+      <TD>33 (TBD)</TD></TR> 
+    <TR>
+      <TD>&nbsp;</TD>
+      <TD colspan="2">IAID</TD>
+      <TD>Unique identifier which client specified</TD></TR>
+    <TR>
+      <TD>&nbsp;</TD>
+      <TD colspan="2">T1</TD>
+      <TD>300</TD></TR>
+    <TR>
+      <TD>&nbsp;</TD>
+      <TD colspan="2">T2</TD>
+      <TD>480</TD></TR>
+    <TR>
+      <TD>&nbsp;</TD>
+      <TD colspan="3">IA_PD Prefix Option</TD>                   
+    </TR>
+    <TR>
+      <TD>&nbsp;</TD>
+      <TD>&nbsp;</TD>
+      <TD>Code</TD>
+      <TD>34 (TBD)</TD></TR> 
+    <TR>
+      <TD>&nbsp;</TD>
+      <TD>&nbsp;</TD>
+      <TD>preferred-lifetime</TD>
+      <TD>600</TD></TR>
+    <TR>
+      <TD>&nbsp;</TD>
+      <TD>&nbsp;</TD>
+      <TD>valid-lifetime</TD>
+      <TD>1200</TD></TR>
+    <TR>
+      <TD>&nbsp;</TD>
+      <TD>&nbsp;</TD>
+      <TD>prefix-length</TD>
+      <TD>48</TD></TR>
+    <TR>
+      <TD>&nbsp;</TD>
+      <TD>&nbsp;</TD>
+      <TD>IPv6 prefix</TD>    
+      <TD>3ffe:501:fffd::</TD></TR>
+</TABLE>
+<BR>
+DHCP Advertise message 2 with Preference option including pref-value 200<BR>
+<TABLE border=1>
+    <TR>
+      <TD colspan="3">msg-type</TD>
+      <TD><b>ADVERTISE</b>(2)</TD>
+    </TR>
+    <tr>
+      <TD colspan="3">transaction-id</TD>
+      <TD>The same transaction ID previous message</TD> 
+    </tr>
+    <TR>
+      <TD colspan="4">options</TD>
+    </TR>
+    <TR>
+      <TD colspan="4">Client Identifier Option</TD>
+    </TR>
+    <TR>
+      <TD colspan="4">Server Identifier Option</TD>
+    </TR>
+    <TR>
+      <TD>&nbsp;</TD>
+      <TD colspan="2">DUID Contents type</TD>                    
+      <TD>1 Link-layer address plus time</TD> 
+    </TR>
+    <TR>
+      <TD>&nbsp;</TD>
+      <TD colspan="2">hardware type</TD>   
+      <TD>1 Ether</TD></TR>
+    <TR>
+      <TD>&nbsp;</TD>
+      <TD colspan="2">time</TD>
+      <TD>Time which the server included</TD> 
+    </TR>
+    <TR>
+      <TD>&nbsp;</TD>
+      <TD colspan="2">link-layer address</TD>   
+      <TD><B>00:00:00:00:a0:a0</B></TD></TR>
+    <tr>
+      <TD colspan="4"><b>Preference Option</b></TD> 
+    </tr>
+    <tr>
+      <TD>&nbsp;</TD>
+      <TD colspan="2">pref-value</TD>                   
+      <TD><b>200</b></TD> 
+    </tr>
+    <TR>
+      <TD colspan="4">IA_PD Option</TD>
+    </TR>
+    <TR>
+      <TD>&nbsp;</TD>
+      <TD colspan="2">Code</TD>
+      <TD>33 (TBD)</TD></TR> 
+    <tr>
+      <TD>&nbsp;</TD>
+      <TD colspan="2">IAID</TD>
+      <TD>Unique identifier which client specified</TD>
+    </tr>
+    <TR>
+      <TD>&nbsp;</TD>
+      <TD colspan="2">T1</TD>
+      <TD>300</TD></TR>
+    <TR>
+      <TD>&nbsp;</TD>
+      <TD colspan="2">T2</TD>
+      <TD>480</TD></TR>
+    <tr>
+      <TD>&nbsp;</TD>
+      <TD colspan="3">IA_PD Prefix Option</TD>                   
+    </tr>
+    <tr>
+      <TD>&nbsp;</TD>
+      <TD>&nbsp;</TD>
+      <TD>Code</TD>
+      <TD>34 (TBD)</TD>
+    </tr>
+    <tr>
+      <TD>&nbsp;</TD>
+      <TD>&nbsp;</TD>
+      <TD>preferred-lifetime</TD>
+      <TD>600</TD>
+    </tr>
+    <tr>
+      <TD>&nbsp;</TD>
+      <TD>&nbsp;</TD>
+      <TD>valid-lifetime</TD>
+      <TD>1200</TD>
+    </tr>
+    <tr>
+      <TD>&nbsp;</TD>
+      <TD>&nbsp;</TD>
+      <TD>prefix-length</TD>
+      <TD>48</TD>
+    </tr>
+    <tr>
+      <TD>&nbsp;</TD>
+      <TD>&nbsp;</TD>
+      <TD>IPv6 prefix</TD>    
+      <TD>3ffe:501:fffd::</TD>
+    </tr>
+</TABLE>
+<BR>
+DHCP Advertise message 3 with Preference option including pref-value 100<BR>
+<TABLE border=1>
+    <TR>
+      <TD colspan="3">msg-type</TD>
+      <TD><b>ADVERTISE</b>(2)</TD>
+    </TR>
+    <tr>
+      <TD colspan="3">transaction-id</TD>
+      <TD>The same transaction ID previous message</TD> 
+    </tr>
+    <TR>
+      <TD colspan="4">options</TD>
+    </TR>
+    <TR>
+      <TD colspan="4">Client Identifier Option</TD>
+    </TR>
+    <TR>
+      <TD colspan="4">Server Identifier Option</TD>
+    </TR>
+    <TR>
+      <TD>&nbsp;</TD>
+      <TD colspan="2">DUID Contents type</TD>                    
+      <TD>1 Link-layer address plus time</TD> 
+    </TR>
+    <TR>
+      <TD>&nbsp;</TD>
+      <TD colspan="2">hardware type</TD>   
+      <TD>1 Ether</TD></TR>
+    <TR>
+      <TD>&nbsp;</TD>
+      <TD colspan="2">time</TD>
+      <TD>Time which the server included</TD> 
+    </TR>
+    <TR>
+      <TD>&nbsp;</TD>
+      <TD colspan="2">link-layer address</TD>   
+      <TD><B>00:00:00:00:a1:a1</B></TD></TR>
+    <tr>
+      <TD colspan="4"><b>Preference Option</b></TD> 
+    </tr>
+    <tr>
+      <TD>&nbsp;</TD>
+      <TD colspan="2">pref-value</TD>                   
+      <TD><b>100</b></TD> 
+    </tr>
+    <TR>
+      <TD colspan="4">IA_PD Option</TD>
+    </TR>
+    <TR>
+      <TD>&nbsp;</TD>
+      <TD colspan="2">Code</TD>
+      <TD>33 (TBD)</TD></TR>
+    <tr>
+      <TD>&nbsp;</TD>
+      <TD colspan="2">IAID</TD>
+      <TD>Unique identifier which client specified</TD>
+    </tr>
+    <TR>
+      <TD>&nbsp;</TD>
+      <TD colspan="2">T1</TD>
+      <TD>300</TD></TR>
+    <TR>
+      <TD>&nbsp;</TD>
+      <TD colspan="2">T2</TD>
+      <TD>480</TD></TR>
+    <tr>
+      <TD>&nbsp;</TD>
+      <TD colspan="3">IA_PD Prefix Option</TD>                   
+    </tr>
+    <tr>
+      <TD>&nbsp;</TD>
+      <TD>&nbsp;</TD>
+      <TD>Code</TD>
+      <TD>34 (TBD)</TD>
+    </tr>
+    <tr>
+      <TD>&nbsp;</TD>
+      <TD>&nbsp;</TD>
+      <TD>preferred-lifetime</TD>
+      <TD>600</TD>
+    </tr>
+    <tr>
+      <TD>&nbsp;</TD>
+      <TD>&nbsp;</TD>
+      <TD>valid-lifetime</TD>
+      <TD>1200</TD>
+    </tr>
+    <tr>
+      <TD>&nbsp;</TD>
+      <TD>&nbsp;</TD>
+      <TD>prefix-length</TD>
+      <TD>48</TD>
+    </tr>
+    <tr>
+      <TD>&nbsp;</TD>
+      <TD>&nbsp;</TD>
+      <TD>IPv6 prefix</TD>    
+      <TD>3ffe:501:fffd::</TD>
+    </tr>
+</TABLE>
+<BR>
+DHCP Request message with IA_PD option including TN1s DUID<BR>
+<TABLE border=1>
+    <tr>
+      <TD colspan="3">msg-type</TD>
+      <TD><b>REQUEST</b>(3)</TD>
+    </tr>
+    <tr>
+      <TD colspan="3">transaction-id</TD>
+      <TD>The transaction ID for this message exchange</TD>
+    </tr>
+    <TR>
+      <TD colspan="4">options</TD>
+    </TR>
+    <TR>
+      <TD colspan="4"><b>Client Identifier Option </b> (MUST)</TD>
+    </TR>
+    <TR>
+      <TD colspan="4"><b>Server Identifier Option </b> (MUST)</TD>
+    </TR>
+    <TR>
+      <TD>&nbsp;</TD>
+      <TD colspan="2">DUID Contents type</TD>                    
+      <TD>1 Link-layer address plus time</TD> 
+    </TR>
+    <TR>
+      <TD>&nbsp;</TD>
+      <TD colspan="2">hardware type</TD>   
+      <TD>1 Ether</TD></TR>
+    <TR>
+      <TD>&nbsp;</TD>
+      <TD colspan="2">time</TD>
+      <TD>Time which the server included</TD> 
+    </TR>
+    <TR>
+      <TD>&nbsp;</TD>
+      <TD colspan="2">link-layer address</TD>   
+      <TD><B>00:00:00:00:a0:a0</B></TD></TR>
+    <tr>
+      <TD colspan="4"><b>IA_PD Option </b> (MUST)</TD>
+    </tr>
+    <tr>
+      <TD>&nbsp;</TD>
+      <TD colspan="2">Code</TD>
+      <TD>33 (TBD)</TD> 
+    </tr>
+    <tr>
+      <TD>&nbsp;</TD>
+      <TD colspan="2">IAID</TD>
+      <TD>Unique identifier which client specified</TD>
+    </tr>
+    <tr>
+      <TD>&nbsp;</TD>
+      <TD colspan="2">T1</TD>
+      <TD>ANY</TD>
+    </tr>
+    <tr>
+      <TD>&nbsp;</TD>
+      <TD colspan="2">T2</TD>
+      <TD>ANY</TD>
+    </tr>
+    <tr>
+      <TD>&nbsp;</TD>
+      <TD colspan="3">IA_PD Prefix Option (Optional)</TD>                
+    </tr>
+    <tr>
+      <TD>&nbsp;</TD>
+      <TD>&nbsp;</TD>
+      <TD>Code</TD>
+      <TD>34 (TBD)</TD>
+    </tr>
+    <tr>
+      <TD>&nbsp;</TD>
+      <TD>&nbsp;</TD>
+      <TD>preferred-lifetime</TD>
+      <TD>ANY</TD>
+    </tr>
+    <tr>
+      <TD>&nbsp;</TD>
+      <TD>&nbsp;</TD>
+      <TD>valid-lifetime</TD>
+      <TD>ANY</TD>
+    </tr>
+    <tr>
+      <TD>&nbsp;</TD>
+      <TD>&nbsp;</TD>
+      <TD>prefix-length</TD>
+      <TD>48</TD>
+    </tr>
+    <tr>
+      <TD>&nbsp;</TD>
+      <TD>&nbsp;</TD>
+      <TD>IPv6 prefix</TD>   
+      <TD>3ffe:501:fffd::</TD>
+    </tr>
+    <tr>
+      <TD colspan="4"> <b> Elapsed Time Option </b> (MUST)</TD>
+    </tr>
+    <tr>
+      <TD>&nbsp;</TD>
+      <TD colspan="2">elapsed-time</TD>
+      <TD>ANY</TD>
+    </tr>
+    <tr>
+      <TD colspan="4"> Option Request Option (Optional)</TD> 
+    </tr>
+</TABLE>
+<BR>
+DHCP Reply message with IA_PD option including IA_Prefix option<BR>
+<TABLE border=1>
+    <TR>
+      <TD colspan="3">msg-type</TD>
+      <TD><b>REPLY</b>(7)</TD>
+    </TR>
+    <tr>
+      <TD colspan="3">transaction-id</TD>
+      <TD>The same transaction ID previous message</TD> 
+    </tr>
+    <TR>
+      <TD colspan="4">options</TD>
+    </TR>
+    <TR>
+      <TD colspan="4">Client Identifier Option</TD>
+    </TR>
+    <TR>
+      <TD colspan="4">Server Identifier Option</TD>
+    </TR>
+    <TR>
+      <TD>&nbsp;</TD>
+      <TD colspan="2">DUID Contents type</TD>                   
+      <TD>1 Link-layer address plus time</TD> 
+    </TR>
+    <TR>
+      <TD>&nbsp;</TD>
+      <TD colspan="2">hardware type</TD>   
+      <TD>1 Ether</TD></TR>
+    <TR>
+      <TD>&nbsp;</TD>
+      <TD colspan="2">time</TD>
+      <TD>Time which the server included</TD> 
+    </TR>
+    <TR>
+      <TD>&nbsp;</TD>
+      <TD colspan="2">link-layer address</TD>   
+      <TD><B>00:00:00:00:a0:a0</B></TD></TR>
+    <TR>
+      <TD colspan="4"><b>IA_PD Option</b></TD> 
+    </TR>
+    <TR>
+      <TD>&nbsp;</TD>
+      <TD colspan="2">Code</TD>
+      <TD>33 (TBD)</TD></TR>
+    <tr>
+      <TD>&nbsp;</TD>
+      <TD colspan="2">IAID</TD>
+      <TD>Unique identifier which client specified</TD>
+    </tr>
+    <TR>
+      <TD>&nbsp;</TD>
+      <TD colspan="2">T1</TD>
+      <TD>300</TD></TR>
+    <TR>
+      <TD>&nbsp;</TD>
+      <TD colspan="2">T2</TD>
+      <TD>480</TD></TR>
+    <tr>
+      <TD>&nbsp;</TD>
+      <TD colspan="3"><b>IA_PD Prefix Option</b></TD>                   
+    </tr>
+    <tr>
+      <TD>&nbsp;</TD>
+      <TD>&nbsp;</TD>
+      <TD>Code</TD>
+      <TD>34 (TBD)</TD>
+    </tr>
+    <tr>
+      <TD>&nbsp;</TD>
+      <TD>&nbsp;</TD>
+      <TD>preferred-lifetime</TD>
+      <TD>600</TD>
+    </tr>
+    <tr>
+      <TD>&nbsp;</TD>
+      <TD>&nbsp;</TD>
+      <TD>valid-lifetime</TD>
+      <TD>1200</TD>
+    </tr>
+    <tr>
+      <TD>&nbsp;</TD>
+      <TD>&nbsp;</TD>
+      <TD>prefix-length</TD>
+      <TD>48</TD>
+    </tr>
+    <tr>
+      <TD>&nbsp;</TD>
+      <TD>&nbsp;</TD>
+      <TD>IPv6 prefix</TD>    
+      <TD>3ffe:501:fffd::</TD>
+    </tr>
+</TABLE>
+</BLOCKQUOTE>
+</PRE>
+
+=end html
+
+=head1 JUDGEMENT
+
+=begin html
+<PRE>
+<A NAME="JDG1"></A>
+  1. Requesting Router chooses SID of the server which has transmitted the preference value 200.
+</PRE>
+
+=end html
+
+=head1 TERMINATION
+
+  N/A
+
+=head1 REFERENCE
+
+=begin html
+<PRE>
+draft-ietf-dhc-dhcpv6-opt-prefix-delegation-01.txt
+<HR>
+10. Delegating Router Solicitation <BR>
+   The requesting router locates and selects a delegating router in the
+   same way as described in section "DHCP Server Solicitation" of the
+   DHCP specification [6].  The details of the solicitation process are
+   described in this section.  <BR>
+10.1 Requesting router behaviour <BR>
+   The requesting router creates and transmits a Solicit message as
+   described in sections "Creation of Solicit Messages" and
+   "Transmission of Solicit Messages" of the DHCP specification [6].
+   The requesting router creates an IA_PD and assigns it an IAID.  The
+   requesting router MUST include the IA_PD option in the Solicit
+   message.  <BR>
+   <B>The requesting router processes any received Advertise messages as
+   described in section "Receipt of Advertise Messages" in the DHCP
+   specification [6].</B>  The requesting router MAY choose to consider the
+   presence of advertised prefixes in its decision about which
+   delegating router to respond to.
+<HR>
+draft-ietf-dhc-dhcpv6-28.txt
+<HR>
+17. DHCP Server Solicitation <BR>
+17.1. Client Behavior <BR>
+17.1.3. Receipt of Advertise Messages <BR>
+   The client MUST ignore any Advertise message that includes a Status
+   Code option containing the value NoAddrsAvail, with the exception
+   that the client MAY display the associated status message to the
+   user.  <BR>
+   <B>Upon receipt of one or more valid Advertise messages, the client
+   selects one or more Advertise messages based upon the following
+   criteria.</B>  <BR>
+    -  <B>Those Advertise messages with the highest server preference value
+       are preferred over all other Advertise messages.</B> <BR>
+    -  Within a group of Advertise messages with the same server
+       preference value, a client MAY select those servers whose
+       Advertise messages advertise information of interest to the
+       client.  For example, the client may choose a server that
+       returned an advertisement with configuration options of interest
+       to the client.  <BR>
+    -  The client MAY choose a less-preferred server if that server has
+       a better set of advertised parameters, such as the available
+       addresses advertised in IAs.  <BR>
+   <B>Once a client has selected Advertise message(s), the client will
+   typically store information about each server, such as server
+   preference value, addresses advertised, when the advertisement was
+   received, and so on.</B> <BR>
+   If the client needs to select an alternate server in the case that a
+   chosen server does not respond, the client chooses the next server
+   according to the criteria given above.
+</PRE>
+
+=head1 SEE ALSO
+
+  perldoc V6evalTool
+
+=cut
+

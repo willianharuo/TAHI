@@ -1,0 +1,99 @@
+<HTML>
+<HEAD>
+<TITLE>IH_UnrecognizedNxtHdrFlood - Many packets with Unrecognized Next Header</TITLE>
+<LINK REV="made" HREF="mailto:hackers@FreeBSD.org">
+</HEAD>
+
+<BODY>
+
+<!-- INDEX BEGIN -->
+<!--
+
+<UL>
+
+	<LI><A HREF="#NAME">NAME</A>
+	<LI><A HREF="#TARGET">TARGET</A>
+	<LI><A HREF="#SYNOPSIS">SYNOPSIS</A>
+	<LI><A HREF="#INITIALIZATION">INITIALIZATION</A>
+	<LI><A HREF="#TEST_PROCEDURE">TEST PROCEDURE</A>
+	<LI><A HREF="#JUDGMENT">JUDGMENT</A>
+	<LI><A HREF="#SEE_ALSO">SEE ALSO</A>
+</UL>
+-->
+<!-- INDEX END -->
+
+<P>
+<H1><A NAME="NAME">NAME</A></H1>
+<P>
+<PRE>    IH_UnrecognizedNxtHdrFlood - Many packets with Unrecognized Next Header
+</PRE>
+<P>
+<HR>
+<H1><A NAME="TARGET">TARGET</A></H1>
+<P>
+<PRE>    Host and Router
+</PRE>
+<P>
+<HR>
+<H1><A NAME="SYNOPSIS">SYNOPSIS</A></H1>
+<PRE>
+    <A HREF="./IH_UnrecognizedNxtHdrFlood.seq">IH_UnrecognizedNxtHdrFlood.seq</A> [-tooloption ...] -pkt <A HREF="./IH_UnrecognizedNxtHdrFlood.def">IH_UnrecognizedNxtHdrFlood.def</A>
+        -tooloption: v6eval tool option
+    </PRE>
+
+<P>
+<HR>
+<H1><A NAME="INITIALIZATION">INITIALIZATION</A></H1>
+<P>
+<PRE>    1. Check Link0 Link Local address Reachability
+</PRE>
+<P>
+<HR>
+<H1><A NAME="TEST_PROCEDURE">TEST PROCEDURE</A></H1>
+<P>
+<PRE>    1. Send Unrecognized Next Header packet.
+    2. Wait 5 sec.
+    3. Send Echo Request
+    4. If NS received then send NA, and wait Echo Reply again
+    5. Receive Echo Reply
+    6. repeat from 1 to 5 (with increase Next Header value).
+</PRE>
+<P>
+<PRE>    last Unrecognized Next Header packet is:
+</PRE>
+<P>
+<PRE>        IPv6 Header
+            Version            = 6
+            Traffic Class      = 0
+            FlowLabel          = 0
+            PayloadLength      = 16
+            NextHeader         = 0 - 255 (be increased for each packets.)
+            HopLimit           = 64
+            SourceAddress      = Tester Link Local Address
+            DestinationAddress = Target Link Local Address
+</PRE>
+<P>
+<PRE>        ICMPv6 Echo Request
+            Type               = 128 (Echo Request)
+            Code               = 0
+            Checksum           = (auto)
+            Identifier         = 0
+            SequenceNumber     = 0
+            PayloadData        = {1, 2, 3, 4, 5, 6, 7, 8}
+</PRE>
+<P>
+<HR>
+<H1><A NAME="JUDGMENT">JUDGMENT</A></H1>
+<P>
+<PRE>    PASS : echo reply packet received.
+    FAIL : don't received echo reply packet.
+</PRE>
+<P>
+<HR>
+<H1><A NAME="SEE_ALSO">SEE ALSO</A></H1>
+<P>
+<PRE>    perldoc V6evalTool
+</PRE>
+</BODY>
+
+</HTML>

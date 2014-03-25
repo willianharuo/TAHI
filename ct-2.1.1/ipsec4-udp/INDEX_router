@@ -1,0 +1,14 @@
+##
+## $Name: REL_2_1_1 $
+##
+## $TAHI: ct/ipsec4-udp/INDEX_router,v 1.4 2001/10/09 05:16:41 toba Exp $
+##
+##<seq>:<def>:[<opt>]:[<log>]:<desc>
+##
+&print:<B>Router Tunnel Mode</B>
+
+&print:Initialize for Router
+
+&#../ipsec/RTU_SetAddress.seq:./RTU_common.def:-cpp="-include ipsecaddr.def"::Set Global Address and Check (Router):2
+#
+#########################################################################

@@ -1,0 +1,283 @@
+#
+# This file is a sample config.txt. It means the below figure, Unified
+# Topology.
+#
+#                                     Network 1
+#       ------+--------------+-----------+------+-
+#             |              |           |      |
+#             | 1            |           | 1    +-------------+
+#      TG +-----------+      |        +------+                |
+#  +------| REF-1 (V) |      |        | LOGO |                |
+#  |      +-----------+      |        +------+                |
+#  |          | 2            |                                |
+#  |          |              |        Network 2               |
+#  |    ------+------+------------+------+-----+--            |
+#  |                 |       |    |            |              |
+#  |               1 |       |    |            +------+       |
+#  |       TG +----------+   |    |                   |       |
+#  | +--------| REF-2 (V)|   |    |                   |       |
+#  | |        +----------+   |    |                   |       |
+#  | |             2 |       |    |                   |       |
+#  | |               |       |    |   Network 3       |       |
+#  | |  ------+------+------------------------+---    |       |
+#  | |        |              |    |           |       |       |
+#  | |        | 3            |    |           |       |       |
+#  | |  TG +----------+ 1    |    |           |       |       |
+#  | | +---| TAR* (V) |------+    |           |       |       |
+#  | | |   +----------+           |           |       |       |
+#  | | |      | 2                 |           |       |       |
+#  | | |      +-------------------+           |       |       |
+#  | | |                                      |       |       |
+#  | | |                                      |       | 2     |
+#  | | |     Network for TG                   |  +---------+  |
+# -+-+-+----+-------+-                        +--| dump (V)|--+
+#           |       |                          3 +---------+ 1
+#        TG |       |                                 | TG
+#     +---------+   +---------------------------------+
+#     | vel mgr |
+#     +---------+
+#
+# Expanation of the above figure:
+# 
+# - LOGO
+#   LOGO is a device tested in this environment.
+#
+# - (V)
+#   (V) marks on nodes mean that vela and velo run on the nodes.
+#
+# - vel mgr
+#   vel mgr means node which 
+#   It is required to have an IPv4 address on its interface TG, for
+#   example 192.168.20.1 (arbitrary).
+#
+# - TAR*
+#   TAR* means that the 4 nodes in which 4 Operating Systems are
+#   installed are here.
+#   The address is used by vel mgr to operate TAR*, REF-1, REF-2 and
+#   dump.  Each TAR* have an IPv4 address on its interface TG. 
+#   sample environment, the nodes have the following addresses:
+#     TAR1 has 192.168.20.10
+#     TAR2 has 192.168.20.11
+#     TAR3 has 192.168.20.12
+#     TAR4 has 192.168.20.13
+#
+# - REF1, REF2
+#   REF1 and REF2 are reference nodes. Both nodes have each IPv4 address
+#   as the following:
+#     REF1 has 192.168.20.100
+#     REF2 has 192.168.20.101
+#
+# - DUMPER
+#   DUMPER is a packet monitor node. It has 192.168.20.2 on
+#   its interface TG.
+
+
+#--------------------------------------------------#
+# COMMON configuration for all nodes and tests     #
+#--------------------------------------------------#
+PREFIX1     3ffe:501:ffff:100
+PREFIX2     3ffe:501:ffff:101
+PREFIX3     3ffe:501:ffff:102
+
+# DUP_ADDR: the duplicate address which is used at Test IP6Interop.1.2 
+#           Part B, D and F Duplicate Address Detection - Tentative
+#           Address Duplicated test case.
+DUP_ADDR	fe80::1111
+
+#--------------------------------------------------#
+# TARGET NODE configuration                        #
+#--------------------------------------------------#
+
+#--------------------------------------------------#
+# YOUR DEVICE                                      #
+#--------------------------------------------------#
+
+#
+# LOGO TYPE: type of your device [host or router]
+LOGO_TYPE		host
+
+#
+# LOGO_NAME: name of your device
+LOGO_NAME		TESTED_NODE
+
+#
+# LOGO_IF1 : interface name and mac address on your device
+LOGO_IF1			aue0
+LOGO_IF1_MAC		00:00:00:00:00:01
+
+#
+# LOGO_IF2 : interface name and mac address on your device
+#            If LOGO_TYPE is router, you need to edit LOGO_IF2
+LOGO_IF2	        aue1
+LOGO_IF2_MAC		00:00:00:00:00:02
+
+
+#--------------------------------------------------#
+# TARGET-1                                         #
+#--------------------------------------------------#
+
+#
+# TAR1_NAME: name of OperatingSystem installed on TAR1
+#            you can select in [FreeBSD, NetBSD, KAME, Linux, USAGI]
+TAR1_NAME				Linux
+
+#
+# TAR1_TYPE: type of TAR1 [host or router]
+TAR1_TYPE				host
+
+#
+# TAR1_IF1 : interface name and mac address on TARGET-1 node
+#            This interface must be connected to Network 1.
+TAR1_IF1		    	eth1
+TAR1_IF1_MAC			00:00:00:00:01:00
+
+#
+# TAR1_IF2 : interface name and mac address on TARGET-1 node
+#            This interface must be connected to Network 2.
+TAR1_IF2				eth2
+TAR1_IF2_MAC			00:00:00:00:01:01
+
+#
+# TAR1_IF3 : interface name and mac address on TARGET-1 node
+#            This interface must be connected to Network 3.
+TAR1_IF3	     		eth3
+TAR1_IF3_MAC			00:00:00:00:01:02
+
+#
+# TAR1_IFTG: interface name to connect to velm node
+#            This interface must be connected to Network for vel
+TAR1_IFTG				eth0
+TAR1_IFTG_V4_ADDR		192.168.20.10
+
+
+#--------------------------------------------------#
+# TARGET-2                                         #
+#--------------------------------------------------#
+TAR2_NAME				FreeBSD
+TAR2_TYPE				router
+
+TAR2_IF1				fxp0
+TAR2_IF1_MAC			00:00:00:00:02:00
+TAR2_IF2				fxp1
+TAR2_IF2_MAC			00:00:00:00:02:01
+TAR2_IF3				fxp2
+TAR2_IF3_MAC			00:00:00:00:02:02
+TAR2_IFTG				ed1
+TAR2_IFTG_V4_ADDR		192.168.20.11
+
+
+#--------------------------------------------------#
+# TARGET-3                                         #
+#--------------------------------------------------#
+TAR3_NAME				NetBSD
+TAR3_TYPE				router
+
+TAR3_IF1				aue0
+TAR3_IF1_MAC			00:00:00:00:03:01
+TAR3_IF2				aue1
+TAR3_IF2_MAC			00:00:00:00:03:02
+TAR3_IF3				aue2
+TAR3_IF3_MAC			00:00:00:00:03:03
+TAR3_IFTG				aue3
+TAR3_IFTG_V4_ADDR		192.168.20.12
+
+
+#--------------------------------------------------#
+# TARGET-4                                         #
+#--------------------------------------------------#
+TAR4_NAME				USAGI
+TAR4_TYPE				host
+
+TAR4_IF1    			aue0
+TAR4_IF1_MAC			00:00:00:00:04:01
+TAR4_IF2				aue1
+TAR4_IF2_MAC			00:00:00:00:04:02
+TAR4_IF3				aue2
+TAR4_IF3_MAC			00:00:00:00:04:03
+TAR4_IFTG				vr0
+TAR4_IFTG_V4_ADDR		192.168.20.13
+
+
+#--------------------------------------------------#
+# REFERENCE NODE configuration                     #
+#--------------------------------------------------#
+
+#--------------------------------------------------#
+# REFERENCE-1                                      #
+#--------------------------------------------------#
+
+#
+# REF1_NAME: name of OperatingSystem installed on REF1
+#            you can select in [FreeBSD, NetBSD, KAME, Linux, USAGI]
+REF1_NAME			KAME
+
+#
+# REF1_IF1 : interface name and mac address on REF1 node
+#            This interface must be connected to Network 1.
+REF1_IF1			em0
+REF1_IF1_MAC		00:00:00:01:00:01
+
+#
+# REF1_IF2 : interface name and mac address on REF1 node
+#            This interface must be connected to Network 2.
+REF1_IF2			em1
+REF1_IF2_MAC		00:00:00:01:00:02
+
+#
+# REF1_IFTG: interface name and mac address on REF1 node
+#            This interface must be connected to Network for TG
+REF1_IFTG			xl0
+REF1_IFTG_V4_ADDR	192.168.20.100
+
+
+#--------------------------------------------------#
+# REFERENCE-2                                      #
+#--------------------------------------------------#
+REF2_NAME			FreeBSD
+
+#
+# REF2_IF1 : interface name and mac address on REF2 node
+#            This interface must be connected to Network 2.
+REF2_IF1			aue0
+REF2_IF1_MAC		00:00:00:02:00:01
+
+#
+# REF2_IF2 : interface name and mac address on REF2 node
+#            This interface must be connected to Network 3.
+REF2_IF2			aue1
+REF2_IF2_MAC		00:00:00:02:00:02
+
+REF2_IFTG			bfe0
+REF2_IFTG_V4_ADDR	192.168.20.101
+
+
+#--------------------------------------------------#
+# PACKET CAPTURE NODE configuration                #
+#--------------------------------------------------#
+
+#
+# DUMPER_NAME : name of OperatingSystem installed on DUMPER
+#               (packet capture node)
+#               you can select in [FreeBSD, NetBSD, KAME, Linux, USAGI]
+DUMPER_NAME		FreeBSD
+
+#
+# DUMPER_IF1 : interface name on packet monitor node
+#              This interface must be connected to Network 1.
+DUMPER_IF1	 vr1
+
+#
+# DUMPER_IF2 : interface name on packet monitor node
+#              This interface must be connected to Network 2.
+DUMPER_IF2	 vr2
+
+#
+# DUMPER_IF3 : interface name on packet monitor node
+#              This interface must be connected to Network 3.
+DUMPER_IF3	 vr0
+
+#
+# DUMPER_IFTG : interface name and mac address on packet monitor node
+#            If LOGO_TYPE is router, you need to edit LOGO_IF2
+DUMPER_IFTG	 fxp0
+DUMPER_IFTG_V4_ADDR	 192.168.20.2

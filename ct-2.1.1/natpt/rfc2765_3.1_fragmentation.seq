@@ -1,0 +1,345 @@
+#!/usr/bin/perl
+#
+# Copyright (C) 1999, 2000, 2001, 2002, 2003 Yokogawa Electric Corporation,
+# IPA (Information-technology Promotion Agency, Japan).
+# All rights reserved.
+# 
+# Redistribution and use of this software in source and binary forms, with 
+# or without modification, are permitted provided that the following 
+# conditions and disclaimer are agreed and accepted by the user:
+# 
+# 1. Redistributions of source code must retain the above copyright 
+# notice, this list of conditions and the following disclaimer.
+# 
+# 2. Redistributions in binary form must reproduce the above copyright 
+# notice, this list of conditions and the following disclaimer in the 
+# documentation and/or other materials provided with the distribution.
+# 
+# 3. Neither the names of the copyrighters, the name of the project which 
+# is related to this software (hereinafter referred to as "project") nor 
+# the names of the contributors may be used to endorse or promote products 
+# derived from this software without specific prior written permission.
+# 
+# 4. No merchantable use may be permitted without prior written 
+# notification to the copyrighters. However, using this software for the 
+# purpose of testing or evaluating any products including merchantable 
+# products may be permitted without any notification to the copyrighters.
+# 
+# 
+# 
+# THIS SOFTWARE IS PROVIDED BY THE COPYRIGHTERS, THE PROJECT AND 
+# CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING 
+# BUT NOT LIMITED THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS 
+# FOR A PARTICULAR PURPOSE, ARE DISCLAIMED.  IN NO EVENT SHALL THE 
+# COPYRIGHTERS, THE PROJECT OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, 
+# INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES 
+# (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR 
+# SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) 
+# HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN 
+# CONTRACT,STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) 
+# ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF 
+# THE POSSIBILITY OF SUCH DAMAGE.
+#
+# $TAHI: ct/natpt/rfc2765_3.1_fragmentation.seq,v 1.4 2001/10/11 01:41:46 akisada Exp $
+#
+
+BEGIN { $V6evalTool::TestVersion = '$Name: REL_2_1_1 $'; }
+use V6evalTool;
+use natpt;
+
+checkNUT(router);
+
+# Interface 
+$IF="Link0";
+$IF1="Link1";
+vCapture($IF);
+vCapture($IF1);
+
+%pktdesc = (
+  ipv4_echo_1232_df       => 'Send IPv4 packet (1232 bytes, don\'t fragment)',
+  ipv4_echo_1232_df_opt   => 'Send IPv4 packet (1232 bytes, + ipv4 options)',
+  ipv4_echo_1234_df       => 'Send IPv4 packet (1234 bytes, don\'t fragment)',
+  ipv4_echo_1232          => 'Send IPv4 packet (1232 bytes, may fragment)',
+  ipv4_echo_1234          => 'Send IPv4 packet (1234 bytes, may fragment)',
+  ipv4_echo_frag          => 'Send IPv4 fragment (1234 bytes, may fragment, offset 512)',
+  ipv6_echo_1232          => 'Recv IPv6 packet (1272 bytes, no fragment hdr)',
+  icmpv4_unreach_mtu1252  => 'Recv ICMPv4 Packet too big, MTU = 1252',
+  icmpv4_unreach_mtu1252_ttl  => 'Recv ICMPv4 Packet too big, MTU = 1252',
+  ipv6_echo_1232_frag     => 'Recv IPv6 packet (1280 bytes, fragment hdr)',
+  ipv6_echo_1234_frag1    => 'Recv IPv6 packet (1280 bytes, (1\'st fragment))',
+  ipv6_echo_1234_frag2    => 'Recv IPv6 packet (50 bytes, (2nd fragment))',
+  ipv6_echo_frag_frag1    => 'Recv IPv6 fragment (offset 512))',
+  ipv6_echo_frag_frag2    => 'Recv IPv6 packet fragment (offset 1744))',
+
+  arp_nut2tn_request => 'Recv ARP request on Link1 (TN IPv4addr)',
+  arp_tn2nut_reply   => 'Send ARP reply on Link1 (TN IPv4addr)',
+  ns_nut2tn_siit0    => 'Recv Neighbor Solicitation on Link0 (SIIT V6addr)',
+  na_tn2nut_siit0    => 'Send Neighbor Advertisement on Link0 (SIIT V6addr)',
+);
+$result = $V6evalTool::exitPass;
+$result += send_recv($IF1, 'ipv4_echo_1232_df', $IF, 'ipv6_echo_1232');
+$result += send_recv($IF1, 'ipv4_echo_1232_df_opt', $IF, 'ipv6_echo_1232');
+$result += send_recv($IF1, 'ipv4_echo_1234_df', $IF1, 
+		     'icmpv4_unreach_mtu1252', 'icmpv4_unreach_mtu1252_ttl'); 
+$result += send_recv($IF1, 'ipv4_echo_1232', $IF, 'ipv6_echo_1232_frag');
+$result += send_recv($IF1, 'ipv4_echo_1234', $IF, 'ipv6_echo_1234_frag1');
+$result += send_recv($IF1, '', $IF, 'ipv6_echo_1234_frag2');
+$result += send_recv($IF1, 'ipv4_echo_frag', $IF, 'ipv6_echo_frag_frag1');
+$result += send_recv($IF1, '', $IF, 'ipv6_echo_frag_frag2');
+
+if($result == $V6evalTool::exitPass) {
+    vLogHTML("<H3>OK</H3>");
+    exit $V6evalTool::exitPass;
+}
+
+error:
+vLogHTML("<FONT COLOR=#FF0000><H3>NG</H3></FONT>");
+exit $V6evalTool::exitFail;
+
+########################################################################
+__END__
+
+=head1 NAME
+
+	rfc2765_3.1_fragmentation.seq - Verify IPv6 <-> IPv4 header 
+        translation in accordance with RFC2765 [SIIT]
+
+=head1 TARGET
+
+	Router
+
+=head1 SYNOPSIS
+
+	rfc2765_3.1_fragmentation.seq [-tooloption ...] 
+        -p rfc2765_3.1_fragmentation.def
+
+=head1 INITIALIZATION
+
+=begin html
+<PRE>
+	Before this test starts, run <A HREF="./initialize.html">initialize.seq</A>.
+</PRE>
+
+=end html
+
+=head1 TEST PROCEDURE
+
+	This test verifies that NUT force fragmentation if the resulting
+        IPv6 package is larger than 1232 bytes + IPv6 header and 
+        optional fragment header.
+	
+	Network Topology
+
+	Link0
+	--------------------------
+	    |               |
+	   TN              NUT
+	    |               |
+	--------------------------
+	Link1
+
+	TN -- (Link0) -- NUT        NUT -- (Link1) -- TN
+	
+	---------------------      ------------------------
+
+=begin html <HR WIDTH=80%>
+
+	1.1.
+                                   <===================
+	ICMPv4 Echo request
+                IPv4 Header
+			src address : TN LINK1 IPv4 address
+			dst address : TN LINK0 IPv4 address
+                        Don't Fragment = 1
+                ICMPv4 echo request
+                        Payload = repeat(0xff, 1224)
+
+	1.2.
+	<<JUDGMENT>>
+	<===================
+	ICMPv6 Echo Request
+		IPv6 Header
+			src address : TN LINK1 IPv4 embedded IPv6 address
+			dst address : TN LINK0 IPv4 embedded IPv6 address
+                ICMPv6 echo request
+                        Payload = repeat(0xff, 1224)
+
+=begin html <HR WIDTH=80%>
+
+	2.1.
+                                   <===================
+	ICMPv4 Echo request
+                IPv4 Header
+			src address : TN LINK1 IPv4 address
+			dst address : TN LINK0 IPv4 address
+                        Don't Fragment = 1
+                        Timestamp Option
+                ICMPv4 echo request
+                        Payload = repeat(0xff, 1224)
+
+	2.2.
+	<<JUDGMENT>>
+	<===================
+	ICMPv6 Echo Request
+		IPv6 Header
+			src address : TN LINK1 IPv4 embedded IPv6 address
+			dst address : TN LINK0 IPv4 embedded IPv6 address
+                ICMPv6 echo request
+                        Payload = repeat(0xff, 1224)
+
+=begin html <HR WIDTH=80%>
+
+	3.1.
+                                   <===================
+	ICMPv4 Echo request
+                IPv4 Header
+			src address : TN LINK1 IPv4 address
+			dst address : TN LINK0 IPv4 address
+                        Don't Fragment = 1
+                ICMPv4 echo request
+                        Payload = repeat(0xff, 1226)
+
+	3.2.
+	<<JUDGMENT>>
+                                   ===================>
+	ICMPv4 Destination Unreachable
+                IPv4 Header
+			src address : NUT LINK1 IPv4 address
+			dst address : TN LINK1 IPv4 address
+                ICMPv4 Destination Unreachable
+                        Type = 3
+                        Code = 2
+                        MTU = 1252
+
+=begin html <HR WIDTH=80%>
+
+	4.1.
+                                   <===================
+	ICMPv4 Echo request
+                IPv4 Header
+			src address : TN LINK1 IPv4 address
+			dst address : TN LINK0 IPv4 address
+                        Don't Fragment = 0
+                ICMPv4 echo request
+                        Payload = repeat(0xff, 1224)
+
+	4.2.
+	<<JUDGMENT>>
+	<===================
+	ICMPv6 Echo Request
+		IPv6 Header
+			src address : TN LINK1 IPv4 embedded IPv6 address
+			dst address : TN LINK0 IPv4 embedded IPv6 address
+                Fragment Header
+                ICMPv6 echo request
+                        Payload = repeat(0xff, 1224)
+
+=begin html <HR WIDTH=80%>
+
+	5.1.
+                                   <===================
+	ICMPv4 Echo request
+                IPv4 Header
+			src address : TN LINK1 IPv4 address
+			dst address : TN LINK0 IPv4 address
+                        Don't Fragment = 0
+                ICMPv4 echo request
+                        Payload = repeat(0xff, 1226)
+
+	5.2.
+	<<JUDGMENT>>
+	<===================
+	ICMPv6 Echo Request
+		IPv6 Header
+			src address : TN LINK1 IPv4 embedded IPv6 address
+			dst address : TN LINK0 IPv4 embedded IPv6 address
+                Fragment Header
+                        Offset = 0
+                        More Fragments = 1
+                ICMPv6 echo request
+                        Payload = repeat(0xff, 1224)
+
+	5.3.
+	<<JUDGMENT>>
+	<===================
+	ICMPv6 Echo Request
+		IPv6 Header
+			src address : TN LINK1 IPv4 embedded IPv6 address
+			dst address : TN LINK0 IPv4 embedded IPv6 address
+                Fragment Header
+                        Offset = 1232
+                        More Fragments = 0
+                Payload = repeat(0xff, 2)
+
+=begin html <HR WIDTH=80%>
+
+	6.1.
+                                   <===================
+	ICMPv4 Echo request
+                IPv4 Header
+			src address : TN LINK1 IPv4 address
+			dst address : TN LINK0 IPv4 address
+                        Don't Fragment = 0
+                        FragmentOffset = 500
+                        MF = 1
+                ICMPv4 echo request
+                        Payload = repeat(0xff, 1226)
+
+	6.2.
+	<<JUDGMENT>>
+	<===================
+	ICMPv6 Echo Request
+		IPv6 Header
+			src address : TN LINK1 IPv4 embedded IPv6 address
+			dst address : TN LINK0 IPv4 embedded IPv6 address
+                Fragment Header
+                        Offset = 500
+                        More Fragments = 1
+                ICMPv6 echo request
+                        Payload = repeat(0xff, 1224)
+
+	6.3.
+	<<JUDGMENT>>
+	<===================
+	ICMPv6 Echo Request
+		IPv6 Header
+			src address : TN LINK1 IPv4 embedded IPv6 address
+			dst address : TN LINK0 IPv4 embedded IPv6 address
+                Fragment Header
+                        Offset = 1732
+                        More Fragments = 1
+                Payload = repeat(0xff, 2)
+
+=head1 JUDGMENT
+
+	<< PASS >>
+		NUT translates IPv4 packages smaller than 1252 bytes.
+                If DF flag is set on IPv4 packages larger than 1254 bytes,
+                an ICMPv4 Destination Unreachable (packet too big) is 
+                returned, otherwise the packet is fragmentet prior to 
+                translation.
+
+	<< FAIL >>	
+		NUT doesn't to forced fragmentation properly.
+
+=head1 NOTE
+
+=head1 REFERENCE
+
+B<RFC2765>
+
+3.1.  Translating IPv4 Headers into IPv6 Headers
+
+   If the DF flag is not set and the IPv4 packet will result in an IPv6
+   packet larger than 1280 bytes the IPv4 packet MUST be fragmented
+   prior to translating it.  Since IPv4 packets with DF not set will
+   always result in a fragment header being added to the packet the IPv4
+   packets must be fragmented so that their length, excluding the IPv4
+   header, is at most 1232 bytes (1280 minus 40 for the IPv6 header and
+   8 for the Fragment header).
+
+=head1 SEE ALSO
+
+	perldoc V6evalTool
+
+=cut

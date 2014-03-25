@@ -1,0 +1,102 @@
+<HTML>
+<HEAD>
+<TITLE>encapsulation_host.seq - Verify that encapsulation IPv6 
+	datagram in IPv4 packet</TITLE>
+<LINK REV="made" HREF="mailto:hackers@FreeBSD.org">
+</HEAD>
+
+<BODY>
+
+<!-- INDEX BEGIN -->
+<!--
+
+<UL>
+
+	<LI><A HREF="#NAME">NAME</A>
+	<LI><A HREF="#TARGET">TARGET</A>
+	<LI><A HREF="#SYNOPSIS">SYNOPSIS</A>
+	<LI><A HREF="#INITIALIZATION">INITIALIZATION</A>
+	<LI><A HREF="#TEST_PROCEDURE">TEST PROCEDURE</A>
+	<LI><A HREF="#JUDGMENT">JUDGMENT</A>
+	<LI><A HREF="#SEE_ALSO">SEE ALSO</A>
+</UL>
+-->
+<!-- INDEX END -->
+
+<P>
+<H1><A NAME="NAME">NAME</A></H1>
+<P>
+<PRE>        encapsulation_host.seq - Verify that encapsulation IPv6 
+        datagram in IPv4 packet
+</PRE>
+<P>
+<HR>
+<H1><A NAME="TARGET">TARGET</A></H1>
+<P>
+<PRE>        Host
+</PRE>
+<P>
+<HR>
+<H1><A NAME="SYNOPSIS">SYNOPSIS</A></H1>
+<P>
+<PRE>        encapsulation_host.seq [-tooloption ...] -p 
+        encapsulation_host.def
+</PRE>
+<P>
+<HR>
+<H1><A NAME="INITIALIZATION">INITIALIZATION</A></H1>
+<PRE>
+	Before this test starts, run <A HREF="initialize.html">initialize.seq</A>.
+</PRE>
+
+<P>
+<HR>
+<H1><A NAME="TEST_PROCEDURE">TEST PROCEDURE</A></H1>
+<P>
+<PRE>        This test verifies that NUT encapsulates IPv6 packet in a 
+        IPv4 packet     
+</PRE>
+<P>
+<PRE>        TN                      NUT
+</PRE>
+<P>
+<PRE>        ---------------------------
+</PRE>
+<P>
+<PRE>        1.
+                'ping6' command is executed by remote script 'ping6.rmt'
+                        dst address : Off-link IPv6 global address
+        2.
+        &lt;&lt; JUDGMENT &gt;&gt;
+</PRE>
+<P>
+<PRE>         &lt;=== IPv4 packet encapsulating IPv6 packet ===
+                Outer Header (IPv4)     
+                        src address : NUT's IPv4 address        
+                        dst address : Off-link IPv4 address
+                Inner Header (IPv6)     
+                        src address : NUT's IPv6 global address        
+                        dst address : Off-link IPv6 global address
+ 
+</PRE>
+<P>
+<HR>
+<H1><A NAME="JUDGMENT">JUDGMENT</A></H1>
+<P>
+<PRE>        &lt;&lt; PASS &gt;&gt;
+                NUT received IPv4 packet encapsulating IPv6 packet
+                
+</PRE>
+<P>
+<PRE>        &lt;&lt; FAIL &gt;&gt;      
+                NUT did not receive IPv4 packet encapsulating IPv6 packet
+</PRE>
+<P>
+<HR>
+<H1><A NAME="SEE_ALSO">SEE ALSO</A></H1>
+<P>
+<PRE>          perldoc V6evalTool
+</PRE>
+</BODY>
+
+</HTML>

@@ -1,0 +1,268 @@
+#!/usr/bin/perl
+#
+# Copyright (C) 1999, 2000, 2001, 2002, 2003 Yokogawa Electric Corporation,
+# IPA (Information-technology Promotion Agency, Japan).
+# All rights reserved.
+# 
+# Redistribution and use of this software in source and binary forms, with 
+# or without modification, are permitted provided that the following 
+# conditions and disclaimer are agreed and accepted by the user:
+# 
+# 1. Redistributions of source code must retain the above copyright 
+# notice, this list of conditions and the following disclaimer.
+# 
+# 2. Redistributions in binary form must reproduce the above copyright 
+# notice, this list of conditions and the following disclaimer in the 
+# documentation and/or other materials provided with the distribution.
+# 
+# 3. Neither the names of the copyrighters, the name of the project which 
+# is related to this software (hereinafter referred to as "project") nor 
+# the names of the contributors may be used to endorse or promote products 
+# derived from this software without specific prior written permission.
+# 
+# 4. No merchantable use may be permitted without prior written 
+# notification to the copyrighters. However, using this software for the 
+# purpose of testing or evaluating any products including merchantable 
+# products may be permitted without any notification to the copyrighters.
+# 
+# 
+# 
+# THIS SOFTWARE IS PROVIDED BY THE COPYRIGHTERS, THE PROJECT AND 
+# CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING 
+# BUT NOT LIMITED THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS 
+# FOR A PARTICULAR PURPOSE, ARE DISCLAIMED.  IN NO EVENT SHALL THE 
+# COPYRIGHTERS, THE PROJECT OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, 
+# INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES 
+# (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR 
+# SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) 
+# HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN 
+# CONTRACT,STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) 
+# ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF 
+# THE POSSIBILITY OF SUCH DAMAGE.
+#
+# $TAHI: ct/nd/hostSendRs.seq,v 1.17 2002/02/27 01:08:26 masaxmasa Exp $
+
+########################################################################
+BEGIN { $V6evalTool::TestVersion = '$Name: REL_2_1_1 $ '; }
+ 
+use V6evalTool;
+use nd;
+
+ndOptions(@ARGV);
+
+# The following generate debugging messages.
+$nd::debug=$ndOpt_v|$ndOpt_vv;
+
+# You can specifies debug options to a remote control program.
+# If you want to know more detail, please see the following:
+# - V6evalTool.pm: perldoc V6evalTool
+# - V6evalRemote.pm: perldoc V6evalRemote
+$nd::remote_debug="-o1" if $ndOpt_vv;
+
+$IF=Link0;
+
+$wait_reboot=600;
+$wait_dad_rs=120;
+$wait_rs = $nd::MAX_RTR_SOLICITATION_DELAY +
+    ($nd::RTR_SOLICITATION_INTERVAL * $nd::MAX_RTR_SOLICITATIONS);
+
+#
+#
+#
+$type=$V6evalTool::NutDef{Type};
+if($type eq router) {
+    vLogHTML("This test is for the host only<BR>");
+    exit $V6evalTool::exitHostOnly;
+}
+
+$type=$V6evalTool::NutDef{Type};
+if($type ne host) {
+    vLogHTML(ndErrmsg("ERROR: $V6evalTool::NutDef{Type}: ".
+		      "Unknown target type<BR>"));
+    exit $V6evalTool::exitFail;
+}
+
+#
+#
+#
+vLogHTML("<FONT SIZE=\"+1\">Initialization</FONT><BR>");
+vLogHTML("Trying to reboot NUT<BR>");
+goto error if ndRebootAsync() != 0;
+vCapture($IF);
+
+#
+#
+#
+vLogHTML("<FONT SIZE=\"+1\">Test</FONT><BR>");
+
+$pktdesc{rs_unspc2allrouter}='Got RS: rs_unspc2allrouter';
+$pktdesc{rs_nut2allrouter}='Got RS: rs_nut2allrouter';
+$pktdesc{rs_nut2allrouter_sll}='Got RS: rs_nut2allrouter_sll';
+$pktdesc{dad_ns}='Got a DAD NS, but discard it';
+
+$i=0;
+$timer=$wait_reboot;
+while(1) {
+    vLogHTML("Wait for RS ($timer sec.)<BR>");
+    %ret=vRecv($IF, $timer, 0, 0,
+	       rs_unspc2allrouter,
+	       rs_nut2allrouter,
+	       rs_nut2allrouter_sll,
+	       dad_ns,
+	       );
+
+    last if $ret{status} == 1;
+    goto error if $ret{status} != 0;
+
+    if($ret{recvFrame} eq dad_ns) {
+	$timer=$wait_dad_rs;
+	next;
+    }
+
+    $timer=$wait_rs;
+    $n = $ret{recvCount};
+    $time[$i] = $ret{"recvTime$n"};
+    $i++;
+}
+
+#
+#
+#
+if($i == 0) {
+    vLogHTML(ndErrmsg("ERROR: Never got any RS<BR>"));
+    goto error;
+} elsif($i > $nd::MAX_RTR_SOLICITATIONS) {
+    vLogHTML(ndErrmsg("ERROR: Too may RSs ".
+		      "(> $nd::MAX_RTR_SOLICITATIONS)<BR>"));
+    goto error;
+}
+
+#
+#
+#
+$over=0;
+for($j=0; $j<($i-1); $j++) {
+    $mark=' ';
+    $delta = vRoundoff($time[$j+1]-$time[$j]);
+    if($delta < $nd::RTR_SOLICITATION_INTERVAL) {
+	$mark=ndErrmsg('*');
+	$over=1;
+    }
+    vLogHTML("$mark"."interval[$j]: $delta sec.<BR>");
+}
+if($over != 0) {
+    vLogHTML(ndErrmsg("ERROR: RSs should be separated by at least ".
+		      "RTR_SOLICITATION_INTERVAL ".
+		      "($nd::RTR_SOLICITATION_INTERVAL) sec.<BR>"));
+    undef %ret;
+    goto error;
+}
+
+#
+#
+#
+vLogHTML("*** OK ***<BR>");
+exit $V6evalTool::exitPass;
+
+error:
+    vLogHTML(vErrmsg(%ret)."<BR>");
+    vLogHTML(ndErrmsg("NG<BR>"));
+    exit $V6evalTool::exitFail;
+
+########################################################################
+__END__
+
+=head1 NAME
+
+hostSendRs - Verifying the host sending valid RSs
+
+=head1 TARGET
+
+Host only
+
+=head1 SYNOPSIS
+
+  hostSendRs.seq [-tooloption ...] -p hostSendRs.def
+
+=head1 INITIALIZATION
+
+  Reboot NUT.
+
+=head1 TEST PROCEDURE
+
+B<hostSendRs.seq> verifies that NUT send valid RSs by the rules:
+
+  - MAX_SOLICITATION_INTERVAL
+  - MAX_RTR_SOLICITATIONS
+
+=begin html
+<PRE>
+  TN                           NUT
+  --------------------------------
+<BR>
+  <=== <A HREF="#JDG1">Judgment #1</A>: DAD NS (if any) ===
+        src=unspecified
+        dst=solicited-node[NUT's link-local]
+        target=NUT's link-local
+        w/o SLLA
+<BR>
+  <=== <A HREF="#JDG2">Judgment #2</A>: RS ===
+        src=link-local or unspecified
+        dst=all-router
+        w/ or w/o SLLA
+<BR>
+  <=== <A HREF="#JDG2">Judgment #2</A>: RS ===
+        src=link-local or unspecified
+        dst=all-router
+        w/ or w/o SLLA
+<BR>
+  <=== <A HREF="#JDG2">Judgment #2</A>: RS ===
+        src=link-local or unspecified
+        dst=all-router
+        w/ or w/o SLLA
+</PRE>
+
+=end html
+
+=head1 JUDGMENT
+
+=for html
+<A NAME="JDG1"></A>
+
+  1. If TN captures the following DAD NSs, those will be discarded.
+     src=unspecified, dst=solicited-node[NUT's link-local]
+     target=NUT's link-local
+     w/o SLLA
+
+=for html
+<A NAME="JDG2"></A>
+
+  2. NUT sends the following RSs:
+
+     2.1. The RSs are valid:
+          A) src=unspecified, dst=all-router, w/o SLLA
+          B) src=NUT's link-local, dst=all-router, w/o SLLA
+          C) src=NUT's link-local, dst=all-router, w/ SLLA
+
+     2.2. A number of the RSs <= MAX_RTR_SOLICITATIONS(3)
+
+     2.3. Intervals between the RSs >= MAX_SOLICITATION_INTERVAL(1 sec.)
+
+=head1 TERMINATION
+
+  N/A
+
+=head1 NOTE
+
+  1. The test dose NOT verify that NUT delays the transmission for
+     a random amount of time between 0 and MAX_RTR_SOLICITATION_DELAY.
+
+  2. The test invokes the following command:
+     - reboot
+
+=head1 SEE ALSO
+
+  perldoc V6evalTool
+  perldoc V6evalRemote
+
+=cut

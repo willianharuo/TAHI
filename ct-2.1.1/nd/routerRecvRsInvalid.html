@@ -1,0 +1,109 @@
+<HTML>
+<HEAD>
+<TITLE>routerRecvRsInvalid - Verifying invalid RS does not influence NCE.</TITLE>
+<LINK REV="made" HREF="mailto:hackers@FreeBSD.org">
+</HEAD>
+
+<BODY>
+
+<!-- INDEX BEGIN -->
+<!--
+
+<UL>
+
+	<LI><A HREF="#NAME">NAME</A>
+	<LI><A HREF="#TARGET">TARGET</A>
+	<LI><A HREF="#SYNOPSIS">SYNOPSIS</A>
+	<LI><A HREF="#INITIALIZATION">INITIALIZATION</A>
+	<LI><A HREF="#TEST_PROCEDURE">TEST PROCEDURE</A>
+	<LI><A HREF="#JUDGMENT">JUDGMENT</A>
+	<LI><A HREF="#TERMINATION">TERMINATION</A>
+	<LI><A HREF="#NOTE">NOTE</A>
+	<LI><A HREF="#SEE_ALSO">SEE ALSO</A>
+</UL>
+-->
+<!-- INDEX END -->
+
+<P>
+<H1><A NAME="NAME">NAME</A></H1>
+<P>
+routerRecvRsInvalid - Verifying invalid RS does not influence NCE.
+
+<P>
+<HR>
+<H1><A NAME="TARGET">TARGET</A></H1>
+<P>
+Router Only
+
+<P>
+<HR>
+<H1><A NAME="SYNOPSIS">SYNOPSIS</A></H1>
+<P>
+<PRE>  routerRecvRsInvalid.seq [-tooloption ...] -p routerRecvRsInvalid.def
+</PRE>
+<P>
+<HR>
+<H1><A NAME="INITIALIZATION">INITIALIZATION</A></H1>
+<P>
+<PRE>  Clear NC state for TN.
+</PRE>
+<P>
+<HR>
+<H1><A NAME="TEST_PROCEDURE">TEST PROCEDURE</A></H1>
+<P>
+<STRONG>routerRecvRsInvalid</STRONG> verifies that NUT does not create NCE even if receive an invalid RS.
+
+<PRE>
+  TN                 NUT
+  ----------------------
+<BR>
+  State: NONCE (for TN)
+<BR>
+  ==== invalid NS ===>
+<BR>
+  <A HREF="#JDG1">Judgment</A>: <A HREF="nd.html">Examining NUT's neighbor state</A>
+</PRE>
+
+<P>
+<HR>
+<H1><A NAME="JUDGMENT">JUDGMENT</A></H1>
+<PRE>
+  ==================+=====================================
+  RS                | NCE state
+                    +------------------+------------------
+                    | Before           | After
+                    | receiving the RS | receiving the RS
+  ==================+==================+==================
+  RS w/ SLL         | NONCE            | NONCE
+  hop *limit!=255   |
+  ------------------+------------------+------------------
+  RS w/ SLL         | NONCE            | NONCE
+  *invalid checksum |
+  ------------------+------------------+------------------
+  RS w/ SLL         | NONCE            | NONCE
+  *icmp code!=0     |
+  ==================+==================+==================
+</PRE>
+
+<P>
+<HR>
+<H1><A NAME="TERMINATION">TERMINATION</A></H1>
+<P>
+<PRE>  N/A
+</PRE>
+<P>
+<HR>
+<H1><A NAME="NOTE">NOTE</A></H1>
+<P>
+<PRE>  N/A
+</PRE>
+<P>
+<HR>
+<H1><A NAME="SEE_ALSO">SEE ALSO</A></H1>
+<P>
+<PRE>  perldoc V6evalTool
+  perldoc V6evalRemote
+</PRE>
+</BODY>
+
+</HTML>

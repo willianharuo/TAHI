@@ -1,0 +1,176 @@
+#!/usr/bin/perl
+#
+# Copyright (C) 2003 Yokogawa Electric Corporation, 
+# INTAP(Interoperability Technology Association
+# for Information Processing, Japan).  All rights reserved.
+# 
+# Redistribution and use of this software in source and binary forms, with 
+# or without modification, are permitted provided that the following 
+# conditions and disclaimer are agreed and accepted by the user:
+# 
+# 1. Redistributions of source code must retain the above copyright 
+# notice, this list of conditions and the following disclaimer.
+# 
+# 2. Redistributions in binary form must reproduce the above copyright 
+# notice, this list of conditions and the following disclaimer in the 
+# documentation and/or other materials provided with the distribution.
+# 
+# 3. Neither the names of the copyrighters, the name of the project which 
+# is related to this software (hereinafter referred to as "project") nor 
+# the names of the contributors may be used to endorse or promote products 
+# derived from this software without specific prior written permission.
+# 
+# 4. No merchantable use may be permitted without prior written 
+# notification to the copyrighters. However, using this software for the 
+# purpose of testing or evaluating any products including merchantable 
+# products may be permitted without any notification to the copyrighters.
+# 
+# 
+# 
+# THIS SOFTWARE IS PROVIDED BY THE COPYRIGHTERS, THE PROJECT AND 
+# CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING 
+# BUT NOT LIMITED THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS 
+# FOR A PARTICULAR PURPOSE, ARE DISCLAIMED.  IN NO EVENT SHALL THE 
+# COPYRIGHTERS, THE PROJECT OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, 
+# INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES 
+# (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR 
+# SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) 
+# HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN 
+# CONTRACT,STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) 
+# ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF 
+# THE POSSIBILITY OF SUCH DAMAGE.
+#
+# $TAHI: ct/router-select/DR_2RT_raMED_raHIGHwRTRLIFE0wrtinfoHIGH.seq,v 1.4 2003/04/22 04:26:44 akisada Exp $
+# $TINY: RA_GA_Success.seq,v 1.14 2002/03/05 17:13:55 miyata Exp $
+# 
+########################################################################
+
+BEGIN { $V6evalTool::TestVersion = '$Name: REL_2_1_1 $ '; }
+use V6evalTool;
+use ROUTE;
+
+#------------------------------------------------------
+#----- get sequence arguments
+#------------------------------------------------------
+#$howto_initNUT="none";
+#$send = "ok";
+
+#$DAD_GA=$DAD_LCNA::DADTransmitsGA;
+#$DAD_GA =~ tr/a-z/A-Z/ ;
+
+checkNUT(host);
+
+#----- test condition
+$IF=Link0;                 # network interface
+$totalret=0;               # return value
+$retval=0;               # return value
+
+vCPP("-DPREF=$ROUTE::MED -DROUTER_LT=$ROUTE::ROUTER_LIFE_TIME");
+
+#---------------------------------------
+#----- initialize NUT
+#---------------------------------------
+vLog("*** Target initialization phase ***");
+#$rret=vRemote("reboot_async.rmt","","timeout=5");
+vLog("reboot_async.rmt returned status $rret");
+
+#----- start Capturing
+vLog("*** Target testing phase ***");
+vCapture($IF);
+vClear($IF);
+
+#---------------------------------------
+#----- LLA PHASE
+#----- Wait DAD NS from NUT or timeout
+#---------------------------------------
+vLog("TN wait DAD NS(DADNS_from_NUT) from NUT for $ROUTE::wait_dadns [sec],");
+
+#%ret=vRecv($IF,$WAIT_DADNS,0,0,DADNS_from_NUT);
+#if ($ret{status} != 0){
+#    vLog("TN wait DAD NS from NUT for $wait_dadns, but NUT had not transmit DAD NS");
+#    seqNG();
+#}
+
+vLog("TN received DAD NS from NUT.");
+
+
+
+#---------------------------------------
+#----- Wait RS from NUT or timeout
+#---------------------------------------
+
+#%ret=vRecv($IF,$MORE_WAIT_RS,0,0,RS_from_NUT);
+#if ($ret{status} != 0){
+#    vLog("TN wait RS from NUT for $MORE_WAIT_RS, but NUT had not transmit RS");
+#    seqNG();
+#}
+
+vLog("OK! Let's go ahead!");
+
+
+
+#---------------------------------------
+#----- Re-SEND RA ( MED vs HIGH )
+#---------------------------------------
+vLogHTML("<B><Font size=+1>Default Router Preference<BR>
+MEDIUM v.s. HIGH</FONT></B>");
+#---------------------------------------
+#      Router1
+#---------------------------------------
+vCPP("-DPREF=$ROUTE::MED -DROUTER_LT=$ROUTE::ROUTER_LIFE_TIME");
+vClear($IF);
+vSend($IF, RA_RT1); vSleep($ROUTE::RA_DELAY);
+vSend($IF, na_tn2nut_sourceLLA_destinationLLA_targetLLA_RT1);
+
+#---------------------------------------
+#      Router2
+#---------------------------------------
+vClear($IF);
+vSend($IF, ra_RT2_link1_HIGH_RTINFO_HIGH_60); vSleep($ROUTE::RA_DELAY);
+vSend($IF, na_tn2nut_sourceLLA_destinationLLA_targetLLA_RT2);
+vSleep($ROUTE::NA_DELAY);
+
+#---------------------------------------
+#----- Ping from Host1
+#---------------------------------------
+%retval=SendRecv($IF,echo_req_Host1_via_RT1,$IF,echo_rep_Host1_via_RT2);
+
+if ($retval != 0){
+    $totalret++;
+    vLog("TN did not receive ICMP Echo Reply to Host1 from NUT.");
+}else{
+    vLog("TN received ICMP Echo Reply to Host1 from NUT.");
+}
+
+
+#---------------------------------------
+#----- Ping from Host2
+#---------------------------------------
+%retval=SendRecv($IF,echo_req_Host2_via_RT1,$IF,echo_rep_Host2_via_RT1);
+
+if ($retval != 0){
+    $totalret++;
+    vLog("TN did not receive ICMP Echo Reply to Host2 from NUT.");
+}else{
+    vLog("TN received ICMP Echo Reply to Host2 from NUT.");
+}
+
+
+
+
+if ($totalret != 0) {
+    vLog("NUT does not deal with Preference correctly.");
+    seqNG();
+}else{
+    vLog("NUT deals with Preference correctly.");
+    seqOK();
+}
+
+
+##########################################################
+
+
+#end
+########################################################################
+__END__
+

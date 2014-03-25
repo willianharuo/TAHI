@@ -1,0 +1,383 @@
+#!/usr/bin/perl
+#
+# Copyright (C) 1999, 2000, 2001, 2002, 2003 Yokogawa Electric Corporation,
+# IPA (Information-technology Promotion Agency, Japan).
+# All rights reserved.
+# 
+# Redistribution and use of this software in source and binary forms, with 
+# or without modification, are permitted provided that the following 
+# conditions and disclaimer are agreed and accepted by the user:
+# 
+# 1. Redistributions of source code must retain the above copyright 
+# notice, this list of conditions and the following disclaimer.
+# 
+# 2. Redistributions in binary form must reproduce the above copyright 
+# notice, this list of conditions and the following disclaimer in the 
+# documentation and/or other materials provided with the distribution.
+# 
+# 3. Neither the names of the copyrighters, the name of the project which 
+# is related to this software (hereinafter referred to as "project") nor 
+# the names of the contributors may be used to endorse or promote products 
+# derived from this software without specific prior written permission.
+# 
+# 4. No merchantable use may be permitted without prior written 
+# notification to the copyrighters. However, using this software for the 
+# purpose of testing or evaluating any products including merchantable 
+# products may be permitted without any notification to the copyrighters.
+# 
+# 
+# 
+# THIS SOFTWARE IS PROVIDED BY THE COPYRIGHTERS, THE PROJECT AND 
+# CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING 
+# BUT NOT LIMITED THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS 
+# FOR A PARTICULAR PURPOSE, ARE DISCLAIMED.  IN NO EVENT SHALL THE 
+# COPYRIGHTERS, THE PROJECT OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, 
+# INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES 
+# (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR 
+# SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) 
+# HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN 
+# CONTRACT,STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) 
+# ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF 
+# THE POSSIBILITY OF SUCH DAMAGE.
+#
+# $TAHI: ct/nd/routerSendRedirectOfflink.seq,v 1.12 2002/02/27 01:08:29 masaxmasa Exp $
+
+########################################################################
+BEGIN { $V6evalTool::TestVersion = '$Name: REL_2_1_1 $ '; }
+ 
+use V6evalTool;
+use nd;
+use routerRedirect;
+
+ndOptions(@ARGV);
+
+# The following generate debugging messages.
+$nd::debug=$ndOpt_v|$ndOpt_vv;
+
+# You can specifies debug options to a remote control program.
+# If you want to know more detail, please see the following:
+# - V6evalTool.pm: perldoc V6evalTool
+# - V6evalRemote.pm: perldoc V6evalRemote
+$nd::remote_debug="-o1" if $ndOpt_vv;
+
+#
+#
+#
+$type=$V6evalTool::NutDef{Type};
+if($type eq host) {
+    vLogHTML("This test is for the router only<BR>");
+    exit $V6evalTool::exitRouterOnly;
+}
+
+$type=$V6evalTool::NutDef{Type};
+if($type ne router) {
+    vLogHTML(ndErrmsg("ERROR: $V6evalTool::NutDef{Type}: ".
+		      "Unknown target type<BR>"));
+    exit $V6evalTool::exitFail;
+}
+
+#
+#
+#
+$IF=Link0;
+$wait_ns=$nd::RETRANS_TIMER * $nd::MAX_MULTICAST_SOLICIT;
+$exit_rtn=$V6evalTool::exitPass;
+
+#
+#
+#
+vCapture($IF);
+
+#
+#
+#
+$pktdesc{RRDecho_request_tn2hostthree}=
+    "Sent echo-request to Host3(off-link) via NUT";
+%ret=vSend($IF, RRDecho_request_tn2hostthree);
+
+#
+$pktdesc{RRDmulticast_ns_nut2tnsolnode_sll}=
+    "Got multicast NS for TN (src=link-local)";
+$pktdesc{RRDmulticast_ns_nutg2tnsolnode_sll}=
+    "Got multicast NS for TN (global)";
+$pktdesc{RRDmulticast_ns_nut2ronesolnode_sll}=
+    "Got multicast NS for Router1 (src=link-local)";
+$pktdesc{RRDmulticast_ns_nutg2ronesolnode_sll}=
+    "Got multicast NS for Router1 (src=global)";
+#
+$pktdesc{RRDredirect_hostthree}=
+    "Got redirect(to Route1) message w/o any option";
+$pktdesc{RRDredirect_hostthree_t}=
+    "Got redirect(to Route1) message w/ TLL";
+$pktdesc{RRDredirect_hostthree_r}=
+    "Got redirect(to Route1) message w/ Redirected Header";
+$pktdesc{RRDredirect_hostthree_r2}=
+    "Got redirect(to Route1) message ".
+    "w/ Redirected Header (HopLimit--)";
+$pktdesc{RRDredirect_hostthree_t_and_r}=
+    "Got redirect(to Route1) message w/ {TLL and Redirected Header}";
+$pktdesc{RRDredirect_hostthree_t_and_r2}=
+    "Got redirect(to Route1) message ".
+    "w/ {TLL and Redirected Header (HopLimit--)}";
+#
+$pktdesc{RRDredirect_any}=
+    ndErrmsg("ERROR: Got unexpected redirect message");
+#
+$pktdesc{RRDecho_request_tn2hostthree_via_nut}=
+    "NUT forwarded the echo-request to Router1";
+#
+$pktdesc{RRDunicast_na_tn2nut_rSO_tll}=
+    "TN sent NA(r/S/O)";
+$pktdesc{RRDunicast_na_tn2nutg_rSO_tll}=
+    "TN sent NA(r/S/O)";
+$pktdesc{RRDunicast_na_rone2nut_RSO_tll}=
+    "Router1 sent NA(R/S/O)";
+
+$is_redirected=0;
+$is_forwarded=0;
+while(1) {
+    %ret2=vRecv($IF, $wait_ns, $ret{sentTime1}, 1,
+		RRDmulticast_ns_nut2tnsolnode_sll,
+		RRDmulticast_ns_nutg2tnsolnode_sll,
+		RRDmulticast_ns_nut2ronesolnode_sll,
+		RRDmulticast_ns_nutg2ronesolnode_sll,
+		RRDredirect_hostthree,
+		RRDredirect_hostthree_t,
+		RRDredirect_hostthree_r,
+		RRDredirect_hostthree_r2,
+		RRDredirect_hostthree_t_and_r,
+		RRDredirect_hostthree_t_and_r2,
+		RRDredirect_any,
+		RRDecho_request_tn2hostthree_via_nut
+		);
+
+    #
+    last if $ret2{status} == 1; # timeout
+    if($ret2{status} != 0) {
+	vLogHTML(ndErrmsg(vErrmsg(%ret2))."<BR>");
+	$exit_rtn=$V6evalTool::exitFail;
+	last;
+    }
+    $frame=$ret2{recvFrame};
+
+    #
+    if($frame=~/RRDredirect/) {
+	$is_redirected=1;
+    }
+    if($frame=~/RRDecho_request/) {
+	$is_forwarded=1;
+    }
+#    if($frame=~/r2/) {
+#	$exit_rtn=$V6evalTool::exitWarn;
+#    }
+    if($frame eq RRDredirect_any) {
+	$exit_rtn=$V6evalTool::exitFail;
+    }
+
+    #
+    $s="";
+    if($frame eq RRDmulticast_ns_nut2tnsolnode_sll) {
+	$s="RRDunicast_na_tn2nut_rSO_tll";
+    } elsif($frame eq RRDmulticast_ns_nutg2tnsolnode_sll) {
+	$s="RRDunicast_na_tn2nutg_rSO_tll";
+    } elsif($frame eq RRDmulticast_ns_nut2ronesolnode_sll) {
+	$s="RRDunicast_na_rone2nut_RSO_tll";
+    }
+    $ret=vSend($IF, $s) if $s ne "";
+}
+
+#
+#
+#
+if($is_redirected==0) {
+    vLogHTML(ndErrmsg("ERROR: Never got redirect message<BR>"));
+    $exit_rtn=$V6evalTool::exitFail;
+}
+if($is_forwarded==0) {
+    vLogHTML(ndErrmsg("ERROR: NUT did not forward the echo-request<BR>"));
+    $exit_rtn=$V6evalTool::exitFail;
+}
+
+#
+#
+#
+if($exit_rtn==$V6evalTool::exitPass) {
+    vLogHTML("OK<BR>");
+} elsif($exit_rtn==$V6evalTool::exitWarn) {
+    vLogHTML(ndWarnmsg("WARN<BR>"));
+} else {
+    vLogHTML(ndErrmsg("NG<BR>"));
+}
+exit $exit_rtn;
+
+########################################################################
+__END__
+
+=head1 NAME
+
+routerSendRedirectOfflink - TBD
+
+=head1 TARGET
+
+  Router Only
+
+=head1 SYNOPSIS
+
+  routerSendRedirectOfflink.seq [-tooloption ...]
+                                -p routerSendRedirectOfflink.def
+
+=head1 INITIALIZATION
+
+=begin html
+Initialization was done by <A HREF="startRedirect.html#INITIALIZATION">
+a previous test</A>.
+
+=end html
+
+=head1 TEST PROCEDURE
+
+B<routerSendRedirectOfflink> verifies that that NUT send a redirect message
+if NUT know the better router's link-local address.
+
+=begin html
+<PRE>
+  TN               NUT
+  --------------------
+<BR>
+  ==== echo-request to H3 ===>
+       TN throws an echo-request to NUT
+       <B>mac src=TN</B>
+       <B>mac dst=NUT</B>
+       ip src=TN's global
+       ip dst=H3's global
+<BR>
+  <=== NS for R1 (if any) ====
+       src=NUT's link-local
+       dst=R1's link-local
+       target=R1's link-local
+       w/ SLLA
+<BR>
+  ==== NA for R1 (if any) ===>
+       src=R1's link-local
+       dst=NUT's link-local
+       target=R1's link-local
+       R=1, S=1, O=1
+       w/ TLLA
+<BR>
+  <=== <A HREF="#JDG1">echo-request to H3</A> ====
+       NUT forwards an echo-request to R1
+       <B>mac src=NUT</B>
+       <B>mac dst=R1</B>
+       ip src=TN's global
+       ip dst=H3's global
+<BR>
+  <=== NS for TN (if any) ====
+       src=NUT's link-local
+       dst=solicited-node[TN's global]
+       target=TN's global
+       w/ SLLA
+<BR>
+  ==== NA for TN (if any) ===>
+       src=TN's global
+       dst=NUT's link-local
+       target=TN's global
+       R=0, S=1, O=1
+       w/ TLLA
+<BR>
+  <=== <A HREF="#JDG2">Redirect</A> ====
+       src=NUT's link-local
+       dst=TN's global
+       <B>target=R1's link-local</B>
+       <B>icmp dst=H3's global</B>
+       w/ OR w/o TLLA
+       w/ OR w/o Redirected header
+</PRE>
+
+=end html
+
+=head1 JUDGMENT
+
+=begin html
+<PRE>
+<A NAME="JDG1">  1.</A> NUT must forwards an echo-request to the better router, R1:
+<BR>
+<A NAME="JDG2">  2.</A> NUT must send a redirect message to TN:
+     ip src=NUT's link-local
+     ip dst=TN's global
+     icmp target=R1's link-local
+     icmp dst=H3's global
+</PRE>
+
+=end html
+
+=head1 TERMINATION
+
+  N/A
+
+=head1 NOTE
+
+  NUT may send a redirect message that contains a redirected header option,
+  but whose hop limit value is decreased from the original one.
+  It does make sense. In such case, this test will judges "WARN" instead of
+  "PASS" to notify the difference.
+
+=head1 REFERENCE
+
+=begin html
+<PRE>
+RFC2461
+<HR>
+8.2.  Router Specification
+<BR>
+   A router SHOULD send a redirect message, subject to rate limiting,
+   whenever it forwards a packet that is not explicitly addressed to
+   itself (i.e. a packet that is not source routed through the router)
+   in which:
+<BR><B>
+      - the Source Address field of the packet identifies a neighbor,
+        and
+<BR>
+      - the router determines that a better first-hop node resides on
+        the same link as the sending node for the Destination Address of
+        the packet being forwarded, and
+<BR>
+      - the Destination Address of the packet is not a multicast
+        address, and
+<BR></B>
+   The transmitted redirect packet contains, consistent with the message
+   format given in Section 4.5:
+<BR>
+      - In the Target Address field: the address to which subsequent
+        packets for the destination SHOULD be sent.  <B>If the target is a
+        router, that router's link-local address MUST be used.</B>  If the
+        target is a host the target address field MUST be set to the
+        same value as the Destination Address field.
+<BR>
+      - <B>In the Destination Address field: the destination address of the
+        invoking IP packet.</B>
+<BR>
+      - In the options:
+<BR>
+           o Target Link-Layer Address option: link-layer address of the
+             target, if known.
+<BR>
+           o Redirected Header: as much of the forwarded packet as can
+             fit without the redirect packet exceeding 1280 octets in
+             size.
+<BR>
+   A router MUST limit the rate at which Redirect messages are sent, in
+   order to limit the bandwidth and processing costs incurred by the
+   Redirect messages when the source does not correctly respond to the
+   Redirects, or the source chooses to ignore unauthenticated Redirect
+   messages.  More details on the rate-limiting of ICMP error messages
+   can be found in [ICMPv6].
+</PRE>
+
+=end html
+
+=head1 SEE ALSO
+
+  perldoc V6evalTool
+  perldoc V6evalRemote
+
+=cut

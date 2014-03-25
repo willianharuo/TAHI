@@ -1,0 +1,9 @@
+<BR>
+<BR>
+Terminology
+<UL>
+  DNS Clinet: A node who can send DNS query. Host and Server can be an DNS Client.<BR>
+  DNS Server: A node who can reply DNS query response. Server can be a DNS Server.<BR> 
+  NUT: Node Under Test<BR>
+  TN: Tester Node<BR>
+</UL>

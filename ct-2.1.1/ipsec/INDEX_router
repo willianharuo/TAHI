@@ -1,0 +1,14 @@
+##
+## $Name: REL_2_1_1 $
+##
+## $TAHI: ct/ipsec/INDEX_router,v 1.8 2001/10/05 06:38:55 masaxmasa Exp $
+##
+##<seq>:<def>:[<opt>]:[<log>]:<desc>
+##
+&print:<B>Router Tunnel Mode</B>
+
+&print:Initialize for Router
+
+./RTU_SetAddress.seq:./RTU_common.def:::Set Global Address and Check (Router):2
+#
+#########################################################################

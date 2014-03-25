@@ -1,0 +1,75 @@
+#
+# $Name: REL_2_1_1 $
+#
+# Copyright (C) 2003 Yokogawa Electric Corporation, 
+# INTAP(Interoperability Technology Association
+# for Information Processing, Japan).  All rights reserved.
+# 
+# Redistribution and use of this software in source and binary forms, with 
+# or without modification, are permitted provided that the following 
+# conditions and disclaimer are agreed and accepted by the user:
+# 
+# 1. Redistributions of source code must retain the above copyright 
+# notice, this list of conditions and the following disclaimer.
+# 
+# 2. Redistributions in binary form must reproduce the above copyright 
+# notice, this list of conditions and the following disclaimer in the 
+# documentation and/or other materials provided with the distribution.
+# 
+# 3. Neither the names of the copyrighters, the name of the project which 
+# is related to this software (hereinafter referred to as "project") nor 
+# the names of the contributors may be used to endorse or promote products 
+# derived from this software without specific prior written permission.
+# 
+# 4. No merchantable use may be permitted without prior written 
+# notification to the copyrighters. However, using this software for the 
+# purpose of testing or evaluating any products including merchantable 
+# products may be permitted without any notification to the copyrighters.
+# 
+# 
+# 
+# THIS SOFTWARE IS PROVIDED BY THE COPYRIGHTERS, THE PROJECT AND 
+# CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING 
+# BUT NOT LIMITED THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS 
+# FOR A PARTICULAR PURPOSE, ARE DISCLAIMED.  IN NO EVENT SHALL THE 
+# COPYRIGHTERS, THE PROJECT OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, 
+# INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES 
+# (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR 
+# SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) 
+# HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN 
+# CONTRACT,STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) 
+# ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF 
+# THE POSSIBILITY OF SUCH DAMAGE.
+#
+# $TAHI: ct/pd/INDEX_pd,v 1.5 2003/06/11 08:32:32 ozoe Exp $
+#
+#<seq>:<def>:[<opt>]:[<log>]:<desc>
+#
+
+########################################################################
+&print:<B>10.  Delegating Router Solicitation</B>
+&print:<B>10.1 Requesting router behavior (CPE)</B>
+
+./RRSolicit.seq:./RRSolicit.def:::Requesting router sends a Solicit message with IA_PD option
+./RRSolicitRapid.seq:./RRSolicitRapid.def:::Requesting router sends a Solicit message with Rapid Commit option
+./RRAdvertisedPreference.seq:./RRAdvertisedPreference.def:::Requesting router received a Advertise messages with Preference option
+./RRAdvertisedStatusCode.seq:./RRAdvertisedStatusCode.def:::Requesting router received a Advertise message with Status Code option
+
+########################################################################
+&print:<B>11   Requesting router initiated prefix delegation</B>
+&print:<B>11.1 Requesting router behavior (CPE)</B>
+
+./RRRequest.seq:./RRRequest.def:::Requesting router retransmits a Request message a maximum of REQ_MAX_RC(10) times
+./RRRenew.seq:./RRRenew.def:::Requesting router performs Renew/Reply message exchange to update information about delegated prefix
+./RRRebind.seq:./RRRebind.def:::Requesting router performs Rebind/Reply message exchange to update information about delegated prefix
+./RRRenewRebind.seq:./RRRenewRebind.def:::Requesting router terminates Renew/Rebind message exchange
+&#./RRRebindPhysical.seq:./RRRebindPhysical.def:::Requesting router sends Rebind message when link is down/up 
+&#./RRRebindInvalid.seq:./RRRebindInvalid.def:::Requesting router sends Rebind message and recieved Reply message including multiple prefixes
+&#./RRRebindIgnored.seq:./RRRebindIgnored.def:::Requesting router sends Solicit message when Rebind message was ignored by Delegating Router 
+&#./RRRebindStatusCode.seq:./RRRebindStatusCode.def:::Requesting router sends Solicit message when it was recived Reply message inclueding Status Code option NotOnLink
+./RRRepliedStatusCode.seq:./RRRepliedStatusCode.def:::Requesting router received a Reply message with Status Code option
+./RRRelease.seq:./RRRelease.def:::Requesting router releases delegated prefix with a Release message
+./RRReleaseRetransmit.seq:./RRReleaseRetransmit.def:::Requesting router retransmits Release messages
+./RRReleaseRetransmitMRC.seq:./RRReleaseRetransmitMRC.def:::Requesting router retransmits a Release message a maximum of REL_MAX_RC(5) times 
+
+########################################################################

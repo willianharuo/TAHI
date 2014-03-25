@@ -1,0 +1,64 @@
+#
+# Copyright (C) 1999, 2000, 2001, 2002, 2003 Yokogawa Electric Corporation,
+# IPA (Information-technology Promotion Agency, Japan).
+# All rights reserved.
+# 
+# Redistribution and use of this software in source and binary forms, with 
+# or without modification, are permitted provided that the following 
+# conditions and disclaimer are agreed and accepted by the user:
+# 
+# 1. Redistributions of source code must retain the above copyright 
+# notice, this list of conditions and the following disclaimer.
+# 
+# 2. Redistributions in binary form must reproduce the above copyright 
+# notice, this list of conditions and the following disclaimer in the 
+# documentation and/or other materials provided with the distribution.
+# 
+# 3. Neither the names of the copyrighters, the name of the project which 
+# is related to this software (hereinafter referred to as "project") nor 
+# the names of the contributors may be used to endorse or promote products 
+# derived from this software without specific prior written permission.
+# 
+# 4. No merchantable use may be permitted without prior written 
+# notification to the copyrighters. However, using this software for the 
+# purpose of testing or evaluating any products including merchantable 
+# products may be permitted without any notification to the copyrighters.
+# 
+# 
+# 
+# THIS SOFTWARE IS PROVIDED BY THE COPYRIGHTERS, THE PROJECT AND 
+# CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING 
+# BUT NOT LIMITED THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS 
+# FOR A PARTICULAR PURPOSE, ARE DISCLAIMED.  IN NO EVENT SHALL THE 
+# COPYRIGHTERS, THE PROJECT OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, 
+# INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES 
+# (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR 
+# SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) 
+# HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN 
+# CONTRACT,STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) 
+# ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF 
+# THE POSSIBILITY OF SUCH DAMAGE.
+#
+# INDEX_router
+#   autorun INDEX for IPv6 Tunnel (Test for a Router)
+#
+# $Name: REL_2_1_1 $
+#
+# $TAHI: ct/tunnel/INDEX_host_router,v 1.6 2003/06/11 09:02:31 akisada Exp $
+#
+
+&print:Initialization
+./initialize.seq:./tunnel.def:::Initialization for Tunnel Test
+&print:Automatic tunnel
+./automatic_encapsulation_host.seq:./automatic_encapsulation_host.def:::Encapsulation in Host (Automatic Tunnel)
+./automatic_decapsulation_host.seq:./automatic_decapsulation_host.def:::Decapsulation in Host (Automatic Tunnel)
+./automatic_encapsulation_router.seq:./automatic_encapsulation_router.def:::Encapsulation in Router (Automatic Tunnel):2
+&print:Configured tunnel
+./encapsulation_host.seq:./encapsulation_host.def:::Encapsulation in Host
+./decapsulation_host.seq:./decapsulation_host.def:::Decapsulation in Host
+./encapsulation_router.seq:./encapsulation_router.def:::Encapsulation in Router :2
+./decapsulation_router.seq:./decapsulation_router.def:::Decapsulation in Router :2
+./hoplimit.seq:./hoplimit.def:::Hop Limit Decrease when NUT forward tunneling IPv6 packets :2
+./ingress_filtering.seq:./ingress_filtering.def:::Filtering when NUT forward tunneling IPv6 packets :2
+./icmpv4.seq:./icmpv4.def:::check NUT behavior when NUT receives ICMPv4 packets:2
+./fragment.seq:./fragment.def:::Fragmentation at tunnel mode:2

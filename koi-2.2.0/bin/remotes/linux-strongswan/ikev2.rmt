@@ -1,0 +1,478 @@
+#!/usr/bin/perl
+#
+# Copyright (C) 2004, 2005, 2006, 2007, 2008, 2009, 2010
+# NTT Advanced Technology, Yokogawa Electric Corporation.
+# All rights reserved.
+# 
+# Redistribution and use of this software in source and binary
+# forms, with or without modification, are permitted provided that
+# the following conditions and disclaimer are agreed and accepted
+# by the user:
+# 
+# 1. Redistributions of source code must retain the above copyright
+#    notice, this list of conditions and the following disclaimer.
+# 
+# 2. Redistributions in binary form must reproduce the above copyright
+#    notice, this list of conditions and the following disclaimer in
+#    the documentation and/or other materials provided with
+#    the distribution.
+# 
+# 3. Neither the names of the copyrighters, the name of the project
+#    which is related to this software (hereinafter referred to as
+#    "project") nor the names of the contributors may be used to
+#    endorse or promote products derived from this software without
+#    specific prior written permission.
+# 
+# 4. No merchantable use may be permitted without prior written
+#    notification to the copyrighters.
+# 
+# 5. The copyrighters, the project and the contributors may prohibit
+#    the use of this software at any time.
+# 
+# THIS SOFTWARE IS PROVIDED BY THE COPYRIGHTERS, THE PROJECT AND
+# CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING
+# BUT NOT LIMITED THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS
+# FOR A PARTICULAR PURPOSE, ARE DISCLAIMED.  IN NO EVENT SHALL THE
+# COPYRIGHTERS, THE PROJECT OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT,
+# INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
+# (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+# SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
+# HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT,
+# STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING
+# IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+# POSSIBILITY OF SUCH DAMAGE.
+#
+# $TAHI: koi/bin/remotes/manual/reboot.rmt,v 1.2 2006/06/26 01:12:30 akisada Exp $
+#
+# $Id: ikev2.rmt,v 1.4 2008/07/15 12:34:18 velo Exp $
+#
+################################################################
+
+BEGIN {
+	push(@INC, '/usr/local/koi/libdata');
+	push(@INC, '..');
+}
+
+use kRemote;
+use File::Basename;
+
+my $_ps = '/bin/ps';
+my $_grep = '/bin/grep';
+my $_setkey = '/sbin/setkey';
+
+my $true = 1;
+my $false = 0;
+
+my $ipsec = '/usr/local/sbin/ipsec';
+my $remote_strongswan_conf_path = '/usr/local/etc/ipsec.conf';
+my $pre_shared_key_base_path = '/usr/local/etc/ipsec.secrets';
+my @strongswan_conf = ();
+my $timeout = 8;
+
+my $basename = basename($0, '.rmt');
+my $prompt = "$basename> ";
+
+my $fd = select (STDIN);  $| = 1; select($fd);
+   $fd = select (STDOUT); $| = 1; select($fd);
+   $fd = select (STDERR); $| = 1; select($fd);
+
+unless(defined(kRemoteOpen())) {
+	print STDERR "fail to open session.\n";
+	exit($kRemote::exitFail);
+}
+
+unless(defined(kRemoteLogin($timeout))) {
+	print STDERR "fail to login.\n";
+	exit($kRemote::exitFail);
+}
+
+unless(defined(kRemoteSubstituteRootWait())) {
+	print STDERR "fail to substitute to Root.\n";
+	exit($kRemote::exitFail);
+}
+
+my $operation = $kRemote::kRemoteOpt{'operation'};
+unless(ikev2($operation)) {
+	exit($kRemote::exitFail);
+}
+
+unless(defined(kRemoteLogoutWait($timeout))) {
+	print STDERR "fail to logout.\n";
+	exit($kRemote::exitFail);
+}
+
+unless(defined(kRemoteLogoutNoWait($timeout))) {
+	print STDERR "fail to logout.\n";
+	exit($kRemote::exitFail);
+}
+
+kRemoteClose();
+
+exit($kRemote::exitPass);
+
+
+
+########################################################################
+sub
+ikev2($)
+{
+	my ($operation) = @_;
+
+	unless(defined($operation)) {
+		unless(generate_strongswan_conf(\@strongswan_conf)) {
+			exit($kRemote::exitFail);
+		}
+
+		unless(defined(kRemoteWriteFile($remote_strongswan_conf_path, $timeout, @strongswan_conf))) {
+			print STDERR "fail to write configuration.\n";
+			exit($kRemote::exitFail);
+		}
+
+		unless(defined(kRemoteCommandWait("chown root:wheel $remote_strongswan_conf_path", $timeout))) {
+			print("fail to change file owner and group of $remote_strongswan_conf_path.\n");
+			exit($kRemote::exitFail);
+		}
+
+		unless(defined(kRemoteCommandWait("chmod 0600 $remote_strongswan_conf_path", $timeout))) {
+			print("fail to change file mode of $remote_strongswan_conf_path.\n");
+			exit($kRemote::exitFail);
+		}
+
+		unless(defined(kRemoteCommandWait("ls -l $remote_strongswan_conf_path", $timeout))) {
+			print("fail to list of $remote_strongswan_conf_path.\n");
+			exit($kRemote::exitFail);
+		}
+
+		unless(defined(kRemoteCommandWait("$_ps -ax | $_grep -e starter -e charon", $timeout))) {
+			print("fail to get process status.\n");
+			exit($kRemote::exitFail);
+		}
+
+		unless(defined(kRemoteCommandWait("$ipsec start", $timeout))) {
+			print("fail to execute spmd.\n");
+			exit($kRemote::exitFail);
+		}
+
+		sleep(3);
+
+		unless(defined(kRemoteCommandWait("$_ps -ax | $_grep -e starter -e charon", $timeout))) {
+			print("fail to get process status.\n");
+			exit($kRemote::exitFail);
+		}
+
+		unless(defined(kRemoteCommandWait("$_setkey -D", $timeout))) {
+			print("fail to get SAD entries.\n");
+			exit($kRemote::exitFail);
+		}
+
+		return($true);
+	}
+
+	if($operation eq 'stop') {
+		unless(defined(kRemoteCommandWait("$_setkey -D", $timeout))) {
+			print("fail to get SAD entries.\n");
+			exit($kRemote::exitFail);
+		}
+
+		unless(defined(kRemoteCommandWait("$_setkey -DP", $timeout))) {
+			print("fail to get SPD entries.\n");
+			exit($kRemote::exitFail);
+		}
+
+		unless(defined(kRemoteCommandWait("$_ps -ax | $_grep -e starter -e charon", $timeout))) {
+			print("fail to get process status.\n");
+			exit($kRemote::exitFail);
+		}
+
+		unless(defined(kRemoteCommandWait("$ipsec stop", $timeout))) {
+			print("fail to kill processes by name.\n");
+			exit($kRemote::exitFail);
+		}
+
+		unless(defined(kRemoteCommandWait("$_ps -ax | $_grep -e starter -e charon", $timeout))) {
+			print("fail to get process status.\n");
+			exit($kRemote::exitFail);
+		}
+
+		unless(defined(kRemoteCommandWait("$_setkey -F", $timeout))) {
+			print("fail to flush SAD entries.\n");
+			exit($kRemote::exitFail);
+		}
+
+		unless(defined(kRemoteCommandWait("$_setkey -FP", $timeout))) {
+			print("fail to flush SPD entries.\n");
+			exit($kRemote::exitFail);
+		}
+
+		sleep(3);
+
+		unless(defined(kRemoteCommandWait("$_setkey -D", $timeout))) {
+			print("fail to get SAD entries.\n");
+			exit($kRemote::exitFail);
+		}
+
+		unless(defined(kRemoteCommandWait("$_setkey -DP", $timeout))) {
+			print("fail to get SPD entries.\n");
+			exit($kRemote::exitFail);
+		}
+
+		return($true);
+	}
+
+	if($operation eq 'initiate') {
+		my $host = $kRemote::kRemoteOpt{'target'};
+		unless(defined(kRemoteCommandWait("ping6 -n -c 1 $host", $timeout))) {
+			print("fail to send ICMPv6 ECHO_REQUEST packets to network hosts.\n");
+			exit($kRemote::exitFail);
+		}
+
+
+		return($true);
+	}
+
+	print("unknown operation -- $operation\n");
+	return($false);
+}
+
+
+
+sub
+generate_strongswan_conf($)
+{
+	my ($conf) = @_;
+
+	my $num = undef;
+
+	# config
+	push(@$conf, 'config setup');
+	push(@$conf, '        crlcheckinterval=180');
+	push(@$conf, '        strictcrlpolicy=no');
+	push(@$conf, '        plutostart=no');
+
+	# conn %default
+	push(@$conf, 'conn %default');
+	push(@$conf, '        ikelifetime=60m');
+	push(@$conf, '        keylife=20m');
+	push(@$conf, '        rekeymargin=3m');
+	push(@$conf, '        keyingtries=1');
+	push(@$conf, '        mobike=no');
+	push(@$conf, '        keyexchange=ikev2');
+	push(@$conf, '        ike=3des-sha-modp1024');
+	push(@$conf, '        esp=3des-sha1');
+	push(@$conf, '        xauth=server');
+	push(@$conf, '        authby=xauthpsk');
+
+	# conn host-host
+	push(@$conf, 'conn host-host');
+
+	## left
+	$num = $kRemote::kRemoteOpt{'ikev2.interface.ike.num'};
+	if($num) {
+		for (my $d = 0; $d < $num; $d ++) {
+			my $prefix = sprintf("%s.%d", 'ikev2.interface.ike', $d);
+			my $address = $kRemote::kRemoteOpt{"$prefix.address"};
+			push(@$conf, "        left=$address");
+		}
+	}
+
+	## right
+        $num = $kRemote::kRemoteOpt{'ikev2.remote.num'};
+	if($num) {
+		for(my $d = 0; $d < $num; $d ++) {
+			my $prefix = sprintf("%s.%d", 'ikev2.remote', $d);
+			my $address = $kRemote::kRemoteOpt{"$prefix.ikev2.peers_ipaddr.address"};
+			push(@$conf, "        right=$address");
+		}
+	}
+
+	## leftid, rightid
+	$num = $kRemote::kRemoteOpt{'ikev2.remote.num'};
+	if($num) {
+		for(my $d = 0; $d < $num; $d ++) {
+			my $prefix = sprintf("%s.%d", 'ikev2.remote', $d);
+			my $ipaddr = undef;
+			my $sub_num = undef;
+
+			## leftid
+			if ($kRemote::kRemoteOpt{"$prefix.ikev2.my_id.ipaddr.num"}) {
+				# ipaddr
+				$sub_num = $kRemote::kRemoteOpt{"$prefix.ikev2.my_id.ipaddr.num"};
+				if ($sub_num) {
+					for (my $d = 0; $d < $sub_num; $d++) {
+						$ipaddr = $kRemote::kRemoteOpt{"$prefix.ikev2.my_id.ipaddr.$d"};
+						push(@$conf, "        leftid=$ipaddr");
+					}
+				}
+			}
+
+			if ($kRemote::kRemoteOpt{"$prefix.ikev2.my_id.fqdn.num"}) {
+				# fqdn
+				$sub_num = $kRemote::kRemoteOpt{"$prefix.ikev2.my_id.fqdn.num"};
+				if ($sub_num) {
+					for (my $d = 0; $d < $sub_num; $d++) {
+						my $fqdn = $kRemote::kRemoteOpt{"$prefix.ikev2.my_id.fqdn.$d"};
+						push(@$conf, "        leftid=$fqdn");
+					}
+				}
+			}
+			if ($kRemote::kRemoteOpt{"$prefix.ikev2.my_id.rfc822addr.num"}) {
+				# rfc822 addr
+				$sub_num = $kRemote::kRemoteOpt{"$prefix.ikev2.my_id.rfc822addr.num"};
+				if ($sub_num) {
+					for (my $d = 0; $d < $sub_num; $d++) {
+						my $rfc822addr = $kRemote::kRemoteOpt{"$prefix.ikev2.my_id.rfc822addr.$d"};
+						push(@$conf, "        leftid=$rfc822addr");
+					}
+				}
+			}
+
+			## rightid
+			if ($kRemote::kRemoteOpt{"$prefix.ikev2.peers_id.ipaddr.num"}) {
+				# ipaddr
+				$sub_num = $kRemote::kRemoteOpt{"$prefix.ikev2.peers_id.ipaddr.num"};
+				if ($sub_num) {
+					for (my $d = 0; $d < $sub_num; $d++) {
+						$ipaddr = $kRemote::kRemoteOpt{"$prefix.ikev2.peers_id.ipaddr.$d"};
+						push(@$conf, "        rightid=$ipaddr");
+					}
+				}
+			}
+			if ($kRemote::kRemoteOpt{"$prefix.ikev2.peers_id.fqdn.num"}) {
+				# fqdn
+				$sub_num = $kRemote::kRemoteOpt{"$prefix.ikev2.peers_id.fqdn.num"};
+				if ($sub_num) {
+					for (my $d = 0; $d < $sub_num; $d++) {
+						my $fqdn = $kRemote::kRemoteOpt{"$prefix.ikev2.peers_id.fqdn.$d"};
+						push(@$conf, "        rightid=$fqdn");
+					}
+				}
+			}
+			if ($kRemote::kRemoteOpt{"$prefix.ikev2.peers_id.rfc822addr.num"}) {
+				# rfc822 addr
+				$sub_num = $kRemote::kRemoteOpt{"$prefix.ikev2.peers_id.rfc822addr.num"};
+				if ($sub_num) {
+					for (my $d = 0; $d < $sub_num; $d++) {
+						my $rfc822addr = $kRemote::kRemoteOpt{"$prefix.ikev2.peers_id.rfc822addr.$d"};
+						push(@$conf, "        rightid=$rfc822addr");
+					}
+				}
+			}
+
+
+			my $pre_shared_key_local = $kRemote::kRemoteOpt{"$prefix.ikev2.pre_shared_key.local"};
+			my $pre_shared_key_remote = $kRemote::kRemoteOpt{"$prefix.ikev2.pre_shared_key.remote"};
+
+			unless (generate_pre_shared_key($pre_shared_key_base_path, $pre_shared_key_local, $pre_shared_key_remote)) {
+				return($false);
+			}
+		}
+	}
+
+	## leftfirewall
+	push(@$conf, '        leftfirewall=yes');
+
+	## type
+	$num = $kRemote::kRemoteOpt{'ikev2.policy.num'};
+	if($num) {
+		for(my $d = 0; $d < $num; $d ++) {
+			my $sub_num = undef;
+
+			my $prefix = sprintf("%s.%d", 'ikev2.policy', $d);
+			my $ipsec_mode = $kRemote::kRemoteOpt{"$prefix.ipsec_mode"};
+			if ($ipsec_mode eq 'transport') {
+				push(@$conf, '        type=transport');
+			}
+		}
+	}
+
+	##
+	push(@$conf, '        auto=route');
+
+	#push(@$conf, '        ');
+
+	return($true);
+}
+
+
+
+sub
+generate_pre_shared_key($$$)
+{
+	my ($path, $local, $remote) = @_;
+
+	if($local ne $remote) {
+		print("racoon2 doesn\'t support different pre-shared keys between initiator and responder.\n");
+		exit($kRemote::exitNS);
+	}
+
+	my @psk = ();
+	push(@psk, ": PSK '$local'");
+	# XXX: use kRemoteCopy() for handling binary pre-shared key
+	unless(defined(kRemoteWriteFile($path, $timeout, @psk))) {
+		print STDERR "fail to write configuration.\n";
+		exit($kRemote::exitFail);
+	}
+
+
+#	unless(defined(kRemoteCommandWait("echo -n : PSK \\'$local\\' > $path", $timeout))) {
+#		print("fail to write out pre_shared_key to $path.\n");
+#		exit($kRemote::exitFail);
+#	}
+
+	unless(defined(kRemoteCommandWait("cat -n $path", $timeout))) {
+		print("fail to print $path.\n");
+		exit($kRemote::exitFail);
+	}
+
+	unless(defined(kRemoteCommandWait("chown root:wheel $path", $timeout))) {
+		print("fail to change file owner and group of $path.\n");
+		exit($kRemote::exitFail);
+	}
+
+	unless(defined(kRemoteCommandWait("chmod 0600 $path", $timeout))) {
+		print("fail to change file mode of $path.\n");
+		exit($kRemote::exitFail);
+	}
+
+	unless(defined(kRemoteCommandWait("ls -l $path", $timeout))) {
+		print("fail to list of $path.\n");
+		exit($kRemote::exitFail);
+	}
+
+	return($true);
+}
+
+
+
+sub generate_id_key_id($$)
+{
+	my ($path, $id) = @_;
+
+	unless (defined(kRemoteCommandWait("touch $path", $timeout))) {
+		print("fail to touch file $path\n");
+		exit($kRemote::exitFail);
+	}
+
+	unless(defined(kRemoteCommandWait("perl -e 'open(OUT, \">$path\"); print(OUT pack(\"H*\", \"$id\")); close(OUT);'", $timeout))) {
+		print("fail to set keyid value to $path.\n");
+		exit($kRemote::exitFail);
+	}
+
+	unless(defined(kRemoteCommandWait("chown root:wheel $path", $timeout))) {
+		print("fail to change file owner and group of $path.\n");
+		exit($kRemote::exitFail);
+	}
+
+	unless(defined(kRemoteCommandWait("chmod 0600 $path", $timeout))) {
+		print("fail to change file mode of $path.\n");
+		exit($kRemote::exitFail);
+	}
+
+	unless(defined(kRemoteCommandWait("ls -l $path", $timeout))) {
+		print("fail to list of $path.\n");
+		exit($kRemote::exitFail);
+	}
+
+	return($true);
+}
+

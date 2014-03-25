@@ -1,0 +1,215 @@
+<HTML>
+<HEAD>
+<TITLE>rfc2765_3.1_options.seq - Verify IPv6 <-> IPv4 header 
+        translation in accordance with RFC2765 [SIIT]</TITLE>
+<LINK REV="made" HREF="mailto:hackers@FreeBSD.org">
+</HEAD>
+
+<BODY>
+
+<!-- INDEX BEGIN -->
+<!--
+
+<UL>
+
+	<LI><A HREF="#NAME">NAME</A>
+	<LI><A HREF="#TARGET">TARGET</A>
+	<LI><A HREF="#SYNOPSIS">SYNOPSIS</A>
+	<LI><A HREF="#INITIALIZATION">INITIALIZATION</A>
+	<LI><A HREF="#TEST_PROCEDURE">TEST PROCEDURE</A>
+	<LI><A HREF="#JUDGMENT">JUDGMENT</A>
+	<LI><A HREF="#NOTE">NOTE</A>
+	<LI><A HREF="#REFERENCE">REFERENCE</A>
+	<LI><A HREF="#SEE_ALSO">SEE ALSO</A>
+</UL>
+-->
+<!-- INDEX END -->
+
+<P>
+<H1><A NAME="NAME">NAME</A></H1>
+<P>
+<PRE>        rfc2765_3.1_options.seq - Verify IPv6 &lt;-&gt; IPv4 header 
+        translation in accordance with RFC2765 [SIIT]
+</PRE>
+<P>
+<HR>
+<H1><A NAME="TARGET">TARGET</A></H1>
+<P>
+<PRE>        Router
+</PRE>
+<P>
+<HR>
+<H1><A NAME="SYNOPSIS">SYNOPSIS</A></H1>
+<P>
+<PRE>        rfc2765_3.1_options.seq [-tooloption ...] 
+        -p rfc2765_3.1_options.def
+</PRE>
+<P>
+<HR>
+<H1><A NAME="INITIALIZATION">INITIALIZATION</A></H1>
+<PRE>
+	Before this test starts, run <A HREF="./initialize.html">initialize.seq</A>.
+</PRE>
+
+<P>
+<HR>
+<H1><A NAME="TEST_PROCEDURE">TEST PROCEDURE</A></H1>
+<P>
+<PRE>        This test verifies that NUT drops IPv4 packets with unexpired 
+        Source Route options, and reply with ICMPv4 Destination Unreachable.
+        
+        Network Topology
+</PRE>
+<P>
+<PRE>        Link0
+        --------------------------
+            |               |
+           TN              NUT
+            |               |
+        --------------------------
+        Link1
+</PRE>
+<P>
+<PRE>        TN -- (Link0) -- NUT        NUT -- (Link1) -- TN
+        
+        ---------------------      ------------------------
+</PRE>
+<HR WIDTH=80%>
+
+<P>
+<PRE>        3.1.[1-2]
+                                   &lt;===================
+        ICMPv4 Echo request
+                IPv4 Header
+                        src address : TN LINK1 IPv4 address
+                        dst address : TN LINK0 IPv4 address
+                        Don't Fragment = 1
+                        More fragments = 0
+                        Offset = 0
+                        Option = Loose Source Route (Route unexpired)
+                              or Strict Source Route (Route unexpired)
+                ICMPv4 echo request
+</PRE>
+<P>
+<PRE>        3.2.[1-2]
+        &lt;&lt;JUDGMENT PASS&gt;&gt;
+                                    ===================&gt;
+        ICMPv4 Destination Unreachable
+                IPv4 Header
+                        src address : NUT LINK1 IPv4 address
+                        dst address : TN LINK1 IPv4 address
+                ICMPv6 Destination Unreachable
+                        data = IPv4 Loose Source Route (Route unexpired)
+                            or IPv4 Strict Source Route (Route unexpired)
+         
+        &lt;&lt;JUDGMENT WARN&gt;&gt;
+        No packets received on either link
+         
+        &lt;&lt;JUDGMENT FAIL&gt;&gt;
+        &lt;===================
+        ICMPv6 Echo Request
+                IPv6 Header
+                        src address : TN LINK0 IPv4 embedded IPv6 address
+                        dst address : TN LINK1 IPv4 embedded IPv6 address
+                        Hop Limit = 63
+                ICMPv6 echo request
+</PRE>
+<HR WIDTH=80%>
+
+<P>
+<PRE>        4.1.1
+                                   &lt;===================
+        ICMPv4 Echo request
+                IPv4 Header
+                        src address : TN LINK1 IPv4 address
+                        dst address : TN LINK0 IPv4 address
+                        Don't Fragment = 1
+                        More fragments = 0
+                        Offset = 0
+                        option = NOP
+                        option = Loose Source Route (Route expired)
+                        option = NOP 
+                        option = Strict Source Route (Route unexpired)
+                        option = NOP
+                        option = Record Route
+                        option = End of OptionList
+                        Padding = 0;
+                        Padding = 0;
+                        Padding = 0;
+                ICMPv4 echo request
+</PRE>
+<P>
+<PRE>        4.2.1
+        &lt;&lt;JUDGMENT PASS&gt;&gt;
+                                    ===================&gt;
+        ICMPv4 Destination Unreachable
+                IPv4 Header
+                        src address : NUT LINK1 IPv4 address
+                        dst address : TN LINK1 IPv4 address
+                ICMPv6 Destination Unreachable
+                        data = IPv4 packet sent
+         
+        &lt;&lt;JUDGMENT WARN&gt;&gt;
+        No packets received on either link
+         
+        &lt;&lt;JUDGMENT FAIL&gt;&gt;
+        &lt;===================
+        ICMPv6 Echo Request
+                IPv6 Header
+                        src address : TN LINK0 IPv4 embedded IPv6 address
+                        dst address : TN LINK1 IPv4 embedded IPv6 address
+                        Hop Limit = 63
+                ICMPv6 echo request
+         
+</PRE>
+<P>
+<HR>
+<H1><A NAME="JUDGMENT">JUDGMENT</A></H1>
+<P>
+<PRE>        &lt;&lt; PASS &gt;&gt;
+                NUT ignores all options except unexpired Source Route.
+                NUT sends ICMPv4 Destination Unreachable (Type 3/Code 5)
+                upon receiving an unexpired Source Route option.
+</PRE>
+<P>
+<PRE>        &lt;&lt; FAIL &gt;&gt;      
+                NUT translates IPv4 packets with unexpired Source Route 
+                option, and forwards the packet.
+</PRE>
+<P>
+<PRE>        &lt;&lt; WARN &gt;&gt;      
+                NUT ignores all options except unexpired Source Route.
+                NUT neither forwards unexpired Source Route packets,
+                nor sends an ICMPv4 Destination Unreachable back.
+</PRE>
+<P>
+<HR>
+<H1><A NAME="NOTE">NOTE</A></H1>
+<P>
+<HR>
+<H1><A NAME="REFERENCE">REFERENCE</A></H1>
+<P>
+<STRONG>RFC2765</STRONG>
+
+
+
+<P>
+3.1. Translating IPv4 Headers into IPv6 Headers
+
+<P>
+<PRE>   If IPv4 options are present in the IPv4 packet, they are ignored
+   i.e., there is no attempt to translate them.  However, if an
+   unexpired source route option is present then the packet MUST instead
+   be discarded, and an ICMPv4 &quot;destination unreachable/source route
+   failed&quot; (Type 3/Code 5) error message SHOULD be returned to the
+   sender.
+</PRE>
+<P>
+<HR>
+<H1><A NAME="SEE_ALSO">SEE ALSO</A></H1>
+<P>
+<PRE>        perldoc V6evalTool
+</PRE>
+</BODY>
+
+</HTML>

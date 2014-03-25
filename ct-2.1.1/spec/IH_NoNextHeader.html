@@ -1,0 +1,148 @@
+<HTML>
+<HEAD>
+<TITLE>IH_NoNextHeader - check No Next Header in IPv6 Header</TITLE>
+<LINK REV="made" HREF="mailto:hackers@FreeBSD.org">
+</HEAD>
+
+<BODY>
+
+<!-- INDEX BEGIN -->
+<!--
+
+<UL>
+
+	<LI><A HREF="#NAME">NAME</A>
+	<LI><A HREF="#TARGET">TARGET</A>
+	<LI><A HREF="#SYNOPSIS">SYNOPSIS</A>
+	<LI><A HREF="#INITIALIZATION">INITIALIZATION</A>
+	<LI><A HREF="#TEST_PROCEDURE">TEST PROCEDURE</A>
+	<LI><A HREF="#JUDGMENT">JUDGMENT</A>
+	<LI><A HREF="#REFERENCE">REFERENCE</A>
+	<LI><A HREF="#SEE_ALSO">SEE ALSO</A>
+</UL>
+-->
+<!-- INDEX END -->
+
+<P>
+<H1><A NAME="NAME">NAME</A></H1>
+<P>
+<PRE>  IH_NoNextHeader - check No Next Header in IPv6 Header (over router)
+</PRE>
+<P>
+<HR>
+<H1><A NAME="TARGET">TARGET</A></H1>
+<P>
+<PRE>  Router
+</PRE>
+<P>
+<HR>
+<H1><A NAME="SYNOPSIS">SYNOPSIS</A></H1>
+<PRE>
+  <A HREF="./IH_NoNextHeader.seq">IH_NoNextHeader.seq</A> [-tooloption ...] -pkt <A HREF="./IH_NoNextHeader.def">IH_NoNextHeader.def</A>
+    -tooloption : v6eval tool option
+</PRE>
+
+<P>
+<HR>
+<H1><A NAME="INITIALIZATION">INITIALIZATION</A></H1>
+<P>
+<PRE>  None
+</PRE>
+<P>
+<HR>
+<H1><A NAME="TEST_PROCEDURE">TEST PROCEDURE</A></H1>
+<P>
+<PRE>  Tester                      Target                      Tester
+              (Link0)                     (Link1)
+    |                           |                           |
+    |--------------------------&gt;|                           |
+    |      Packet to Link0      |                           |
+    |                           |                           |
+    |                           |--------------------------&gt;|
+    |                           |   Neighbor Solicitation   |
+    |                           |                           |
+    |                           |&lt;--------------------------|
+    |                           |   Neighbor Advertisement  |
+    |                           |                           |
+    |                           |--------------------------&gt;|
+    |                           |      Packet from Link1    |
+    |                           |                           |
+    |                           |                           |
+    v                           v                           v
+</PRE>
+<P>
+<PRE>  1. Send Packet with No Next Header to Link0
+  2. Wait Packet with No Next Header from Link1 or NS from Link1
+  3. If NS received then send NA to Link1, and wait Packet with No Next Header form Link1 again
+  4. Receive Packet with No Next Header from Link1
+</PRE>
+<P>
+<PRE>  Packet with No Next Header to Link0 Data is:
+</PRE>
+<P>
+<PRE>        IPv6 Header
+            Version            = 6
+            Traffic Class      = 0
+            FlowLabel          = 0
+            PayloadLength      = 8
+            NextHeader         = 59 (No Next Header)
+            SourceAddress      = Tester Global Address (Link0)
+            DestinationAddress = Tester Global Address (Link1)
+</PRE>
+<P>
+<PRE>        Payload
+            PayloadData    = {0x80,0x81,0x82,0x83,0x84,0x85,0x86,0x87}
+</PRE>
+<P>
+<PRE>  Neighbor Solicitation packet's IP source Address selection may be:
+    - Link Local Address
+    - Global Address
+  This test IS NOT the Neighbor Discovery test, so admit both implementation.
+</PRE>
+<P>
+<HR>
+<H1><A NAME="JUDGMENT">JUDGMENT</A></H1>
+<P>
+<PRE>  PASS: Packet with No Next Header Received from Link1
+</PRE>
+<P>
+<PRE>        IPv6 Header
+            Version             = 6
+            Traffic Class       = 0
+            FlowLabel           = 0
+            PayloadLength       = 8
+            NextHeader          = 59 (No Next Header)
+            SourceAddress      = Tester Global Address (Link0)
+            DestinationAddress = Tester Global Address (Link1)
+</PRE>
+<P>
+<PRE>        Payload
+            PayloadData    = {0x80,0x81,0x82,0x83,0x84,0x85,0x86,0x87}
+</PRE>
+<P>
+<HR>
+<H1><A NAME="REFERENCE">REFERENCE</A></H1>
+<P>
+RFC2460
+
+<P>
+4.7 No Next Header
+
+<PRE>
+   The value 59 in the Next Header field of an IPv6 header or any
+   extension header indicates that there is nothing following that
+   header.  <B>If the Payload Length field of the IPv6 header indicates the
+   presence of octets past the end of a header whose Next Header field
+   contains 59, those octets must be ignored, and passed on unchanged if
+   the packet is forwarded.</B>
+</PRE>
+
+<P>
+<HR>
+<H1><A NAME="SEE_ALSO">SEE ALSO</A></H1>
+<P>
+<PRE>  perldoc V6evalTool
+</PRE>
+</BODY>
+
+</HTML>

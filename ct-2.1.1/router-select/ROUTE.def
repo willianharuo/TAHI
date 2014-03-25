@@ -1,0 +1,1435 @@
+//
+// Copyright (C) 2003 Yokogawa Electric Corporation, 
+// INTAP(Interoperability Technology Association
+// for Information Processing, Japan).  All rights reserved.
+// 
+// Redistribution and use of this software in source and binary forms, with 
+// or without modification, are permitted provided that the following 
+// conditions and disclaimer are agreed and accepted by the user:
+// 
+// 1. Redistributions of source code must retain the above copyright 
+// notice, this list of conditions and the following disclaimer.
+// 
+// 2. Redistributions in binary form must reproduce the above copyright 
+// notice, this list of conditions and the following disclaimer in the 
+// documentation and/or other materials provided with the distribution.
+// 
+// 3. Neither the names of the copyrighters, the name of the project which 
+// is related to this software (hereinafter referred to as "project") nor 
+// the names of the contributors may be used to endorse or promote products 
+// derived from this software without specific prior written permission.
+// 
+// 4. No merchantable use may be permitted without prior written 
+// notification to the copyrighters. However, using this software for the 
+// purpose of testing or evaluating any products including merchantable 
+// products may be permitted without any notification to the copyrighters.
+// 
+// 
+// 
+// THIS SOFTWARE IS PROVIDED BY THE COPYRIGHTERS, THE PROJECT AND 
+// CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING 
+// BUT NOT LIMITED THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS 
+// FOR A PARTICULAR PURPOSE, ARE DISCLAIMED.  IN NO EVENT SHALL THE 
+// COPYRIGHTERS, THE PROJECT OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, 
+// INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES 
+// (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR 
+// SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) 
+// HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN 
+// CONTRACT,STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) 
+// ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF 
+// THE POSSIBILITY OF SUCH DAMAGE.
+//
+// OFFLINK_GLOBAL_ADDRESS               Off-Link host's Global Address
+// TN_GLOBAL_ADDRESS                    TN's Global Address
+//
+// $TAHI: ct/router-select/ROUTE.def,v 1.5 2003/04/22 04:26:45 akisada Exp $
+//
+
+
+// ##############################
+// MAC address
+// ##############################
+
+// #######
+// Router
+// #######
+
+#define TN_RT1_LINK0_MAC_ADDRESS ether(A0N_MAC_ADDR)
+#define TN_RT2_LINK0_MAC_ADDRESS ether(A1N_MAC_ADDR)
+#define rt1_mac TN_RT1_LINK0_MAC_ADDRESS
+#define rt2_mac TN_RT2_LINK0_MAC_ADDRESS
+
+_SLLOPT_define(_SLLOPT_tn_RT1,  rt1_mac)
+_SLLOPT_define(_SLLOPT_tn_RT2,  rt2_mac)
+_TLLOPT_define(_TLLOPT_tn_RT1,  rt1_mac)
+_TLLOPT_define(_TLLOPT_tn_RT2,  rt2_mac)
+
+// ##############################
+// IPv6 address
+// ##############################
+
+#define GLOBAL_UCAST_PRFXLEN _GLOBAL0_UCAST_PRFXLEN
+
+// #######
+// Router
+// #######
+
+#define TN_LINK0_GLOBAL_ADDRESS v6merge(_GLOBAL0_UCAST_PRFX,\
+	GLOBAL_UCAST_PRFXLEN, \
+	v6("::1"))
+
+#define TN_RT1_LINK0_LINK_ADDRESS v6( _LLOCAL0A0N_UCAST_ADDR)
+#define TN_RT2_LINK0_LINK_ADDRESS v6( _LLOCAL0A1N_UCAST_ADDR)
+#define TN_RT1_LINK0_GLOBAL_ADDRESS v6( _GLOBAL0A0N_UCAST_ADDR)
+#define TN_RT2_LINK0_GLOBAL_ADDRESS v6( _GLOBAL0A1N_UCAST_ADDR)
+#define rt1_lla	TN_RT1_LINK0_LINK_ADDRESS
+#define rt2_lla	TN_RT2_LINK0_LINK_ADDRESS
+#define rt1_ga	TN_RT1_LINK0_GLOBAL_ADDRESS
+#define rt2_ga	TN_RT2_LINK0_GLOBAL_ADDRESS
+
+// #######
+// Host
+// #######
+
+#define NUT_LINK0_GLOBAL_ADDRESS v6merge( _GLOBAL0_UCAST_PRFX, \
+	GLOBAL_UCAST_PRFXLEN, \
+	nutv6())
+
+#define TN_HOST1_LINK1_GLOBAL_ADDRESS v6merge( _GLOBAL1_UCAST_PRFX, \
+	GLOBAL_UCAST_PRFXLEN, \
+	v6("::1"))
+
+#define TN_HOST2_LINK2_GLOBAL_ADDRESS v6merge( _GLOBAL2_UCAST_PRFX, \
+	GLOBAL_UCAST_PRFXLEN, \
+	v6("::1"))
+
+#define TN_HOST3_LINK3_GLOBAL_ADDRESS v6merge( _GLOBAL3_UCAST_PRFX, \
+	GLOBAL_UCAST_PRFXLEN, \
+	v6("::1"))
+
+#define TN_HOST4_LINK4_GLOBAL_ADDRESS v6merge( _GLOBAL4_UCAST_PRFX, \
+	GLOBAL_UCAST_PRFXLEN, \
+	v6("::1"))
+
+#define TN_HOST5_LINK5_GLOBAL_ADDRESS v6merge( _GLOBAL5_UCAST_PRFX, \
+	GLOBAL_UCAST_PRFXLEN, \
+	v6("::1"))
+
+#define TN_HOST6_LINK6_GLOBAL_ADDRESS v6merge( _GLOBAL6_UCAST_PRFX, \
+	GLOBAL_UCAST_PRFXLEN, \
+	v6("::1"))
+
+#define TN_HOST7_LINK7_GLOBAL_ADDRESS v6merge( _GLOBAL7_UCAST_PRFX, \
+	GLOBAL_UCAST_PRFXLEN, \
+	v6("::1"))
+
+#define TN_HOST8_LINK8_GLOBAL_ADDRESS v6merge( _GLOBAL8_UCAST_PRFX, \
+	GLOBAL_UCAST_PRFXLEN, \
+	v6("::1"))
+
+#define TN_HOST9_LINK9_GLOBAL_ADDRESS v6merge( _GLOBAL9_UCAST_PRFX, \
+	GLOBAL_UCAST_PRFXLEN, \
+	v6("::1"))
+
+#define TN_HOST10_LINK10_GLOBAL_ADDRESS v6merge( _GLOBAL10_UCAST_PRFX, \
+	GLOBAL_UCAST_PRFXLEN, \
+	v6("::1"))
+
+#define TN_HOST11_LINK11_GLOBAL_ADDRESS v6merge( _GLOBAL11_UCAST_PRFX, \
+	GLOBAL_UCAST_PRFXLEN, \
+	v6("::1"))
+
+#define TN_HOST12_LINK12_GLOBAL_ADDRESS v6merge( _GLOBAL12_UCAST_PRFX, \
+	GLOBAL_UCAST_PRFXLEN, \
+	v6("::1"))
+
+#define TN_HOST13_LINK13_GLOBAL_ADDRESS v6merge( _GLOBAL13_UCAST_PRFX, \
+	GLOBAL_UCAST_PRFXLEN, \
+	v6("::1"))
+
+#define TN_HOST14_LINK14_GLOBAL_ADDRESS v6merge( _GLOBAL14_UCAST_PRFX, \
+	GLOBAL_UCAST_PRFXLEN, \
+	v6("::1"))
+
+#define TN_HOST15_LINK15_GLOBAL_ADDRESS v6merge( _GLOBAL15_UCAST_PRFX, \
+	GLOBAL_UCAST_PRFXLEN, \
+	v6("::1"))
+
+#define TN_HOST16_LINK16_GLOBAL_ADDRESS v6merge( _GLOBAL16_UCAST_PRFX, \
+	GLOBAL_UCAST_PRFXLEN, \
+	v6("::1"))
+
+#define TN_HOST17_LINK17_GLOBAL_ADDRESS v6merge( _GLOBAL17_UCAST_PRFX, \
+	GLOBAL_UCAST_PRFXLEN, \
+	v6("::1"))
+
+
+#define TN_LINK0_ONEOF_ADDRESSES_RT1 oneof(rt1_ga, rt1_lla)
+#define NUT_LINK0_ONEOF_ADDRESSES oneof(NUT_LINK0_GLOBAL_ADDRESS,nutv6())
+
+
+//
+// define Packets
+//
+
+
+//
+// Echo Request Onlink
+// TN (link local address) --> NUT (link local address)
+
+#define echo_request_tn2nut_ONLINK( \
+        pNAME, \
+        SrcAddr \
+) \
+FEM_icmp6_echo_request( \
+         pNAME, \
+         _HETHER_tn2nut, \
+                { \
+                _SRC(SrcAddr); \
+                _DST(nutv6()); \
+         }, \
+                 { \
+                 payload=ping_data; \
+         } \
+)  
+
+//
+// Echo Reply Onlink
+// TN (link local address) <-- NUT (link local address)
+#define echo_reply_nut2tn_ONLINK( \
+        pNAME,\
+        DstAddr \
+) \
+FEM_icmp6_echo_reply( \
+        pNAME,\
+        _HETHER_nut2tn, \
+                { \
+                _SRC(nutv6()); \
+                _DST(DstAddr); \
+        }, \
+                { \
+                payload=ping_data; \
+        } \
+)
+
+
+//
+// Echo Request Global
+// TN (link local address) --> NUT (link local address)
+
+#define echo_request_tn2nut_GLOBAL( \
+        pNAME,\
+        SrcMac,\
+        SrcAddr \
+) \
+FEM_icmp6_echo_request( \
+         pNAME,\
+	_HETHER_tn2nut_viaRT_##pNAME, \
+                { \
+                _SRC(SrcAddr); \
+                _DST(NUT_LINK0_GLOBAL_ADDRESS); \
+	}, \
+                 { \
+                 payload=ping_data; \
+	} \
+)  \
+_HETHER_define(_HETHER_tn2nut_viaRT_##pNAME, SrcMac, nutether())
+
+
+//
+// Echo Reply Global
+// TN (link local address) <-- NUT (link local address)
+#define echo_reply_nut2tn_GLOBAL( \
+        pNAME,\
+        DstMac, \
+        DstAddr \
+) \
+FEM_icmp6_echo_reply( \
+        pNAME, \
+	_HETHER_nut2tn_viaRT_##pNAME, \
+                { \
+                _SRC(NUT_LINK0_GLOBAL_ADDRESS); \
+                _DST(DstAddr); \
+	}, \
+                { \
+                payload=ping_data; \
+	} \
+) \
+_HETHER_define(_HETHER_nut2tn_viaRT_##pNAME, nutether(), DstMac)
+
+
+
+//
+// instantiate Packets
+//
+
+_HETHER_define(HETHER_nut2tn_oneof,  nutether(), 
+	oneof(tnether(),_ETHER_SOLNODE_MCAST(tnv6()) ))
+
+_HETHER_define(HETHER_nut2tn_oneof_RT1,  nutether(), 
+	oneof(rt1_mac,_ETHER_SOLNODE_MCAST(rt1_lla) ))
+
+_HETHER_define(HETHER_nut2tn_oneof_RT2,  nutether(), 
+	oneof(rt2_mac,_ETHER_SOLNODE_MCAST(rt2_lla) ))
+
+_HETHER_define(_HETHER_tn2nut_RT1,  rt1_mac, nutether())
+_HETHER_define(_HETHER_tn2nut_RT2,  rt2_mac, nutether())
+
+_HETHER_define( HETHER_nut2tn_HOST1, nutether(),
+	_ETHER_SOLNODE_MCAST(TN_HOST1_LINK1_GLOBAL_ADDRESS)) 
+
+_HETHER_define(_HETHER_tn2allnodes_RT1, rt1_mac, v62ethermulti(v6(_ALLNODES_MCAST_ADDR)) )
+_HETHER_define(_HETHER_tn2allnodes_RT2, rt2_mac, v62ethermulti(v6(_ALLNODES_MCAST_ADDR)) )
+
+// ##################################
+// ##################################
+// Packet Definition
+// ##################################
+// ##################################
+
+// {{{ IPv6 Echo Request/Reply
+//
+// IPv6 Echo Request
+//
+
+//echo_request_tn2nut_ONLINK(echo_request_tn2nut_LLA, tnv6())
+
+// VIA ROUTER1
+
+echo_request_tn2nut_GLOBAL(echo_req_Host1_via_RT1, 
+		TN_RT1_LINK0_MAC_ADDRESS,
+		TN_HOST1_LINK1_GLOBAL_ADDRESS)
+echo_request_tn2nut_GLOBAL(echo_req_Host2_via_RT1, 
+		TN_RT1_LINK0_MAC_ADDRESS,
+		TN_HOST2_LINK2_GLOBAL_ADDRESS)
+echo_request_tn2nut_GLOBAL(echo_req_Host3_via_RT1, 
+		TN_RT1_LINK0_MAC_ADDRESS,
+		TN_HOST3_LINK3_GLOBAL_ADDRESS)
+echo_request_tn2nut_GLOBAL(echo_req_Host4_via_RT1, 
+		TN_RT1_LINK0_MAC_ADDRESS,
+		TN_HOST4_LINK4_GLOBAL_ADDRESS)
+echo_request_tn2nut_GLOBAL(echo_req_Host5_via_RT1, 
+		TN_RT1_LINK0_MAC_ADDRESS,
+		TN_HOST5_LINK5_GLOBAL_ADDRESS)
+echo_request_tn2nut_GLOBAL(echo_req_Host6_via_RT1, 
+		TN_RT1_LINK0_MAC_ADDRESS,
+		TN_HOST6_LINK6_GLOBAL_ADDRESS)
+echo_request_tn2nut_GLOBAL(echo_req_Host7_via_RT1, 
+		TN_RT1_LINK0_MAC_ADDRESS,
+		TN_HOST7_LINK7_GLOBAL_ADDRESS)
+echo_request_tn2nut_GLOBAL(echo_req_Host8_via_RT1, 
+		TN_RT1_LINK0_MAC_ADDRESS,
+		TN_HOST8_LINK8_GLOBAL_ADDRESS)
+echo_request_tn2nut_GLOBAL(echo_req_Host9_via_RT1, 
+		TN_RT1_LINK0_MAC_ADDRESS,
+		TN_HOST9_LINK9_GLOBAL_ADDRESS)
+echo_request_tn2nut_GLOBAL(echo_req_Host10_via_RT1, 
+		TN_RT1_LINK0_MAC_ADDRESS,
+		TN_HOST10_LINK10_GLOBAL_ADDRESS)
+echo_request_tn2nut_GLOBAL(echo_req_Host11_via_RT1, 
+		TN_RT1_LINK0_MAC_ADDRESS,
+		TN_HOST11_LINK11_GLOBAL_ADDRESS)
+echo_request_tn2nut_GLOBAL(echo_req_Host12_via_RT1, 
+		TN_RT1_LINK0_MAC_ADDRESS,
+		TN_HOST12_LINK12_GLOBAL_ADDRESS)
+echo_request_tn2nut_GLOBAL(echo_req_Host13_via_RT1, 
+		TN_RT1_LINK0_MAC_ADDRESS,
+		TN_HOST13_LINK13_GLOBAL_ADDRESS)
+echo_request_tn2nut_GLOBAL(echo_req_Host14_via_RT1, 
+		TN_RT1_LINK0_MAC_ADDRESS,
+		TN_HOST14_LINK14_GLOBAL_ADDRESS)
+echo_request_tn2nut_GLOBAL(echo_req_Host15_via_RT1, 
+		TN_RT1_LINK0_MAC_ADDRESS,
+		TN_HOST15_LINK15_GLOBAL_ADDRESS)
+echo_request_tn2nut_GLOBAL(echo_req_Host16_via_RT1, 
+		TN_RT1_LINK0_MAC_ADDRESS,
+		TN_HOST16_LINK16_GLOBAL_ADDRESS)
+echo_request_tn2nut_GLOBAL(echo_req_Host17_via_RT1, 
+		TN_RT1_LINK0_MAC_ADDRESS,
+		TN_HOST17_LINK17_GLOBAL_ADDRESS)
+
+// VIA ROUTER2
+
+echo_request_tn2nut_GLOBAL(echo_req_Host1_via_RT2, 
+		TN_RT2_LINK0_MAC_ADDRESS,
+		TN_HOST1_LINK1_GLOBAL_ADDRESS)
+echo_request_tn2nut_GLOBAL(echo_req_Host2_via_RT2, 
+		TN_RT2_LINK0_MAC_ADDRESS,
+		TN_HOST2_LINK2_GLOBAL_ADDRESS)
+echo_request_tn2nut_GLOBAL(echo_req_Host3_via_RT2, 
+		TN_RT2_LINK0_MAC_ADDRESS,
+		TN_HOST3_LINK3_GLOBAL_ADDRESS)
+echo_request_tn2nut_GLOBAL(echo_req_Host4_via_RT2, 
+		TN_RT2_LINK0_MAC_ADDRESS,
+		TN_HOST4_LINK4_GLOBAL_ADDRESS)
+echo_request_tn2nut_GLOBAL(echo_req_Host5_via_RT2, 
+		TN_RT2_LINK0_MAC_ADDRESS,
+		TN_HOST5_LINK5_GLOBAL_ADDRESS)
+echo_request_tn2nut_GLOBAL(echo_req_Host6_via_RT2, 
+		TN_RT2_LINK0_MAC_ADDRESS,
+		TN_HOST6_LINK6_GLOBAL_ADDRESS)
+echo_request_tn2nut_GLOBAL(echo_req_Host7_via_RT2, 
+		TN_RT2_LINK0_MAC_ADDRESS,
+		TN_HOST7_LINK7_GLOBAL_ADDRESS)
+echo_request_tn2nut_GLOBAL(echo_req_Host8_via_RT2, 
+		TN_RT2_LINK0_MAC_ADDRESS,
+		TN_HOST8_LINK8_GLOBAL_ADDRESS)
+echo_request_tn2nut_GLOBAL(echo_req_Host9_via_RT2, 
+		TN_RT2_LINK0_MAC_ADDRESS,
+		TN_HOST9_LINK9_GLOBAL_ADDRESS)
+echo_request_tn2nut_GLOBAL(echo_req_Host10_via_RT2, 
+		TN_RT2_LINK0_MAC_ADDRESS,
+		TN_HOST10_LINK10_GLOBAL_ADDRESS)
+
+//
+// IPv6 Echo Reply
+//
+
+//echo_reply_nut2tn_ONLINK(echo_reply_nut2tn_LLA, ping_data)
+
+// VIA ROUTER1
+
+echo_reply_nut2tn_GLOBAL(echo_rep_Host1_via_RT1, 
+		TN_RT1_LINK0_MAC_ADDRESS,
+		TN_HOST1_LINK1_GLOBAL_ADDRESS)
+echo_reply_nut2tn_GLOBAL(echo_rep_Host2_via_RT1, 
+		TN_RT1_LINK0_MAC_ADDRESS,
+		TN_HOST2_LINK2_GLOBAL_ADDRESS)
+echo_reply_nut2tn_GLOBAL(echo_rep_Host3_via_RT1, 
+		TN_RT1_LINK0_MAC_ADDRESS,
+		TN_HOST3_LINK3_GLOBAL_ADDRESS)
+echo_reply_nut2tn_GLOBAL(echo_rep_Host4_via_RT1, 
+		TN_RT1_LINK0_MAC_ADDRESS,
+		TN_HOST4_LINK4_GLOBAL_ADDRESS)
+echo_reply_nut2tn_GLOBAL(echo_rep_Host5_via_RT1, 
+		TN_RT1_LINK0_MAC_ADDRESS,
+		TN_HOST5_LINK5_GLOBAL_ADDRESS)
+echo_reply_nut2tn_GLOBAL(echo_rep_Host6_via_RT1, 
+		TN_RT1_LINK0_MAC_ADDRESS,
+		TN_HOST6_LINK6_GLOBAL_ADDRESS)
+echo_reply_nut2tn_GLOBAL(echo_rep_Host7_via_RT1, 
+		TN_RT1_LINK0_MAC_ADDRESS,
+		TN_HOST7_LINK7_GLOBAL_ADDRESS)
+echo_reply_nut2tn_GLOBAL(echo_rep_Host8_via_RT1, 
+		TN_RT1_LINK0_MAC_ADDRESS,
+		TN_HOST8_LINK8_GLOBAL_ADDRESS)
+echo_reply_nut2tn_GLOBAL(echo_rep_Host9_via_RT1, 
+		TN_RT1_LINK0_MAC_ADDRESS,
+		TN_HOST9_LINK9_GLOBAL_ADDRESS)
+echo_reply_nut2tn_GLOBAL(echo_rep_Host10_via_RT1, 
+		TN_RT1_LINK0_MAC_ADDRESS,
+		TN_HOST10_LINK10_GLOBAL_ADDRESS)
+echo_reply_nut2tn_GLOBAL(echo_rep_Host11_via_RT1, 
+		TN_RT1_LINK0_MAC_ADDRESS,
+		TN_HOST11_LINK11_GLOBAL_ADDRESS)
+echo_reply_nut2tn_GLOBAL(echo_rep_Host12_via_RT1, 
+		TN_RT1_LINK0_MAC_ADDRESS,
+		TN_HOST12_LINK12_GLOBAL_ADDRESS)
+echo_reply_nut2tn_GLOBAL(echo_rep_Host13_via_RT1, 
+		TN_RT1_LINK0_MAC_ADDRESS,
+		TN_HOST13_LINK13_GLOBAL_ADDRESS)
+echo_reply_nut2tn_GLOBAL(echo_rep_Host14_via_RT1, 
+		TN_RT1_LINK0_MAC_ADDRESS,
+		TN_HOST14_LINK14_GLOBAL_ADDRESS)
+echo_reply_nut2tn_GLOBAL(echo_rep_Host15_via_RT1, 
+		TN_RT1_LINK0_MAC_ADDRESS,
+		TN_HOST15_LINK15_GLOBAL_ADDRESS)
+echo_reply_nut2tn_GLOBAL(echo_rep_Host16_via_RT1, 
+		TN_RT1_LINK0_MAC_ADDRESS,
+		TN_HOST16_LINK16_GLOBAL_ADDRESS)
+echo_reply_nut2tn_GLOBAL(echo_rep_Host17_via_RT1, 
+		TN_RT1_LINK0_MAC_ADDRESS,
+		TN_HOST17_LINK17_GLOBAL_ADDRESS)
+
+// VIA ROUTER2
+
+echo_reply_nut2tn_GLOBAL(echo_rep_Host1_via_RT2, 
+		TN_RT2_LINK0_MAC_ADDRESS,
+		TN_HOST1_LINK1_GLOBAL_ADDRESS)
+echo_reply_nut2tn_GLOBAL(echo_rep_Host2_via_RT2, 
+		TN_RT2_LINK0_MAC_ADDRESS,
+		TN_HOST2_LINK2_GLOBAL_ADDRESS)
+echo_reply_nut2tn_GLOBAL(echo_rep_Host3_via_RT2, 
+		TN_RT2_LINK0_MAC_ADDRESS,
+		TN_HOST3_LINK3_GLOBAL_ADDRESS)
+echo_reply_nut2tn_GLOBAL(echo_rep_Host4_via_RT2, 
+		TN_RT2_LINK0_MAC_ADDRESS,
+		TN_HOST4_LINK4_GLOBAL_ADDRESS)
+echo_reply_nut2tn_GLOBAL(echo_rep_Host5_via_RT2, 
+		TN_RT2_LINK0_MAC_ADDRESS,
+		TN_HOST5_LINK5_GLOBAL_ADDRESS)
+echo_reply_nut2tn_GLOBAL(echo_rep_Host6_via_RT2, 
+		TN_RT2_LINK0_MAC_ADDRESS,
+		TN_HOST6_LINK6_GLOBAL_ADDRESS)
+echo_reply_nut2tn_GLOBAL(echo_rep_Host7_via_RT2, 
+		TN_RT2_LINK0_MAC_ADDRESS,
+		TN_HOST7_LINK7_GLOBAL_ADDRESS)
+echo_reply_nut2tn_GLOBAL(echo_rep_Host8_via_RT2, 
+		TN_RT2_LINK0_MAC_ADDRESS,
+		TN_HOST8_LINK8_GLOBAL_ADDRESS)
+echo_reply_nut2tn_GLOBAL(echo_rep_Host9_via_RT2, 
+		TN_RT2_LINK0_MAC_ADDRESS,
+		TN_HOST9_LINK9_GLOBAL_ADDRESS)
+echo_reply_nut2tn_GLOBAL(echo_rep_Host10_via_RT2, 
+		TN_RT2_LINK0_MAC_ADDRESS,
+		TN_HOST10_LINK10_GLOBAL_ADDRESS)
+echo_reply_nut2tn_GLOBAL(echo_rep_Host11_via_RT2, 
+		TN_RT2_LINK0_MAC_ADDRESS,
+		TN_HOST11_LINK11_GLOBAL_ADDRESS)
+echo_reply_nut2tn_GLOBAL(echo_rep_Host12_via_RT2, 
+		TN_RT2_LINK0_MAC_ADDRESS,
+		TN_HOST12_LINK12_GLOBAL_ADDRESS)
+echo_reply_nut2tn_GLOBAL(echo_rep_Host13_via_RT2, 
+		TN_RT2_LINK0_MAC_ADDRESS,
+		TN_HOST13_LINK13_GLOBAL_ADDRESS)
+echo_reply_nut2tn_GLOBAL(echo_rep_Host14_via_RT2, 
+		TN_RT2_LINK0_MAC_ADDRESS,
+		TN_HOST14_LINK14_GLOBAL_ADDRESS)
+echo_reply_nut2tn_GLOBAL(echo_rep_Host15_via_RT2, 
+		TN_RT2_LINK0_MAC_ADDRESS,
+		TN_HOST15_LINK15_GLOBAL_ADDRESS)
+echo_reply_nut2tn_GLOBAL(echo_rep_Host16_via_RT2, 
+		TN_RT2_LINK0_MAC_ADDRESS,
+		TN_HOST16_LINK16_GLOBAL_ADDRESS)
+echo_reply_nut2tn_GLOBAL(echo_rep_Host17_via_RT2, 
+		TN_RT2_LINK0_MAC_ADDRESS,
+		TN_HOST17_LINK17_GLOBAL_ADDRESS)
+
+
+//
+// payload  data
+//
+
+Payload ping_data
+        {
+        data=repeat(0xfe,6);
+    }
+
+
+// ########################################
+//  DAD NS Messages
+// ########################################
+
+
+//
+// DADNS_from_NUT
+//  Description: 
+//    DAD NS coming from NUT on DAD
+//  Spec:
+//    valid DAD NS
+
+
+FEM_icmp6_ns(  DADNS_from_NUT,
+	_HETHER_nut2nutsolnode,
+            {  
+		_SRC(v6(_UNSPEC_ADDR));
+		_DST(_IPV6_SOLNODE_MCAST(nutv6()));
+		HopLimit=255;
+            },
+            {
+		   TargetAddress=nutv6(); // Tentative Address
+            }
+)
+
+// ########################################
+//  Neighboor Solicitasion Messages
+// ########################################
+
+// ##############################
+// Target=Link_Local
+// ##############################
+
+// #######################
+// Tester Itself
+// #######################
+
+// TN  <-- NUT (link local address)
+//
+// Neighber Solicitasion
+// TN  <-- NUT (link local address)
+// TargetAddress: TN's link local address
+// Option : Source link layer address
+
+FEM_icmp6_ns (ns_nut2tn_sourceLLA_targetLLA_optionSLL, 
+        HETHER_nut2tn_oneof,
+                {
+                _SRC(nutv6());
+                _DST(oneof(_IPV6_SOLNODE_MCAST(tnv6()),
+		_IPV6_SOLNODE_MCAST(TN_LINK0_GLOBAL_ADDRESS),
+		tnv6(),
+		TN_LINK0_GLOBAL_ADDRESS));
+                HopLimit=255;
+        },
+                {
+                TargetAddress=tnv6();
+                option=_SLLOPT_nut;
+        }
+)
+
+// TN  <-- NUT (link local address)
+//
+// Neighber Solicitasion
+// TN  <-- NUT (link local address)
+// TargetAddress: TN's link local address
+// Option : none
+
+FEM_icmp6_ns (
+        ns_nut2tn_sourceLLA_targetLLA_nooption,
+        HETHER_nut2tn_oneof,
+                {
+                _SRC(nutv6());
+                _DST(oneof(_IPV6_SOLNODE_MCAST(tnv6()),
+		_IPV6_SOLNODE_MCAST(TN_LINK0_GLOBAL_ADDRESS),
+		tnv6(),
+		TN_LINK0_GLOBAL_ADDRESS));
+                HopLimit=255;
+        },
+                {
+                TargetAddress=tnv6();
+        }
+)
+
+// TN  <-- NUT (global address)
+//
+// Neighber Solicitasion
+// TN  <-- NUT (global address)
+// TargetAddress: TN's link local address
+// Option : Source link layer address
+
+FEM_icmp6_ns (
+        ns_nut2tn_sourceGA_targetLLA_optionSLL,
+        HETHER_nut2tn_oneof,
+                {
+                _SRC(NUT_LINK0_GLOBAL_ADDRESS);
+                _DST(oneof(_IPV6_SOLNODE_MCAST(tnv6()),
+		_IPV6_SOLNODE_MCAST(TN_LINK0_GLOBAL_ADDRESS),
+		tnv6(),
+		TN_LINK0_GLOBAL_ADDRESS));
+                HopLimit=255;
+        },
+                {
+                TargetAddress=tnv6();
+                option=_SLLOPT_nut;
+        }
+)
+
+// TN  <-- NUT (global address)
+//
+// Neighber Solicitasion
+// TN  <-- NUT (global address)
+// TargetAddress: TN's link local address
+// Option : none
+
+FEM_icmp6_ns (
+        ns_nut2tn_sourceGA_targetLLA_nooption,
+        HETHER_nut2tn_oneof,
+                {
+                _SRC(NUT_LINK0_GLOBAL_ADDRESS);
+                _DST(oneof(_IPV6_SOLNODE_MCAST(tnv6()),
+		_IPV6_SOLNODE_MCAST(TN_LINK0_GLOBAL_ADDRESS),
+		tnv6(),
+		TN_LINK0_GLOBAL_ADDRESS));
+                HopLimit=255;
+        },
+                {
+                TargetAddress=tnv6();
+        }
+)
+
+// #######################
+// For Router1
+// #######################
+
+// TN  <-- NUT (link local address)
+//
+// Neighber Solicitasion
+// TN  <-- NUT (link local address)
+// TargetAddress: TN's link local address
+// Option : Source link layer address
+
+FEM_icmp6_ns (ns_nut2tn_sourceLLA_targetLLA_optionSLL_RT1, 
+        HETHER_nut2tn_oneof_RT1,
+                {
+                _SRC(nutv6());
+                _DST(oneof(_IPV6_SOLNODE_MCAST(rt1_lla), rt1_lla));
+                HopLimit=255;
+        },
+                {
+                TargetAddress=rt1_lla;
+                option=_SLLOPT_nut;
+        }
+)
+
+// TN  <-- NUT (link local address)
+//
+// Neighber Solicitasion
+// TN  <-- NUT (link local address)
+// TargetAddress: TN's link local address
+// Option : none
+
+FEM_icmp6_ns (
+        ns_nut2tn_sourceLLA_targetLLA_nooption_RT1,
+        HETHER_nut2tn_oneof_RT1,
+                {
+                _SRC(nutv6());
+                _DST(oneof(_IPV6_SOLNODE_MCAST(rt1_lla), rt1_lla));
+                HopLimit=255;
+        },
+                {
+                TargetAddress=rt1_lla;
+        }
+)
+
+
+// TN  <-- NUT (global address)
+//
+// Neighber Solicitasion
+// TN  <-- NUT (global address)
+// TargetAddress: TN's link local address
+// Option : Source link layer address
+
+FEM_icmp6_ns (
+        ns_nut2tn_sourceGA_targetLLA_optionSLL_RT1,
+        HETHER_nut2tn_oneof_RT1,
+                {
+                _SRC(NUT_LINK0_GLOBAL_ADDRESS);
+                _DST(oneof( _IPV6_SOLNODE_MCAST(rt1_lla), rt1_lla, rt1_ga));
+                HopLimit=255;
+        },
+                {
+                TargetAddress=rt1_lla;
+                option=_SLLOPT_nut;
+        }
+)
+
+// TN  <-- NUT (global address)
+//
+// Neighber Solicitasion
+// TN  <-- NUT (global address)
+// TargetAddress: TN's link local address
+// Option : none
+
+FEM_icmp6_ns (
+        ns_nut2tn_sourceGA_targetLLA_nooption_RT1,
+        HETHER_nut2tn_oneof_RT1,
+                {
+                _SRC(NUT_LINK0_GLOBAL_ADDRESS);
+                _DST(oneof( _IPV6_SOLNODE_MCAST(rt1_lla), rt1_lla, rt1_ga));
+                HopLimit=255;
+        },
+                {
+                TargetAddress=rt1_lla;
+        }
+)
+
+// #######################
+// For Router2
+// #######################
+
+// TN  <-- NUT (link local address)
+//
+// Neighber Solicitasion
+// TN  <-- NUT (link local address)
+// TargetAddress: TN's link local address
+// Option : Source link layer address
+
+FEM_icmp6_ns (ns_nut2tn_sourceLLA_targetLLA_optionSLL_RT2, 
+        HETHER_nut2tn_oneof_RT2,
+                {
+                _SRC(nutv6());
+                _DST(oneof(_IPV6_SOLNODE_MCAST(rt2_lla), rt2_lla));
+                HopLimit=255;
+        },
+                {
+                TargetAddress=rt2_lla;
+                option=_SLLOPT_nut;
+        }
+)
+
+// TN  <-- NUT (link local address)
+//
+// Neighber Solicitasion
+// TN  <-- NUT (link local address)
+// TargetAddress: TN's link local address
+// Option : none
+
+FEM_icmp6_ns (
+        ns_nut2tn_sourceLLA_targetLLA_nooption_RT2,
+        HETHER_nut2tn_oneof_RT2,
+                {
+                _SRC(nutv6());
+                _DST(oneof(_IPV6_SOLNODE_MCAST(rt2_lla), rt2_lla));
+                HopLimit=255;
+        },
+                {
+                TargetAddress=rt2_lla;
+        }
+)
+
+
+// TN  <-- NUT (global address)
+//
+// Neighber Solicitasion
+// TN  <-- NUT (global address)
+// TargetAddress: TN's link local address
+// Option : Source link layer address
+
+FEM_icmp6_ns (
+        ns_nut2tn_sourceGA_targetLLA_optionSLL_RT2,
+        HETHER_nut2tn_oneof_RT2,
+                {
+                _SRC(NUT_LINK0_GLOBAL_ADDRESS);
+                _DST(oneof( _IPV6_SOLNODE_MCAST(rt2_lla), rt2_lla, rt2_ga));
+                HopLimit=255;
+        },
+                {
+                TargetAddress=rt2_lla;
+                option=_SLLOPT_nut;
+        }
+)
+
+// TN  <-- NUT (global address)
+//
+// Neighber Solicitasion
+// TN  <-- NUT (global address)
+// TargetAddress: TN's link local address
+// Option : none
+
+FEM_icmp6_ns (
+        ns_nut2tn_sourceGA_targetLLA_nooption_RT2,
+        HETHER_nut2tn_oneof_RT2,
+                {
+                _SRC(NUT_LINK0_GLOBAL_ADDRESS);
+                _DST(oneof( _IPV6_SOLNODE_MCAST(rt2_lla), rt2_lla, rt2_ga));
+                HopLimit=255;
+        },
+                {
+                TargetAddress=rt2_lla;
+        }
+)
+
+
+
+// ##############################
+// Target=Global
+// ##############################
+
+// #######################
+// Tester Itself
+// #######################
+
+// TN  <-- NUT (link local address)
+//
+// Neighber Solicitasion
+// TN  <-- NUT (link local address)
+// TargetAddress: TN's global address
+// Option : Source link layer address
+
+FEM_icmp6_ns (
+        ns_nut2tn_sourceLLA_targetGA_optionSLL,
+        HETHER_nut2tn_oneof,
+                {
+                _SRC(nutv6());
+                _DST(oneof(_IPV6_SOLNODE_MCAST(tnv6()),
+		_IPV6_SOLNODE_MCAST(TN_LINK0_GLOBAL_ADDRESS),
+		tnv6(),
+		TN_LINK0_GLOBAL_ADDRESS));
+                HopLimit=255;
+        },
+                {
+                TargetAddress=TN_LINK0_GLOBAL_ADDRESS;
+                option=_SLLOPT_nut;
+        }
+)
+
+// #######################
+// Host1
+// #######################
+
+FEM_icmp6_ns (
+        ns_nut2tn_sourceLLA_targetGA_optionSLL_HOST1,
+        HETHER_nut2tn_HOST1,
+                {
+                _SRC(nutv6());
+                _DST(oneof( _IPV6_SOLNODE_MCAST(TN_HOST1_LINK1_GLOBAL_ADDRESS),
+		TN_HOST1_LINK1_GLOBAL_ADDRESS));
+                HopLimit=255;
+        },
+                {
+                TargetAddress=TN_HOST1_LINK1_GLOBAL_ADDRESS;
+                option=_SLLOPT_nut;
+        }
+)
+
+// #######################
+// Tester Itself
+// #######################
+
+// TN  <-- NUT (link local address)
+//
+// Neighber Solicitasion
+// TN  <-- NUT (link local address)
+// TargetAddress: TN's global address
+// Option : none
+
+FEM_icmp6_ns (
+        ns_nut2tn_sourceLLA_targetGA_nooption,
+        HETHER_nut2tn_oneof,
+                {
+                _SRC(nutv6());
+                _DST(oneof(_IPV6_SOLNODE_MCAST(tnv6()),
+		_IPV6_SOLNODE_MCAST(TN_LINK0_GLOBAL_ADDRESS),
+		tnv6(),
+		TN_LINK0_GLOBAL_ADDRESS));
+                HopLimit=255;
+        },
+                {
+                TargetAddress=TN_LINK0_GLOBAL_ADDRESS;
+        }
+)
+
+// #######################
+// Host1
+// #######################
+
+FEM_icmp6_ns (
+        ns_nut2tn_sourceLLA_targetGA_nooption_HOST1,
+        HETHER_nut2tn_HOST1,
+                {
+                _SRC(nutv6());
+                _DST(oneof( _IPV6_SOLNODE_MCAST(TN_HOST1_LINK1_GLOBAL_ADDRESS),
+		TN_HOST1_LINK1_GLOBAL_ADDRESS));
+                HopLimit=255;
+        },
+                {
+                TargetAddress=TN_HOST1_LINK1_GLOBAL_ADDRESS;
+        }
+)
+
+// #######################
+// Tester Itself
+// #######################
+
+// TN  <-- NUT (global address)
+//
+// Neighber Solicitasion
+// TN  <-- NUT (global address)
+// TargetAddress: TN's global address
+// Option : Source link layer address
+
+FEM_icmp6_ns (
+        ns_nut2tn_sourceGA_targetGA_optionSLL,
+        HETHER_nut2tn_oneof,
+                {
+                _SRC(NUT_LINK0_GLOBAL_ADDRESS);
+                _DST(oneof(_IPV6_SOLNODE_MCAST(tnv6()),
+		_IPV6_SOLNODE_MCAST(TN_LINK0_GLOBAL_ADDRESS),
+		tnv6(),
+		TN_LINK0_GLOBAL_ADDRESS));
+                HopLimit=255;
+        },
+                {
+                TargetAddress=TN_LINK0_GLOBAL_ADDRESS;
+                option=_SLLOPT_nut;
+        }
+)
+
+// #######################
+// Host1
+// #######################
+
+FEM_icmp6_ns (
+        ns_nut2tn_sourceGA_targetGA_optionSLL_HOST1,
+        HETHER_nut2tn_HOST1,
+                {
+                _SRC(NUT_LINK0_GLOBAL_ADDRESS);
+                _DST(oneof( _IPV6_SOLNODE_MCAST(TN_HOST1_LINK1_GLOBAL_ADDRESS),
+		TN_HOST1_LINK1_GLOBAL_ADDRESS));
+                HopLimit=255;
+        },
+                {
+                TargetAddress=TN_HOST1_LINK1_GLOBAL_ADDRESS;
+                option=_SLLOPT_nut;
+        }
+)
+
+// #######################
+// Tester Itself
+// #######################
+
+// TN  <-- NUT (global address)
+//
+// Neighber Solicitasion
+// TN  <-- NUT (global address)
+// TargetAddress: TN's global address
+// Option : none
+
+FEM_icmp6_ns (
+        ns_nut2tn_sourceGA_targetGA_nooption,
+        HETHER_nut2tn_oneof,
+                {
+                _SRC(NUT_LINK0_GLOBAL_ADDRESS);
+                _DST(oneof(_IPV6_SOLNODE_MCAST(tnv6()),
+		_IPV6_SOLNODE_MCAST(TN_LINK0_GLOBAL_ADDRESS),
+		tnv6(),
+		TN_LINK0_GLOBAL_ADDRESS));
+                HopLimit=255;
+        },
+                {
+                TargetAddress=TN_LINK0_GLOBAL_ADDRESS;
+      }
+)
+
+
+// #######################
+// Host1
+// #######################
+
+FEM_icmp6_ns (
+        ns_nut2tn_sourceGA_targetGA_nooption_HOST1,
+        HETHER_nut2tn_HOST1,
+                {
+                _SRC(NUT_LINK0_GLOBAL_ADDRESS);
+                _DST(oneof( _IPV6_SOLNODE_MCAST(TN_HOST1_LINK1_GLOBAL_ADDRESS),
+		TN_HOST1_LINK1_GLOBAL_ADDRESS));
+                HopLimit=255;
+        },
+                {
+                TargetAddress=TN_HOST1_LINK1_GLOBAL_ADDRESS;
+      }
+)
+
+
+// #######################################
+//
+// Neighboor Advertisement Messages
+//
+// #######################################
+//
+
+// #######################
+// Tester Itself
+// #######################
+
+// Neighber Advertisement 
+// TN  (link local address)--> NUT (link local address)
+// TargetAddress: TN's link local address
+
+FEM_icmp6_na (
+        na_tn2nut_sourceLLA_destinationLLA_targetLLA,
+        _HETHER_tn2nut,
+                {
+                _SRC(tnv6());
+                _DST(nutv6());
+                HopLimit=255;
+        },
+                {
+		RFlag=1;
+                SFlag=1;
+                OFlag=1;
+                TargetAddress=tnv6();
+                option=_TLLOPT_tn;
+        }
+)
+
+// Neighber Advertisement 
+// TN  (global address)--> NUT (global address)
+// TargetAddress: TN's link local address
+
+FEM_icmp6_na (
+        na_tn2nut_sourceGA_destinationGA_targetLLA,
+        _HETHER_tn2nut,
+                {
+                _SRC(TN_LINK0_GLOBAL_ADDRESS);
+                _DST(NUT_LINK0_GLOBAL_ADDRESS);
+                HopLimit=255;
+        },
+                {
+		RFlag=1;
+                SFlag=1;
+                OFlag=1;
+                TargetAddress=tnv6();
+                option=_TLLOPT_tn;
+        }
+)
+
+// Neighber Advertisement 
+// TN  (link local address)--> NUT (link local address) T:global
+// TargetAddress: TN's global address
+
+FEM_icmp6_na (
+        na_tn2nut_sourceLLA_destinationLLA_targetGA,
+        _HETHER_tn2nut,
+                {
+                _SRC(tnv6());
+                _DST(nutv6());
+                HopLimit=255;
+        },
+                {
+		RFlag=1;
+                SFlag=1;
+                OFlag=1;
+                TargetAddress=TN_LINK0_GLOBAL_ADDRESS;
+                option=_TLLOPT_tn;
+       }
+)
+
+//
+// Neighber Advertisement 
+// TN  (global address)--> NUT (global address)
+// TargetAddress: TN's global address
+
+FEM_icmp6_na (
+        na_tn2nut_sourceGA_destinationGA_targetGA,
+        _HETHER_tn2nut,
+                {
+                _SRC(TN_LINK0_GLOBAL_ADDRESS);
+                _DST(NUT_LINK0_GLOBAL_ADDRESS);
+                HopLimit=255;
+        },
+                {
+		RFlag=1;
+                SFlag=1;
+                OFlag=1;
+                TargetAddress=TN_LINK0_GLOBAL_ADDRESS;
+                option=_TLLOPT_tn;
+        }
+)
+
+// #######################
+// Router1
+// #######################
+
+// Neighber Advertisement 
+// TN  (link local address)--> NUT (link local address)
+// TargetAddress: TN's link local address
+
+FEM_icmp6_na (
+        na_tn2nut_sourceLLA_destinationLLA_targetLLA_RT1,
+        _HETHER_tn2nut_RT1,
+                {
+                _SRC(rt1_lla);
+                _DST(nutv6());
+                HopLimit=255;
+        },
+                {
+		RFlag=1;
+                SFlag=1;
+                OFlag=1;
+                TargetAddress=rt1_lla;
+                option=_TLLOPT_tn_RT1;
+        }
+)
+
+// Neighber Advertisement 
+// TN  (global address)--> NUT (global address)
+// TargetAddress: TN's link local address
+
+FEM_icmp6_na (
+        na_tn2nut_sourceGA_destinationGA_targetLLA_RT1,
+        _HETHER_tn2nut_RT1,
+                {
+                _SRC(rt1_ga);
+                _DST(NUT_LINK0_GLOBAL_ADDRESS);
+                HopLimit=255;
+        },
+                {
+		RFlag=1;
+                SFlag=1;
+                OFlag=1;
+                TargetAddress=rt1_lla;
+                option=_TLLOPT_tn_RT1;
+        }
+)
+
+// Neighber Advertisement 
+// TN  (link local address)--> NUT (link local address) T:global
+// TargetAddress: TN's global address
+
+FEM_icmp6_na (
+        na_tn2nut_sourceLLA_destinationLLA_targetGA_RT1,
+        _HETHER_tn2nut_RT1,
+                {
+                _SRC(rt1_lla);
+                _DST(nutv6());
+                HopLimit=255;
+        },
+                {
+		RFlag=1;
+                SFlag=1;
+                OFlag=1;
+                TargetAddress=rt1_ga;
+                option=_TLLOPT_tn_RT1;
+       }
+)
+
+// Neighber Advertisement 
+// TN  (global address)--> NUT (global address)
+// TargetAddress: TN's global address
+
+FEM_icmp6_na (
+        na_tn2nut_sourceGA_destinationGA_targetGA_RT1,
+        _HETHER_tn2nut_RT1,
+                {
+                _SRC(rt1_ga);
+                _DST(NUT_LINK0_GLOBAL_ADDRESS);
+                HopLimit=255;
+        },
+                {
+		RFlag=1;
+                SFlag=1;
+                OFlag=1;
+                TargetAddress=rt1_ga;
+                option=_TLLOPT_tn_RT1;
+        }
+)
+
+
+// #######################
+// Router2
+// #######################
+
+// Neighber Advertisement 
+// TN  (link local address)--> NUT (link local address)
+// TargetAddress: TN's link local address
+
+FEM_icmp6_na (
+        na_tn2nut_sourceLLA_destinationLLA_targetLLA_RT2,
+        _HETHER_tn2nut_RT2,
+                {
+                _SRC(rt2_lla);
+                _DST(nutv6());
+                HopLimit=255;
+        },
+                {
+		RFlag=1;
+                SFlag=1;
+                OFlag=1;
+                TargetAddress=rt2_lla;
+                option=_TLLOPT_tn_RT2;
+        }
+)
+
+// Neighber Advertisement 
+// TN  (global address)--> NUT (global address)
+// TargetAddress: TN's link local address
+
+FEM_icmp6_na (
+        na_tn2nut_sourceGA_destinationGA_targetLLA_RT2,
+        _HETHER_tn2nut_RT2,
+                {
+                _SRC(rt2_ga);
+                _DST(NUT_LINK0_GLOBAL_ADDRESS);
+                HopLimit=255;
+        },
+                {
+		RFlag=1;
+                SFlag=1;
+                OFlag=1;
+                TargetAddress=rt2_lla;
+                option=_TLLOPT_tn_RT2;
+        }
+)
+
+// Neighber Advertisement 
+// TN  (link local address)--> NUT (link local address) T:global
+// TargetAddress: TN's global address
+
+FEM_icmp6_na (
+        na_tn2nut_sourceLLA_destinationLLA_targetGA_RT2,
+        _HETHER_tn2nut_RT2,
+                {
+                _SRC(rt2_lla);
+                _DST(nutv6());
+                HopLimit=255;
+        },
+                {
+		RFlag=1;
+                SFlag=1;
+                OFlag=1;
+                TargetAddress=rt2_ga;
+                option=_TLLOPT_tn_RT2;
+       }
+)
+
+// Neighber Advertisement 
+// TN  (global address)--> NUT (global address)
+// TargetAddress: TN's global address
+
+FEM_icmp6_na (
+        na_tn2nut_sourceGA_destinationGA_targetGA_RT2,
+        _HETHER_tn2nut_RT2,
+                {
+                _SRC(rt2_ga);
+                _DST(NUT_LINK0_GLOBAL_ADDRESS);
+                HopLimit=255;
+        },
+                {
+		RFlag=1;
+                SFlag=1;
+                OFlag=1;
+                TargetAddress=rt2_ga;
+                option=_TLLOPT_tn_RT2;
+        }
+)
+
+
+// #########################################
+// Router Solicitation Messages
+// #########################################
+//
+
+FEM_icmp6_rs(RS_from_NUT,_HETHER_nut2allrouters,
+        {   
+         _SRC(nutv6());
+         _DST(v6(_ALLROUTERS_MCAST_ADDR));
+         HopLimit=255;
+        },
+        {
+        }
+)
+
+FEM_icmp6_rs(RS_from_NUT_wSLL, _HETHER_nut2allrouters,
+        {
+         _SRC(nutv6());
+         _DST(v6(_ALLROUTERS_MCAST_ADDR));
+         HopLimit=255;
+        },
+        {
+         option=_SLLOPT_nut;
+        }
+)
+
+// #########################################
+// Router Advertisement Messages
+// #########################################
+//
+// Router Advertisement 
+// TN  (link local ddress)--> NUT (all node multicast  address)
+//
+
+FEM_icmp6_ra (
+        ra,
+        _HETHER_tn2allnodes,
+                {
+                _SRC(tnv6());
+                _DST(v6(_LLOCAL_ALLNODES_MCAST_ADDR));
+                HopLimit=255;
+        },
+                {
+                CurHopLimit=64;
+                LifeTime=3600;
+                ReachableTime=600000;
+                RetransTimer=1005;
+                option=_SLLOPT_tn;
+                option=prefix_ra;
+        }
+)
+
+Opt_ICMPv6_Prefix prefix_ra { 
+        LFlag=1;
+        AFlag=1;
+        ValidLifetime=3600005;
+        PreferredLifetime=3600005;
+        Prefix=v6(_GLOBAL0_UCAST_PRFX);
+}
+
+
+//
+// Router Advertisement 
+// TN  (link local ddress)--> NUT (all node multicast  address)
+//
+
+FEM_icmp6_ra (
+        RA_RT1,
+        _HETHER_tn2allnodes_RT1,
+                {
+                _SRC(rt1_lla);
+                _DST(v6(_LLOCAL_ALLNODES_MCAST_ADDR));
+                HopLimit=255;
+        },
+                {
+                Preference=PREF;
+                LifeTime=ROUTER_LT;
+                CurHopLimit=64;
+                ReachableTime=600000;
+                RetransTimer=1005;
+                option=_SLLOPT_tn_RT1;
+                option=prefix_ra;
+        }
+)
+
+//
+// Router Advertisement 
+// TN  (link local ddress)--> NUT (all node multicast  address)
+//
+
+FEM_icmp6_ra (
+        RA_RT2,
+        _HETHER_tn2allnodes_RT2,
+                {
+                _SRC(rt2_lla);
+                _DST(v6(_LLOCAL_ALLNODES_MCAST_ADDR));
+                HopLimit=255;
+        },
+                {
+                Preference=PREF;
+                LifeTime=ROUTER_LT;
+                CurHopLimit=64;
+                ReachableTime=600000;
+                RetransTimer=1005;
+                option=_SLLOPT_tn_RT2;
+                option=prefix_ra;
+        }
+)
+
+//
+// Router Advertisement 
+// TN  (link local ddress)--> NUT (all node multicast  address)
+// Short Reachable time
+//
+
+FEM_icmp6_ra (
+        RA_RT1_SHORTREACH,
+        _HETHER_tn2allnodes_RT1,
+                {
+                _SRC(rt1_lla);
+                _DST(v6(_LLOCAL_ALLNODES_MCAST_ADDR));
+                HopLimit=255;
+        },
+                {
+                Preference=PREF;
+                LifeTime=ROUTER_LT;
+                CurHopLimit=64;
+                ReachableTime=10000; //10sec
+                RetransTimer=1005;
+                option=_SLLOPT_tn_RT1;
+                option=prefix_ra;
+        }
+)
+
+//
+// Router Advertisement 
+// TN  (link local ddress)--> NUT (all node multicast  address)
+// Short Reachable time
+//
+
+FEM_icmp6_ra (
+        RA_RT2_SHORTREACH,
+        _HETHER_tn2allnodes_RT2,
+                {
+                _SRC(rt2_lla);
+                _DST(v6(_LLOCAL_ALLNODES_MCAST_ADDR));
+                HopLimit=255;
+        },
+                {
+                Preference=PREF;
+                LifeTime=ROUTER_LT;
+                CurHopLimit=64;
+                ReachableTime=10000; //10sec
+                RetransTimer=1005;
+                option=_SLLOPT_tn_RT2;
+                option=prefix_ra;
+        }
+)
+

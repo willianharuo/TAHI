@@ -1,0 +1,422 @@
+#!/usr/bin/perl
+#
+# Copyright (C) 2003 Yokogawa Electric Corporation, 
+# INTAP(Interoperability Technology Association
+# for Information Processing, Japan).  All rights reserved.
+# 
+# Redistribution and use of this software in source and binary forms, with 
+# or without modification, are permitted provided that the following 
+# conditions and disclaimer are agreed and accepted by the user:
+# 
+# 1. Redistributions of source code must retain the above copyright 
+# notice, this list of conditions and the following disclaimer.
+# 
+# 2. Redistributions in binary form must reproduce the above copyright 
+# notice, this list of conditions and the following disclaimer in the 
+# documentation and/or other materials provided with the distribution.
+# 
+# 3. Neither the names of the copyrighters, the name of the project which 
+# is related to this software (hereinafter referred to as "project") nor 
+# the names of the contributors may be used to endorse or promote products 
+# derived from this software without specific prior written permission.
+# 
+# 4. No merchantable use may be permitted without prior written 
+# notification to the copyrighters. However, using this software for the 
+# purpose of testing or evaluating any products including merchantable 
+# products may be permitted without any notification to the copyrighters.
+# 
+# 
+# 
+# THIS SOFTWARE IS PROVIDED BY THE COPYRIGHTERS, THE PROJECT AND 
+# CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING 
+# BUT NOT LIMITED THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS 
+# FOR A PARTICULAR PURPOSE, ARE DISCLAIMED.  IN NO EVENT SHALL THE 
+# COPYRIGHTERS, THE PROJECT OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, 
+# INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES 
+# (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR 
+# SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) 
+# HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN 
+# CONTRACT,STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) 
+# ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF 
+# THE POSSIBILITY OF SUCH DAMAGE.
+#
+# $TAHI: ct/router-select/rtinfo_64_LOW96.seq,v 1.5 2003/04/22 04:26:46 akisada Exp $
+# $TINY: RA_GA_Success.seq,v 1.14 2002/03/05 17:13:55 miyata Exp $
+# 
+########################################################################
+
+BEGIN { $V6evalTool::TestVersion = '$Name: REL_2_1_1 $ '; }
+use V6evalTool;
+use ROUTE;
+
+#------------------------------------------------------
+#----- get sequence arguments
+#------------------------------------------------------
+#$howto_initNUT="none";
+#$send = "ok";
+
+#$DAD_GA=$DAD_LCNA::DADTransmitsGA;
+#$DAD_GA =~ tr/a-z/A-Z/ ;
+
+checkNUT(host);
+
+#----- test condition
+$IF=Link0;                 # network interface
+$totalret=0;               # return value
+$retval=0;               # return value
+
+vCPP("-DPREF=$ROUTE::MED -DROUTER_LT=$ROUTE::ROUTER_LIFE_TIME");
+
+#---------------------------------------
+#----- initialize NUT
+#---------------------------------------
+vLogHTML("*** Initialization phase ***");
+
+flushtables($V6evalTool::NutDef{System});
+
+#----- start Capturing
+vLogHTML("*** Testing phase ***");
+vCapture($IF);
+vClear($IF);
+
+#---------------------------------------
+#----- LLA PHASE
+#----- Wait DAD NS from NUT or timeout
+#---------------------------------------
+vLog("TN wait DAD NS(DADNS_from_NUT) from NUT for $ROUTE::wait_dadns [sec],");
+
+#%ret=vRecv($IF,$WAIT_DADNS,0,0,DADNS_from_NUT);
+#if ($ret{status} != 0){
+#    vLog("TN wait DAD NS from NUT for $wait_dadns, but NUT had not transmit DAD NS");
+#    seqNG();
+#}
+
+#vLog("TN received DAD NS from NUT.");
+
+
+
+#---------------------------------------
+#----- Wait RS from NUT or timeout
+#---------------------------------------
+
+#%ret=vRecv($IF,$MORE_WAIT_RS,0,0,RS_from_NUT);
+#if ($ret{status} != 0){
+#    vLog("TN wait RS from NUT for $MORE_WAIT_RS, but NUT had not transmit RS");
+#    seqNG();
+#}
+
+#vLog("OK! Let's go ahead!");
+
+
+
+#---------------------------------------
+#----- SEND RA ( PrefixLength 96 vs 64 )
+#---------------------------------------
+vLogHTML("<B><Font size=+1>Route Option PrefixLength<BR>
+96 vs. 64</FONT></B>");
+#---------------------------------------
+#      Router1
+#---------------------------------------
+vClear($IF);
+vSend($IF, ra_RT1_link1_LOW_RTINFO_LOW_60_96); vSleep($ROUTE::RA_DELAY);
+vSend($IF, na_tn2nut_sourceLLA_destinationLLA_targetLLA_RT1);
+
+#---------------------------------------
+#      Router2
+#---------------------------------------
+vClear($IF);
+vSend($IF, ra_RT2_link1_MED_RTINFO_MED_60); vSleep($ROUTE::RA_DELAY);
+vSend($IF, na_tn2nut_sourceLLA_destinationLLA_targetLLA_RT2);
+vSleep($ROUTE::NA_DELAY);
+
+#---------------------------------------
+#----- Ping from Host1
+#---------------------------------------
+$retval=SendRecv($IF,echo_req_Host1_via_RT1,$IF,echo_rep_Host1_via_RT1);
+
+if ($retval != 0){
+    $totalret++;
+    vLog("TN did not receive ICMP Echo Reply to Host1 from NUT.");
+}else{
+    vLog("TN received ICMP Echo Reply to Host1 from NUT.");
+}
+
+
+#---------------------------------------
+#----- initialize NUT
+#---------------------------------------
+vLogHTML("*** Re-initialization phase ***");
+
+flushtables($V6evalTool::NutDef{System});
+
+#----- start Capturing
+vLogHTML("*** Testing phase ***");
+
+#---------------------------------------
+#----- SEND RA ( PrefixLength 64 vs 96 )
+#---------------------------------------
+vLogHTML("<B><Font size=+1>Route Option PrefixLength<BR>
+64 vs. 96</FONT></B>");
+#---------------------------------------
+#      Router1
+#---------------------------------------
+vClear($IF);
+vSend($IF, ra_RT1_link1_MED_RTINFO_MED_60); vSleep($ROUTE::RA_DELAY);
+vSend($IF, na_tn2nut_sourceLLA_destinationLLA_targetLLA_RT1);
+
+#---------------------------------------
+#      Router2
+#---------------------------------------
+vClear($IF);
+vSend($IF, ra_RT2_link1_LOW_RTINFO_LOW_60_96); vSleep($ROUTE::RA_DELAY);
+vSend($IF, na_tn2nut_sourceLLA_destinationLLA_targetLLA_RT2);
+vSleep($ROUTE::NA_DELAY);
+
+#---------------------------------------
+#----- Ping from Host1
+#---------------------------------------
+$retval=SendRecv($IF,echo_req_Host1_via_RT1,$IF,echo_rep_Host1_via_RT2);
+
+if ($retval != 0){
+    $totalret++;
+    vLog("TN did not receive ICMP Echo Reply to Host1 from NUT.");
+}else{
+    vLog("TN received ICMP Echo Reply to Host1 from NUT.");
+}
+
+
+if ($totalret != 0) {
+    vLog("NUT does not deal with Preference correctly.");
+    seqNG();
+}else{
+    vLog("NUT deals with Preference correctly.");
+    seqOK();
+}
+
+
+##########################################################
+
+
+#end
+########################################################################
+__END__
+
+
+=head1 NAME
+
+=begin html
+<PRE>
+RA w/ Preference=MED, Route Information Option(Link1:Preference=MED:PrefixLen=64) vs.
+RA w/ Preference=LOW, Route Information Option (Link1:Preference=LOW:PrefixLen=96) 
+</PRE>
+
+=end html
+
+=head1 TARGET
+
+=begin html
+<PRE>
+Host
+</PRE>
+
+=end html
+
+=head1 SYNOPSIS
+
+=begin html
+<PRE>
+<A HREF="./rtinfo_64_LOW96.seq">rtinfo_64_LOW96.seq</A> [-tooloption ...] -pkt <A HREF="./RTINFO.def">RTINFO.def</A>
+</PRE>
+<BLOCKQUOTE>
+<PRE>
+-tooloption: v6eval tool option
+</PRE>
+</BLOCKQUOTE>
+
+=end html
+
+=head1 TOPOLOGY
+
+=begin html
+<BLOCKQUOTE>
+<PRE>
+                                     HOST2
+                                       |
+            ---------------+-----------+--- Link2
+                           |
+                          RT3        HOST1
+                           |           |
+            -------+-------+-------+---+--- Link1
+                   |               |
+                   RT2            RT1
+                   |               |
+            -------+-------+-------+------- Link0
+                           |
+                          NUT
+</PRE>
+</BLOCKQUOTE>
+<BLOCKQUOTE>
+<TABLE BORDER>
+<TR>
+<TD><TT>Link0</TT></TD>
+<TD><TT>global</TT></TD>
+<TD><TT>3ffe:501:ffff:100::/64</TT></TD>
+<TD><TT>Testing link</TT></TD>
+</TR>
+<TR>
+<TD><TT>Link1</TT></TD>
+<TD><TT>global</TT></TD>
+<TD><TT>3ffe:501:ffff:101::/64</TT></TD>
+<TD><TT>other link</TT></TD>
+</TR>
+<TR>
+<TD><TT>Link2</TT></TD>
+<TD><TT>global</TT></TD>
+<TD><TT>3ffe:501:ffff:102::/64</TT></TD>
+<TD><TT>other link</TT></TD>
+</TR>
+<TR>
+<TD ROWSPAN="3"><TT>RT1(Link0)</TT></TD>
+<TD><TT>global</TT></TD>
+<TD><TT>3ffe:501:ffff:100::a0a0</TT></TD>
+<TD ROWSPAN="3"><TT>Alternative router</TT></TD>
+</TR>
+<TR>
+<TD><TT>link-local</TT></TD>
+<TD><TT>fe80::200:ff:fe00:a0a0</TT></TD>
+</TR>
+<TR>
+<TD><TT>ether</TT></TD>
+<TD><TT>00:00:00:00:a0:a0</TT></TD>
+</TR>
+<TR>
+<TD ROWSPAN="3"><TT>RT2(Link0)</TT></TD>
+<TD><TT>global</TT></TD>
+<TD><TT>3ffe:501:ffff:100::a1a1</TT></TD>
+<TD ROWSPAN="3"><TT>Alternative router</TT></TD>
+</TR>
+<TR>
+<TD><TT>link-local</TT></TD>
+<TD><TT>fe80::200:ff:fe00:a1a1</TT></TD>
+</TR>
+<TR>
+<TD><TT>ether</TT></TD>
+<TD><TT>00:00:00:00:a1:a1</TT></TD>
+</TR>
+<TR>
+<TD><TT>HOST1</TT></TD>
+<TD><TT>global</TT></TD>
+<TD><TT>3ffe:501:ffff:101::1</TT></TD>
+<TD><TT>Host on Link1</TT></TD>
+</TR>
+<TR>
+<TD><TT>HOST2</TT></TD>
+<TD><TT>global</TT></TD>
+<TD><TT>3ffe:501:ffff:102::1</TT></TD>
+<TD><TT>Host on Link2</TT></TD>
+</TR>
+</TABLE>
+</BLOCKQUOTE>
+
+=end html
+
+=head1 INITIALIZATION
+
+=begin html
+<BLOCKQUOTE>
+<PRE>
+Flush Default Router List
+Flush Routing Table
+Flush Neighbor Cache
+Flush Prefix List
+</PRE>
+</BLOCKQUOTE>
+
+=end html
+
+=head1 TEST PROCEDURE
+
+=begin html
+<BLOCKQUOTE>
+<PRE>
+NUT                RT1                RT2   HOST1
+ |                  |                  |      |
+ =====================(INITIALIZE)=============
+ |                  |                  |      |
+ | Link1PrefixLen=96|                  |      |
+ |     Link1Pref=LOW|                  |      |
+ |          Pref=LOW|                  |      |
+ |<-----------------+                  |      | RA from RT1
+ |                  | Link1PrefixLen=64|      |
+ |                  |     Link1Pref=MED|      |
+ |                  |          Pref=MED|      |
+ |<------------------------------------+      | RA from RT2
+ |                  |                  |      |
+ |<-----------------#-------------------------+ Echo Request(via RT1)
+ +------------------#------------------------>| Echo Reply  (via RT1)(*1)
+ |                  |                  |      |
+ |                  |                  |      |
+ =====================(INITIALIZE)=============
+ |                  |                  |      |
+ | Link1PrefixLen=64|                  |      |
+ |     Link1Pref=MED|                  |      |
+ |          Pref=MED|                  |      |
+ |<-----------------+                  |      | RA from RT1
+ |                  | Link1PrefixLen=96|      |
+ |                  |     Link1Pref=LOW|      |
+ |                  |          Pref=LOW|      |
+ |<------------------------------------+      | RA from RT2
+ |                  |                  |      |
+ |<-----------------#-------------------------+ Echo Request(via RT1)
+ +-------------------------------------#----->| Echo Reply  (via RT2)(*2)
+ |                  |                  |      |
+ |                  |                  |      |
+</PRE>
+</BLOCKQUOTE>
+<P>
+<PRE>
+(INITIALIZATION)
+1. RT1 Sends RA w/ Preference=LOW, RouteInfoOption(Link1:PrefixLen=96:Preference=LOW)
+2. RT2 Sends RA w/ Preference=MED, RouteInfoOption(Link1:PrefixLen=64:Preference=MED)
+3. HOST1 Sends Echo Request
+4. NUT Sends Echo Reply to HOST1 via RT1(*1)
+(INITIALIZATION)
+5. RT1 Sends RA w/ Preference=MED, RouteInfoOption(Link1:PrefixLen=64:Preference=MED)
+6. RT2 Sends RA w/ Preference=LOW, RouteInfoOption(Link1:PrefixLen=96:Preference=LOW)
+7. HOST1 Sends Echo Request
+8. NUT Sends Echo Reply to HOST1 via RT2(*2)
+</PRE>
+<P>
+<P>
+<PRE>
+[NOTIFICATION]
+LinkANY=(::/0)
+</PRE>
+
+=end html
+
+=head1 JUDGEMENT
+
+=begin html
+<PRE>
+(*1)
+    PASS: HOST1 receives Echo Reply via RT1
+</PRE>
+<PRE>
+(*2)
+    PASS: HOST2 receives Echo Reply via RT2
+</PRE>
+
+=end html
+
+=head1 SEE ALSO
+
+=begin html
+<PRE>
+<A HREF="./ROUTE.pm">ROUTE.pm</A>
+<A HREF="./RTINFO.def">RTINFO.def</A>
+</PRE>
+
+=end html
+
+=cut

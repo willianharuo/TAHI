@@ -1,0 +1,272 @@
+<HTML>
+<HEAD>
+<TITLE>ReceivingBA132 - MN receives Binding Acknowledgement</TITLE>
+<LINK REV="made" HREF="mailto:hackers@FreeBSD.org">
+</HEAD>
+
+<BODY>
+
+<!-- INDEX BEGIN -->
+<!--
+
+<UL>
+
+	<LI><A HREF="#NAME">NAME</A>
+	<LI><A HREF="#TARGET">TARGET</A>
+	<LI><A HREF="#SYNOPSIS">SYNOPSIS</A>
+	<LI><A HREF="#TOPOLOGY">TOPOLOGY</A>
+	<LI><A HREF="#TEST_PROCEDURE">TEST PROCEDURE</A>
+	<LI><A HREF="#JUDGEMENT">JUDGEMENT</A>
+	<LI><A HREF="#REFERENCE">REFERENCE</A>
+</UL>
+-->
+<!-- INDEX END -->
+
+<P>
+<H1><A NAME="NAME">NAME</A></H1>
+<P>
+ReceivingBA132 - MN receives Binding <CODE>Acknowledgement(error</CODE>
+132)
+
+<P>
+<HR>
+<H1><A NAME="TARGET">TARGET</A></H1>
+<PRE>
+Host
+</PRE>
+
+<P>
+<HR>
+<H1><A NAME="SYNOPSIS">SYNOPSIS</A></H1>
+<PRE>
+<A HREF="./ReceivingBA132.seq">ReceivingBA132.seq</A> [-tooloption ...] -pkt <A HREF="./MN_Common.def">MN_Common.def</A>
+</PRE>
+<BLOCKQUOTE>
+<PRE>
+-tooloption: v6eval tool option
+</PRE>
+</BLOCKQUOTE>
+
+<P>
+<HR>
+<H1><A NAME="TOPOLOGY">TOPOLOGY</A></H1>
+<PRE>
+                                      |
+                                      R       TN
+                                      |       |
+                              --------+-------+--------------- LinkZ
+</PRE>
+<BR><BR><BR>
+<PRE>
+                                      |
+                                      R2             NUT2
+                                      |               |
+                              --------+---------------+------- LinkY
+</PRE>
+<BR><BR><BR>
+<PRE>
+                                      |       |
+                                      HA2     R1     NUT1
+                                      |       |       |
+                              --------+-------+-------+------- LinkX
+</PRE>
+<BR><BR><BR>
+<PRE>
+                          |           |
+             NUT0        HA1          HA0
+              |           |           |
+Link0 --------+-----------+-----------+-----------------------
+</PRE>
+<BLOCKQUOTE>
+<TABLE BORDER>
+<TR>
+<TD><TT>Link0</TT></TD>
+<TD><TT>3ffe:501:ffff:100::/64</TT></TD>
+<TD><TT>home link</TT></TD>
+</TR>
+<TR>
+<TD><TT>LinkX</TT></TD>
+<TD><TT>3ffe:501:ffff:102::/64</TT></TD>
+<TD><TT>&nbsp;</TT></TD>
+</TR>
+<TR>
+<TD><TT>LinkY</TT></TD>
+<TD><TT>3ffe:501:ffff:103::/64</TT></TD>
+<TD><TT>&nbsp;</TT></TD>
+</TR>
+<TR>
+<TD><TT>LinkZ</TT></TD>
+<TD><TT>3ffe:501:ffff:104::/64</TT></TD>
+<TD><TT>&nbsp;</TT></TD>
+</TR>
+<TR>
+<TD><TT>HA0(Link0)</TT></TD>
+<TD><TT>3ffe:501:ffff:100:200:ff:fe00:a1a1/64</TT></TD>
+<TD><TT>&nbsp;</TT></TD>
+</TR>
+<TR>
+<TD><TT>HA1(Link0)</TT></TD>
+<TD><TT>3ffe:501:ffff:100:200:ff:fe00:a2a2/64</TT></TD>
+<TD><TT>&nbsp;</TT></TD>
+</TR>
+<TR>
+<TD><TT>HA2(LinkX)</TT></TD>
+<TD><TT>3ffe:501:ffff:102:200:ff:fe00:a3a3</TT></TD>
+<TD><TT>&nbsp;</TT></TD>
+</TR>
+<TR>
+<TD><TT>R1(LinkX)</TT></TD>
+<TD><TT>3ffe:501:ffff:102:200:ff:fe00:a4a4</TT></TD>
+<TD><TT>&nbsp;</TT></TD>
+</TR>
+<TR>
+<TD><TT>R2(LinkY)</TT></TD>
+<TD><TT>3ffe:501:ffff:103:200:ff:fe00:a5a5</TT></TD>
+<TD><TT>&nbsp;</TT></TD>
+</TR>
+<TR>
+<TD><TT>TN(LinkZ)</TT></TD>
+<TD><TT>3ffe:501:ffff:104:200:ff:fe00:a6a6</TT></TD>
+<TD><TT>&nbsp;</TT></TD>
+</TR>
+</TABLE>
+</BLOCKQUOTE>
+
+<P>
+<HR>
+<H1><A NAME="TEST_PROCEDURE">TEST PROCEDURE</A></H1>
+<P>
+<PRE>
+<B>MN receives Binding Acknowledgement(error 132)</B>
+</PRE>
+<P>
+<PRE>
+        HA0    NUT0     R1      R2
+        |       |       |       | 
+        | ----> |       |       | RA(H bit)
+        |       |       |       | 
+        |      NUT1     |       | 
+        |       | <---- |       | RA
+        |       |       |       | 
+        | <---- |       |       | Binding Update (*1)
+        | ----> |       |       | Binding Acknowledgement
+        |       |       |       | 
+        |      NUT2     |       |
+        |       | <------------ | RA
+        |       |       |       |
+        | <---- |       |       | Binding Update (*2)
+        | ----> |       |       | Binding Acknowledgement (w/ error=132)
+        |       |       |       | * 132=home registration not supported
+        |       |       |       | 
+        |       |       |       | NUT SHOULD NOT send BU to HA0 (*3)
+        |       |       |       | 
+        |      NUT1     |       | 
+        |       | <---- |       | RA
+        |       |       |       | 
+        |       |       |       | NUT SHOULD NOT send BU to HA0 (*4)
+        |       |       |       | 
+</PRE>
+
+<P>
+<HR>
+<H1><A NAME="JUDGEMENT">JUDGEMENT</A></H1>
+<PRE>
+(*1) PASS: HA0 receives Binding Update
+</PRE>
+<PRE>
+(*2) PASS: HA0 receives Binding Update
+</PRE>
+<PRE>
+(*3) PASS: HA0 doesn't receive Binding Update
+</PRE>
+<PRE>
+(*4) PASS: HA0 doesn't receive Binding Update
+</PRE>
+
+<P>
+<HR>
+<H1><A NAME="REFERENCE">REFERENCE</A></H1>
+<PRE>
+<A HREF="./draft-ietf-mobileip-ipv6-20.txt">draft-ietf-mobileip-ipv6-20.txt</A>
+</PRE>
+<PRE>
+11.7.3 Receiving Binding Acknowledgements
+</PRE>
+<PRE>
+   Upon receiving a packet carrying a Binding Acknowledgement, a mobile
+   node MUST validate the packet according to the following tests:
+</PRE>
+<PRE>
+   o  The packet meets the authentication requirements for Binding
+      Acknowledgements, defined in Section 6.1.8 and Section 5.  That
+      is, if the Binding Update was sent to the home agent, underlying
+      IPsec protection is used.  If the Binding Update was sent to the
+      MUST be present and have a valid value.
+</PRE>
+<PRE>
+      be the last option and MUST not have trailing padding.
+</PRE>
+<PRE>
+   o  The Sequence Number field matches the Sequence Number sent by the
+      mobile node to this destination address in an outstanding Binding
+      Update.
+</PRE>
+<PRE>
+   Any Binding Acknowledgement not satisfying all of these tests MUST be
+   silently ignored.
+</PRE>
+<PRE>
+   When a mobile node receives a packet carrying a valid Binding
+   Acknowledgement, the mobile node MUST examine the Status field as
+   follows:
+</PRE>
+<PRE>
+   o  If the Status field indicates that the Binding Update was accepted
+      (the Status field is less than 128), then the mobile node MUST
+      update the corresponding entry in its Binding Update List to
+      indicate that the Binding Update has been acknowledged; the mobile
+      node MUST then stop retransmitting the Binding Update.  In
+      addition, if the value specified in the Lifetime field in the
+      Binding Acknowledgement is less than the Lifetime value sent in
+      the Binding Update being acknowledged, then the mobile node MUST
+      subtract the difference between these two Lifetime values from the
+      remaining lifetime for the binding as maintained in the
+      corresponding Binding Update List entry (with a minimum value for
+      the Binding Update List entry lifetime of 0).  That is, if the
+      Lifetime value sent in the Binding Update was L_update, the
+      Lifetime value received in the Binding Acknowledgement was L_ack,
+      and the current remaining lifetime of the Binding Update List
+      entry is L_remain, then the new value for the remaining lifetime
+      of the Binding Update List entry should be
+</PRE>
+<PRE>
+         max((L_remain - (L_update - L_ack)), 0)
+</PRE>
+<PRE>
+      where max(X, Y) is the maximum of X and Y.  The effect of this
+      step is to correctly manage the mobile node's view of the
+      binding's remaining lifetime (as maintained in the corresponding
+      Binding Update List entry) so that it correctly counts down from
+      the Lifetime value given in the Binding Acknowledgement, but with
+      the timer countdown beginning at the time that the Binding Update
+      was sent.  Mobile nodes SHOULD send a new Binding Update well
+      before the expiration of this period in order to extend the
+      lifetime.  This helps to avoid disruptions in communications,
+      which might otherwise be caused by network delays or clock drift.
+</PRE>
+<PRE>
+   o  If the Status field indicates that the Binding Update was rejected
+      (the Status field is greater than or equal to 128), then the
+      mobile node SHOULD record in its Binding Update List that future
+      Binding Updates SHOULD NOT be sent to this destination.
+</PRE>
+<PRE>
+      Optionally, the mobile node MAY then take steps to correct the
+      cause of the error and retransmit the Binding Update (with a new
+      Sequence Number value), subject to the rate limiting restriction
+      specified in Section 11.8.
+</PRE>
+
+</BODY>
+
+</HTML>

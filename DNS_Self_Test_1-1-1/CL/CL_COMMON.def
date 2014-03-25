@@ -1,0 +1,420 @@
+//
+// $Copyright_v6PC$
+//
+// $Name: REL_1_1_1 $
+//
+// $TAHI: ct-dns/dns/CL/CL_COMMON.def,v 1.1.1.1 2006/06/02 05:15:40 akisada Exp $
+//
+//////////////////////////////////////////////////////////////////////////////////////
+
+#ifndef NUT_PORT
+#define NUT_PORT 10000
+#endif
+
+#ifndef ACK
+#define ACK 0
+#endif
+
+//
+// NS or ARP Request
+//
+
+#ifdef NUT_ADDR_FAMILY_INET
+
+FEM_hdr_arp(
+	arp_from_nut,
+	_HETHER_nut2broadcast,
+	{
+		Operation=1;
+		SenderHAddr=nutether();
+		SenderPAddr=v4(NUT_CL1_NETZ_ADDR);
+		TargetHAddr=any; // not only 00:00:00:00:00:00
+		// but also ff:ff:ff:ff:ff:ff (same as ether_src)
+		// is allowed
+		TargetPAddr=v4(TN_ROUTER_NETZ_ADDR);
+	}
+)
+
+#else
+
+#ifndef NETZ_PREFIX
+#define NETZ_PREFIX 3ffe:501:ffff:100::
+#endif
+
+#ifndef NETZ_PREFIX_LEN
+#define NETZ_PREFIX_LEN 64
+#endif
+
+
+//======================================================================
+//
+// NS
+//
+
+FEM_icmp6_ns(
+	ns_multi,
+	_HETHER_nut2tnsolnode,
+	{
+		HopLimit      = 255;
+//		_SRC(oneof(nutv6(), v6merge(NETZ_PREFIX, NETZ_PREFIX_LEN, nutv6())));
+		_SRC(oneof(nutv6(), v6(NUT_CL1_NETZ_ADDR)));
+		_DST(_IPV6_SOLNODE_MCAST(v6(TN_ROUTER_NETZ_ADDR)));
+	},
+	{
+		TargetAddress = v6(TN_ROUTER_NETZ_ADDR);
+		option        = _SLLOPT_nut;
+	}
+)
+
+
+FEM_icmp6_ns(
+	ns_multi_llt,
+	_HETHER_nut2tnsolnode,
+	{
+		HopLimit      = 255;
+//		_SRC(oneof(nutv6(), v6merge(NETZ_PREFIX, NETZ_PREFIX_LEN, nutv6())));
+		_SRC(oneof(nutv6(), v6(NUT_CL1_NETZ_ADDR)));
+		_DST(_IPV6_SOLNODE_MCAST(v6(TN_ROUTER_NETZ_ADDR)));
+	},
+	{
+		TargetAddress = tnv6();
+		option        = _SLLOPT_nut;
+	}
+)
+
+
+FEM_icmp6_ns(
+	ns_uni,
+	_HETHER_nut2tn,
+	{
+		HopLimit      = 255;
+//		_SRC(oneof(nutv6(), v6merge(NETZ_PREFIX, NETZ_PREFIX_LEN, nutv6())));
+		_SRC(oneof(nutv6(), v6(NUT_CL1_NETZ_ADDR)));
+		_DST(v6(TN_ROUTER_NETZ_ADDR));
+	},
+	{
+		TargetAddress = v6(TN_ROUTER_NETZ_ADDR);
+	}
+)
+
+
+FEM_icmp6_ns(
+	ns_uni_sll,
+	_HETHER_nut2tn,
+	{
+		HopLimit      = 255;
+		_SRC(oneof(nutv6(), v6(NUT_CL1_NETZ_ADDR)));
+		_DST(v6(TN_ROUTER_NETZ_ADDR));
+	},
+	{
+		TargetAddress = v6(TN_ROUTER_NETZ_ADDR);
+		option        = _SLLOPT_nut;
+	}
+)
+
+FEM_icmp6_ns(
+	ns_uni_tll_sll,
+	_HETHER_nut2tn,
+	{
+		HopLimit      = 255;
+		_SRC(nutv6());
+		_DST(tnv6());
+	},
+	{
+		TargetAddress = tnv6();
+		option        = _SLLOPT_nut;
+	}
+)
+
+
+//======================================================================
+//
+// NA
+//
+
+FEM_icmp6_na(
+	na,
+	_HETHER_tn2nut,
+	{
+		HopLimit        = 255;
+		_SRC(v6(TN_ROUTER_NETZ_ADDR));
+		_DST(v6(NUT_CL1_NETZ_ADDR));
+	},
+	{
+		RFlag           = 1;
+		SFlag           = 1;
+		OFlag           = 1;
+		TargetAddress   = v6(TN_ROUTER_NETZ_ADDR);
+		option          = _TLLOPT_tn;
+	}
+)
+
+
+FEM_icmp6_na(
+	na_llt,
+	_HETHER_tn2nut,
+	{
+		HopLimit        = 255;
+		_SRC(v6(TN_ROUTER_NETZ_ADDR));
+		_DST(v6(NUT_CL1_NETZ_ADDR));
+	},
+	{
+		RFlag		= 1;
+		SFlag		= 1;
+		OFlag		= 1;
+		TargetAddress	= tnv6();
+		option		= _TLLOPT_tn;
+	}
+)
+
+
+FEM_icmp6_na(
+	na_ll_llt,
+	_HETHER_tn2nut,
+	{
+		HopLimit        = 255;
+		_SRC(tnv6());
+		_DST(nutv6());
+	},
+	{
+		RFlag		= 1;
+		SFlag		= 1;
+		OFlag		= 1;
+		TargetAddress	= tnv6();
+		option		= _TLLOPT_tn;
+	}
+)
+
+#endif
+
+//
+// NA or ARP Reply
+//
+
+#ifdef NUT_ADDR_FAMILY_INET
+FEM_hdr_arp(
+        arp_to_nut,
+	_HETHER_tn2nut,
+        {
+                Operation=2;
+                SenderHAddr=tnether();
+                SenderPAddr=v4(TN_ROUTER_NETZ_ADDR);
+                TargetHAddr=nutether();
+                TargetPAddr=v4(NUT_CL1_NETZ_ADDR);
+        }
+)
+
+#else
+
+#endif
+
+//======================================================================
+//
+// Echo Request from Router
+//
+
+#ifndef ECHO_DATA
+#define ECHO_DATA echo_data8
+#endif
+
+#ifdef NUT_ADDR_FAMILY_INET
+
+FEM_icmp4_echo_request(
+	echo_request_from_nut,
+	_HETHER_nut2tn,
+	{
+		_SRC(v4(NUT_CL1_NETZ_ADDR));
+		_DST(v4(TN_AP_NETY_ADDR));
+	},
+	{
+		Identifier = any;
+		SequenceNumber = any;
+		payload = any;
+	}
+)
+
+FEM_icmp4_echo_reply(
+	echo_reply_to_nut,
+	_HETHER_tn2nut,
+	{
+		_SRC(v4(TN_AP_NETY_ADDR));
+		_DST(v4(NUT_CL1_NETZ_ADDR));
+	},
+	{
+		payload = ECHO_DATA;
+	}
+)
+
+FEM_icmp4_destination_unreachable(
+	echo_reply_unreachable_to_nut,
+	_HETHER_tn2nut,
+	{
+		_SRC(v4(TN_AP_NETY_ADDR));
+		_DST(v4(NUT_CL1_NETZ_ADDR));
+	},
+	{
+		payload = ECHO_DATA;
+	}
+)
+
+#else
+
+FEM_icmp6_echo_request(
+	echo_request_from_nut,
+	_HETHER_nut2tn,
+	{
+		_SRC(v6(NUT_CL1_NETZ_ADDR));
+		_DST(v6(TN_AP_NETY_ADDR));
+	},
+	{
+		Identifier = any;
+		SequenceNumber = any;
+		payload = any;
+	}
+)
+
+FEM_icmp6_echo_reply(
+	echo_reply_to_nut,
+	_HETHER_tn2nut,
+	{
+		_SRC(v6(TN_AP_NETY_ADDR));
+		_DST(v6(NUT_CL1_NETZ_ADDR));
+	},
+	{
+		payload = ECHO_DATA;
+	}
+)
+
+FEM_icmp6_destination_unreachable(
+	echo_reply_unreachable_to_nut,
+	_HETHER_tn2nut,
+	{
+		_SRC(v6(TN_AP_NETY_ADDR));
+		_DST(v6(NUT_CL1_NETZ_ADDR));
+	},
+	{
+		payload = ECHO_DATA;
+	}
+)
+
+#endif
+
+//======================================================================
+//
+// Default Payload Data ("EchoData")
+//
+
+Payload echo_data8 {
+        data = { 0x45, 0x63, 0x68, 0x6f, 0x44, 0x61, 0x74, 0x61};
+}
+
+
+//======================================================================
+//
+// Syn Request from NUT
+//
+
+
+#ifdef NUT_ADDR_FAMILY_INET
+
+FEM_tcp4(
+        syn_request_from_nut,
+        _HETHER_nut2tn,
+        {
+                _SRC(v4(NUT_CL1_NETZ_ADDR));
+                _DST(v4(TN_AP_NETY_ADDR));
+        },
+        {
+                _SPORT(any);
+                _DPORT(53);
+                SequenceNumber       = any;
+                SYNFlag              = 1;
+		Window               = any;
+		UrgentPointer        = stop;
+        },
+        {
+		header = _HDR_TCP_NAME(syn_request_from_nut);
+		payload = any;
+        }
+)
+
+#else
+FEM_tcp6(
+        syn_request_from_nut,
+        _HETHER_nut2tn,
+        {
+                _SRC(v6(NUT_CL1_NETZ_ADDR));
+                _DST(v6(TN_AP_NETY_ADDR));
+        },
+        {
+                _SPORT(any);
+                _DPORT(53);
+                SequenceNumber       = any;
+                SYNFlag              = 1;
+		Window               = any;
+		UrgentPointer        = stop;
+        },
+        {
+		header = _HDR_TCP_NAME(syn_request_from_nut);
+		payload = any;
+        }
+)
+
+#endif
+
+//======================================================================
+//
+// TCP Reset Request from TN
+//
+
+
+#ifdef NUT_ADDR_FAMILY_INET
+
+FEM_tcp4(
+        reset_request_to_nut,
+        _HETHER_tn2nut,
+        {
+		_SRC(v4(TN_AP_NETY_ADDR));
+		_DST(v4(NUT_CL1_NETZ_ADDR));
+        },
+        {
+                _SPORT(53);
+                _DPORT(NUT_PORT);
+                SequenceNumber       = 0;
+	        AcknowledgmentNumber = ACK;
+		ACKFlag              = 1;
+                RSTFlag               = 1;
+        },
+        {
+                header = _HDR_TCP_NAME(reset_request_to_nut);
+                payload = payload_syn;
+        }
+)
+
+#else
+FEM_tcp6(
+        reset_request_to_nut,
+        _HETHER_tn2nut,
+        {
+		_SRC(v6(TN_AP_NETY_ADDR));
+		_DST(v6(NUT_CL1_NETZ_ADDR));
+        },
+        {
+                _SPORT(53);
+                _DPORT(NUT_PORT);
+                SequenceNumber       = 0;
+	        AcknowledgmentNumber = ACK;
+		ACKFlag              = 1;
+                RSTFlag              = 1;
+        },
+        {
+                header = _HDR_TCP_NAME(reset_request_to_nut);
+                payload = payload_syn;
+        }
+)
+
+#endif
+
+Payload payload_syn {
+        data = {};
+}

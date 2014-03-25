@@ -1,0 +1,1077 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<title>CL_RFC3403_4_NAPTR_services - Selection of services</title>
+<link rev="made" href="mailto:akisada@ifrit.64translator.com" />
+</head>
+
+<body style="background-color: white">
+
+<p><a name="__index__"></a></p>
+<!-- INDEX BEGIN -->
+<!--
+
+<ul>
+
+	<li><a href="#name">NAME</a></li>
+	<li><a href="#verification_points">VERIFICATION POINTS</a></li>
+	<li><a href="#target">TARGET</a></li>
+	<li><a href="#synopsis">SYNOPSIS</a></li>
+	<li><a href="#initialization">INITIALIZATION</a></li>
+	<li><a href="#test_procedure">TEST PROCEDURE</a></li>
+	<li><a href="#judgment">JUDGMENT</a></li>
+	<li><a href="#termination">TERMINATION</a></li>
+	<li><a href="#reference">REFERENCE</a></li>
+</ul>
+-->
+<!-- INDEX END -->
+
+<p>
+</p>
+<h1><a name="name">NAME</a></h1>
+<pre>
+        CL_RFC3403_4_NAPTR_services - Selection of services</pre>
+<p>
+</p>
+<hr />
+<h1><a name="verification_points">VERIFICATION POINTS</a></h1>
+<pre>
+        Verify a NUT process when NUT received message that includes multiple 
+        Naming Authority Pointer (NAPTR) Resource Records (RR) containing 
+        different services.</pre>
+<UL>
+        <DD><LI>SERVICES
+	<UL>
+        <DD>   A <character-string> that specifies the Service Parameters applicable 
+	<DD>   to this this delegation path.  It is up to the Application Specification 
+	<DD>   to specify the values found in this field.
+	</UL>
+	</LI><BR>
+        <DD><LI>Application specification define what the allowed values for the Services 
+        <DD>and Protocols fields are.
+	</LI><BR>
+        <DD><LI>Enumservice specifications contain the functional specification
+        <DD>(i.e., what it can be used for), the valid protocols, and the URI
+        <DD>schemes that may be returned.  Note that there is no implicit mapping
+        <DD>between the textual string "type" or "subtype" in the grammar for the
+        <DD>Enumservice and URI schemes or protocols.  The mapping, if any, must
+        <DD>be made explicit in the specification for the Enumservice itself.  A
+        <DD>registration of a specific Type also has to specify the Subtypes allowed.
+	</LI><BR>
+	<DD><LI>In Enumservice case, the only exception to the registration rule is for
+        <DD>Types and Subtypes used for experimental purposes, and those are to 
+        <DD>start with the facet "X-".  These elements are unregistered, experimental, 
+        <DD>and should be used only with the active agreement of the parties exchanging them.
+	</LI><BR>
+	<DD><LI> In SIP case, a client MUST discard any service fields that identify
+        <DD>a resolution service whose value is not "D2X", for values of X that
+        <DD>indicate transport protocols supported by the client.  
+	</LI>
+	</UL><p>
+</p>
+<hr />
+<h1><a name="target">TARGET</a></h1>
+<pre>
+        Client (ADVANCED)</pre>
+<p>
+</p>
+<hr />
+<h1><a name="synopsis">SYNOPSIS</a></h1>
+<PRE>
+	<A HREF="./CL_RFC3403_4_NAPTR_services.seq">CL_RFC3403_4_NAPTR_services.seq</A> [-tooloption ...]: KOI tool option
+	See also <A HREF="../DNSConfig.pm">DNSConfig.pm</A>
+</PRE><p>
+</p>
+<hr />
+<h1><a name="initialization">INITIALIZATION</a></h1>
+<ul>
+	<li><STRONG>Network Topology</STRONG></li> 
+	<PRE>
+        AP Server1(TN):A.example.com     DNS Server1(TN)
+          |3ffe:501:ffff:101::10           |3ffe:501:ffff:101::20
+          |192.168.1.10                    |192.168.1.20
+          |                                |
+Net-y   --+--------+-----------------------+-------- 3ffe:501:ffff:101::/64 
+                   |                                 192.168.1/24
+                   |
+                   |
+                 ROUTER1(TN)
+                   |3ffe:501:ffff:100::1
+                   |192.168.0.1
+                   |
+Net-z   --+--------+-------------------------------- 3ffe:501:ffff:100::/64 
+          |                                          192.168.0/24
+        DNS Client1(NUT)
+           3ffe:501:ffff:100:XXXX
+           192.168.0.10
+	<BR>
+	XXXX: EUI64 address
+	</PRE>
+	<p></p>
+	<li><STRONG>Setup</STRONG></li>
+	<PRE>
+	Set the DNS Server1 (TN)'s address on DNS Client1 (NUT) as above mentioned Network Topology.
+	DNS Client1 (NUT) needs a SIP user agent as DDDS application. 
+	Note that it doesn't use SIP Proxy.
+	<BR>
+	Application Unique String (AUS): +81-90-1111-0004
+	Converted to the Key: 819011110004
+	Used domain-name to retrieve Rewrite Rules as NAPTR records: 4.0.0.0.1.1.1.1.0.9.1.8.e164.arpa.
+	</PRE>
+	</UL><p>
+</p>
+<hr />
+<h1><a name="test_procedure">TEST PROCEDURE</a></h1>
+<pre>
+        This test sequence is following.</pre>
+<pre>
+    DNS Client1 (NUT)                               DNS Server1 (TN)
+        |                                               |
+        | Invoke some application                       |
+        |    on NUT (Ex. SIP UA)                        |
+        |                                               |
+        |----------------------------------------------&gt;|
+        | 1. Send standard query                        |
+        |    QNAME=&quot;4.0.0.0.1.1.1.1.0.9.1.8.e164.arpa.&quot; |
+        |    QTYPE=NAPTR                                |
+        |                                               |
+        |&lt;----------------------------------------------|
+        | 2. Send standard response                     |
+        |                                               |
+        |----------------------------------------------&gt;|
+        | 3. Send standard query                        |
+        |    QNAME=&quot;sip.example.com&quot;                    |
+        |    QTYPE=NAPTR                                |  
+        |                                               |
+        |&lt;----------------------------------------------|
+        | 4. Send standard query response               |
+        |                                               |
+        |----------------------------------------------&gt;|
+        | 5. Send standard query                        |
+        |    QNAME=&quot;_sip._udp.sip.example.com&quot;          |
+        |    QTYPE=SRV                                  |  
+        |                                               |
+        v                                               v</pre>
+<pre>
+        1. DNS Client1 (NUT) sends a standard query with QNAME = &quot;4.0.0.0.1.1.1.1.0.9.1.8.e164.arpa.&quot; type = NAPTR 
+        2. DNS Server1 (NUT) transmits a response to DNS Client1 (NUT) with:</pre>
+<pre>
+           $ORIGIN 4.0.0.0.1.1.1.1.0.9.1.8.e164.arpa.
+            ;;       order pref flags service    regexp                                      replacement
+            IN NAPTR 0     0    &quot;u&quot;   &quot;E2U+X-hoge&quot;  &quot;!^.*$!X-hoge:info4@hoge.example.com!i&quot;     .
+            IN NAPTR 0     0    &quot;u&quot;   &quot;E2U+sip&quot;  &quot;!^.*$!sip:info4@sip.example.com!i&quot;     .</pre>
+<pre>
+        3. DNS Client1 (NUT) sends a standard query with QNAME = &quot;sip.example.com.&quot; type = NAPTR.
+        4. DNS Server1 (NUT) transmits a response to DNS Client1 (NUT) with:</pre>
+<pre>
+           $ORIGIN sip.example.com.
+            ;;       order pref flags service   regexp  replacement
+            IN NAPTR 0     0    &quot;s&quot;   &quot;http+L2R&quot; &quot;&quot;      http.tcp.sip.example.com.
+            IN NAPTR 0     0    &quot;s&quot;   &quot;SIP+X2T&quot; &quot;&quot;      _sip._tcp.sip.example.com.
+            IN NAPTR 0     0    &quot;s&quot;   &quot;SIP+D2U&quot; &quot;&quot;      _sip._udp.sip.example.com.</pre>
+<pre>
+        5. DNS Client1 (NUT) sends a standard query with QNAME = &quot;_sip._udp.sip.example.com.&quot; type = SRV. Judgment (Check *5)</pre>
+<UL>
+	<DD><LI>Packet Description</LI><BR>
+	<BR>
+	<DD>1st packet.
+	<P></P>
+	<DD><TABLE BORDER="1">
+		<TBODY>
+		<TR>
+			<TD COLSPAN="3">
+			<CENTER>Standard query from DNS Client1 (NUT) to Server1 (TN) </CENTER>
+			</TD>
+		</TR>
+		<TR>
+			<TD ROWSPAN="2">IP Header</TD>
+			<TD>Source Address</TD>
+			<TD>NUT_NETZ</TD>
+		</TR>
+		<TR>
+			<TD>Destination Address</TD>
+			<TD>SV1_NETY</TD>
+		</TR>
+		<TR>
+			<TD COLSPAN="1" ROWSPAN="2">UDP Header</TD>
+			<TD>Src Port</TD>
+			<TD>ANY</TD>
+		</TR>
+		<TR>
+			<TD>Dst Port</TD>
+			<TD>53</TD>
+		</TR>
+		<TR>
+			<TD COLSPAN="1" ROWSPAN="13">DNS Header</TD>
+			<TD>ID</TD>
+			<TD>ANY</TD>
+		</TR>
+		<TR>
+			<TD>QR</TD>
+			<TD>0</TD>
+		</TR>
+		<TR>
+			<TD>OPCODE</TD>
+			<TD>0</TD>
+		</TR>
+		<TR>
+			<TD>AA</TD>
+			<TD>0</TD>
+		</TR>
+		<TR>
+			<TD>TC</TD>
+			<TD>0</TD>
+		</TR>
+		<TR>
+			<TD>RD</TD>
+			<TD>0</TD>
+		</TR>
+		<TR>
+			<TD>RA</TD>
+			<TD>0</TD>
+		</TR>
+		<TR>
+			<TD>Z</TD>
+			<TD>0</TD>
+		</TR>
+		<TR>
+			<TD>RCODE</TD>
+			<TD>0</TD>
+		</TR>
+		<TR>
+			<TD>QDCOUNT</TD>
+			<TD>1</TD>
+		</TR>
+		<TR>
+			<TD>ANCOUNT</TD>
+			<TD>0</TD>
+		</TR>
+		<TR>
+			<TD>NSCOUNT</TD>
+			<TD>0</TD>
+		</TR>
+		<TR>
+			<TD>ARCOUNT</TD>
+			<TD>0</TD>
+		</TR>
+		<TR>
+			<TD COLSPAN="1" ROWSPAN="3">DNS Question section</TD>
+			<TD>QNAME</TD>
+			<TD>4.0.0.0.1.1.1.1.0.9.1.8.e164.arpa.</TD>
+		</TR>
+		<TR>
+			<TD>QTYPE</TD>
+			<TD>NAPTR (0x0023)</TD>
+		</TR>
+		<TR>
+			<TD>QCLASS</TD>
+			<TD>IN (0x0001)</TD>
+		</TR>
+		</TBODY>
+	</TABLE>
+	<BR>
+	<DD>2nd packet.
+	<P></P>
+	<DD><TABLE BORDER="1">
+		<TBODY>
+		<TR>
+			<TD COLSPAN="3">
+			<CENTER>Standard query response from DNS Server1 (TN) to Client1 (NUT)</CENTER>
+			</TD>
+		</TR>
+		<TR>
+			<TD ROWSPAN="2">IP Header</TD>
+			<TD>Source Address</TD>
+			<TD>SV1_NETY</TD>
+		</TR>
+		<TR>
+			<TD>Destination Address</TD>
+			<TD>NUT_NETZ</TD>
+		</TR>
+		<TR>
+			<TD COLSPAN="1" ROWSPAN="2">UDP Header</TD>
+			<TD>Src Port</TD>
+			<TD>53</TD>
+		</TR>
+		<TR>
+			<TD>Dst Port</TD>
+			<TD>Value that NUT uses</TD>
+		</TR>
+		<TR>
+			<TD COLSPAN="1" ROWSPAN="13">DNS Header</TD>
+			<TD>ID</TD>
+			<TD>Value that NUT uses</TD>
+		</TR>
+		<TR>
+			<TD>QR</TD>
+			<TD>1</TD>
+		</TR>
+		<TR>
+			<TD>OPCODE</TD>
+			<TD>0</TD>
+		</TR>
+		<TR>
+			<TD>AA</TD>
+			<TD>1</TD>
+		</TR>
+		<TR>
+			<TD>TC</TD>
+			<TD>0</TD>
+		</TR>
+		<TR>
+			<TD>RD</TD>
+			<TD>0</TD>
+		</TR>
+		<TR>
+			<TD>RA</TD>
+			<TD>0</TD>
+		</TR>
+		<TR>
+			<TD>Z</TD>
+			<TD>0</TD>
+		</TR>
+		<TR>
+			<TD>RCODE</TD>
+			<TD>0</TD>
+		</TR>
+		<TR>
+			<TD>QDCOUNT</TD>
+			<TD>1</TD>
+		</TR>
+		<TR>
+			<TD>ANCOUNT</TD>
+			<TD>1</TD>
+		</TR>
+		<TR>
+			<TD>NSCOUNT</TD>
+			<TD>1</TD>
+		</TR>
+		<TR>
+			<TD>ARCOUNT</TD>
+			<TD>2</TD>
+		</TR>
+		<TR>
+			<TD COLSPAN="1" ROWSPAN="3">DNS Question section</TD>
+			<TD>QNAME</TD>
+			<TD>4.0.0.0.1.1.1.1.0.9.1.8.e164.arpa.</TD>
+		</TR>
+		<TR>
+			<TD>QTYPE</TD>
+			<TD>NAPTR (0x0023)</TD>
+		</TR>
+		<TR>
+			<TD>QCLASS</TD>
+			<TD>IN (0x0001)</TD>
+		</TR>
+		<TR>
+			<TD COLSPAN="1" ROWSPAN="11">DNS Answer section</TD>
+			<TD>NAME</TD>
+			<TD>4.0.0.0.1.1.1.1.0.9.1.8.e164.arpa. (Pointer 0xC00C)</TD>
+		</TR>
+		<TR>
+			<TD>TYPE</TD>
+			<TD>NAPTR (0x0023)</TD>
+		</TR>
+		<TR>
+			<TD>CLASS</TD>
+			<TD>IN (0x0001)</TD>
+		</TR>
+		<TR>
+			<TD>TTL</TD>
+			<TD>86400sec</TD>
+		</TR>
+		<TR>
+			<TD>RDLENGTH</TD>
+			<TD>56</TD>
+		</TR>
+		<TR>
+			<TD>ORDER</TD>
+			<TD>0</TD>
+		</TR>
+		<TR>
+			<TD>PREFERENCE</TD>
+			<TD>0</TD>
+		</TR>
+		<TR>
+			<TD>FLAGS</TD>
+			<TD>u</TD>
+		</TR>
+		<TR>
+			<TD>SERVICES</TD>
+			<TD><B>E2U+X-hoge</B></TD>
+		</TR>
+		<TR>
+			<TD>REGEXP</TD>
+			<TD>!^.*$!X-hoge:info4@hoge.example.com!i</TD>
+		</TR>
+		<TR>
+			<TD>REPLACEMENT</TD>
+			<TD>.</TD>
+		</TR>
+		<TR>
+			<TD COLSPAN="1" ROWSPAN="11">DNS Answer section</TD>
+			<TD>NAME</TD>
+			<TD>4.0.0.0.1.1.1.1.0.9.1.8.e164.arpa. (Pointer 0xC00C)</TD>
+		</TR>
+		<TR>
+			<TD>TYPE</TD>
+			<TD>NAPTR (0x0023)</TD>
+		</TR>
+		<TR>
+			<TD>CLASS</TD>
+			<TD>IN (0x0001)</TD>
+		</TR>
+		<TR>
+			<TD>TTL</TD>
+			<TD>86400sec</TD>
+		</TR>
+		<TR>
+			<TD>RDLENGTH</TD>
+			<TD>49</TD>
+		</TR>
+		<TR>
+			<TD>ORDER</TD>
+			<TD>0</TD>
+		</TR>
+		<TR>
+			<TD>PREFERENCE</TD>
+			<TD>0</TD>
+		</TR>
+		<TR>
+			<TD>FLAGS</TD>
+			<TD>u</TD>
+		</TR>
+		<TR>
+			<TD>SERVICES</TD>
+			<TD><B>E2U+sip</B></TD>
+		</TR>
+		<TR>
+			<TD>REGEXP</TD>
+			<TD>!^.*$!sip:info4@sip.example.com!i</TD>
+		</TR>
+		<TR>
+			<TD>REPLACEMENT</TD>
+			<TD>.</TD>
+		</TR>
+		<TR>
+			<TD COLSPAN="1" ROWSPAN="6">DNS Authority section</TD>
+			<TD>NAME</TD>
+			<TD>1.1.1.1.0.9.1.8.e164.arpa. (Pointer 0xC014)</TD>
+		</TR>
+		<TR>
+			<TD>TYPE</TD>
+			<TD>NS (0x0002)</TD>
+		</TR>
+		<TR>
+			<TD>CLASS</TD>
+			<TD>IN (0x0001)</TD>
+		</TR>
+		<TR>
+			<TD>TTL</TD>
+			<TD>86400sec</TD>
+		</TR>
+		<TR>
+			<TD>RDLENGTH</TD>
+			<TD>17</TD>
+		</TR>
+		<TR>
+			<TD>NSDNAME</TD>
+			<TD>NS1.example.com</TD>
+		</TR>
+		<TR>
+			<TD COLSPAN="1" ROWSPAN="6">DNS Additional section</TD>
+			<TD>NAME</TD>
+			<TD>NS1.example.com (Pointer 0xC0C0)</TD>
+		</TR>
+		<TR>
+			<TD>TYPE</TD>
+			<TD>A (0x0001)</TD>
+		</TR>
+		<TR>
+			<TD>CLASS</TD>
+			<TD>IN (0x0001)</TD>
+		</TR>
+		<TR>
+			<TD>TTL</TD>
+			<TD>86400sec</TD>
+		</TR>
+		<TR>
+			<TD>RDLENGTH</TD>
+			<TD>4</TD>
+		</TR>
+		<TR>
+			<TD>ADDRESS</TD>
+			<TD>192.168.1.20</TD>
+		</TR>
+		<TR>
+			<TD COLSPAN="1" ROWSPAN="6">DNS Additional section</TD>
+			<TD>NAME</TD>
+			<TD>NS1.example.com (Pointer 0xC0C0)</TD>
+		</TR>
+		<TR>
+			<TD>TYPE<BR>
+			</TD>
+			<TD>AAAA (0x001C)</TD>
+		</TR>
+		<TR>
+			<TD>CLASS</TD>
+			<TD>IN (0x0001)</TD>
+		</TR>
+		<TR>
+			<TD>TTL</TD>
+			<TD>86400sec</TD>
+		</TR>
+		<TR>
+			<TD>RDLENGTH</TD>
+			<TD>16</TD>
+		</TR>
+		<TR>
+			<TD>ADDRESS</TD>
+			<TD>3ffe:501:ffff:101::20</TD>
+		</TR>
+		</TBODY>
+	</TABLE>
+	<BR>
+	<DD>3rd packet.
+	<P></P>
+	<DD><TABLE BORDER="1">
+		<TBODY>
+		<TR>
+			<TD COLSPAN="3">
+			<CENTER>Standard query from DNS Client1 (NUT) to Server1 (TN) </CENTER>
+			</TD>
+		</TR>
+		<TR>
+			<TD ROWSPAN="2">IP Header</TD>
+			<TD>Source Address</TD>
+			<TD>NUT_NETZ</TD>
+		</TR>
+		<TR>
+			<TD>Destination Address</TD>
+			<TD>SV1_NETY</TD>
+		</TR>
+		<TR>
+			<TD COLSPAN="1" ROWSPAN="2">UDP Header</TD>
+			<TD>Src Port</TD>
+			<TD>ANY</TD>
+		</TR>
+		<TR>
+			<TD>Dst Port</TD>
+			<TD>53</TD>
+		</TR>
+		<TR>
+			<TD COLSPAN="1" ROWSPAN="13">DNS Header</TD>
+			<TD>ID</TD>
+			<TD>ANY</TD>
+		</TR>
+		<TR>
+			<TD>QR</TD>
+			<TD>0</TD>
+		</TR>
+		<TR>
+			<TD>OPCODE</TD>
+			<TD>0</TD>
+		</TR>
+		<TR>
+			<TD>AA</TD>
+			<TD>0</TD>
+		</TR>
+		<TR>
+			<TD>TC</TD>
+			<TD>0</TD>
+		</TR>
+		<TR>
+			<TD>RD</TD>
+			<TD>0</TD>
+		</TR>
+		<TR>
+			<TD>RA</TD>
+			<TD>0</TD>
+		</TR>
+		<TR>
+			<TD>Z</TD>
+			<TD>0</TD>
+		</TR>
+		<TR>
+			<TD>RCODE</TD>
+			<TD>0</TD>
+		</TR>
+		<TR>
+			<TD>QDCOUNT</TD>
+			<TD>1</TD>
+		</TR>
+		<TR>
+			<TD>ANCOUNT</TD>
+			<TD>0</TD>
+		</TR>
+		<TR>
+			<TD>NSCOUNT</TD>
+			<TD>0</TD>
+		</TR>
+		<TR>
+			<TD>ARCOUNT</TD>
+			<TD>0</TD>
+		</TR>
+		<TR>
+			<TD COLSPAN="1" ROWSPAN="3">DNS Question section</TD>
+			<TD>QNAME</TD>
+			<TD><B><I>sip.example.com.</I></B></TD>
+		</TR>
+		<TR>
+			<TD>QTYPE</TD>
+			<TD>NAPTR (0x0023)</TD>
+		</TR>
+		<TR>
+			<TD>QCLASS</TD>
+			<TD>IN (0x0001)</TD>
+		</TR>
+		</TBODY>
+	</TABLE>
+	<BR>
+	<DD>4th packet.
+	<P></P>
+	<DD><TABLE BORDER="1">
+		<TBODY>
+		<TR>
+			<TD COLSPAN="3">
+			<CENTER>Standard query response from DNS Server1 (TN) to Client1 (NUT)</CENTER>
+			</TD>
+		</TR>
+		<TR>
+			<TD ROWSPAN="2">IP Header</TD>
+			<TD>Source Address</TD>
+			<TD>SV1_NETY</TD>
+		</TR>
+		<TR>
+			<TD>Destination Address</TD>
+			<TD>NUT_NETZ</TD>
+		</TR>
+		<TR>
+			<TD COLSPAN="1" ROWSPAN="2">UDP Header</TD>
+			<TD>Src Port</TD>
+			<TD>53</TD>
+		</TR>
+		<TR>
+			<TD>Dst Port</TD>
+			<TD>Value that NUT uses</TD>
+		</TR>
+		<TR>
+			<TD COLSPAN="1" ROWSPAN="13">DNS Header</TD>
+			<TD>ID</TD>
+			<TD>Value that NUT uses</TD>
+		</TR>
+		<TR>
+			<TD>QR</TD>
+			<TD>1</TD>
+		</TR>
+		<TR>
+			<TD>OPCODE</TD>
+			<TD>0</TD>
+		</TR>
+		<TR>
+			<TD>AA</TD>
+			<TD>1</TD>
+		</TR>
+		<TR>
+			<TD>TC</TD>
+			<TD>0</TD>
+		</TR>
+		<TR>
+			<TD>RD</TD>
+			<TD>0</TD>
+		</TR>
+		<TR>
+			<TD>RA</TD>
+			<TD>0</TD>
+		</TR>
+		<TR>
+			<TD>Z</TD>
+			<TD>0</TD>
+		</TR>
+		<TR>
+			<TD>RCODE</TD>
+			<TD>0</TD>
+		</TR>
+		<TR>
+			<TD>QDCOUNT</TD>
+			<TD>1</TD>
+		</TR>
+		<TR>
+			<TD>ANCOUNT</TD>
+			<TD>1</TD>
+		</TR>
+		<TR>
+			<TD>NSCOUNT</TD>
+			<TD>1</TD>
+		</TR>
+		<TR>
+			<TD>ARCOUNT</TD>
+			<TD>2</TD>
+		</TR>
+		<TR>
+			<TD COLSPAN="1" ROWSPAN="3">DNS Question section</TD>
+			<TD>QNAME</TD>
+			<TD>sip.example.com.</TD>
+		</TR>
+		<TR>
+			<TD>QTYPE</TD>
+			<TD>NAPTR (0x0023)</TD>
+		</TR>
+		<TR>
+			<TD>QCLASS</TD>
+			<TD>IN (0x0001)</TD>
+		</TR>
+		<TR>
+			<TD COLSPAN="1" ROWSPAN="11">DNS Answer section</TD>
+			<TD>NAME</TD>
+			<TD>sip.example.com. (Pointer 0xC00C)</TD>
+		</TR>
+		<TR>
+			<TD>TYPE</TD>
+			<TD>NAPTR (0x0023)</TD>
+		</TR>
+		<TR>
+			<TD>CLASS</TD>
+			<TD>IN (0x0001)</TD>
+		</TR>
+		<TR>
+			<TD>TTL</TD>
+			<TD>86400sec</TD>
+		</TR>
+		<TR>
+			<TD>RDLENGTH</TD>
+			<TD>42</TD>
+		</TR>
+		<TR>
+			<TD>ORDER</TD>
+			<TD>0</TD>
+		</TR>
+		<TR>
+			<TD>PREFERENCE</TD>
+			<TD>0</TD>
+		</TR>
+		<TR>
+			<TD>FLAGS</TD>
+			<TD><B>s</B></TD>
+		</TR>
+		<TR>
+			<TD>SERVICES</TD>
+			<TD><B>http+L2R</B></TD>
+		</TR>
+		<TR>
+			<TD>REGEXP</TD>
+			<TD><B>(not present)</B></TD>
+		</TR>
+		<TR>
+			<TD>REPLACEMENT</TD>
+			<TD><B>http.tcp.sip.example.com</B></TD>
+		</TR>
+		<TR>
+			<TD COLSPAN="1" ROWSPAN="11">DNS Answer section</TD>
+			<TD>NAME</TD>
+			<TD>sip.example.com. (Pointer 0xC00C)</TD>
+		</TR>
+		<TR>
+			<TD>TYPE</TD>
+			<TD>NAPTR (0x0023)</TD>
+		</TR>
+		<TR>
+			<TD>CLASS</TD>
+			<TD>IN (0x0001)</TD>
+		</TR>
+		<TR>
+			<TD>TTL</TD>
+			<TD>86400sec</TD>
+		</TR>
+		<TR>
+			<TD>RDLENGTH</TD>
+			<TD>42</TD>
+		</TR>
+		<TR>
+			<TD>ORDER</TD>
+			<TD>0</TD>
+		</TR>
+		<TR>
+			<TD>PREFERENCE</TD>
+			<TD>0</TD>
+		</TR>
+		<TR>
+			<TD>FLAGS</TD>
+			<TD><B>s</B></TD>
+		</TR>
+		<TR>
+			<TD>SERVICES</TD>
+			<TD><B>SIP+X2T</B></TD>
+		</TR>
+		<TR>
+			<TD>REGEXP</TD>
+			<TD><B>(not present)</B></TD>
+		</TR>
+		<TR>
+			<TD>REPLACEMENT</TD>
+			<TD><B>_sip._tcp.sip.example.com</B></TD>
+		</TR>
+		<TR>
+			<TD COLSPAN="1" ROWSPAN="11">DNS Answer section</TD>
+			<TD>NAME</TD>
+			<TD>sip.example.com. (Pointer 0xC00C)</TD>
+		</TR>
+		<TR>
+			<TD>TYPE</TD>
+			<TD>NAPTR (0x0023)</TD>
+		</TR>
+		<TR>
+			<TD>CLASS</TD>
+			<TD>IN (0x0001)</TD>
+		</TR>
+		<TR>
+			<TD>TTL</TD>
+			<TD>86400sec</TD>
+		</TR>
+		<TR>
+			<TD>RDLENGTH</TD>
+			<TD>42</TD>
+		</TR>
+		<TR>
+			<TD>ORDER</TD>
+			<TD>0</TD>
+		</TR>
+		<TR>
+			<TD>PREFERENCE</TD>
+			<TD>0</TD>
+		</TR>
+		<TR>
+			<TD>FLAGS</TD>
+			<TD><B>s</B></TD>
+		</TR>
+		<TR>
+			<TD>SERVICES</TD>
+			<TD><B>SIP+D2U</B></TD>
+		</TR>
+		<TR>
+			<TD>REGEXP</TD>
+			<TD><B>(not present)</B></TD>
+		</TR>
+		<TR>
+			<TD>REPLACEMENT</TD>
+			<TD><B>_sip._udp.sip.example.com</B></TD>
+		</TR>
+		<TR>
+			<TD COLSPAN="1" ROWSPAN="6">DNS Authority section</TD>
+			<TD>NAME</TD>
+			<TD>example.com. (Pointer 0xC04A)</TD>
+		</TR>
+		<TR>
+			<TD>TYPE</TD>
+			<TD>NS (0x0002)</TD>
+		</TR>
+		<TR>
+			<TD>CLASS</TD>
+			<TD>IN (0x0001)</TD>
+		</TR>
+		<TR>
+			<TD>TTL</TD>
+			<TD>86400sec</TD>
+		</TR>
+		<TR>
+			<TD>RDLENGTH</TD>
+			<TD>17</TD>
+		</TR>
+		<TR>
+			<TD>NSDNAME</TD>
+			<TD>NS1.example.com</TD>
+		</TR>
+		<TR>
+			<TD COLSPAN="1" ROWSPAN="6">DNS Additional section</TD>
+			<TD>NAME</TD>
+			<TD>NS1.example.com (Pointer 0xC0CF)</TD>
+		</TR>
+		<TR>
+			<TD>TYPE</TD>
+			<TD>A (0x0001)</TD>
+		</TR>
+		<TR>
+			<TD>CLASS</TD>
+			<TD>IN (0x0001)</TD>
+		</TR>
+		<TR>
+			<TD>TTL</TD>
+			<TD>86400sec</TD>
+		</TR>
+		<TR>
+			<TD>RDLENGTH</TD>
+			<TD>4</TD>
+		</TR>
+		<TR>
+			<TD>ADDRESS</TD>
+			<TD>192.168.1.20</TD>
+		</TR>
+		<TR>
+			<TD COLSPAN="1" ROWSPAN="6">DNS Additional section</TD>
+			<TD>NAME</TD>
+			<TD>NS1.example.com (Pointer 0xC0CF)</TD>
+		</TR>
+		<TR>
+			<TD>TYPE<BR>
+			</TD>
+			<TD>AAAA (0x001C)</TD>
+		</TR>
+		<TR>
+			<TD>CLASS</TD>
+			<TD>IN (0x0001)</TD>
+		</TR>
+		<TR>
+			<TD>TTL</TD>
+			<TD>86400sec</TD>
+		</TR>
+		<TR>
+			<TD>RDLENGTH</TD>
+			<TD>16</TD>
+		</TR>
+		<TR>
+			<TD>ADDRESS</TD>
+			<TD>3ffe:501:ffff:101::20</TD>
+		</TR>
+		</TBODY>
+	</TABLE>
+	<BR>
+	<DD>5th packet.
+	<P></P>
+	<DD><TABLE BORDER="1">
+		<TBODY>
+		<TR>
+			<TD COLSPAN="3">
+			<CENTER>Standard query from DNS Client1 (NUT) to Server1 (TN) </CENTER>
+			</TD>
+		</TR>
+		<TR>
+			<TD ROWSPAN="2">IP Header</TD>
+			<TD>Source Address</TD>
+			<TD>NUT_NETZ</TD>
+		</TR>
+		<TR>
+			<TD>Destination Address</TD>
+			<TD>SV1_NETY</TD>
+		</TR>
+		<TR>
+			<TD COLSPAN="1" ROWSPAN="2">UDP Header</TD>
+			<TD>Src Port</TD>
+			<TD>ANY</TD>
+		</TR>
+		<TR>
+			<TD>Dst Port</TD>
+			<TD>53</TD>
+		</TR>
+		<TR>
+			<TD COLSPAN="1" ROWSPAN="13">DNS Header</TD>
+			<TD>ID</TD>
+			<TD>ANY</TD>
+		</TR>
+		<TR>
+			<TD>QR</TD>
+			<TD>0</TD>
+		</TR>
+		<TR>
+			<TD>OPCODE</TD>
+			<TD>0</TD>
+		</TR>
+		<TR>
+			<TD>AA</TD>
+			<TD>0</TD>
+		</TR>
+		<TR>
+			<TD>TC</TD>
+			<TD>0</TD>
+		</TR>
+		<TR>
+			<TD>RD</TD>
+			<TD>0</TD>
+		</TR>
+		<TR>
+			<TD>RA</TD>
+			<TD>0</TD>
+		</TR>
+		<TR>
+			<TD>Z</TD>
+			<TD>0</TD>
+		</TR>
+		<TR>
+			<TD>RCODE</TD>
+			<TD>0</TD>
+		</TR>
+		<TR>
+			<TD>QDCOUNT</TD>
+			<TD>1</TD>
+		</TR>
+		<TR>
+			<TD>ANCOUNT</TD>
+			<TD>0</TD>
+		</TR>
+		<TR>
+			<TD>NSCOUNT</TD>
+			<TD>0</TD>
+		</TR>
+		<TR>
+			<TD>ARCOUNT</TD>
+			<TD>0</TD>
+		</TR>
+		<TR>
+			<TD COLSPAN="1" ROWSPAN="3">DNS Question section</TD>
+			<TD>QNAME</TD>
+			<TD><B><I>_sip._udp.sip.example.com.</I></B></TD>
+		</TR>
+		<TR>
+			<TD>QTYPE</TD>
+			<TD>SRV (0x0021)</TD>
+		</TR>
+		<TR>
+			<TD>QCLASS</TD>
+			<TD>IN (0x0001)</TD>
+		</TR>
+		</TBODY>
+	</TABLE>
+	<BR>
+	<BR>
+	<DD>Exp.
+	<BR>
+	<DD><TABLE BORDER="1">
+		<TBODY>
+		<TR>
+			<TD>NUT_NETZ</TD>
+			<TD>DNS Client1's (NUT) Net-z address</TD>
+		</TR>
+		<TR>
+			<TD>SV1_NETY</TD>
+			<TD>DNS Server1's (TN) Net-y address</TD>
+		</TR>
+		</TBODY>
+	</TABLE>
+	</UL><p>
+</p>
+<hr />
+<h1><a name="judgment">JUDGMENT</a></h1>
+<pre>
+        3. Received a query message that it includes QNAME=sip.example.com, TYPE=NAPTR.
+        5. Received a query message that it includes QNAME=_sip._udp.sip.example.com, TYPE=SRV.</pre>
+<p>
+</p>
+<hr />
+<h1><a name="termination">TERMINATION</a></h1>
+<pre>
+        If NUT has cache function, clear the cache.</pre>
+<p>
+</p>
+<hr />
+<h1><a name="reference">REFERENCE</a></h1>
+<PRE>
+	RFC3403 Dynamic Delegation Discovery System (DDDS)
+	        Part Three: The Domain Name System (DNS) Database
+	        4. NAPTR RR Format 
+	RFC3263 Session Initiation Protocol (SIP): Locating SIP Servers
+	RFC3761 The E.164 to Uniform Resource Identifiers (URI)
+	        Dynamic Delegation Discovery System (DDDS) Application (ENUM)
+	RFC2782 A DNS RR for specifying the location of services (DNS SRV)
+</PRE>
+</body>
+
+</html>

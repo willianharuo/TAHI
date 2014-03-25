@@ -1,0 +1,198 @@
+<HTML>
+<HEAD>
+<TITLE>fragment.seq - Verify that node perform fragmentation inside 
+	tunnel</TITLE>
+<LINK REV="made" HREF="mailto:hackers@FreeBSD.org">
+</HEAD>
+
+<BODY>
+
+<!-- INDEX BEGIN -->
+<!--
+
+<UL>
+
+	<LI><A HREF="#NAME">NAME</A>
+	<LI><A HREF="#TARGET">TARGET</A>
+	<LI><A HREF="#SYNOPSIS">SYNOPSIS</A>
+	<LI><A HREF="#INITIALIZATION">INITIALIZATION</A>
+	<LI><A HREF="#TEST_PROCEDURE">TEST PROCEDURE</A>
+	<LI><A HREF="#JUDGMENT">JUDGMENT</A>
+	<LI><A HREF="#SEE_ALSO">SEE ALSO</A>
+</UL>
+-->
+<!-- INDEX END -->
+
+<P>
+<H1><A NAME="NAME">NAME</A></H1>
+<P>
+<PRE>        fragment.seq - Verify that node perform fragmentation inside 
+        tunnel
+</PRE>
+<P>
+<HR>
+<H1><A NAME="TARGET">TARGET</A></H1>
+<P>
+<PRE>        Router
+</PRE>
+<P>
+<HR>
+<H1><A NAME="SYNOPSIS">SYNOPSIS</A></H1>
+<P>
+<PRE>        fragment.seq [-tooloption ...] -p fragment.def
+</PRE>
+<P>
+<HR>
+<H1><A NAME="INITIALIZATION">INITIALIZATION</A></H1>
+<PRE>
+	Before this test starts, run <A HREF="initialize.html">initialize.seq</A>.
+	In subroutine "change_tunnel_mtu" use two way of changeing 
+	tunnel's path MTU.
+	If DF flag of encapsulating IPv4 Header isn't set, the test consider 
+	that node do not execute IPv4 path MTU. and change node's link MTU.
+	If DF flag of encapsulating IPv4 Header is set, test consider 
+	that node execute IPv4 path MTU. and send ICMPv4 Packet Too Big 
+	message.
+</PRE>
+
+<P>
+<HR>
+<H1><A NAME="TEST_PROCEDURE">TEST PROCEDURE</A></H1>
+<P>
+<PRE>        This test verifies that node can employ fragmentation algorithm 
+        to determine when to forward an IPv6 packet that is larger than 
+        the tunnel's path mtu.
+        
+    Network Topology
+</PRE>
+<P>
+<PRE>    Link0
+    --------------------------
+        |               |
+       TN              NUT
+        |               |
+    --------------------------
+    Link1
+</PRE>
+<P>
+<PRE>    TN -- (Link0) -- NUT        TN -- (Link1) -- NUT
+</PRE>
+<P>
+<PRE>    ---------------------      ------------------------
+    0.
+    set tunnel's mtu is 1500
+</PRE>
+<P>
+<PRE>    -- V4PMTU -20 = 1400
+    1.1.1
+    ===================&gt;
+    ICMPv6 Echo Request
+        packet size : 1401
+</PRE>
+<P>
+<PRE>    1.1.2
+    &lt;&lt;JUDGMENT&gt;&gt;
+    &lt;===================
+    ICMPv6 Packet Too Big message 
+        MTU : 1400
+</PRE>
+<P>
+<PRE>    1.2.1
+    ===================&gt;
+    ICMPv6 Echo Request
+        packet size : 1400
+</PRE>
+<P>
+<PRE>    1.2.2
+    &lt;&lt;JUDGMENT&gt;&gt;
+                               &lt;===================
+    IPv4 packet encapsulating IPv6 packet
+</PRE>
+<P>
+<PRE>    -- V4PMTU -20 = 1280
+</PRE>
+<P>
+<PRE>    2.1.1
+    ===================&gt;
+    ICMPv6 Echo Request
+        packet size : 1400
+</PRE>
+<P>
+<PRE>    2.1.2
+    &lt;&lt;JUDGMENT&gt;&gt;
+    &lt;===================
+    ICMPv6 Packet Too Big message 
+        MTU : 1280
+</PRE>
+<P>
+<PRE>    2.2.1
+    ===================&gt;
+    ICMPv6 Echo Request
+        packet size : 1281
+</PRE>
+<P>
+<PRE>    2.2.2
+    &lt;&lt;JUDGMENT&gt;&gt;
+    &lt;===================
+    ICMPv6 Packet Too Big message 
+        MTU : 1280
+</PRE>
+<P>
+<PRE>    2.3.1
+    ===================&gt;
+    ICMPv6 Echo Request
+        packet size : 1280
+</PRE>
+<P>
+<PRE>    2.3.2
+    &lt;&lt;JUDGMENT&gt;&gt;
+                               &lt;===================
+    IPv4 packet encapsulating IPv6 packet
+</PRE>
+<P>
+<PRE>    -- V4PMTU -20 = 1000
+    3.1.1
+    ===================&gt;
+    ICMPv6 Echo Request
+        packet size : 1281
+</PRE>
+<P>
+<PRE>    3.1.2
+    &lt;&lt;JUDGMENT&gt;&gt;
+    &lt;===================
+    ICMPv6 Packet Too Big message 
+        MTU : 1280
+</PRE>
+<P>
+<PRE>    3.2.1
+    ===================&gt;
+    ICMPv6 Echo Request
+        packet size : 1280
+</PRE>
+<P>
+<PRE>    3.2.2
+    &lt;&lt;JUDGMENT&gt;&gt;
+                               &lt;===================
+    IPv4 packet encapsulating IPv6 packet
+</PRE>
+<P>
+<HR>
+<H1><A NAME="JUDGMENT">JUDGMENT</A></H1>
+<P>
+<PRE>        &lt;&lt; PASS &gt;&gt;
+                TN received the packet which describe above &quot;TEST PROCEDURE&quot;    
+</PRE>
+<P>
+<PRE>        &lt;&lt; FAIL &gt;&gt;      
+                TN could not receive the packet which describe above 
+                &quot;TEST PROCEDURE&quot;        
+</PRE>
+<P>
+<HR>
+<H1><A NAME="SEE_ALSO">SEE ALSO</A></H1>
+<P>
+<PRE>          perldoc V6evalTool
+</PRE>
+</BODY>
+
+</HTML>

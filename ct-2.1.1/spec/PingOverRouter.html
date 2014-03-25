@@ -1,0 +1,230 @@
+<HTML>
+<HEAD>
+<TITLE>PingOverRouter - check IPv6 Header Basic Items</TITLE>
+<LINK REV="made" HREF="mailto:hackers@FreeBSD.org">
+</HEAD>
+
+<BODY>
+
+<!-- INDEX BEGIN -->
+<!--
+
+<UL>
+
+	<LI><A HREF="#NAME">NAME</A>
+	<LI><A HREF="#TARGET">TARGET</A>
+	<LI><A HREF="#SYNOPSIS">SYNOPSIS</A>
+	<LI><A HREF="#INITIALIZATION">INITIALIZATION</A>
+	<LI><A HREF="#TEST_PROCEDURE">TEST PROCEDURE</A>
+	<LI><A HREF="#JUDGMENT">JUDGMENT</A>
+	<LI><A HREF="#REFERENCE">REFERENCE</A>
+	<LI><A HREF="#SEE_ALSO">SEE ALSO</A>
+</UL>
+-->
+<!-- INDEX END -->
+
+<P>
+<H1><A NAME="NAME">NAME</A></H1>
+<P>
+<PRE>  PingOverRouter - check IPv6 Header Basic Items
+</PRE>
+<P>
+<HR>
+<H1><A NAME="TARGET">TARGET</A></H1>
+<P>
+<PRE>  Router
+</PRE>
+<P>
+<HR>
+<H1><A NAME="SYNOPSIS">SYNOPSIS</A></H1>
+<PRE>
+  <A HREF="./PingOverRouter.seq">PingOverRouter.seq</A> [-tooloption ...] -pkt <A HREF="./PingOverRouter.def">PingOverRouter.def</A>
+    -tooloption : v6eval tool option
+</PRE>
+
+<P>
+<HR>
+<H1><A NAME="INITIALIZATION">INITIALIZATION</A></H1>
+<P>
+<PRE>  1. Check Link0 Global Address Reachability
+  2. Check Link1 Global Address Reachability
+</PRE>
+<P>
+<HR>
+<H1><A NAME="TEST_PROCEDURE">TEST PROCEDURE</A></H1>
+<P>
+<PRE>  Tester                      Target                      Tester
+              (Link0)                     (Link1)
+    |                           |                           |
+    |--------------------------&gt;|                           |
+    |   Echo Request to Link0   |                           |
+    |                           |                           |
+    |                           |--------------------------&gt;|
+    |                           |   Neighbor Solicitation   |
+    |                           |                           |
+    |                           |&lt;--------------------------|
+    |                           |   Neighbor Advertisement  |
+    |                           |                           |
+    |                           |--------------------------&gt;|
+    |                           |   Echo Request from Link1 |
+    |                           |                           |
+    |                           |                           |
+    |                           |&lt;--------------------------|
+    |                           |   Echo Reply to Link1     |
+    |                           |                           |
+    |&lt;--------------------------|                           |
+    |   Neighbor Solicitation   |                           |
+    |                           |                           |
+    |--------------------------&gt;|                           |
+    |   Neighbor Advertisement  |                           |
+    |                           |                           |
+    |&lt;--------------------------|                           |
+    |   Echo Reply from Link0   |                           |
+    |                           |                           |
+    v                           v                           v
+</PRE>
+<P>
+<PRE>  1. Send Echo Request to Link0
+  2. Wait Echo Request from Link1 or NS from Link1
+  3. If NS received then send NA to Link1, and wait Echo Request form Link1 again
+  4. Receive Echo Request from Link1
+  5. Send Echo Reply to Link1
+  6. Wait Echo Reply from Link0 or NS from Link0
+  7. If NS received then send NA to Link0, and wait Echo Reply form Link0 again
+  8. Receive Echo Reply from Link0
+</PRE>
+<P>
+<PRE>  Echo Request to Link0 Data is:
+</PRE>
+<P>
+<PRE>        IPv6 Header
+            Version            = 6
+            Traffic Class      = 0
+            FlowLabel          = 0
+            PayloadLength      = 16
+            NextHeader         = 58 (ICMP)
+            HopLimit           = 64
+            SourceAddress      = Tester Global Address (Link0)
+            DestinationAddress = Tester Global Address (Link1)
+</PRE>
+<P>
+<PRE>        ICMP Echo Request
+            Type           = 128 (Echo Request)
+            Code           = 0
+            Checksum       = (auto)
+            Identifier     = 0xffff
+            SequenceNumber = 1
+            PayloadData    = {1,2,3,4,5,6,7,8}
+</PRE>
+<P>
+<PRE>  Neighbor Solicitation packet's IP source Address selection may be:
+    - Link Local Address
+    - Global Address
+  This test IS NOT the Neighbor Discovery test, so admit both implementation.
+</PRE>
+<P>
+<HR>
+<H1><A NAME="JUDGMENT">JUDGMENT</A></H1>
+<P>
+<PRE>  PASS: Echo Reply Received from Link0
+</PRE>
+<P>
+<PRE>        IPv6 Header
+            Version             = 6
+            Traffic Class       = 0
+            FlowLabel           = 0
+            PayloadLength       = 16
+            NextHeader          = 58 (ICMP)
+            HopLimit            = 63 (decremented)
+            SourceAddress      = Tester Global Address (Link1)
+            DestinationAddress = Tester Global Address (Link0)
+</PRE>
+<P>
+<PRE>        ICMP Echo Reply
+            Type           = 129 (Echo Reply)
+            Code           = 0
+            Checksum       = (auto)
+            Identifier     = 0xffff (same as Echo Request)
+            SequenceNumber = 1 (same as Echo Request)
+            PayloadData    = {1,2,3,4,5,6,7,8} (same as Echo Request)
+</PRE>
+<P>
+<HR>
+<H1><A NAME="REFERENCE">REFERENCE</A></H1>
+<P>
+RFC2460
+
+<P>
+3. IPv6 Header Format
+
+<P>
+<PRE>   +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+   |Version| Traffic Class |           Flow Label                  |
+   +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+   |         Payload Length        |  Next Header  |   Hop Limit   |
+   +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+   |                                                               |
+   +                                                               +
+   |                                                               |
+   +                         Source Address                        +
+   |                                                               |
+   +                                                               +
+   |                                                               |
+   +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+   |                                                               |
+   +                                                               +
+   |                                                               |
+   +                      Destination Address                      +
+   |                                                               |
+   +                                                               +
+   |                                                               |
+   +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+</PRE>
+<P>
+<PRE>   Version              4-bit Internet Protocol version number = 6.
+</PRE>
+<P>
+<PRE>   Traffic Class        8-bit traffic class field.  See section 7.
+</PRE>
+<P>
+<PRE>   Flow Label           20-bit flow label.  See section 6.
+</PRE>
+<P>
+<PRE>   Payload Length       16-bit unsigned integer.  Length of the IPv6
+                        payload, i.e., the rest of the packet following
+                        this IPv6 header, in octets.  (Note that any
+                        extension headers [section 4] present are
+                        considered part of the payload, i.e., included
+                        in the length count.)
+</PRE>
+<P>
+<PRE>   Next Header          8-bit selector.  Identifies the type of header
+                        immediately following the IPv6 header.  Uses the
+                        same values as the IPv4 Protocol field [RFC-1700
+                        et seq.].
+</PRE>
+<P>
+<PRE>   Hop Limit            8-bit unsigned integer.  Decremented by 1 by
+                        each node that forwards the packet. The packet
+                        is discarded if Hop Limit is decremented to
+                        zero.
+</PRE>
+<P>
+<PRE>   Source Address       128-bit address of the originator of the packet.
+                        See [ADDRARCH].
+</PRE>
+<P>
+<PRE>   Destination Address  128-bit address of the intended recipient of the
+                        packet (possibly not the ultimate recipient, if
+                        a Routing header is present).  See [ADDRARCH]
+                        and section 4.4.
+</PRE>
+<P>
+<HR>
+<H1><A NAME="SEE_ALSO">SEE ALSO</A></H1>
+<P>
+<PRE>  perldoc V6evalTool
+</PRE>
+</BODY>
+
+</HTML>

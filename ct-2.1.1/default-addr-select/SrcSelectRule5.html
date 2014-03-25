@@ -1,0 +1,166 @@
+<HTML>
+<HEAD>
+<TITLE>SrcSelectRule5.seq - Source Address Selection
+                       check Rule 5</TITLE>
+<LINK REV="made" HREF="mailto:hackers@FreeBSD.org">
+</HEAD>
+
+<BODY>
+
+<!-- INDEX BEGIN -->
+<!--
+
+<UL>
+
+	<LI><A HREF="#NAME">NAME</A>
+	<LI><A HREF="#TARGET">TARGET</A>
+	<LI><A HREF="#SYNOPSIS">SYNOPSIS</A>
+	<LI><A HREF="#INITIALIZATION">INITIALIZATION</A>
+	<LI><A HREF="#TEST_PROCEDURE">TEST PROCEDURE</A>
+	<LI><A HREF="#JUDGEMENT">JUDGEMENT</A>
+	<LI><A HREF="#SEE_ALSO">SEE ALSO</A>
+</UL>
+-->
+<!-- INDEX END -->
+
+<P>
+<H1><A NAME="NAME">NAME</A></H1>
+<P>
+<PRE>  SrcSelectRule5.seq - Source Address Selection
+                       check Rule 5(Prefer outgoing interface.)
+</PRE>
+<P>
+<PRE>  Rule 5: Prefer outgoing interface. 
+    If SA is assigned to the interface that will be used to send to D 
+    and SB is assigned to a different interface, then prefer SA. 
+</PRE>
+<P>
+<PRE>  Source addresses used for this test are &quot;preferred address&quot;.
+</PRE>
+<P>
+<HR>
+<H1><A NAME="TARGET">TARGET</A></H1>
+<P>
+<PRE>  Host and Router
+</PRE>
+<P>
+<HR>
+<H1><A NAME="SYNOPSIS">SYNOPSIS</A></H1>
+<P>
+<PRE>  *This Test use Link0 &amp; Link1
+</PRE>
+<PRE>
+  <A HREF="./SrcSelectRule5.seq">SrcSelectRule5.seq</A> [-tooloption ...] -pkt <A HREF="./ADDR_SELECT.def">ADDR_SELECT.def</A>
+    -tooloption : v6eval tool option
+</PRE>
+
+<P>
+<HR>
+<H1><A NAME="INITIALIZATION">INITIALIZATION</A></H1>
+<P>
+<PRE>  None
+</PRE>
+<P>
+<HR>
+<H1><A NAME="TEST_PROCEDURE">TEST PROCEDURE</A></H1>
+<P>
+<PRE>  This TEST performs the following Check procedures for
+  every address group defined by Check 01 - *.
+    
+  *Check procedure
+  
+  1. Initialize :
+     1.1. Set IPv6 Default Route in NUT
+          (Default Router address = &lt;TN-Link0-LinkLocalAddress&gt;)
+     1.2. Add Candidate Source Addresses in NUT
+     1.3. Check Candidate Source Addresses by Ping6 (TN-&gt;NUT)
+  2. Send Ping6 from NUT to Destination
+     2.1. NUT send ICMPv6 echo request (NUT-&gt;TN)
+  3. Judgment : don't recive packet &amp; check ping6 result
+  4. Cleanup :
+     4.1. Delete Candidate Source Addresses in NUT
+     4.2. Clear prefix list &amp; NCE &amp; default router list in NUT
+</PRE>
+<P>
+<PRE>        NUT    TN  Default Router  Destination
+         |      |      |           |
+         ======(INITIALIZE)=========
+         |      |      |           |
+         |&lt;-&lt;-&lt;-+      |           | Set IPv6 Default Route
+         |&lt;-&lt;-&lt;-+      |           | Add Candidate Source Addresses (Link0)
+         |&lt;-&lt;-&lt;-+      |           | Add Candidate Source Addresses (Link1)
+         |      |      |           |
+         |&lt;------------+           | Echo Request to Candidate Source Addresses 1 (Liunk0)
+         +------------&gt;|           | Echo Reply (Liunk0)
+         |      |      |           |
+         |&lt;------------+           | Echo Request to Candidate Source Addresses 2 (Liunk0)
+         +------------&gt;|           | Echo Reply (Liunk0)
+         |      |      |           |
+         |&lt;------------+           | Echo Request to Candidate Source Addresses (Liunk1)
+         +------------&gt;|           | Echo Reply (Liunk1)
+         |      |      |           |
+         ======(INITIALIZE)=========
+         |      |      |           |
+         |&lt;-&lt;-&lt;-+      |           | Excute ping6 command
+         |      |      |           |
+         +------------------------&gt;| Echo Request (Liunk0)
+         |      |      |           |
+</PRE>
+<P>
+<PRE>  LLA(Link Local Address)
+</PRE>
+<P>
+<PRE>  * default route face to Link0
+  *Following address grouup does not match Rule 1-4
+</PRE>
+<P>
+<PRE>  Check 01:
+    Destination: 3fff::2
+    Candidate Source Addresses: 3ffe::1(Link0) or 3ffd::1(Link1) or fec0::1(Link0) or LLA(Link0)
+    Result: 3ffe::1(Link0)
+</PRE>
+<P>
+<PRE>  Check 02:
+    Destination: ff08::2
+    Candidate Source Addresses: 3ffe::1(Link0) or 3ffd::1(Link1) or fec0::1(Link0) or LLA(Link0)
+    Result: 3ffe::1(Link0)
+</PRE>
+<P>
+<PRE>  Check 03:
+    Destination: fec0::2
+    Candidate Source Addresses: 3ffe::1(Link0) or 3ffd::1(Link1) or LLA(Link0)
+    Result: 3ffe::1(Link0)
+</PRE>
+<P>
+<HR>
+<H1><A NAME="JUDGEMENT">JUDGEMENT</A></H1>
+<P>
+<PRE>  Check 01:
+    PASS: Receive Echo Request &amp; source address = 3ffe::1
+</PRE>
+<P>
+<PRE>  Check 02:
+    PASS: Receive Echo Request &amp; source address = 3ffe::1
+</PRE>
+<P>
+<PRE>  Check 03:
+    PASS: Receive Echo Request &amp; source address = 3ffe::1
+</PRE>
+<P>
+<PRE>  TEST
+    PASS: All Check = PASS
+</PRE>
+<P>
+<HR>
+<H1><A NAME="SEE_ALSO">SEE ALSO</A></H1>
+<P>
+<PRE>  perldoc V6evalTool
+</PRE>
+<PRE>
+  <A HREF="ADDR_SELECT.html">ADDR_SELECT.html</A> "Default Address Selection for IPv6" Test Common Utility<BR>
+  <A HREF="das_rules.html">das_rules.html</A> "Default Address Selection for IPv6" Rules
+</PRE>
+
+</BODY>
+
+</HTML>

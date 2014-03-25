@@ -1,0 +1,1672 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<title>SV_RFC1995_2_IXFR_client_F - an IXFR client receive an IXFR response with the full zone transfer message</title>
+<link rev="made" href="mailto:akisada@ifrit.64translator.com" />
+</head>
+
+<body style="background-color: white">
+
+<p><a name="__index__"></a></p>
+<!-- INDEX BEGIN -->
+<!--
+
+<ul>
+
+	<li><a href="#name">NAME</a></li>
+	<li><a href="#verification_points">VERIFICATION POINTS</a></li>
+	<li><a href="#target">TARGET</a></li>
+	<li><a href="#synopsis">SYNOPSIS</a></li>
+	<li><a href="#initialization">INITIALIZATION</a></li>
+	<li><a href="#pretest_sequence">PRE-TEST SEQUENCE</a></li>
+	<li><a href="#test_procedure">TEST PROCEDURE</a></li>
+	<li><a href="#judgment">JUDGMENT</a></li>
+	<li><a href="#termination">TERMINATION</a></li>
+	<li><a href="#reference">REFERENCE</a></li>
+</ul>
+-->
+<!-- INDEX END -->
+
+<p>
+</p>
+<h1><a name="name">NAME</a></h1>
+<pre>
+        SV_RFC1995_2_IXFR_client_F - an IXFR client receive an IXFR response with the full zone transfer message</pre>
+<p>
+</p>
+<hr />
+<h1><a name="verification_points">VERIFICATION POINTS</a></h1>
+<pre>
+        Verify that a NUT receives an IXFR response with the full zone transfer message</pre>
+<UL>
+	<DD><LI>If an IXFR client, which likely has an older version of a zone,<BR>
+	<DD>   thinks it needs new information about the zone through SOA refresh timeout,<BR>
+	<DD>   it sends an IXFR message containing the SOA serial number of its, presumably
+	<DD>   outdated, copy of the zone.
+	<DD><LI>When an IXFR client sent an IXFR request with an older version number,<BR>
+	<DD>   the server may transfer the entire zone just as in a normal full zone transfer.
+	<DD><LI>If incremental zone transfer is not available, the entire zone is returned.
+	<DD>   The first and the last RR of the response is the SOA record of the zone.
+	</UL><p>
+</p>
+<hr />
+<h1><a name="target">TARGET</a></h1>
+<pre>
+        Server (an IXFR client)</pre>
+<p>
+</p>
+<hr />
+<h1><a name="synopsis">SYNOPSIS</a></h1>
+<PRE>
+	<A HREF="./SV_RFC1995_2_IXFR_client_F.seq">SV_RFC1995_2_IXFR_client_F.seq</A> [-tooloption ...]: KOI tool option
+	See also <A HREF="../DNSConfig.pm">DNSConfig.pm</A>
+</PRE><p>
+</p>
+<hr />
+<h1><a name="initialization">INITIALIZATION</a></h1>
+<UL>
+	<DD><LI><STRONG>Network Topology</STRONG></LI> 
+	<PRE>
+                   |
+                   |                     sec.example.com domain
+                 Router (TN)             DNS Server7
+                   |3ffe:501:ffff:100::1   |3ffe:501:ffff:100::31
+                   |192.168.0.1            |192.168.0.31
+                   |                       |
+                   |                       |
+Net-z   --+--------+---------------+-------+------------------- 3ffe:501:ffff:100::/64
+          |                        |                            192.168.0/24
+          |                        |
+        DNS Server1 (NUT)         DNS Client1 (TN)
+           3ffe:501:ffff:100::10    3ffe:501:ffff:100::20
+           192.168.0.10             192.168.0.20
+	<BR>
+	</PRE>
+	<DD><LI><STRONG>Setup</STRONG></LI><BR>
+	<BR>
+	<DD>Set the DNS Server1's (NUT) address as above mentioned Network Topology.<BR>
+	<DD>Configure the Server1's: (NUT) 
+	<DD><DD><LI>zone file to response query from TN.<BR>
+	<DD><DD><LI>configuration file as slave server about sec.example.com zone.<BR>
+	<DD><DD><LI>Enable incremental zone transfer function.<BR>
+	<BR>
+	<DD>Example of DNS server configuration on DNS Server1 (NUT):
+	<PRE>
+	<DD><DD><LI>For IPv4 transport
+zone "sec.example.com" {
+	type slave;
+	masters {192.168.0.31;};
+	file "s/sec.example.com";
+};
+	<DD><DD><LI>For IPv6 transport
+zone "sec.example.com" {
+	type slave;
+	masters {3ffe:501:ffff:100::31;};
+	file "s/sec.example.com";
+};
+	</PRE>
+	<DD>Transferred sec.example.com zone information:<BR>
+	<PRE>
+$TTL    86400	; TTL of 1 day
+@ IN SOA NS7.sec.example.com. root.sec.example.com. (
+	1	; serial
+	180	; refresh every 3 min
+	30	; retry every 30 sec
+	360	; expire after 6 min
+	30	; Minimum TTL of 30 sec
+)
+;
+	IN	NS	NS7.sec.example.com.
+	IN	NS	NS1.sec.example.com.
+NS7	IN	A	192.168.0.31
+	IN	AAAA	3ffe:501:ffff:100::31
+NS1	IN	A	192.168.0.10
+	IN	AAAA	3ffe:501:ffff:100::10
+;
+CL1	IN	A	192.168.0.20
+CL2	IN	A	192.168.0.21
+	</PRE>
+	</UL><p>
+</p>
+<hr />
+<h1><a name="pretest_sequence">PRE-TEST SEQUENCE</a></h1>
+<pre>
+        After all zone information are transferred between primary DNS server7 (TN) 
+        and slave DNS server1 (NUT), following pre-test sequence is performed.</pre>
+<pre>
+    DNS Client1 (TN)             DNS Server1 (NUT)              DNS Server7 (TN)
+        |                              |                              |
+        |-----------------------------&gt;|                              |
+        | 1. Send standard query       |                              |
+        |  RD = 0                      |                              |
+        |  QNAME = CL2.sec.example.com |                              |
+        |  QTYPE = A                   |                              |
+        |                              |                              |
+        |&lt;-----------------------------|                              |
+        | 2. Standard query response   |                              |
+        |  AA = 0                      |                              |
+        |  RD = 0                      |                              |
+        |  QNAME = CL2.sec.example.com |                              |
+        |  QTYPE = A                   |                              |
+        |  ANSWER Name                 |                              |
+        |        = CL2.sec.example.com |                              |
+        |  ANSWER Type                 |                              |
+        |        = A (0x0001)          |                              |
+        |  ANSWER Address              |                              |
+        |        = 192.168.0.21        |                              |
+        |                              |                              |
+        v                              v                              v</pre>
+<p>
+</p>
+<hr />
+<h1><a name="test_procedure">TEST PROCEDURE</a></h1>
+<pre>
+        This test sequence is following.
+        NOTE: SOA's parameter and $TTL are same as above sec.example.com zone information.
+              TN includes NS7 and NS1.sub.example.com into Authority as type = NS.
+              Also TN includes NS7 and NS1.sub.example.com address into Additional section.
+              Thus NUT may reply to answer client with Authority and Additional section including
+              those values.</pre>
+<pre>
+    DNS Client1 (TN)             DNS Server1 (NUT)              DNS Server7 (TN)
+        |                              |                              |
+        |                              |                              |
+        |                              |  Before SOA REFRESH (180sec) |
+        |                              |  timeout expired             |
+        |                              |                              |
+        |                              |-----------------------------&gt;|
+        |                              | 1. Standard query            |
+        |                              |  QNAME = sec.example.com     |
+        |                              |  QTYPE = SOA (0x0006)        |
+        |                              |                              |
+        |                              |&lt;-----------------------------|
+        |                              | 2. Standard query response   |
+        |                              |  QNAME = sec.example.com     |
+        |                              |  QTYPE = SOA (0x0006)        |
+        |                              |                              |
+        |                              |  ANSWER Name                 |
+        |                              |       = sec.example.com      |
+        |                              |  ANSWER Type                 |
+        |                              |       = SOA (0x0006)         |
+        |                              |  ANSWER SERIAL               |
+        |                              |       = 2                    |
+        |                              |                              |
+        |                              |-----------------------------&gt;|
+        |                              | 3. Standard query            |
+        |                              |  QNAME = sec.example.com     |
+        |                              |  QTYPE = IXFR (0x00FB)       |
+        |                              |                              |
+        |                              |  AUTHORITY Name              |
+        |                              |       = sec.example.com      |
+        |                              |  AUTHORITY Type              |
+        |                              |       = SOA (0x0006)         |
+        |                              |  AUTHORITY SERIAL            |
+        |                              |       = 1                    |
+        |                              |                              |
+        |                              |&lt;-----------------------------|
+        |                              | 4. Standard query response   |
+        |                              |                              |
+        |                              |  modify exist record         |
+        |                              |                              |
+        |                              |  QNAME = sec.example.com     |
+        |                              |  QTYPE = IXFR (0x00FB)       |
+        |                              |                              |
+        |                              |  ANSWER Name                 |
+        |                              |       = sec.example.com      |
+        |                              |  ANSWER Type                 |
+        |                              |       = SOA (0x0006)         |
+        |                              |  ANSWER SERIAL               |
+        |                              |       = 2                    |
+        |                              |                              |
+        |                              |  ANSWER Name                 |
+        |                              |       = sec.example.com      |
+        |                              |  ANSWER Type                 |
+        |                              |       = NS (0x0002)          |
+        |                              |  ANSWER NSDNAME              |
+        |                              |       = NS7.sec.example.com  |
+        |                              |                              |
+        |                              |  ANSWER Name                 |
+        |                              |       = sec.example.com      |
+        |                              |  ANSWER Type                 |
+        |                              |       = NS (0x0002)          |
+        |                              |  ANSWER NSDNAME              |
+        |                              |       = NS1.sec.example.com  |
+        |                              |                              |
+        |                              |  ANSWER Name                 |
+        |                              |       = NS7.sec.example.com  |
+        |                              |  ANSWER Type                 |
+        |                              |       = A (0x0001)           |
+        |                              |  ANSWER Address              |
+        |                              |       = 192.168.0.31         |
+        |                              |                              |
+        |                              |  ANSWER Name                 |
+        |                              |       = NS7.sec.example.com  |
+        |                              |  ANSWER Type                 |
+        |                              |       = AAAA (0x001C)        |
+        |                              |  ANSWER Address              |
+        |                              |       = 3ffe:501:ffff:100::31|
+        |                              |                              |
+        |                              |  ANSWER Name                 |
+        |                              |       = NS1.sec.example.com  |
+        |                              |  ANSWER Type                 |
+        |                              |       = A (0x0001)           |
+        |                              |  ANSWER Address              |
+        |                              |       = 192.168.0.10         |
+        |                              |                              |
+        |                              |  ANSWER Name                 |
+        |                              |       = NS1.sec.example.com  |
+        |                              |  ANSWER Type                 |
+        |                              |       = AAAA (0x001C)        |
+        |                              |  ANSWER Address              |
+        |                              |       = 3ffe:501:ffff:100::10|
+        |                              |                              |
+        |                              |  ANSWER Name                 |
+        |                              |       = CL1.sec.example.com  |
+        |                              |  ANSWER Type                 |
+        |                              |       = A (0x0001)           |
+        |                              |  ANSWER Address              |
+        |                              |       = 192.168.0.20         |
+        |                              |                              |
+        |                              |  ANSWER Name                 |
+        |                              |       = CL2.sec.example.com  |
+        |                              |  ANSWER Type                 |
+        |                              |       = A (0x0001)           |
+        |                              |  ANSWER Address              |
+        |                              |       = 192.168.0.22         |
+        |                              |                              |
+        |                              |  ANSWER Name                 |
+        |                              |       = sec.example.com      |
+        |                              |  ANSWER Type                 |
+        |                              |       = SOA (0x0006)         |
+        |                              |  ANSWER SERIAL               |
+        |                              |       = 2                    |
+        |                              |                              |
+        |-----------------------------&gt;|                              |
+        | 5. Send standard query       |                              |
+        |  RD = 0                      |                              |
+        |  QNAME = CL2.sec.example.com |                              |
+        |  QTYPE = A                   |                              |
+        |                              |                              |
+        |&lt;-----------------------------|                              |
+        | 6. Standard query response   |                              |
+        |  AA = 0                      |                              |
+        |  RD = 0                      |                              |
+        |  QNAME = CL2.sec.example.com |                              |
+        |  QTYPE = A                   |                              |
+        |  ANSWER Name                 |                              |
+        |        = CL2.sec.example.com |                              |
+        |  ANSWER Type                 |                              |
+        |        = A (0x0001)          |                              |
+        |  ANSWER Address              |                              |
+        |        = 192.168.0.22        |                              |
+        |                              |                              |
+        v                              v                              v</pre>
+<pre>
+        This test sequence is following.</pre>
+<pre>
+        1. After SOA refresh time expired, DNS Server1 (NUT) transmits standard query 
+           QNAME = sec.example.com, Type = SOA to DNS Server7 (TN). (Judgment *1)
+        2. DNS Server7 (TN) sends standard query response with SOA serial = 2 to DNS Server1 (NUT).</pre>
+<pre>
+        3. DNS Server1 (NUT) transmits standard query with QNAME = sec.example.com, Type = IXFR, 
+           including Authority Name = sec.example.com, Type = SOA serial = 1 to DNS Server7 (TN). 
+           (Judgment *3)
+        4. DNS Server7 (TN) sends standard query response including all of RRs in sec.example.com zone
+           to DNS Server1 (NUT). The difference from previous zone is that CL2.sec.example.com's address is 
+           changed from 192.168.0.21 to 192.168.0.22.</pre>
+<pre>
+        5. DNS Client1 (TN) sends standard query QNAME = CL2.sec.example.com to DNS Server1 (NUT).
+        6. DNS Server1 (NUT) transmits standard query response ANSWER Address = 192.168.0.22 
+           to DNS Client1 (TN). (Judgment *6)</pre>
+<UL>
+	<DD><LI>Packet Description</LI><BR>
+	<BR>
+	<DD>1st packet.
+	<P></P>
+	<DD><TABLE BORDER="1">
+		<TBODY>
+		<TR>
+			<TD COLSPAN="3">
+			<CENTER>Standard query from DNS Server1 (NUT) to Server7 (TN) </CENTER>
+			</TD>
+		</TR>
+		<TR>
+			<TD ROWSPAN="2">IP Header</TD>
+			<TD>Source Address</TD>
+			<TD>NUT_NETZ</TD>
+		</TR>
+		<TR>
+			<TD>Destination Address</TD>
+			<TD>SV7_NETZ</TD>
+		</TR>
+		<TR>
+			<TD COLSPAN="1" ROWSPAN="2">UDP Header</TD>
+			<TD>Src Port</TD>
+			<TD>ANY</TD>
+		</TR>
+		<TR>
+			<TD>Dst Port</TD>
+			<TD>53</TD>
+		</TR>
+		<TR>
+			<TD COLSPAN="1" ROWSPAN="13">DNS Header</TD>
+			<TD>ID</TD>
+			<TD>ANY</TD>
+		</TR>
+		<TR>
+			<TD>QR</TD>
+			<TD>0</TD>
+		</TR>
+		<TR>
+			<TD>OPCODE</TD>
+			<TD>0</TD>
+		</TR>
+		<TR>
+			<TD>AA</TD>
+			<TD>0</TD>
+		</TR>
+		<TR>
+			<TD>TC</TD>
+			<TD>0</TD>
+		</TR>
+		<TR>
+			<TD>RD</TD>
+			<TD>0</TD>
+		</TR>
+		<TR>
+			<TD>RA</TD>
+			<TD>0</TD>
+		</TR>
+		<TR>
+			<TD>Z</TD>
+			<TD>0</TD>
+		</TR>
+		<TR>
+			<TD>RCODE</TD>
+			<TD>0</TD>
+		</TR>
+		<TR>
+			<TD>QDCOUNT</TD>
+			<TD>1</TD>
+		</TR>
+		<TR>
+			<TD>ANCOUNT</TD>
+			<TD>0</TD>
+		</TR>
+		<TR>
+			<TD>NSCOUNT</TD>
+			<TD>0</TD>
+		</TR>
+		<TR>
+			<TD>ARCOUNT</TD>
+			<TD>0</TD>
+		</TR>
+		<TR>
+			<TD COLSPAN="1" ROWSPAN="3">DNS Question section</TD>
+			<TD>QNAME</TD>
+			<TD>sec.example.com</TD>
+		</TR>
+		<TR>
+			<TD>QTYPE</TD>
+			<TD>SOA (0x0006)</TD>
+		</TR>
+		<TR>
+			<TD>QCLASS</TD>
+			<TD>IN (0x0001)</TD>
+		</TR>
+		</TBODY>
+	</TABLE>
+	<BR>
+	<DD>2nd packet.
+	<P></P>
+	<DD><TABLE BORDER="1">
+		<TBODY>
+		<TR>
+			<TD COLSPAN="3">
+			<CENTER>Standard query response from DNS Server7 (TN) to Server1 (NUT)</CENTER>
+			</TD>
+		</TR>
+		<TR>
+			<TD ROWSPAN="2">IP Header</TD>
+			<TD>Source Address</TD>
+			<TD>SV7_NETZ</TD>
+		</TR>
+		<TR>
+			<TD>Destination Address</TD>
+			<TD>NUT_NETZ</TD>
+		</TR>
+		<TR>
+			<TD COLSPAN="1" ROWSPAN="2">UDP Header</TD>
+			<TD>Src Port</TD>
+			<TD>53</TD>
+		</TR>
+		<TR>
+			<TD>Dst Port</TD>
+			<TD>Value that NUT uses</TD>
+		</TR>
+		<TR>
+			<TD COLSPAN="1" ROWSPAN="13">DNS Header</TD>
+			<TD>ID</TD>
+			<TD>Value that NUT uses</TD>
+		</TR>
+		<TR>
+			<TD>QR</TD>
+			<TD>1</TD>
+		</TR>
+		<TR>
+			<TD>OPCODE</TD>
+			<TD>0</TD>
+		</TR>
+		<TR>
+			<TD>AA</TD>
+			<TD>1</TD>
+		</TR>
+		<TR>
+			<TD>TC</TD>
+			<TD>0</TD>
+		</TR>
+		<TR>
+			<TD>RD</TD>
+			<TD>0</TD>
+		</TR>
+		<TR>
+			<TD>RA</TD>
+			<TD>0</TD>
+		</TR>
+		<TR>
+			<TD>Z</TD>
+			<TD>0</TD>
+		</TR>
+		<TR>
+			<TD>RCODE</TD>
+			<TD>0</TD>
+		</TR>
+		<TR>
+			<TD>QDCOUNT</TD>
+			<TD>1</TD>
+		</TR>
+		<TR>
+			<TD>ANCOUNT</TD>
+			<TD>1</TD>
+		</TR>
+		<TR>
+			<TD>NSCOUNT</TD>
+			<TD>2</TD>
+		</TR>
+		<TR>
+			<TD>ARCOUNT</TD>
+			<TD>4</TD>
+		</TR>
+		<TR>
+			<TD COLSPAN="1" ROWSPAN="3">DNS Question section</TD>
+			<TD>QNAME</TD>
+			<TD>sec.example.com</TD>
+		</TR>
+		<TR>
+			<TD>QTYPE</TD>
+			<TD>SOA (0x0006)</TD>
+		</TR>
+		<TR>
+			<TD>QCLASS</TD>
+			<TD>IN (0x0001)</TD>
+		</TR>
+		<TR>
+			<TD COLSPAN="1" ROWSPAN="12">DNS Answer section</TD>
+			<TD>NAME</TD>
+			<TD>sec.example.com (Pointer 0xC00C)
+			</TD>
+		</TR>
+		<TR>
+			<TD>TYPE</TD>
+			<TD>SOA (0x0006)</TD>
+		</TR>
+		<TR>
+			<TD>CLASS</TD>
+			<TD>IN (0x0001)</TD>
+		</TR>
+		<TR>
+			<TD>TTL</TD>
+			<TD>86400sec</TD>
+		</TR>
+		<TR>
+			<TD>RDLENGTH</TD>
+			<TD>33</TD>
+		</TR>
+		<TR>
+			<TD>MNAME</TD>
+			<TD>NS7.sec.example.com (NS7 + Pointer 0xC00C)</TD>
+		</TR>
+		<TR>
+			<TD>RNAME</TD>
+			<TD>root.sec.example.com (root + Pointer 0xC00C)</TD>
+		</TR>
+		<TR>
+			<TD><B>SERIAL</B></TD>
+			<TD><I>2</I></TD>
+		</TR>
+		<TR>
+			<TD>REFRESH</TD>
+			<TD>180sec</TD>
+		</TR>
+		<TR>
+			<TD>RETRY</TD>
+			<TD>30sec</TD>
+		</TR>
+		<TR>
+			<TD>EXPIRE</TD>
+			<TD>360sec</TD>
+		</TR>
+		<TR>
+			<TD>MINIMUM</TD>
+			<TD>30sec</TD>
+		</TR>
+		<TR>
+			<TD COLSPAN="1" ROWSPAN="6">DNS Authority section</TD>
+			<TD>NAME</TD>
+			<TD>sec.example.com (Pointer 0xC00C)</TD>
+		</TR>
+		<TR>
+			<TD>TYPE</TD>
+			<TD>NS (0x0002)</TD>
+		</TR>
+		<TR>
+			<TD>CLASS</TD>
+			<TD>IN (0x0001)</TD>
+		</TR>
+		<TR>
+			<TD>TTL</TD>
+			<TD>86400sec</TD>
+		</TR>
+		<TR>
+			<TD>RDLENGTH</TD>
+			<TD>2</TD>
+		</TR>
+		<TR>
+			<TD>NSDNAME</TD>
+			<TD>NS1.sec.example.com (NS1 + Pointer 0xC00C)</TD>
+		</TR>
+		<TR>
+			<TD COLSPAN="1" ROWSPAN="6">DNS Authority section</TD>
+			<TD>NAME</TD>
+			<TD>sec.example.com (Pointer 0xC00C)</TD>
+		</TR>
+		<TR>
+			<TD>TYPE</TD>
+			<TD>NS (0x0002)</TD>
+		</TR>
+		<TR>
+			<TD>CLASS</TD>
+			<TD>IN (0x0001)</TD>
+		</TR>
+		<TR>
+			<TD>TTL</TD>
+			<TD>86400sec</TD>
+		</TR>
+		<TR>
+			<TD>RDLENGTH</TD>
+			<TD>2</TD>
+		</TR>
+		<TR>
+			<TD>NSDNAME</TD>
+			<TD>NS7.sec.example.com (Pointer 0xC02D)</TD>
+		</TR>
+		<TR>
+			<TD COLSPAN="1" ROWSPAN="6">DNS Additional section</TD>
+			<TD>NAME</TD>
+			<TD>NS1.sec.example.com (Pointer 0xC05A)</TD>
+		</TR>
+		<TR>
+			<TD>TYPE<BR>
+			</TD>
+			<TD>A (0x0001)</TD>
+		</TR>
+		<TR>
+			<TD>CLASS</TD>
+			<TD>IN (0x0001)</TD>
+		</TR>
+		<TR>
+			<TD>TTL</TD>
+			<TD>86400sec</TD>
+		</TR>
+		<TR>
+			<TD>RDLENGTH</TD>
+			<TD>4</TD>
+		</TR>
+		<TR>
+			<TD>ADDRESS</TD>
+			<TD>192.168.0.10</TD>
+		</TR>
+		<TR>
+			<TD COLSPAN="1" ROWSPAN="6">DNS Additional section</TD>
+			<TD>NAME</TD>
+			<TD>NS1.sec.example.com (Pointer 0xC05A)</TD>
+		</TR>
+		<TR>
+			<TD>TYPE<BR>
+			</TD>
+			<TD>AAAA (0x001C)</TD>
+		</TR>
+		<TR>
+			<TD>CLASS</TD>
+			<TD>IN (0x0001)</TD>
+		</TR>
+		<TR>
+			<TD>TTL</TD>
+			<TD>86400sec</TD>
+		</TR>
+		<TR>
+			<TD>RDLENGTH</TD>
+			<TD>16</TD>
+		</TR>
+		<TR>
+			<TD>ADDRESS</TD>
+			<TD>3ffe:501:ffff:100::10</TD>
+		</TR>
+		<TR>
+			<TD COLSPAN="1" ROWSPAN="6">DNS Additional section</TD>
+			<TD>NAME</TD>
+			<TD>NS7.sec.example.com (Pointer 0xC02D)</TD>
+		</TR>
+		<TR>
+			<TD>TYPE<BR>
+			</TD>
+			<TD>A (0x0001)</TD>
+		</TR>
+		<TR>
+			<TD>CLASS</TD>
+			<TD>IN (0x0001)</TD>
+		</TR>
+		<TR>
+			<TD>TTL</TD>
+			<TD>86400sec</TD>
+		</TR>
+		<TR>
+			<TD>RDLENGTH</TD>
+			<TD>4</TD>
+		</TR>
+		<TR>
+			<TD>ADDRESS</TD>
+			<TD>192.168.0.31</TD>
+		</TR>
+		<TR>
+			<TD COLSPAN="1" ROWSPAN="6">DNS Additional section</TD>
+			<TD>NAME</TD>
+			<TD>NS7.sec.example.com (Pointer 0xC02D)</TD>
+		</TR>
+		<TR>
+			<TD>TYPE<BR>
+			</TD>
+			<TD>AAAA (0x001C)</TD>
+		</TR>
+		<TR>
+			<TD>CLASS</TD>
+			<TD>IN (0x0001)</TD>
+		</TR>
+		<TR>
+			<TD>TTL</TD>
+			<TD>86400sec</TD>
+		</TR>
+		<TR>
+			<TD>RDLENGTH</TD>
+			<TD>16</TD>
+		</TR>
+		<TR>
+			<TD>ADDRESS</TD>
+			<TD>3ffe:501:ffff:100::31</TD>
+		</TR>
+		</TBODY>
+	</TABLE>
+	<BR>
+	<DD>3rd packet.
+	<P></P>
+	<DD><TABLE BORDER="1">
+		<TBODY>
+		<TR>
+			<TD COLSPAN="3">
+			<CENTER>Standard query from DNS Server1 (NUT) to Server7 (TN) </CENTER>
+			</TD>
+		</TR>
+		<TR>
+			<TD ROWSPAN="2">IP Header</TD>
+			<TD>Source Address</TD>
+			<TD>NUT_NETZ</TD>
+		</TR>
+		<TR>
+			<TD>Destination Address</TD>
+			<TD>SV7_NETZ</TD>
+		</TR>
+		<TR>
+			<TD COLSPAN="1" ROWSPAN="2">UDP Header</TD>
+			<TD>Src Port</TD>
+			<TD>ANY</TD>
+		</TR>
+		<TR>
+			<TD>Dst Port</TD>
+			<TD>53</TD>
+		</TR>
+		<TR>
+			<TD COLSPAN="1" ROWSPAN="13">DNS Header</TD>
+			<TD>ID</TD>
+			<TD>ANY</TD>
+		</TR>
+		<TR>
+			<TD>QR</TD>
+			<TD>0</TD>
+		</TR>
+		<TR>
+			<TD>OPCODE</TD>
+			<TD>0</TD>
+		</TR>
+		<TR>
+			<TD>AA</TD>
+			<TD>0</TD>
+		</TR>
+		<TR>
+			<TD>TC</TD>
+			<TD>0</TD>
+		</TR>
+		<TR>
+			<TD>RD</TD>
+			<TD>0</TD>
+		</TR>
+		<TR>
+			<TD>RA</TD>
+			<TD>0</TD>
+		</TR>
+		<TR>
+			<TD>Z</TD>
+			<TD>0</TD>
+		</TR>
+		<TR>
+			<TD>RCODE</TD>
+			<TD>0</TD>
+		</TR>
+		<TR>
+			<TD>QDCOUNT</TD>
+			<TD>1</TD>
+		</TR>
+		<TR>
+			<TD>ANCOUNT</TD>
+			<TD>0</TD>
+		</TR>
+		<TR>
+			<TD>NSCOUNT</TD>
+			<TD>&gt;=1</TD>
+		</TR>
+		<TR>
+			<TD>ARCOUNT</TD>
+			<TD>0</TD>
+		</TR>
+		<TR>
+			<TD COLSPAN="1" ROWSPAN="3">DNS Question section</TD>
+			<TD>QNAME</TD>
+			<TD>sec.example.com</TD>
+		</TR>
+		<TR>
+			<TD><B>QTYPE</B></TD>
+			<TD><B><I>IXFR (0x00FB)</I></B></TD>
+		</TR>
+		<TR>
+			<TD>QCLASS</TD>
+			<TD>IN (0x0001)</TD>
+		</TR>
+		<TR>
+			<TD COLSPAN="1" ROWSPAN="12">DNS Authority section</TD>
+			<TD>NAME</TD>
+			<TD>sec.example.com (Pointer 0xC00C)
+			</TD>
+		</TR>
+		<TR>
+			<TD>TYPE</TD>
+			<TD>SOA (0x0006)</TD>
+		</TR>
+		<TR>
+			<TD>CLASS</TD>
+			<TD>IN (0x0001)</TD>
+		</TR>
+		<TR>
+			<TD>TTL</TD>
+			<TD>86400sec</TD>
+		</TR>
+		<TR>
+			<TD>RDLENGTH</TD>
+			<TD>33</TD>
+		</TR>
+		<TR>
+			<TD>MNAME</TD>
+			<TD>NS7.sec.example.com (NS7 + Pointer 0xC00C)</TD>
+		</TR>
+		<TR>
+			<TD>RNAME</TD>
+			<TD>root.sec.example.com (root + Pointer 0xC00C)</TD>
+		</TR>
+		<TR>
+			<TD><B>SERIAL</B></TD>
+			<TD><B><I>1</I></B></TD>
+		</TR>
+		<TR>
+			<TD>REFRESH</TD>
+			<TD>180sec</TD>
+		</TR>
+		<TR>
+			<TD>RETRY</TD>
+			<TD>30sec</TD>
+		</TR>
+		<TR>
+			<TD>EXPIRE</TD>
+			<TD>360sec</TD>
+		</TR>
+		<TR>
+			<TD>MINIMUM</TD>
+			<TD>30sec</TD>
+		</TR>
+		</TBODY>
+	</TABLE>
+	<BR>
+	<DD>4th packet.
+	<P></P>
+	<DD><TABLE BORDER="1">
+		<TBODY>
+		<TR>
+			<TD COLSPAN="3">
+			<CENTER>Standard query response from DNS Server7 (TN) to Server1 (NUT)</CENTER>
+			</TD>
+		</TR>
+		<TR>
+			<TD ROWSPAN="2">IP Header</TD>
+			<TD>Source Address</TD>
+			<TD>NUT_NETZ</TD>
+		</TR>
+		<TR>
+			<TD>Destination Address</TD>
+			<TD>SV7_NETZ</TD>
+		</TR>
+		<TR>
+			<TD COLSPAN="1" ROWSPAN="2">UDP Header</TD>
+			<TD>Src Port</TD>
+			<TD>53</TD>
+		</TR>
+		<TR>
+			<TD>Dst Port</TD>
+			<TD>Value that NUT uses</TD>
+		</TR>
+		<TR>
+			<TD COLSPAN="1" ROWSPAN="13">DNS Header</TD>
+			<TD>ID</TD>
+			<TD>Value that NUT uses</TD>
+		</TR>
+		<TR>
+			<TD>QR</TD>
+			<TD>1</TD>
+		</TR>
+		<TR>
+			<TD>OPCODE</TD>
+			<TD>0</TD>
+		</TR>
+		<TR>
+			<TD>AA</TD>
+			<TD>0</TD>
+		</TR>
+		<TR>
+			<TD>TC</TD>
+			<TD>0</TD>
+		</TR>
+		<TR>
+			<TD>RD</TD>
+			<TD>0</TD>
+		</TR>
+		<TR>
+			<TD>RA</TD>
+			<TD>0</TD>
+		</TR>
+		<TR>
+			<TD>Z</TD>
+			<TD>0</TD>
+		</TR>
+		<TR>
+			<TD>RCODE</TD>
+			<TD>0</TD>
+		</TR>
+		<TR>
+			<TD>QDCOUNT</TD>
+			<TD>1</TD>
+		</TR>
+		<TR>
+			<TD>ANCOUNT</TD>
+			<TD>10</TD>
+		</TR>
+		<TR>
+			<TD>NSCOUNT</TD>
+			<TD>0</TD>
+		</TR>
+		<TR>
+			<TD>ARCOUNT</TD>
+			<TD>0</TD>
+		</TR>
+		<TR>
+			<TD COLSPAN="1" ROWSPAN="3">DNS Question section</TD>
+			<TD>QNAME</TD>
+			<TD>sec.example.com</TD>
+		</TR>
+		<TR>
+			<TD>QTYPE</TD>
+			<TD>IXFR (0x00FB)</TD>
+		</TR>
+		<TR>
+			<TD>QCLASS</TD>
+			<TD>IN (0x0001)</TD>
+		</TR>
+<!-- /////////////////////////////////////////////////////////////// -->
+		<TR>
+			<TD COLSPAN="1" ROWSPAN="12">DNS Answer section</TD>
+			<TD>NAME</TD>
+			<TD>sec.example.com (Pointer 0xC00C)
+			</TD>
+		</TR>
+		<TR>
+			<TD>TYPE</TD>
+			<TD>SOA (0x0006)</TD>
+		</TR>
+		<TR>
+			<TD>CLASS</TD>
+			<TD>IN (0x0001)</TD>
+		</TR>
+		<TR>
+			<TD>TTL</TD>
+			<TD>86400sec</TD>
+		</TR>
+		<TR>
+			<TD>RDLENGTH</TD>
+			<TD>33</TD>
+		</TR>
+		<TR>
+			<TD>MNAME</TD>
+			<TD>NS7.sec.example.com (NS7 + Pointer 0xC00C)</TD>
+		</TR>
+		<TR>
+			<TD>RNAME</TD>
+			<TD>root.sec.example.com (root + Pointer 0xC00C)</TD>
+		</TR>
+		<TR>
+			<TD><B>SERIAL</B></TD>
+			<TD><I>2</I></TD>
+		</TR>
+		<TR>
+			<TD>REFRESH</TD>
+			<TD>180sec</TD>
+		</TR>
+		<TR>
+			<TD>RETRY</TD>
+			<TD>30sec</TD>
+		</TR>
+		<TR>
+			<TD>EXPIRE</TD>
+			<TD>360sec</TD>
+		</TR>
+		<TR>
+			<TD>MINIMUM</TD>
+			<TD>30sec</TD>
+		</TR>
+<!-- /////////////////////////////////////////////////////////////// -->
+		<TR>
+			<TD COLSPAN="1" ROWSPAN="6">DNS Answer section</TD>
+			<TD>NAME</TD>
+			<TD>sec.example.com (Pointer 0xC00C)</TD>
+		</TR>
+		<TR>
+			<TD>TYPE</TD>
+			<TD>NS (0x0002)</TD>
+		</TR>
+		<TR>
+			<TD>CLASS</TD>
+			<TD>IN (0x0001)</TD>
+		</TR>
+		<TR>
+			<TD>TTL</TD>
+			<TD>1 day (86400)</TD>
+		</TR>
+		<TR>
+			<TD>RDLENGTH</TD>
+			<TD>2</TD>
+		</TR>
+		<TR>
+			<TD>NSDNAME</TD>
+			<TD>NS7.sec.example.com (NS7 + Pointer 0xC02D)</TD>
+		</TR>
+<!-- /////////////////////////////////////////////////////////////// -->
+		<TR>
+			<TD COLSPAN="1" ROWSPAN="6">DNS Answer section</TD>
+			<TD>NAME</TD>
+			<TD>sec.example.com (Pointer 0xC00C)</TD>
+		</TR>
+		<TR>
+			<TD>TYPE</TD>
+			<TD>NS (0x0002)</TD>
+		</TR>
+		<TR>
+			<TD>CLASS</TD>
+			<TD>IN (0x0001)</TD>
+		</TR>
+		<TR>
+			<TD>TTL</TD>
+			<TD>1 day (86400)</TD>
+		</TR>
+		<TR>
+			<TD>RDLENGTH</TD>
+			<TD>6</TD>
+		</TR>
+		<TR>
+			<TD>NSDNAME</TD>
+			<TD>NS1.sec.example.com (NS1 + Pointer 0xC00C)</TD>
+		</TR>
+<!-- /////////////////////////////////////////////////////////////// -->
+		<TR>
+			<TD COLSPAN="1" ROWSPAN="6">DNS Answer section</TD>
+			<TD>NAME</TD>
+			<TD>NS7.sec.example.com (Pointer 0xC02D)</TD>
+		</TR>
+		<TR>
+			<TD>TYPE</TD>
+			<TD>A (0x0001)</TD>
+		</TR>
+		<TR>
+			<TD>CLASS</TD>
+			<TD>IN (0x0001)</TD>
+		</TR>
+		<TR>
+			<TD>TTL</TD>
+			<TD>1 day (86400)</TD>
+		</TR>
+		<TR>
+			<TD>RDLENGTH</TD>
+			<TD>4</TD>
+		</TR>
+		<TR>
+			<TD>ADDRESS</TD>
+			<TD>192.168.0.31</TD>
+		</TR>
+<!-- /////////////////////////////////////////////////////////////// -->
+		<TR>
+			<TD COLSPAN="1" ROWSPAN="6">DNS Answer section</TD>
+			<TD>NAME</TD>
+			<TD>NS7.sec.example.com (Pointer 0xC02D)</TD>
+		</TR>
+		<TR>
+			<TD>TYPE</TD>
+			<TD>AAAA (0x0001C)</TD>
+		</TR>
+		<TR>
+			<TD>CLASS</TD>
+			<TD>IN (0x0001)</TD>
+		</TR>
+		<TR>
+			<TD>TTL</TD>
+			<TD>1 day (86400)</TD>
+		</TR>
+		<TR>
+			<TD>RDLENGTH</TD>
+			<TD>4</TD>
+		</TR>
+		<TR>
+			<TD>ADDRESS</TD>
+			<TD>3ffe:501:ffff:100::31</TD>
+		</TR>
+<!-- /////////////////////////////////////////////////////////////// -->
+		<TR>
+			<TD COLSPAN="1" ROWSPAN="6">DNS Answer section</TD>
+			<TD>NAME</TD>
+			<TD>NS1.sec.example.com (Pointer 0xC05A)</TD>
+		</TR>
+		<TR>
+			<TD>TYPE</TD>
+			<TD>A (0x0001)</TD>
+		</TR>
+		<TR>
+			<TD>CLASS</TD>
+			<TD>IN (0x0001)</TD>
+		</TR>
+		<TR>
+			<TD>TTL</TD>
+			<TD>1 day (86400)</TD>
+		</TR>
+		<TR>
+			<TD>RDLENGTH</TD>
+			<TD>4</TD>
+		</TR>
+		<TR>
+			<TD>ADDRESS</TD>
+			<TD>192.168.0.10</TD>
+		</TR>
+<!-- /////////////////////////////////////////////////////////////// -->
+		<TR>
+			<TD COLSPAN="1" ROWSPAN="6">DNS Answer section</TD>
+			<TD>NAME</TD>
+			<TD>NS1.sec.example.com (Pointer 0xC05A)</TD>
+		</TR>
+		<TR>
+			<TD>TYPE</TD>
+			<TD>AAAA (0x0001C)</TD>
+		</TR>
+		<TR>
+			<TD>CLASS</TD>
+			<TD>IN (0x0001)</TD>
+		</TR>
+		<TR>
+			<TD>TTL</TD>
+			<TD>1 day (86400)</TD>
+		</TR>
+		<TR>
+			<TD>RDLENGTH</TD>
+			<TD>4</TD>
+		</TR>
+		<TR>
+			<TD>ADDRESS</TD>
+			<TD>3ffe:501:ffff:100::10</TD>
+		</TR>
+<!-- /////////////////////////////////////////////////////////////// -->
+		<TR>
+			<TD COLSPAN="1" ROWSPAN="6">DNS Answer section</TD>
+			<TD>NAME</TD>
+			<TD>CL2.sec.example.com (CL2 + Pointer 0xC00C)</TD>
+		</TR>
+		<TR>
+			<TD>TYPE<BR>
+			</TD>
+			<TD>A (0x0001)</TD>
+		</TR>
+		<TR>
+			<TD>CLASS</TD>
+			<TD>IN (0x0001)</TD>
+		</TR>
+		<TR>
+			<TD>TTL</TD>
+			<TD>86400sec</TD>
+		</TR>
+		<TR>
+			<TD>RDLENGTH</TD>
+			<TD>4</TD>
+		</TR>
+		<TR>
+			<TD>ADDRESS</TD>
+			<TD>192.168.0.22</TD>
+		</TR>
+<!-- /////////////////////////////////////////////////////////////// -->
+		<TR>
+			<TD COLSPAN="1" ROWSPAN="12">DNS Answer section</TD>
+			<TD>NAME</TD>
+			<TD>sec.example.com (Pointer 0xC00C)
+			</TD>
+		</TR>
+		<TR>
+			<TD>TYPE</TD>
+			<TD>SOA (0x0006)</TD>
+		</TR>
+		<TR>
+			<TD>CLASS</TD>
+			<TD>IN (0x0001)</TD>
+		</TR>
+		<TR>
+			<TD>TTL</TD>
+			<TD>86400sec</TD>
+		</TR>
+		<TR>
+			<TD>RDLENGTH</TD>
+			<TD>33</TD>
+		</TR>
+		<TR>
+			<TD>MNAME</TD>
+			<TD>NS7.sec.example.com (NS7 + Pointer 0xC00C)</TD>
+		</TR>
+		<TR>
+			<TD>RNAME</TD>
+			<TD>root.sec.example.com (root + Pointer 0xC00C)</TD>
+		</TR>
+		<TR>
+			<TD><B>SERIAL</B></TD>
+			<TD><I>2</I></TD>
+		</TR>
+		<TR>
+			<TD>REFRESH</TD>
+			<TD>180sec</TD>
+		</TR>
+		<TR>
+			<TD>RETRY</TD>
+			<TD>30sec</TD>
+		</TR>
+		<TR>
+			<TD>EXPIRE</TD>
+			<TD>360sec</TD>
+		</TR>
+		<TR>
+			<TD>MINIMUM</TD>
+			<TD>30sec</TD>
+		</TR>
+<!-- /////////////////////////////////////////////////////////////// -->
+		</TBODY>
+	</TABLE>
+	<BR>
+	<DD>5th packet.
+	<P></P>
+	<DD><TABLE BORDER="1">
+		<TBODY>
+		<TR>
+			<TD COLSPAN="3">
+			<CENTER>Standard query from DNS Client1 (TN) to Server1 (NUT)</CENTER>
+			</TD>
+		</TR>
+		<TR>
+			<TD ROWSPAN="2">IP Header</TD>
+			<TD>Source Address</TD>
+			<TD>CL1_NETZ</TD>
+		</TR>
+		<TR>
+			<TD>Destination Address</TD>
+			<TD>NUT_NETZ</TD>
+		</TR>
+		<TR>
+			<TD COLSPAN="1" ROWSPAN="2">UDP Header</TD>
+			<TD>Src Port</TD>
+			<TD>1000</TD>
+		</TR>
+		<TR>
+			<TD>Dst Port</TD>
+			<TD>53</TD>
+		</TR>
+		<TR>
+			<TD COLSPAN="1" ROWSPAN="13">DNS Header</TD>
+			<TD>ID</TD>
+			<TD>0x2000</TD>
+		</TR>
+		<TR>
+			<TD>QR</TD>
+			<TD>0</TD>
+		</TR>
+		<TR>
+			<TD>OPCODE</TD>
+			<TD>0</TD>
+		</TR>
+		<TR>
+			<TD>AA</TD>
+			<TD>0</TD>
+		</TR>
+		<TR>
+			<TD>TC</TD>
+			<TD>0</TD>
+		</TR>
+		<TR>
+			<TD>RD</TD>
+			<TD>0</TD>
+		</TR>
+		<TR>
+			<TD>RA</TD>
+			<TD>0</TD>
+		</TR>
+		<TR>
+			<TD>Z</TD>
+			<TD>0</TD>
+		</TR>
+		<TR>
+			<TD>RCODE</TD>
+			<TD>0</TD>
+		</TR>
+		<TR>
+			<TD>QDCOUNT</TD>
+			<TD>1</TD>
+		</TR>
+		<TR>
+			<TD>ANCOUNT</TD>
+			<TD>0</TD>
+		</TR>
+		<TR>
+			<TD>NSCOUNT</TD>
+			<TD>0</TD>
+		</TR>
+		<TR>
+			<TD>ARCOUNT</TD>
+			<TD>0</TD>
+		</TR>
+		<TR>
+			<TD COLSPAN="1" ROWSPAN="3">DNS Question section</TD>
+			<TD>QNAME</TD>
+			<TD>CL2.sec.example.com</TD>
+		</TR>
+		<TR>
+			<TD>QTYPE</TD>
+			<TD>A (0x0001)</TD>
+		</TR>
+		<TR>
+			<TD>QCLASS</TD>
+			<TD>IN (0x0001)</TD>
+		</TR>
+		</TBODY>
+	</TABLE>
+	<BR>
+	<DD>6th packet.
+	<P></P>
+	<DD><TABLE BORDER="1">
+		<TBODY>
+		<TR>
+			<TD COLSPAN="3">
+			<CENTER>Standard query response from DNS Server1 (NUT) to Client1 (TN) </CENTER>
+			</TD>
+		</TR>
+		<TR>
+			<TD ROWSPAN="2">IP Header</TD>
+			<TD>Source Address</TD>
+			<TD>NUT_NETZ</TD>
+		</TR>
+		<TR>
+			<TD>Destination Address</TD>
+			<TD>CL1_NETZ</TD>
+		</TR>
+		<TR>
+			<TD COLSPAN="1" ROWSPAN="2">UDP Header</TD>
+			<TD>Src Port</TD>
+			<TD>53</TD>
+		</TR>
+		<TR>
+			<TD>Dst Port</TD>
+			<TD>1000</TD>
+		</TR>
+		<TR>
+			<TD COLSPAN="1" ROWSPAN="13">DNS Header</TD>
+			<TD>ID</TD>
+			<TD>0x2000</TD>
+		</TR>
+		<TR>
+			<TD>QR</TD>
+			<TD>1</TD>
+		</TR>
+		<TR>
+			<TD>OPCODE</TD>
+			<TD>0</TD>
+		</TR>
+		<TR>
+			<TD>AA</TD>
+			<TD>1</TD>
+		</TR>
+		<TR>
+			<TD>TC</TD>
+			<TD>0</TD>
+		</TR>
+		<TR>
+			<TD>RD</TD>
+			<TD>0</TD>
+		</TR>
+		<TR>
+			<TD>RA</TD>
+			<TD>ANY</TD>
+		</TR>
+		<TR>
+			<TD>Z</TD>
+			<TD>ANY</TD>
+		</TR>
+		<TR>
+			<TD>RCODE</TD>
+			<TD>0</TD>
+		</TR>
+		<TR>
+			<TD>QDCOUNT</TD>
+			<TD>1</TD>
+		</TR>
+		<TR>
+			<TD>ANCOUNT</TD>
+			<TD>1</TD>
+		</TR>
+		<TR>
+			<TD>NSCOUNT</TD>
+			<TD><I>ANY</I></TD>
+		</TR>
+		<TR>
+			<TD>ARCOUNT</TD>
+			<TD><I>ANY</I></TD>
+		</TR>
+		<TR>
+			<TD COLSPAN="1" ROWSPAN="3">DNS Question section</TD>
+			<TD>QNAME</TD>
+			<TD>
+			CL2.sec.example.com
+			</TD>
+		</TR>
+		<TR>
+			<TD>QTYPE</TD>
+			<TD>A (0x0001)</TD>
+		</TR>
+		<TR>
+			<TD>QCLASS</TD>
+			<TD>IN (0x0001)</TD>
+		</TR>
+		<TR>
+			<TD COLSPAN="1" ROWSPAN="6">DNS Answer section</TD>
+			<TD>NAME</TD>
+			<TD>
+			CL2.sec.example.com (Pointer 0xC00C)
+			</TD>
+		</TR>
+		<TR>
+			<TD>TYPE</TD>
+			<TD>A (0x0001)</TD>
+		</TR>
+		<TR>
+			<TD>CLASS</TD>
+			<TD>IN (0x0001)</TD>
+		</TR>
+		<TR>
+			<TD>TTL</TD>
+			<TD>86400sec</TD>
+		</TR>
+		<TR>
+			<TD>RDLENGTH</TD>
+			<TD>4</TD>
+		</TR>
+		<TR>
+			<TD>ADDRESS</TD>
+			<TD>192.168.0.22</TD>
+		</TR>
+		<TR>
+			<TD COLSPAN="1" ROWSPAN="6">DNS Authority section</TD>
+			<TD>NAME</TD>
+			<TD>sec.example.com (Pointer 0xC010)</TD>
+		</TR>
+		<TR>
+			<TD>TYPE</TD>
+			<TD>NS (0x0002)</TD>
+		</TR>
+		<TR>
+			<TD>CLASS</TD>
+			<TD>IN (0x0001)</TD>
+		</TR>
+		<TR>
+			<TD>TTL</TD>
+			<TD>86400sec</TD>
+		</TR>
+		<TR>
+			<TD>RDLENGTH</TD>
+			<TD>6</TD>
+		</TR>
+		<TR>
+			<TD>NSDNAME</TD>
+			<TD>NS1.sec.example.com (NS1 + Pointer 0xC010)</TD>
+		</TR>
+		<TR>
+			<TD COLSPAN="1" ROWSPAN="6">DNS Authority section</TD>
+			<TD>NAME</TD>
+			<TD>sec.example.com (Pointer 0xC010)</TD>
+		</TR>
+		<TR>
+			<TD>TYPE</TD>
+			<TD>NS (0x0002)</TD>
+		</TR>
+		<TR>
+			<TD>CLASS</TD>
+			<TD>IN (0x0001)</TD>
+		</TR>
+		<TR>
+			<TD>TTL</TD>
+			<TD>86400sec</TD>
+		</TR>
+		<TR>
+			<TD>RDLENGTH</TD>
+			<TD>6</TD>
+		</TR>
+		<TR>
+			<TD>NSDNAME</TD>
+			<TD>NS7.sec.example.com (NS7 + Pointer 0xC010)</TD>
+		</TR>
+		<TR>
+			<TD COLSPAN="1" ROWSPAN="6">DNS Additional section</TD>
+			<TD>NAME</TD>
+			<TD>NS1.sec.example.com (Pointer 0xC041)</TD>
+		</TR>
+		<TR>
+			<TD>TYPE<BR>
+			</TD>
+			<TD>A (0x0001)</TD>
+		</TR>
+		<TR>
+			<TD>CLASS</TD>
+			<TD>IN (0x0001)</TD>
+		</TR>
+		<TR>
+			<TD>TTL</TD>
+			<TD>86400sec</TD>
+		</TR>
+		<TR>
+			<TD>RDLENGTH</TD>
+			<TD>4</TD>
+		</TR>
+		<TR>
+			<TD>ADDRESS</TD>
+			<TD>192.168.0.10</TD>
+		</TR>
+		<TR>
+			<TD COLSPAN="1" ROWSPAN="6">DNS Additional section</TD>
+			<TD>NAME</TD>
+			<TD>NS1.sec.example.com (Pointer 0xC041)</TD>
+		</TR>
+		<TR>
+			<TD>TYPE<BR>
+			</TD>
+			<TD>AAAA (0x001C)</TD>
+		</TR>
+		<TR>
+			<TD>CLASS</TD>
+			<TD>IN (0x0001)</TD>
+		</TR>
+		<TR>
+			<TD>TTL</TD>
+			<TD>86400sec</TD>
+		</TR>
+		<TR>
+			<TD>RDLENGTH</TD>
+			<TD>16</TD>
+		</TR>
+		<TR>
+			<TD>ADDRESS</TD>
+			<TD>3ffe:501:ffff:100::10</TD>
+		</TR>
+		<TR>
+			<TD COLSPAN="1" ROWSPAN="6">DNS Additional section</TD>
+			<TD>NAME</TD>
+			<TD>NS7.sec.example.com (Pointer 0xC053)</TD>
+		</TR>
+		<TR>
+			<TD>TYPE<BR>
+			</TD>
+			<TD>A (0x0001)</TD>
+		</TR>
+		<TR>
+			<TD>CLASS</TD>
+			<TD>IN (0x0001)</TD>
+		</TR>
+		<TR>
+			<TD>TTL</TD>
+			<TD>86400sec</TD>
+		</TR>
+		<TR>
+			<TD>RDLENGTH</TD>
+			<TD>4</TD>
+		</TR>
+		<TR>
+			<TD>ADDRESS</TD>
+			<TD>192.168.0.31</TD>
+		</TR>
+		<TR>
+			<TD COLSPAN="1" ROWSPAN="6">DNS Additional section</TD>
+			<TD>NAME</TD>
+			<TD>NS7.sec.example.com (Pointer 0xC053)</TD>
+		</TR>
+		<TR>
+			<TD>TYPE<BR>
+			</TD>
+			<TD>AAAA (0x001C)</TD>
+		</TR>
+		<TR>
+			<TD>CLASS</TD>
+			<TD>IN (0x0001)</TD>
+		</TR>
+		<TR>
+			<TD>TTL</TD>
+			<TD>86400sec</TD>
+		</TR>
+		<TR>
+			<TD>RDLENGTH</TD>
+			<TD>16</TD>
+		</TR>
+		<TR>
+			<TD>ADDRESS</TD>
+			<TD>3ffe:501:ffff:100::31</TD>
+		</TR>
+		</TBODY>
+	</TABLE>
+	<BR>
+	<DD>Exp.
+	<BR>
+	<DD><TABLE BORDER="1">
+		<TBODY>
+		<TR>
+			<TD>NUT_NETZ</TD>
+			<TD>DNS Server1's (NUT) Net-z address</TD>
+		</TR>
+		<TR>
+			<TD>CL1_NETZ</TD>
+			<TD>DNS Client1's (TN) Net-z address</TD>
+		</TR>
+		<TR>
+			<TD>SV7_NETZ</TD>
+			<TD>DNS Server7's (TN) Net-z address</TD>
+		</TR>
+		</TBODY>
+	</TABLE>
+	</UL><p>
+</p>
+<hr />
+<h1><a name="judgment">JUDGMENT</a></h1>
+<pre>
+        1. Received standard query with Type=SOA after SOA refresh time expired.
+        3. Received standard query with Type=IXFR serial=1.
+        6. Received standard query response QNAME=CL2.sec.example.com and Answer address 192.168.0.22. 
+
+</pre>
+<p>
+</p>
+<hr />
+<h1><a name="termination">TERMINATION</a></h1>
+<pre>
+        None
+
+</pre>
+<p>
+</p>
+<hr />
+<h1><a name="reference">REFERENCE</a></h1>
+<pre>
+        RFC1995 Incremental Zone Transfer in DNS
+        2. Brief Description of the Protocol
+        3. Query Format
+
+</pre>
+
+</body>
+
+</html>

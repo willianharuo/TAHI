@@ -1,0 +1,255 @@
+<HTML>
+<HEAD>
+<TITLE>rfc2766_ping.seq - Verify IPv6 <-> IPv4 header translation in 
+        accordance with RFC2766 [NATPT]</TITLE>
+<LINK REV="made" HREF="mailto:hackers@FreeBSD.org">
+</HEAD>
+
+<BODY>
+
+<!-- INDEX BEGIN -->
+<!--
+
+<UL>
+
+	<LI><A HREF="#NAME">NAME</A>
+	<LI><A HREF="#TARGET">TARGET</A>
+	<LI><A HREF="#SYNOPSIS">SYNOPSIS</A>
+	<LI><A HREF="#INITIALIZATION">INITIALIZATION</A>
+	<LI><A HREF="#TEST_PROCEDURE">TEST PROCEDURE</A>
+	<LI><A HREF="#JUDGMENT">JUDGMENT</A>
+	<LI><A HREF="#NOTE">NOTE</A>
+	<LI><A HREF="#REFERENCE">REFERENCE</A>
+	<LI><A HREF="#SEE_ALSO">SEE ALSO</A>
+</UL>
+-->
+<!-- INDEX END -->
+
+<P>
+<H1><A NAME="NAME">NAME</A></H1>
+<P>
+<PRE>        rfc2766_ping.seq - Verify IPv6 &lt;-&gt; IPv4 header translation in 
+        accordance with RFC2766 [NATPT]
+</PRE>
+<P>
+<HR>
+<H1><A NAME="TARGET">TARGET</A></H1>
+<P>
+<PRE>        Router
+</PRE>
+<P>
+<HR>
+<H1><A NAME="SYNOPSIS">SYNOPSIS</A></H1>
+<P>
+<PRE>        rfc2766_ping.seq [-tooloption ...] -p rfc2766_ping.def
+</PRE>
+<P>
+<HR>
+<H1><A NAME="INITIALIZATION">INITIALIZATION</A></H1>
+<PRE>
+	Before this test starts, run <A HREF="./initialize_natpt.html">initialize_natpt.seq</A>.
+</PRE>
+
+<P>
+<HR>
+<H1><A NAME="TEST_PROCEDURE">TEST PROCEDURE</A></H1>
+<P>
+<PRE>        This test verifies that NUT translates between IPv6 (no fragment hdr) 
+        and IPv4 (DF=1). It also tests ICMPv6 echo &lt;-&gt; ICMPv4 echo 
+        translation.
+        
+        Network Topology
+</PRE>
+<P>
+<PRE>        Link0
+        --------------------------
+            |               |
+           TN              NUT
+            |               |
+        --------------------------
+        Link1
+</PRE>
+<P>
+<PRE>        TN -- (Link0) -- NUT        NUT -- (Link1) -- TN
+        
+        ---------------------      ------------------------
+</PRE>
+<HR WIDTH=80%>
+
+<P>
+<PRE>        1.1
+        ===================&gt;
+        ICMPv6 Echo Request
+                IPv6 Header
+                        src address : TN LINK0 IPv4 embedded IPv6 address
+                        dst address : TN LINK1 IPv4 embedded IPv6 address
+                ICMPv6 echo request
+</PRE>
+<P>
+<PRE>        1.2
+        &lt;&lt;JUDGMENT&gt;&gt;
+                                    ===================&gt;
+        ICMPv4 Echo request
+                IPv4 Header
+                        src address : TN LINK0 IPv4 address
+                        dst address : TN LINK1 IPv4 address
+                        Don't Fragment = 1
+                        More fragments = 0
+                ICMPv4 echo request
+</PRE>
+<HR WIDTH=80%>
+
+<P>
+<PRE>        2.1
+                                    &lt;===================
+        ICMPv4 Echo Reply
+                IPv4 Header
+                        src address : TN LINK1 IPv4 address
+                        dst address : TN LINK0 IPv4 address
+                        Don't Fragment = 1
+                        More fragments = 0
+                ICMPv4 echo reply
+</PRE>
+<P>
+<PRE>        2.2
+        &lt;&lt;JUDGMENT&gt;&gt;
+        &lt;===================
+        ICMPv6 Echo Reply
+                IPv6 Header
+                        src address : TN LINK1 IPv4 embedded IPv6 address
+                        dst address : TN LINK0 IPv4 embedded IPv6 address
+                        FlowLabel = 0
+                ICMPv6 echo reply
+</PRE>
+<HR WIDTH=80%>
+
+<P>
+<PRE>        3.1
+        ===================&gt;
+        ICMPv6 Echo Request
+                IPv6 Header
+                        src address : TN LINK0 IPv4 embedded IPv6 address
+                        dst address : TN LINK1 IPv4 embedded IPv6 address
+                Fragment Header
+                        More fragments = 0
+                ICMPv6 echo request
+</PRE>
+<P>
+<PRE>        3.2
+        &lt;&lt;JUDGMENT&gt;&gt;
+                                    ===================&gt;
+        ICMPv4 Echo request
+                IPv4 Header
+                        src address : TN LINK0 IPv4 address
+                        dst address : TN LINK1 IPv4 address
+                        Don't Fragment = 0
+                        More fragments = 0
+                ICMPv4 echo request
+</PRE>
+<HR WIDTH=80%>
+
+<P>
+<PRE>        4.1
+                                    &lt;===================
+        ICMPv4 Echo Reply
+                IPv4 Header
+                        src address : TN LINK1 IPv4 address
+                        dst address : TN LINK0 IPv4 address
+                        Don't Fragment = 0
+                        More fragments = 0
+                ICMPv4 echo reply
+</PRE>
+<P>
+<PRE>        4.2
+        &lt;&lt;JUDGMENT&gt;&gt;
+        &lt;===================
+        ICMPv6 Echo Reply
+                IPv6 Header
+                        src address : TN LINK1 IPv4 embedded IPv6 address
+                        dst address : TN LINK0 IPv4 embedded IPv6 address
+                Fragment Header
+                        More fragments = 0
+                ICMPv6 echo reply
+</PRE>
+<P>
+<HR>
+<H1><A NAME="JUDGMENT">JUDGMENT</A></H1>
+<P>
+<PRE>        &lt;&lt; PASS &gt;&gt;
+                TN (Link1) received ICMPv4 echo request, 
+                with DF=1 in IPv4 header.
+                TN (Link0) received ICMPv6 echo reply, 
+                with no fragment header after IPv6 header.
+                TN (Link1) received ICMPv4 echo request, 
+                with DF=0 in IPv4 header.
+                TN (Link0) received ICMPv6 echo reply, 
+                with a fragment header after IPv6 header.
+</PRE>
+<P>
+<PRE>        &lt;&lt; FAIL &gt;&gt;      
+                NUT did not translate between ICMPv6 echo and ICMPv4 echo, 
+                or NUT did not translate between IPv6 fragment header 
+                and IPv4 DF option.
+</PRE>
+<P>
+<HR>
+<H1><A NAME="NOTE">NOTE</A></H1>
+<P>
+<HR>
+<H1><A NAME="REFERENCE">REFERENCE</A></H1>
+<P>
+<STRONG>RFC2766</STRONG>
+
+
+
+<P>
+5.1 Translating IPv4 headers to IPv6 headers
+
+<P>
+<PRE>   This is done exactly the same as in SIIT apart from the following
+   fields:
+</PRE>
+<P>
+<PRE>      Source Address:
+         The low-order 32 bits is the IPv4 source address. The high-
+         order 96 bits is the designated PREFIX for all v4
+         communications. Addresses using this PREFIX will be routed
+         to the NAT-PT gateway (PREFIX::/96)
+</PRE>
+<P>
+<PRE>      Destination Address:
+         NAT-PT retains a mapping between the IPv4 destination
+         address and the IPv6 address of the destination node. The
+         IPv4 destination address is replaced by the IPv6 address
+         retained in that mapping.
+</PRE>
+<P>
+5.2 Translating IPv6 headers to IPv4 headers
+
+<P>
+<PRE>   This is done exactly the same as in SIIT apart from the Source
+   Address which should be determined as follows:
+</PRE>
+<P>
+<PRE>      Source Address:
+         The NAT-PT retains a mapping between the IPv6 source address
+         and an IPv4 address from the pool of IPv4 addresses
+         available. The IPv6 source address is replaced by the IPv4
+         address retained in that mapping.
+</PRE>
+<P>
+<PRE>      Destination Address:
+         IPv6 packets that are translated have a destination address
+         of the form PREFIX::IPv4/96. Thus the low-order 32 bits of
+         the IPv6 destination address is copied to the IPv4
+         destination address.
+</PRE>
+<P>
+<HR>
+<H1><A NAME="SEE_ALSO">SEE ALSO</A></H1>
+<P>
+<PRE>        perldoc V6evalTool
+</PRE>
+</BODY>
+
+</HTML>

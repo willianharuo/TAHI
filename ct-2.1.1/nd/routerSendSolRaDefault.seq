@@ -1,0 +1,420 @@
+#!/usr/bin/perl
+#
+# Copyright (C) 1999, 2000, 2001, 2002, 2003 Yokogawa Electric Corporation,
+# IPA (Information-technology Promotion Agency, Japan).
+# All rights reserved.
+# 
+# Redistribution and use of this software in source and binary forms, with 
+# or without modification, are permitted provided that the following 
+# conditions and disclaimer are agreed and accepted by the user:
+# 
+# 1. Redistributions of source code must retain the above copyright 
+# notice, this list of conditions and the following disclaimer.
+# 
+# 2. Redistributions in binary form must reproduce the above copyright 
+# notice, this list of conditions and the following disclaimer in the 
+# documentation and/or other materials provided with the distribution.
+# 
+# 3. Neither the names of the copyrighters, the name of the project which 
+# is related to this software (hereinafter referred to as "project") nor 
+# the names of the contributors may be used to endorse or promote products 
+# derived from this software without specific prior written permission.
+# 
+# 4. No merchantable use may be permitted without prior written 
+# notification to the copyrighters. However, using this software for the 
+# purpose of testing or evaluating any products including merchantable 
+# products may be permitted without any notification to the copyrighters.
+# 
+# 
+# 
+# THIS SOFTWARE IS PROVIDED BY THE COPYRIGHTERS, THE PROJECT AND 
+# CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING 
+# BUT NOT LIMITED THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS 
+# FOR A PARTICULAR PURPOSE, ARE DISCLAIMED.  IN NO EVENT SHALL THE 
+# COPYRIGHTERS, THE PROJECT OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, 
+# INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES 
+# (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR 
+# SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) 
+# HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN 
+# CONTRACT,STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) 
+# ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF 
+# THE POSSIBILITY OF SUCH DAMAGE.
+#
+# $TAHI: ct/nd/routerSendSolRaDefault.seq,v 1.8 2002/02/27 01:08:29 masaxmasa Exp $
+
+########################################################################
+BEGIN { $V6evalTool::TestVersion = '$Name: REL_2_1_1 $ '; }
+ 
+use V6evalTool;
+use nd;
+use ra;
+
+ndOptions(@ARGV);
+
+# The following generate debugging messages.
+$nd::debug=$ndOpt_v|$ndOpt_vv;
+
+# You can specifies debug options to a remote control program.
+# If you want to know more detail, please see the following:
+# - V6evalTool.pm: perldoc V6evalTool
+# - V6evalRemote.pm: perldoc V6evalRemote
+$nd::remote_debug="-o1" if $ndOpt_vv;
+
+$IF=Link0;
+$exit_rtn=$V6evalTool::exitPass;
+
+$wait_ra=$ra::defaultRA2maxInterval*2;
+$delay=1;
+
+#
+#
+#
+$type=$V6evalTool::NutDef{Type};
+if($type eq host) {
+    vLogHTML("This test is for the router only<BR>");
+    exit $V6evalTool::exitRouterOnly;
+}
+
+$type=$V6evalTool::NutDef{Type};
+if($type ne router) {
+    vLogHTML(ndErrmsg("ERROR: $V6evalTool::NutDef{Type}: ".
+		      "Unknown target type<BR>"));
+    exit $V6evalTool::exitFail;
+}
+
+if(raIsMarkDefaultRA2() == 0) {
+    vLogHTML(ndErrmsg("ERROR: Need RA configuration<BR>"));
+    exit $V6evalTool::exitFail;
+}
+
+#
+#
+#
+vCapture($IF);
+
+#
+#
+#
+if(beforeLimit() == 0) {
+    $exit_rtn=$V6evalTool::exitFail;
+}
+if(afterLimit() == 0) {
+    $exit_rtn=$V6evalTool::exitFail;
+}
+
+#
+#
+#
+end:
+    exit $exit_rtn;
+
+sub beforeLimit()
+{
+    #
+    #
+    #
+    vClear($IF);
+
+    #
+    #
+    #
+    if(raRecvAnyRA($IF, $wait_ra, 0, 0, %ret1) == 0) {
+	vLogHTML("ERROR: Never got RA<BR>");
+	goto error;
+    }
+
+    #
+    #
+    #
+    vSleep($nd::MIN_DELAY_BETWEEN_RAS - $delay,
+	   "Wait (MIN_DELAY_BETWEEN_RAS - $delay) sec.");
+    $pktdesc{rs_tn2allrouter}="Send RS";
+    %ret2=vSend($IF, rs_tn2allrouter);
+
+    #
+    #
+    #
+    if(raRecvAnyRA($IF, $wait_ra, $ret2{sentTime1}, 0, %ret3) == 0) {
+	vLogHTML("ERROR: Never got RA<BR>");
+	goto error;
+    }
+
+    #
+    #
+    #
+    $n=$ret1{recvCount};
+    $time_first=$ret1{"recvTime$n"};
+    $n=$ret3{recvCount};
+    $time_last=$ret3{"recvTime$n"};
+    $interval=$time_last-$time_first;
+    vLogHTML("Interval between RAs (1st and 2nd): $interval<BR>");
+    if($interval < $nd::MIN_DELAY_BETWEEN_RAS ||
+       $interval > $nd::MIN_DELAY_BETWEEN_RAS+1) {
+	vLogHTML(ndErrmsg("ERROR: $nd::MIN_DELAY_BETWEEN_RAS &lt; ".
+			  "The interval &lt; ".
+			  "$nd::MIN_DELAY_BETWEEN_RAS+1<BR>"));
+	goto error;
+    }
+
+    #
+    #
+    #
+    return(1);
+
+error:
+    return(0);
+}
+
+sub afterLimit()
+{
+    #
+    #
+    #
+    vClear($IF);
+
+    #
+    #
+    #
+    if(raRecvAnyRA($IF, $wait_ra, 0, 0, %ret1) == 0) {
+	vLogHTML("ERROR: Never got RA<BR>");
+	goto error;
+    }
+
+    #
+    #
+    #
+    vSleep($nd::MIN_DELAY_BETWEEN_RAS + $delay,
+	   "Wait (MIN_DELAY_BETWEEN_RAS + $delay) sec.");
+    $pktdesc{rs_tn2allrouter}="Send RS";
+    %ret2=vSend($IF, rs_tn2allrouter);
+
+    #
+    #
+    #
+    if(raRecvAnyRA($IF, $wait_ra, $ret2{sentTime1}, 0, %ret3) == 0) {
+	vLogHTML("ERROR: Never got RA<BR>");
+	goto error;
+    }
+
+    #
+    #
+    #
+    $time_first=$ret2{sentTime1};
+    $n=$ret3{recvCount};
+    $time_last=$ret3{"recvTime$n"};
+    $interval=$time_last-$time_first;
+    vLogHTML("Interval between RS and RA: $interval<BR>");
+    if($interval > $nd::MAX_RA_DELAY_TIME) {
+	vLogHTML(ndErrmsg("ERROR: $nd::MAX_RA_DELAY_TIME &lt; ".
+			  "The interval<BR>"));
+	goto error;
+    }
+
+    #
+    #
+    #
+    return(1);
+
+error:
+    return(0);
+}
+
+########################################################################
+__END__
+
+=head1 NAME
+
+routerSendSolRaDefault - TBD
+
+=head1 TARGET
+
+Router Only
+
+=head1 SYNOPSIS
+
+  routerSendSolRaDefault.seq [-tooloption ...] -p routerSendSolRaDefault.def
+
+=head1 INITIALIZATION
+
+=begin html
+Start NUT advertising RAs whose parameters are as same as 
+<A HREF="startDefaultRA.html#INITIALIZATION">those</A>
+except the followings:
+<UL>
+  <LI>MaxRtrAdvInterval:7
+  <LI>MinRtrAdvInterval:10
+</UL>
+
+=end html
+
+=head1 TEST PROCEDURE
+
+B<routerSendSolRaDefault> verifies that RA is delayed by the rules.
+
+=begin html
+<PRE>
+CASE I
+<BR>
+  TN               NUT
+  ----------------------
+<BR>
+  <=== RA ====
+       src=NUT
+       dst=all-node
+       any option is accepted.
+<BR>
+       T1 <= received time
+<BR>
+  Wait(MIN_DELAY_BETWEEN_RAS - 1 sec)
+<BR>
+  ==== RS ===>
+       src=TN
+       dst=all-router
+<BR>
+  <=== RA ====
+       src=NUT
+       dst=allnode
+       any option is accepted.
+<BR>
+       T2 <= received time
+<BR>
+  <A HREF="#JDG1">Judgment</A>: MIN_DELAY_BETWEEN_RAS < T2 - T1 < MIN_DELAY_BETWEEN_RAS +
+                                              RA_MAX_DELAY_TIME
+<BR>
+CASE II
+<BR>
+  TN               NUT
+  ----------------------
+<BR>
+  <=== RA ====
+       src=NUT
+       dst=all-node
+       any option is accepted.
+<BR>
+  Wait(MIN_DELAY_BETWEEN_RAS + 1 sec)
+<BR>
+  ==== RS ===>
+       src=TN
+       dst=all-router
+<BR>
+       T1 <= sent time
+<BR>
+  <=== RA ====
+       src=NUT
+       dst=all-node
+       any option is accepted.
+<BR>
+       T2 <= received time
+<BR>
+  <A HREF="#JDG2">Judgment</A>: 0 < = T2 - T1 < RA_MAX_DELAY_TIME
+</PRE>
+
+=end html
+
+=head1 JUDGMENT
+
+=begin html
+<PRE>
+<A NAME="JDG1">CASE I</A>
+                                    Solicited
+      Multicast                     Multicast
+          RA                 RS         RA
+          ^                  |          ^
+          |                  |          |
+          |                  V          |
+      ----+------------------+-----+----+----> time
+          |<======================>|    |
+          | MIN_DELAY_BETWEEN_RAS       |
+          |                             |
+          |<===========================>|
+            <A HREF="#REF1">MIN_DELAY_BETWEEN_RAS + T</A>
+<BR>
+      MIN_DELAY_BETWEEN_RAS=3 sec.
+      0 < T < MAX_RA_DELAY_TIME (0.5 sec)
+<BR>
+<A NAME="JDG2">CASE II</A>
+                                           Solicited
+      Multicast                            Multicast
+          RA                            RS    RA
+          ^                             |     ^
+          |                             |     |
+          |                             V     |
+      ----+------------------------+----+-----+---> time
+          |<======================>|    |<===>|
+            MIN_DELAY_BETWEEN_RAS          <A HREF="#REF2">T</A>
+<BR>
+      MIN_DELAY_BETWEEN_RAS=3 sec.
+      0 < T < MAX_RA_DELAY_TIME (0.5 sec)
+</PRE>
+
+=end html
+
+=head1 TERMINATION
+
+  N/A
+
+=head1 NOTE
+
+  TBD
+
+=head1 REFERENCE
+
+=begin html
+<PRE>
+6.2.6.  Processing Router Solicitations
+<BR>
+   A host MUST silently discard any received Router Solicitation
+   messages.
+<BR>
+   In addition to sending periodic, unsolicited advertisements, a router
+   sends advertisements in response to valid solicitations received on
+   an advertising interface.  A router MAY choose to unicast the
+   response directly to the soliciting host's address (if the
+   solicitation's source address is not the unspecified address), but
+   the usual case is to multicast the response to the all-nodes group.
+   In the latter case, the interface's interval timer is reset to a new
+   random value, as if an unsolicited advertisement had just been sent
+   (see Section 6.2.4).
+<BR>
+   In all cases, Router Advertisements sent in response to a Router
+   Solicitation MUST be delayed by a random time between 0 and
+   MAX_RA_DELAY_TIME seconds. (If a single advertisement is sent in
+   response to multiple solicitations, the delay is relative to the
+   first solicitation.)  In addition, consecutive Router Advertisements
+   sent to the all-nodes multicast address MUST be rate limited to no
+   more than one advertisement every MIN_DELAY_BETWEEN_RAS seconds.
+<BR>
+   A router might process Router Solicitations as follows:
+<BR>
+    - Upon receipt of a Router Solicitation, compute a random delay
+      within the range 0 through MAX_RA_DELAY_TIME.  If the computed
+      value corresponds to a time later than the time the next multicast
+      Router Advertisement is scheduled to be sent, ignore the random
+      delay and send the advertisement at the already-scheduled time.
+<BR>
+    - <A NAME="REF1"><B>If the router sent a multicast Router Advertisement (solicited or
+      unsolicited) within the last MIN_DELAY_BETWEEN_RAS seconds,
+      schedule the advertisement to be sent at a time corresponding to
+      MIN_DELAY_BETWEEN_RAS plus the random value after the previous
+      advertisement was sent.  This ensures that the multicast Router
+      Advertisements are rate limited.</B></A>
+<BR>
+    - <A NAME="REF2"><B>Otherwise, schedule the sending of a Router Advertisement at the
+      time given by the random value.</B></A>
+<BR>
+   Note that a router is permitted to send multicast Router
+   Advertisements more frequently than indicated by the
+   MinRtrAdvInterval configuration variable so long as the more frequent
+   advertisements are responses to Router Solicitations.  In all cases,
+   however, unsolicited multicast advertisements MUST NOT be sent more
+   frequently than indicated by MinRtrAdvInterval.
+</PRE>
+
+=end html
+
+=head1 SEE ALSO
+
+  perldoc V6evalTool
+  perldoc V6evalRemote
+
+=cut

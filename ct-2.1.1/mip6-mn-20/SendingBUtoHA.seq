@@ -1,0 +1,355 @@
+#!/usr/bin/perl
+#
+# Copyright (C) 2003 Yokogawa Electric Corporation , 
+# INTAP(Interoperability Technology Association for Information 
+# Processing, Japan) , IPA (Information-technology Promotion Agency,Japan)
+# Copyright (C) IBM Corporation 2003.
+# All rights reserved.
+#
+# Redistribution and use of this software in source and binary forms, with 
+# or without modification, are permitted provided that the following 
+# conditions and disclaimer are agreed and accepted by the user:
+#
+# 1. Redistributions of source code must retain the above copyright 
+# notice, this list of conditions and the following disclaimer.
+#
+# 2. Redistributions in binary form must reproduce the above copyright 
+# notice, this list of conditions and the following disclaimer in the 
+# documentation and/or other materials provided with the distribution.
+#
+# 3. Neither the names of the copyrighters, the name of the project which 
+# is related to this software (hereinafter referred to as "project") nor 
+# the names of the contributors may be used to endorse or promote products 
+# derived from this software without specific prior written permission.
+#
+# 4. No merchantable use may be permitted without prior written 
+# notification to the copyrighters. However, using this software for the 
+# purpose of testing or evaluating any products including merchantable 
+# products may be permitted without any notification to the copyrighters.
+#
+#
+#
+# THIS SOFTWARE IS PROVIDED BY THE COPYRIGHTERS, THE PROJECT AND 
+# CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING 
+# BUT NOT LIMITED THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS 
+# FOR A PARTICULAR PURPOSE, ARE DISCLAIMED.  IN NO EVENT SHALL THE 
+# COPYRIGHTERS, THE PROJECT OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, 
+# INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES 
+# (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR 
+# SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) 
+# HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN 
+# CONTRACT,STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) 
+# ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF 
+# THE POSSIBILITY OF SUCH DAMAGE.
+#
+#    Author: Kazuo Hiekata <hiekata@yamato.ibm.com>
+#
+
+@title  = ();
+%result = ();
+
+BEGIN { $V6evalTool::TestVersion = '$Name: REL_2_1_1 $'; }
+
+use V6evalTool;
+use mip6MN_common;
+
+
+#--------------------------------------------------------------#
+# check if NUT is host or router
+#--------------------------------------------------------------#
+if($V6evalTool::NutDef{Type} ne 'host') {
+	vLogHTML("This test is for the host only");
+	exit $V6evalTool::exitHostOnly;
+}
+
+$IF0_NUT = $V6evalTool::NutDef{Link0_device};
+$IF0 = Link0;
+vCapture($IF0);
+
+#--------------------------------------------------------------#
+# Initialization
+#--------------------------------------------------------------#
+init_mn();
+
+# Assuming MN is at Link0
+vSend($IF0, ra_ha0_to_multi);
+vSend($IF0, na_ha0lla_to_nut0);
+vSleep(3);
+
+# Clear Packets
+vClear($IF0);
+#--------------------------------------------------------------#
+# MN sends Binding Update when changing primary CoA
+#--------------------------------------------------------------#
+vLogHTML('<B>==== MN sends Binding Update when changing primary CoA ====</B><BR>');
+
+# LinkX
+vLogHTML('<B>MN moved to LinkX</B><BR>');
+vSend($IF0, ra_r1_to_multi);
+vSend($IF0, na_r1lla_to_nut1);
+if (0 != wait_frame_at_linkx($IF0, bindingupdate_nut1_to_ha0)) {
+	exit $V6evalTool::exitFail;
+}
+
+# ping from TN to NUT1
+vSend($IF0, echorequest_tn_to_nut1);
+if (0 != wait_frame_at_linkx($IF0, echoreply_nut1_to_tn)) {
+	exit $V6evalTool::exitFail;
+}
+
+# move to LinkY
+vLogHTML('<B>MN moved to LinkY</B><BR>');
+vSend($IF0, ra_r2_to_multi);
+vSend($IF0, na_r2lla_to_nut2);
+if (0 != wait_frame_at_linky($IF0, bindingupdate_nut2_to_ha0)) {
+	exit $V6evalTool::exitFail;
+}
+
+# ping from TN to NUT
+vSend($IF0, echorequest_tn_to_nut2);
+if (0 != wait_frame_at_linky($IF0, echoreply_nut2_to_tn)) {
+	exit $V6evalTool::exitFail;
+}
+
+vLogHTML('OK<BR>');
+exit $V6evalTool::exitPass;
+
+################################################################
+__END__
+
+=head1 NAME
+
+SendingBUtoHA - MN sends Binding Update when changing primary CoA
+
+=head1 TARGET
+
+=begin html
+<PRE>
+Host
+</PRE>
+
+=end html
+
+=head1 SYNOPSIS
+
+=begin html
+<PRE>
+<A HREF="./SendingBUtoHA.seq">SendingBUtoHA.seq</A> [-tooloption ...] -pkt <A HREF="./MN_Common.def">MN_Common.def</A>
+</PRE>
+<BLOCKQUOTE>
+<PRE>
+-tooloption: v6eval tool option
+</PRE>
+</BLOCKQUOTE>
+
+=end html
+
+=head1 TOPOLOGY
+
+=begin html
+<PRE>
+                                      |
+                                      R       TN
+                                      |       |
+                              --------+-------+--------------- LinkZ
+</PRE>
+<BR><BR><BR>
+<PRE>
+                                      |
+                                      R2             NUT2
+                                      |               |
+                              --------+---------------+------- LinkY
+</PRE>
+<BR><BR><BR>
+<PRE>
+                                      |       |
+                                      HA2     R1     NUT1
+                                      |       |       |
+                              --------+-------+-------+------- LinkX
+</PRE>
+<BR><BR><BR>
+<PRE>
+                          |           |
+             NUT0        HA1          HA0
+              |           |           |
+Link0 --------+-----------+-----------+-----------------------
+</PRE>
+<BLOCKQUOTE>
+<TABLE BORDER>
+<TR>
+<TD><TT>Link0</TT></TD>
+<TD><TT>3ffe:501:ffff:100::/64</TT></TD>
+<TD><TT>home link</TT></TD>
+</TR>
+<TR>
+<TD><TT>LinkX</TT></TD>
+<TD><TT>3ffe:501:ffff:102::/64</TT></TD>
+<TD><TT>&nbsp;</TT></TD>
+</TR>
+<TR>
+<TD><TT>LinkY</TT></TD>
+<TD><TT>3ffe:501:ffff:103::/64</TT></TD>
+<TD><TT>&nbsp;</TT></TD>
+</TR>
+<TR>
+<TD><TT>LinkZ</TT></TD>
+<TD><TT>3ffe:501:ffff:104::/64</TT></TD>
+<TD><TT>&nbsp;</TT></TD>
+</TR>
+<TR>
+<TD><TT>HA0(Link0)</TT></TD>
+<TD><TT>3ffe:501:ffff:100:200:ff:fe00:a1a1/64</TT></TD>
+<TD><TT>&nbsp;</TT></TD>
+</TR>
+<TR>
+<TD><TT>HA1(Link0)</TT></TD>
+<TD><TT>3ffe:501:ffff:100:200:ff:fe00:a2a2/64</TT></TD>
+<TD><TT>&nbsp;</TT></TD>
+</TR>
+<TR>
+<TD><TT>HA2(LinkX)</TT></TD>
+<TD><TT>3ffe:501:ffff:102:200:ff:fe00:a3a3</TT></TD>
+<TD><TT>&nbsp;</TT></TD>
+</TR>
+<TR>
+<TD><TT>R1(LinkX)</TT></TD>
+<TD><TT>3ffe:501:ffff:102:200:ff:fe00:a4a4</TT></TD>
+<TD><TT>&nbsp;</TT></TD>
+</TR>
+<TR>
+<TD><TT>R2(LinkY)</TT></TD>
+<TD><TT>3ffe:501:ffff:103:200:ff:fe00:a5a5</TT></TD>
+<TD><TT>&nbsp;</TT></TD>
+</TR>
+<TR>
+<TD><TT>TN(LinkZ)</TT></TD>
+<TD><TT>3ffe:501:ffff:104:200:ff:fe00:a6a6</TT></TD>
+<TD><TT>&nbsp;</TT></TD>
+</TR>
+</TABLE>
+</BLOCKQUOTE>
+
+=end html
+
+=head1 TEST PROCEDURE
+
+=begin html
+<P>
+<PRE>
+<B>MN sends Binding Update when changing primary CoA</B>
+</PRE>
+<P>
+<PRE>
+        HA0    NUT1     R1      R2      TN
+        |       |       |       |       |
+        |       | <---- |       |       | RA
+        |       |       |       |       |
+        | <---- |       |       |       | Binding Update (*1)
+        | ----> |       |       |       | Binding Acknowledgement
+        |       |       |       |       |
+        |       | <-------------------- | Echo Request
+        |       | --------------------> | Echo Reply (*2)
+        |       |       |       |       |
+        |      NUT2     |       |       |
+        |       |       |       |       |
+        |       | <------------ |       | RA
+        |       |       |       |       |
+        | <---- |       |       |       | Binding Update (*3)
+        | ----> |       |       |       | Binding Acknowledgement
+        |       |       |       |       |
+        |       | <-------------------- | Echo Request
+        |       | --------------------> | Echo Reply (*4)
+        |       |       |       |       |
+</PRE>
+
+=end html
+
+=head1 JUDGEMENT
+
+=begin html
+<PRE>
+(*1) PASS: TN receives Binding Update
+</PRE>
+<PRE>
+(*2) PASS: TN receives Echo Reply
+</PRE>
+<PRE>
+(*3) PASS: TN receives Binding Update
+</PRE>
+<PRE>
+(*4) PASS: TN receives Echo Reply
+</PRE>
+
+=end html
+
+=head1 REFERENCE
+
+=begin html
+<PRE>
+<A HREF="./draft-ietf-mobileip-ipv6-20.txt">draft-ietf-mobileip-ipv6-20.txt</A>
+</PRE>
+<PRE>
+11.5.4 Returning Home
+</PRE>
+<PRE>
+   After deciding to change its primary care-of address as described in
+   Section 11.5.1 and Section 11.5.2, a mobile node MUST register this
+   care-of address with its home agent in order to make this its primary
+   care-of address.  Also, if the mobile node wants the services of the
+   home agent beyond the current registration period, the mobile node
+   MUST send a new Binding Update to it well before the expiration of
+   this period, even if it is not changing its primary care-of address.
+</PRE>
+<PRE>
+   In both of these situations, the mobile node sends a packet to its
+   home agent containing a Binding Update, with the packet constructed
+   as follows:
+</PRE>
+<PRE>
+   o  The Home Registration (H) bit MUST be set in the Binding Update.
+</PRE>
+<PRE>
+   o  The Acknowledge (A) bit MUST be set in the Binding Update.
+</PRE>
+<PRE>
+   o  The packet MUST contain a Home Address destination option, giving
+      the mobile node's home address for the binding.
+</PRE>
+<PRE>
+   o  The care-of address for the binding MUST be used as the Source
+      Address in the packet's IPv6 header, unless an Alternate Care-of
+      Address mobility option is included in the Binding Update.  This
+      option SHOULD be included in all home registrations, as the ESP
+      protocol will not be able to protect care-of addresses in the IPv6
+      header.  (Mobile IPv6 implementations that know they are using
+      IPsec AH to protect a particular message might avoid this option.
+      For brevity the usage of AH is not discussed in this document.)
+</PRE>
+<PRE>
+   o  If the mobile node's link-local address has the same interface
+      identifier as the home address for which it is supplying a new
+      care-of address, then the mobile node SHOULD set the Link-Local
+      Address Compatibility (L) bit.
+</PRE>
+<PRE>
+   o  If the home address was generated using RFC 3041 [18], then the
+      link local address is unlikely to have a compatible interface
+      identifier.  In this case, the mobile node MUST clear the
+      Link-Local Address Compatibility (L) bit.
+</PRE>
+<PRE>
+   o  If the IPsec security associations between the mobile node and the
+      home agent have been established dynamically, and the mobile node
+      has the capability to update its endpoint in the used key
+      management protocol to the new care-of address every time it
+      moves, the mobile node SHOULD set the Key Management Mobility
+      Capability (K) bit in the Binding Update.  Otherwise, the mobile
+      node MUST clear the bit.
+</PRE>
+<PRE>
+   o  The value specified in the Lifetime field SHOULD be less than or
+      equal to the remaining lifetime of the home address and the
+      care-of address specified for the binding.
+</PRE>
+
+=end html

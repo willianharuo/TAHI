@@ -1,0 +1,324 @@
+#
+# Copyright (C) 2006 Yokogawa Electric Corporation.
+# All rights reserved.
+# 
+# Redistribution and use of this software in source and binary
+# forms, with or without modification, are permitted provided that
+# the following conditions and disclaimer are agreed and accepted
+# by the user:
+# 
+# 1. Redistributions of source code must retain the above copyright
+#    notice, this list of conditions and the following disclaimer.
+# 
+# 2. Redistributions in binary form must reproduce the above copyright
+#    notice, this list of conditions and the following disclaimer in
+#    the documentation and/or other materials provided with
+#    the distribution.
+# 
+# 3. Neither the names of the copyrighters, the name of the project
+#    which is related to this software (hereinafter referred to as
+#    "project") nor the names of the contributors may be used to
+#    endorse or promote products derived from this software without
+#    specific prior written permission.
+# 
+# 4. No merchantable use may be permitted without prior written
+#    notification to the copyrighters.
+# 
+# 5. The copyrighters, the project and the contributors may prohibit
+#    the use of this software at any time.
+# 
+# THIS SOFTWARE IS PROVIDED BY THE COPYRIGHTERS, THE PROJECT AND
+# CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING
+# BUT NOT LIMITED THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS
+# FOR A PARTICULAR PURPOSE, ARE DISCLAIMED.  IN NO EVENT SHALL THE
+# COPYRIGHTERS, THE PROJECT OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT,
+# INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
+# (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+# SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
+# HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT,
+# STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING
+# IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+# POSSIBILITY OF SUCH DAMAGE.
+#
+# $Name: REL_1_1_1 $
+#
+# $TAHI: ct-dns/dns/INDEX_client,v 1.6 2007/08/02 05:45:12 akisada Exp $
+#
+################################################################
+
+
+
+&print:<U><B><FONT SIZE="+2">Client Test</FONT></B></U>
+
+
+
+#======================================================================#
+# RFC 1034: Domain Concepts and Facilities                             #
+#======================================================================#
+&print:<U><B><FONT SIZE="+1" COLOR="#FF0000">RFC 1034: Domain Concepts and Facilities</FONT></B></U>
+&print:<B>3. DOMAIN NAME SPACE AND RESOURCE RECORDS</B>
+&print:<B>Name syntax </B>
+./CL/CL_RFC1034_3_1_LabelLength.seq::::Label length
+./CL/CL_RFC1034_3_1_DomainNameLength.seq::::Domain Name length
+./CL/CL_RFC1034_3_1_RuleForLabel.seq::::Rule for label
+
+&print:<B>3.6. Resource Records</B>
+&print:<B>type </B>
+./CL/CL_RFC1034_3_6_A_type.seq::::A record
+./CL/CL_RFC1034_3_6_CNAME_type.seq::::CNAME record
+./CL/CL_RFC1034_3_6_HINFO_type.seq::::HINFO record
+./CL/CL_RFC1034_3_6_MX_type.seq::::MX record
+./CL/CL_RFC1034_3_6_NS_type.seq::::NS record
+./CL/CL_RFC1034_3_6_PTR_type_A.seq::::PTR record (A)
+./CL/CL_RFC1034_3_6_PTR_type_AAAA.seq::::PTR record (AAAA)
+./CL/CL_RFC1034_3_6_SOA_type.seq::::SOA record
+
+&print:<B>class </B>
+./CL/CL_RFC1034_3_6_IN_class.seq::::IN class
+./CL/CL_RFC1034_3_6_CH_class.seq::::CH class
+
+&print:<B>Caching </B>
+./CL/CL_RFC1034_3_6_Zero_TTL.seq::test_type=ADVANCED support=SUPPORT_CLIENT_CACHING::Zero TTL prohibits caching
+
+&print:<B>3.7.Queries </B>
+./CL/CL_RFC1034_3_7_TCP.seq::::Carried in TCP
+./CL/CL_RFC1034_3_7_Standard.seq::::Standard message format
+./CL/CL_RFC1034_3_7_Opcode_Standard.seq::::Opcode (standard query)
+./CL/CL_RFC1034_3_7_Opcode_Status.seq::test_type=ADVANCED app_type=REQ_STATUS::Opcode (status query)
+
+&print:<B>3.7.1. Standard queries </B>
+./CL/CL_RFC1034_3_7_1_Question.seq::::Question section format
+
+&print:<B>QTYPE </B>
+./CL/CL_RFC1034_3_7_1_AXFR_qtype.seq::::AXFR record
+./CL/CL_RFC1034_3_7_1_any_qtype.seq::::* record
+
+&print:<B>QCLASS </B>
+./CL/CL_RFC1034_3_7_1_any_qclass.seq::::* class
+
+&print:<B>4.3.1. Queries and responses</B>
+./CL/CL_RFC1034_4_3_1_RD.seq::::Recursion desired (RD)
+
+&print:<B>4.3.3. Wildcards </B>
+./CL/CL_RFC1034_4_3_3_caching_wildcard.seq::test_type=ADVANCED support=SUPPORT_CLIENT_CACHING::Caching wildcards response
+
+&print:<B>5. RESOLVERS</B>
+&print:<B>5.2. Client-resolver interface</B>
+./CL/CL_RFC1034_5_2_return_answer.seq:./CL/CL_COMMON.def:::Returning of answer
+./CL/CL_RFC1034_5_2_return_NXDOMAIN.seq:./CL/CL_COMMON.def:::Returning of name error
+./CL/CL_RFC1034_5_2_return_no_data.seq:./CL/CL_COMMON.def:::Returning of data not found error
+
+&print:<B>5.2.2. Aliases </B>
+./CL/CL_RFC1034_5_2_2_Encounter_CNAME.seq::test_type=ADVANCED support=SUPPORT_CLIENT_RECURSIVE::Encounters a CNAME
+
+&print:<B>5.2.3. Temporary failures </B>
+&print:<B>5.3. Resolver internals</B>
+&print:<B>5.3.2. Resources </B>
+./CL/CL_RFC1034_5_3_2_Cache_vs_auth.seq::test_type=ADVANCED support=SUPPORT_CLIENT_CACHING::Cache data vs authoritative data
+
+&print:<B>5.3.3. Algorithm </B>
+./CL/CL_RFC1034_5_3_3_local_info.seq::test_type=ADVANCED support=SUPPORT_CLIENT_CACHING::Answer in local information
+./CL/CL_RFC1034_5_3_3_sending_query.seq::::Sending query to servers
+./CL/CL_RFC1034_5_3_3_delegation.seq::test_type=ADVANCED support=SUPPORT_CLIENT_RECURSIVE::Analyze the response (delegation)
+./CL/CL_RFC1034_5_3_3_cache_delegation.seq::test_type=ADVANCED support='SUPPORT_CLIENT_RECURSIVE&SUPPORT_CLIENT_CACHING'::Analyze the response (caching delegation)
+./CL/CL_RFC1034_5_3_3_cache_CNAME.seq::test_type=ADVANCED support='SUPPORT_CLIENT_RECURSIVE&SUPPORT_CLIENT_CACHING'::Analyze the response (caching CNAME)
+./CL/CL_RFC1034_5_3_3_answer_invalid.seq::test_type=ADVANCED support=SUPPORT_CLIENT_RECURSIVE::Analyze the response (answer is invalid for recursive)
+./CL/CL_RFC1034_5_3_3_cache_answer_invalid.seq::test_type=ADVANCED support=SUPPORT_CLIENT_CACHING::Analyze the response (answer is invalid for caching)
+./CL/CL_RFC1034_5_3_3_delegation_invalid.seq::test_type=ADVANCED support=SUPPORT_CLIENT_RECURSIVE::Analyze the response (delegation is invalid)
+
+
+
+#======================================================================#
+# RFC 1035: Domain Implementation and Specification                    #
+#======================================================================#
+&print:<U><B><FONT SIZE="+1" COLOR="#FF0000">RFC 1035: Domain Implementation and Specification</FONT></B></U>
+&print:<B>2.3.2 Data Transmission Order </B>
+./CL/CL_RFC1035_2_3_2_order_octets.seq::::Order of transmission of octets and bits
+
+&print:<B>3.1 Name space definitions </B>
+./CL/CL_RFC1035_3_1_label_format.seq::::Label format
+./CL/CL_RFC1035_3_1_label_root.seq::::Label of root
+
+&print:<B>3.2.1 Format </B>
+&print:<B>3.2.2 TYPE values </B>
+./CL/CL_RFC1035_3_2_2_MB_type.seq::::MB record
+./CL/CL_RFC1035_3_2_2_MG_type.seq::::MG record
+./CL/CL_RFC1035_3_2_2_MR_type.seq::::MR record
+./CL/CL_RFC1035_3_2_2_NULL_type.seq::::NULL record
+./CL/CL_RFC1035_3_2_2_WKS_type.seq::::WKS record
+./CL/CL_RFC1035_3_2_2_MINFO_type.seq::::MINFO record
+./CL/CL_RFC1035_3_2_2_TXT_type.seq::::TXT record
+
+&print:<B>3.2.3 QTYPE values </B>
+./CL/CL_RFC1035_3_2_3_MAILB_qtype.seq::::MAILB record
+
+&print:<B>3.2.4 CLASS values </B>
+./CL/CL_RFC1035_3_2_4_HS_class.seq::::HS class
+
+&print:<B>4.1 Format </B>
+./CL/CL_RFC1035_4_1_Header.seq::::Header section format
+
+&print:<B>4.1.4 Message compression </B>
+./CL/CL_RFC1035_4_1_4_compression.seq:./CL/CL_COMMON.def:::Message compression
+
+&print:<B>4.2.1 UDP usage </B>
+./CL/CL_RFC1035_4_2_1_not_depend_order.seq:./CL/CL_COMMON.def:::Not depend on response in order
+
+&print:<B>7.3 UDP Processing responses </B>
+./CL/CL_RFC1035_7_3_invalid_response.seq:./CL/CL_COMMON.def:::Invalid response (Query is returned)
+./CL/CL_RFC1035_7_3_invalid_RR.seq:./CL/CL_COMMON.def:::Invalid response (RRs are incorrectly formatted)
+./CL/CL_RFC1035_7_3_invalid_TTL.seq:./CL/CL_COMMON.def:test_type=ADVANCED support=SUPPORT_LIMIT_TTL::Invalid response (Long TTL) (optional)
+./CL/CL_RFC1035_7_3_invalid_ID.seq:./CL/CL_COMMON.def:::Invalid response (ID does not match)
+./CL/CL_RFC1035_7_3_invalid_QS.seq:./CL/CL_COMMON.def:::Invalid response (Invalid question section)
+
+&print:<B>7.4 Using the cache </B>
+./CL/CL_RFC1035_7_4_cache_RRs.seq::test_type=ADVANCED support=SUPPORT_CLIENT_CACHING::Caching several RRs of same type
+
+
+
+#======================================================================#
+# RFC 1123: Requirements for Internet Hosts -- Application and Support #
+#======================================================================#
+&print:<U><B><FONT SIZE="+1" COLOR="#FF0000">RFC 1123: Requirements for Internet Hosts -- Application and Support</FONT></B></U>
+&print:<B>6. SUPPORT SERVICES </B>
+&print:<B>6.1 DOMAIN NAME TRANSLATION </B>
+&print:<B>6.1.2  PROTOCOL WALK-THROUGH </B>
+&print:<B>6.1.2.3  Unused Fields: RFC-1035 Section 4.1.1 </B>
+./CL/CL_RFC1123_6_1_2_3_Unused.seq::::Unused fields in a query
+
+&print:<B>6.1.3.1 Resolver Implementation </B>
+./CL/CL_RFC1123_6_1_3_1_Multi_req.seq::::Multiplex concurrent requests
+
+&print:<B>Full-Service Resolver</B>
+./CL/CL_RFC1123_6_1_3_1_Timeout_cache.seq::test_type=ADVANCED support=SUPPORT_CLIENT_CACHING::Time out of cache
+
+&print:<B>6.1.3.2 Transport Protocols </B>
+./CL/CL_RFC1123_6_1_3_2_truncated_resp.seq::test_type=ADVANCED support=SUPPORT_CLIENT_CACHING::Caching truncated responses
+./CL/CL_RFC1123_6_1_3_2_Multicast.seq::::Multicast query
+
+&print:<B>6.1.3.3 Efficient Resource Usage </B>
+./CL/CL_RFC1123_6_1_3_3_Retrans_control.seq::::Retransmission control
+./CL/CL_RFC1123_6_1_3_3_Cache_tmp_fail.seq::test_type=ADVANCED support=SUPPORT_CLIENT_CACHING::Caching of temporary failure
+
+
+
+#======================================================================#
+# RFC 2181: Clarifications to the DNS Specification                    #
+#======================================================================#
+&print:<U><B><FONT SIZE="+1" COLOR="#FF0000">RFC 2181: Clarifications to the DNS Specification</FONT></B></U>
+&print:<B>5.2 TTLs of RRs in an RRSet </B>
+./CL/CL_RFC2181_5_2_diff_nonauth.seq::test_type=ADVANCED support=SUPPORT_CLIENT_CACHING::Differing TTLs from non-authoritative source
+./CL/CL_RFC2181_5_2_diff_auth.seq::test_type=ADVANCED support=SUPPORT_CLIENT_CACHING::Differing TTLs from authoritative source
+
+&print:<B>8. Time to Live (TTL) </B>
+./CL/CL_RFC2181_8_sign_bit.seq::test_type=ADVANCED support=SUPPORT_CLIENT_CACHING::Received with most significant bit is set
+
+
+
+#======================================================================#
+# RFC 2308: DNS NCACHE                                                 #
+#======================================================================#
+&print:<U><B><FONT SIZE="+1" COLOR="#FF0000">RFC 2308: DNS NCACHE</FONT></B></U>
+&print:<B>5. Caching Negative Answers </B>
+./CL/CL_RFC2308_5_cache_NXDOMAIN.seq::test_type=ADVANCED support=SUPPORT_CLIENT_CACHING::Caching of name error (NXDOMAIN)
+./CL/CL_RFC2308_5_expire_cache_NXDOMAIN.seq::test_type=ADVANCED support=SUPPORT_CLIENT_CACHING::TTL expired negative cache MUST NOT be used (NXDOMAIN)
+./CL/CL_RFC2308_5_not_cache_NXDOMAIN.seq::test_type=ADVANCED support=SUPPORT_CLIENT_CACHING::Caching of name error (NXDOMAIN) for query tuple
+./CL/CL_RFC2308_5_cache_NODATA.seq::test_type=ADVANCED support=SUPPORT_CLIENT_CACHING::Caching of no data (NODATA)
+./CL/CL_RFC2308_5_expire_cache_NODATA.seq::test_type=ADVANCED support=SUPPORT_CLIENT_CACHING::TTL expired negative cache MUST NOT be used (NODATA)
+./CL/CL_RFC2308_5_not_cache_NODATA.seq::test_type=ADVANCED support=SUPPORT_CLIENT_CACHING::Caching of no data (NODATA) for query tuple
+./CL/CL_RFC2308_5_without_SOA.seq::test_type=ADVANCED support=SUPPORT_CLIENT_CACHING::Negative responses without SOA records
+
+&print:<B>7.1 Server Failure (OPTIONAL) </B>
+./CL/CL_RFC2308_7_1_cache_server_fail.seq::test_type=ADVANCED support=SUPPORT_CLIENT_CACHING::Resolver cache a server failure response
+./CL/CL_RFC2308_7_1_not_cache_server_fail.seq::test_type=ADVANCED support=SUPPORT_CLIENT_CACHING::Resolver cache a server failure response for query tuple
+./CL/CL_RFC2308_7_1_limit_server_fail.seq::test_type=ADVANCED support=SUPPORT_CLIENT_CACHING::Limit of time (5 minutes) for caching (Server Failure)
+
+&print:<B>7.2 Dead / Unreachable Server (OPTIONAL) </B>
+./CL/CL_RFC2308_7_2_cache_dead_server.seq::test_type=ADVANCED support=SUPPORT_CLIENT_CACHING::Caching of dead server indication
+./CL/CL_RFC2308_7_2_not_cache_dead_server.seq::test_type=ADVANCED support=SUPPORT_CLIENT_CACHING::Caching of dead server indication for query tuple
+./CL/CL_RFC2308_7_2_limit_dead_server.seq::test_type=ADVANCED support=SUPPORT_CLIENT_CACHING::Limit of time (5 minutes) for caching (Dead/Unreachable Server)
+
+&print:<B>8 Changes from RFC1034 </B>
+./CL/CL_RFC2308_8_cache_SOA.seq::test_type=ADVANCED support=SUPPORT_CLIENT_CACHING::Caching of SOA record
+
+
+
+#======================================================================#
+# RFC 2671: Extension Mechanisms for DNS (EDNS0)                       #
+#======================================================================#
+&print:<U><B><FONT SIZE="+1" COLOR="#FF0000">RFC 2671: Extension Mechanisms for DNS (EDNS0)</FONT></B></U>
+&print:<B>4 - OPT pseudo-RR </B>
+./CL/CL_RFC2671_4_1_OPT_RR.seq::test_type=ADVANCED support=SUPPORT_EDNS0::OPT pseudo-RR
+./CL/CL_RFC2671_4_1_quantity_OPT.seq::test_type=ADVANCED support=SUPPORT_EDNS0::The quantity of OPT pseudo-RRs
+./CL/CL_RFC2671_4_3_OPT_format.seq::test_type=ADVANCED support=SUPPORT_EDNS0::Check OPT RR format
+./CL/CL_RFC2671_4_5_OPT_UDP_size.seq::test_type=ADVANCED support=SUPPORT_EDNS0::Check Sender's UDP payload size
+
+&print:<B>5 - Transport Considerations </B>
+./CL/CL_RFC2671_5_3_OPT_not_understand.seq::test_type=ADVANCED support=SUPPORT_EDNS0::Responders don't understand OPT RR
+
+
+
+#======================================================================#
+# RFC 2782: DNS SRV RR                                                 #
+#======================================================================#
+&print:<U><B><FONT SIZE="+1" COLOR="#FF0000">RFC 2782: DNS SRV RR</FONT></B></U>
+./CL/CL_RFC2782_SRV_type.seq::test_type=ADVANCED support=SUPPORT_SRV::SRV record
+./CL/CL_RFC2782_SRV_return_answer.seq:./CL/CL_COMMON.def:test_type=ADVANCED support=SUPPORT_SRV::Returning of answer
+./CL/CL_RFC2782_SRV_return_answer_no_additional.seq:./CL/CL_COMMON.def:test_type=ADVANCED support=SUPPORT_SRV::Returning of answer (w/o Additional Data section)
+./CL/CL_RFC2782_SRV_priority.seq:./CL/CL_COMMON.def:test_type=ADVANCED support=SUPPORT_SRV::Priority comparison
+./CL/CL_RFC2782_SRV_priority_round_robin.seq:./CL/CL_COMMON.def:test_type=ADVANCED support=SUPPORT_SRV::Priority comparison (round-robin)
+./CL/CL_RFC2782_SRV_weight.seq:./CL/CL_COMMON.def:test_type=ADVANCED support=SUPPORT_SRV::Weight comparison
+./CL/CL_RFC2782_SRV_NXDOMAIN.seq::test_type=ADVANCED support=SUPPORT_SRV::NXDOMAIN
+
+
+
+#======================================================================#
+# RFC 3401: DDDS - The Comprehensive DDDS                              #
+# RFC 3402: DDDS - The Algorithm                                       #
+# RFC 3403: DDDS DNS Database                                          #
+# RFC 3404: DDDS Based URI Resolution                                  #
+# RFC 3405: DDDS URI.ARPA Assignment Procedures                        #
+#======================================================================#
+&print:<U><B><FONT SIZE="+1" COLOR="#FF0000">RFC 3401: DDDS - The Comprehensive DDDS<BR>RFC 3402: DDDS - The Algorithm<BR>RFC 3403: DDDS DNS Database<BR>RFC 3404: DDDS Based URI Resolution<BR>RFC 3405: DDDS URI.ARPA Assignment Procedures</FONT></B></U>
+&print:<BR>RFC3402 Part Two: The Domain Name System (DNS) Database</B>
+&print:<BR>RFC3403 Part Three: The Domain Name System (DNS) Database</B>
+./CL/CL_RFC3403_4_NAPTR_type.seq::test_type=ADVANCED support=SUPPORT_NAPTR::NAPTR resource record query
+
+&print:<B>4. NAPTR RR Format</B>
+&print:<B>4.1 Packet Format</B>
+./CL/CL_RFC3403_4_NAPTR_order.seq::test_type=ADVANCED support='SUPPORT_NAPTR&SUPPORT_ENUM' app_type=REQ_SIP::Order comparison
+./CL/CL_RFC3403_4_NAPTR_preference.seq::test_type=ADVANCED support='SUPPORT_NAPTR&SUPPORT_ENUM' app_type=REQ_SIP::Preference comparison
+./CL/CL_RFC3403_4_NAPTR_flag.seq::test_type=ADVANCED support='SUPPORT_NAPTR&SUPPORT_URI' app_type=REQ_HTTP::Flag "" to control rewriting and interpretation
+./CL/CL_RFC3403_4_NAPTR_flagA.seq::test_type=ADVANCED support='SUPPORT_NAPTR&SUPPORT_URI' app_type=REQ_HTTP::Flag "A" to control rewriting and interpretation
+./CL/CL_RFC3403_4_NAPTR_flagS.seq::test_type=ADVANCED support='SUPPORT_NAPTR&SUPPORT_ENUM&SUPPORT_URI' app_type=REQ_SIP::Flag "S" to control rewriting and interpretation
+./CL/CL_RFC3403_4_NAPTR_services.seq::test_type=ADVANCED support='SUPPORT_NAPTR&SUPPORT_ENUM&SUPPORT_URI' app_type=REQ_SIP::Selection of services
+./CL/CL_RFC3403_4_NAPTR_unknown_flag.seq::test_type=ADVANCED support='SUPPORT_NAPTR&SUPPORT_ENUM' app_type=REQ_SIP::Encounter Unknown flag
+./CL/CL_RFC3403_4_NAPTR_reg_repl.seq::test_type=ADVANCED support='SUPPORT_NAPTR&SUPPORT_ENUM&SUPPORT_URI' app_type=REQ_SIP::Both REGEXP and REPLACEMENT fields exist.
+
+&print:<B>6. Example</B>
+./CL/CL_RFC3403_6_NAPTR_answer.seq::test_type=ADVANCED support='SUPPORT_NAPTR&SUPPORT_ENUM' app_type=REQ_SIP::E164 to Uniform Resource Identifiers (URI)
+
+&print:<B>RFC3404 Part Four: The Uniform Resource Identifiers (URI) Resolution Application</B>
+&print:<B>5. Examples</B>
+./CL/CL_RFC3404_5_NAPTR_urn.seq::test_type=ADVANCED support='SUPPORT_NAPTR&SUPPORT_URN' app_type='REQ_THTTP|REQ_RCDS'::URN resolution
+
+&print:<B>RFC3405 Part Five: URI.ARPA Assignment Procedures</B>
+
+
+
+#======================================================================#
+# RFC 3425: Obsoleting IQUERY                                          #
+#======================================================================#
+&print:<U><B><FONT SIZE="+1" COLOR="#FF0000">RFC3425 Obsoleting IQUERY</FONT></B></U>
+&print:<B>3 - Effect on RFC 1035</B>
+./CL/CL_RFC3425_3_IQUERY.seq::test_type=ADVANCED app_type=REQ_IQUERY::Obsoleting IQUERY
+
+
+
+#======================================================================#
+# RFC 3596: DNS Extensions to Support IPv6                             #
+#======================================================================#
+&print:<U><B><FONT SIZE="+1" COLOR="#FF0000">RFC3596 DNS Extensions to Support IP Version 6</FONT></B></U>
+&print:<B>2 New resource record definition and domain </B>
+&print:<B>2.1 AAAA record type </B>
+./CL/CL_RFC3596_2_1_AAAA_type.seq::test_type=ADVANCED support=SUPPORT_AAAA::AAAA record

@@ -1,0 +1,450 @@
+#!/usr/bin/perl
+#
+# Copyright (C) 1999, 2000, 2001, 2002, 2003 Yokogawa Electric Corporation,
+# IPA (Information-technology Promotion Agency, Japan).
+# All rights reserved.
+# 
+# Redistribution and use of this software in source and binary forms, with 
+# or without modification, are permitted provided that the following 
+# conditions and disclaimer are agreed and accepted by the user:
+# 
+# 1. Redistributions of source code must retain the above copyright 
+# notice, this list of conditions and the following disclaimer.
+# 
+# 2. Redistributions in binary form must reproduce the above copyright 
+# notice, this list of conditions and the following disclaimer in the 
+# documentation and/or other materials provided with the distribution.
+# 
+# 3. Neither the names of the copyrighters, the name of the project which 
+# is related to this software (hereinafter referred to as "project") nor 
+# the names of the contributors may be used to endorse or promote products 
+# derived from this software without specific prior written permission.
+# 
+# 4. No merchantable use may be permitted without prior written 
+# notification to the copyrighters. However, using this software for the 
+# purpose of testing or evaluating any products including merchantable 
+# products may be permitted without any notification to the copyrighters.
+# 
+# 
+# 
+# THIS SOFTWARE IS PROVIDED BY THE COPYRIGHTERS, THE PROJECT AND 
+# CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING 
+# BUT NOT LIMITED THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS 
+# FOR A PARTICULAR PURPOSE, ARE DISCLAIMED.  IN NO EVENT SHALL THE 
+# COPYRIGHTERS, THE PROJECT OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, 
+# INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES 
+# (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR 
+# SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) 
+# HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN 
+# CONTRACT,STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) 
+# ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF 
+# THE POSSIBILITY OF SUCH DAMAGE.
+#
+# $TAHI: ct/ipsec/RTU_SetAddress.seq,v 1.18 2003/05/06 12:18:26 ozoe Exp $
+#
+######################################################################
+BEGIN {
+    unshift(@INC, '../ipsec/');
+    $V6evalTool::TestVersion = '$Name: REL_2_1_1 $ ';
+}
+
+use V6evalTool;
+use IPSEC;
+
+%pktdesc = (
+    echo_request_from_router	=> 'Send Echo Request from Router',
+    echo_reply_to_router	=> 'Recv Echo Reply to Router',
+
+    echo_request_from_host1	=> 'Send Echo Request from Host1',
+    echo_reply_to_host1		=> 'Recv Echo Reply to Host1',
+
+    ns_to_router		=> 'Recv Neighbor Solicitation',
+    na_from_router		=> 'Send Neighbor Advertisement',
+);
+
+ipsecCheckNUT(router);
+
+$if_nut_net0 = $V6evalTool::NutDef{Link0_device};
+$if_nut_net1 = $V6evalTool::NutDef{Link1_device};
+
+ipsecReboot();
+
+#
+# set global address
+#
+
+if ($IPSEC::IPsecAddr{IPSEC_IPVERSION} == 4) {
+    # for IPv4
+
+    $ret = vRemote(
+        "manualaddrconf.rmt",
+        "if=$if_nut_net0",
+        "addrfamily=inet",
+        "type=delete",
+        );
+
+    if ($ret) {
+        vLogHTML('<FONT COLOR="#FF0000">NG</FONT>');
+        exit $V6evalTool::exitFatal;
+    }
+
+    $ret = vRemote(
+        "manualaddrconf.rmt",
+        "if=$if_nut_net1",
+        "addrfamily=inet",
+        "type=delete",
+        );
+
+    if ($ret) {
+        vLogHTML('<FONT COLOR="#FF0000">NG</FONT>');
+        exit $V6evalTool::exitFatal;
+    }
+
+    $ret = vRemote(
+        "manualaddrconf.rmt",
+        "if=$if_nut_net0",
+        "addrfamily=inet",
+        "addr=$IPSEC::IPsecAddr{IPSEC_NUT_NET0_ADDR}",
+        "netmask=$IPSEC::IPsecAddr{IPSEC_NET0_NETMASK}",
+        "type=add",
+        );
+
+    if ($ret) {
+        vLogHTML('<FONT COLOR="#FF0000">NG</FONT>');
+        exit $V6evalTool::exitFatal;
+    }
+
+    $ret = vRemote(
+        "manualaddrconf.rmt",
+        "if=$if_nut_net1",
+        "addrfamily=inet",
+        "addr=$IPSEC::IPsecAddr{IPSEC_NUT_NET1_ADDR}",
+        "netmask=$IPSEC::IPsecAddr{IPSEC_NET1_NETMASK}",
+        "type=add",
+        );
+
+    if ($ret) {
+        vLogHTML('<FONT COLOR="#FF0000">NG</FONT>');
+        exit $V6evalTool::exitFatal;
+    }
+
+}
+else {
+    # for IPv6
+
+    $ret = vRemote(
+	'manualaddrconf.rmt',
+	"if=$if_nut_net0",
+	"addr=$IPSEC::IPsecAddr{IPSEC_NUT_NET0_ADDR}",
+	"len=$IPSEC::IPsecAddr{IPSEC_NET0_PREFIX_LEN}",
+	'type=unicast'
+	);
+
+    if ($ret) {
+	vLogHTML('<FONT COLOR="#FF0000">NG</FONT>');
+	exit $V6evalTool::exitFatal;
+    }
+
+    $ret = vRemote(
+	'manualaddrconf.rmt',
+	"if=$if_nut_net1",
+	"addr=$IPSEC::IPsecAddr{IPSEC_NUT_NET1_ADDR}",
+	"len=$IPSEC::IPsecAddr{IPSEC_NET1_PREFIX_LEN}",
+	'type=unicast'
+	);
+
+    if ($ret) {
+	vLogHTML('<FONT COLOR="#FF0000">NG</FONT>');
+	exit $V6evalTool::exitFatal;
+    }
+}
+
+vSleep(10);
+
+#----- start capturing
+
+$IF0 = Link0;
+$IF1 = Link1;
+
+vCapture($IF0);
+vCapture($IF1);
+
+#======================================================================
+# ping TN(Router) <-> NUT
+
+vLogHTML("<B>Ping TN(Router-Net0) <-> NUT(Net0)</B><BR>");
+
+vSend($IF0, echo_request_from_router);
+
+%ret = vRecv($IF0, 5, 0, 0, ns_to_router, echo_reply_to_router);
+if ($ret{status} != 0) {
+    vLogHTML('<FONT COLOR="#FF0000">NG</FONT>');
+    exit $V6evalTool::exitFail;
+}
+if ($ret{recvFrame} eq 'ns_to_router') {
+    vSend($IF0, na_from_router);
+    %ret = vRecv($IF0, 5, 0, 0, echo_reply_to_router);
+    if ($ret{status} != 0) {
+        vLogHTML('<FONT COLOR="#FF0000">NG</FONT>');
+        exit $V6evalTool::exitFail;
+    }
+}
+
+if ($ret{recvFrame} ne 'echo_reply_to_router') {
+    vLogHTML('<FONT COLOR="#FF0000">NG</FONT>');
+    exit $V6evalTool::exitFail;
+}
+
+if ($IPSEC::IPsecAddr{IPSEC_IPVERSION} == 4) {
+    &setroute4();
+}
+else {
+    &setroute();
+}
+
+vSleep(10);
+
+#======================================================================
+# ping TN(SG1.Net2) <-> NUT
+
+vLogHTML("<B>Ping TN(SG1-Net2) <-> NUT(Net0)</B><BR>");
+
+vSend($IF0, echo_request_from_sg1_net2);
+
+%ret = vRecv($IF0, 5, 0, 0, ns_to_router, echo_reply_to_sg1_net2);
+if ($ret{status} != 0) {
+    vLogHTML('<FONT COLOR="#FF0000">NG</FONT>');
+    exit $V6evalTool::exitFail;
+}
+if ($ret{recvFrame} eq 'ns_to_router') {
+    vSend($IF0, na_from_router);
+    %ret = vRecv($IF0, 5, 0, 0, echo_reply_to_sg1_net2);
+    if ($ret{status} != 0) {
+        vLogHTML('<FONT COLOR="#FF0000">NG</FONT>');
+        exit $V6evalTool::exitFail;
+    }
+}
+
+if ($ret{recvFrame} ne 'echo_reply_to_sg1_net2') {
+    vLogHTML('<FONT COLOR="#FF0000">NG</FONT>');
+    exit $V6evalTool::exitFail;
+}
+
+#======================================================================
+# ping TN(Host1.Net1) <-> NUT
+
+vLogHTML("<B>Ping TN(Host1-Net1) <-> NUT(Net1)</B><BR>");
+
+vSend($IF1, echo_request_from_host1_net1);
+
+%ret = vRecv($IF1, 5, 0, 0, ns_to_host1_net1, echo_reply_to_host1_net1);
+if ($ret{status} != 0) {
+    vLogHTML('<FONT COLOR="#FF0000">NG</FONT>');
+    exit $V6evalTool::exitFail;
+}
+if ($ret{recvFrame} eq 'ns_to_host1_net1') {
+    vSend($IF1, na_from_host1_net1);
+    %ret = vRecv($IF1, 5, 0, 0, echo_reply_to_host1_net1);
+    if ($ret{status} != 0) {
+        vLogHTML('<FONT COLOR="#FF0000">NG</FONT>');
+        exit $V6evalTool::exitFail;
+    }
+}
+
+if ($ret{recvFrame} ne 'echo_reply_to_host1_net1') {
+    vLogHTML('<FONT COLOR="#FF0000">NG</FONT>');
+    exit $V6evalTool::exitFail;
+}
+
+#======================================================================
+# ping TN(Host1.Net4) <-> TN(Host1.Net1)
+
+vLogHTML("<B>Ping TN(Host1-Net4) <-> TN(Host1-Net1)</B><BR>");
+
+# echo request
+
+vSend($IF0, echo_request_from_host1_net4_to_host1_net1_on_net0);
+
+%ret = vRecv($IF1, 5, 0, 0, ns_to_host1_net1, echo_request_from_host1_net4_to_host1_net1_on_net1);
+if ($ret{status} != 0) {
+    vLogHTML('<FONT COLOR="#FF0000">NG</FONT>');
+    exit $V6evalTool::exitFail;
+}
+if ($ret{recvFrame} eq 'ns_to_host1_net1') {
+    vSend($IF1, na_from_host1_net1);
+    %ret = vRecv($IF1, 5, 0, 0, echo_request_from_host1_net4_to_host1_net1_on_net1);
+    if ($ret{status} != 0) {
+        vLogHTML('<FONT COLOR="#FF0000">NG</FONT>');
+        exit $V6evalTool::exitFail;
+    }
+}
+
+if ($ret{recvFrame} ne 'echo_request_from_host1_net4_to_host1_net1_on_net1') {
+    vLogHTML('<FONT COLOR="#FF0000">NG</FONT>');
+    exit $V6evalTool::exitFail;
+}
+
+# echo reply
+
+vSend($IF1, echo_reply_from_host1_net1_to_host1_net4_on_net1);
+
+%ret = vRecv($IF0, 5, 0, 0, ns_to_router, echo_reply_from_host1_net1_to_host1_net4_on_net0);
+if ($ret{status} != 0) {
+    vLogHTML('<FONT COLOR="#FF0000">NG</FONT>');
+    exit $V6evalTool::exitFail;
+}
+if ($ret{recvFrame} eq 'ns_to_router') {
+    vSend($IF0, na_from_router);
+    %ret = vRecv($IF0, 5, 0, 0, echo_reply_from_host1_net1_to_host1_net4_on_net0);
+    if ($ret{status} != 0) {
+        vLogHTML('<FONT COLOR="#FF0000">NG</FONT>');
+        exit $V6evalTool::exitFail;
+    }
+}
+
+if ($ret{recvFrame} ne 'echo_reply_from_host1_net1_to_host1_net4_on_net0') {
+    vLogHTML('<FONT COLOR="#FF0000">NG</FONT>');
+    exit $V6evalTool::exitFail;
+}
+
+vLogHTML('OK');
+exit $V6evalTool::exitPass;
+
+#
+# set route
+#
+sub setroute() {
+    $ret = vRemote(
+		   'route.rmt',
+		   'cmd=add',
+		   "if=$if_nut_net0",
+		   "prefix=$IPSEC::IPsecAddr{IPSEC_NET2_PREFIX}",
+		   "prefixlen=$IPSEC::IPsecAddr{IPSEC_NET2_PREFIX_LEN}",
+		   "gateway=$IPSEC::IPsecAddr{IPSEC_ROUTER_NET0_ADDR}",
+		   );
+
+    if ($ret) {
+	vLogHTML('<FONT COLOR="#FF0000">NG</FONT>');
+	exit $V6evalTool::exitFatal;
+    }
+
+    $ret = vRemote(
+		   'route.rmt',
+		   'cmd=add',
+		   "if=$if_nut_net0",
+		   "prefix=$IPSEC::IPsecAddr{IPSEC_NET4_PREFIX}",
+		   "prefixlen=$IPSEC::IPsecAddr{IPSEC_NET4_PREFIX_LEN}",
+		   "gateway=$IPSEC::IPsecAddr{IPSEC_ROUTER_NET0_ADDR}",
+		   );
+
+    if ($ret) {
+	vLogHTML('<FONT COLOR="#FF0000">NG</FONT>');
+	exit $V6evalTool::exitFatal;
+    }
+
+    $ret = vRemote(
+		   'route.rmt',
+		   'cmd=add',
+		   "if=$if_nut_net0",
+		   "prefix=$IPSEC::IPsecAddr{IPSEC_NET6_PREFIX}",
+		   "prefixlen=$IPSEC::IPsecAddr{IPSEC_NET6_PREFIX_LEN}",
+		   "gateway=$IPSEC::IPsecAddr{IPSEC_ROUTER_NET0_ADDR}",
+		   );
+
+    if ($ret) {
+	vLogHTML('<FONT COLOR="#FF0000">NG</FONT>');
+	exit $V6evalTool::exitFatal;
+    }
+}
+
+sub setroute4() {
+    $ret = vRemote(
+		   'route.rmt',
+		   'cmd=add',
+		   "addrfamily=inet",
+		   "addrtype=net",
+		   "if=$if_nut_net0",
+		   "prefix=$IPSEC::IPsecAddr{IPSEC_NET2_PREFIX}",
+		   "netmask=$IPSEC::IPsecAddr{IPSEC_NET2_NETMASK}",
+		   "gateway=$IPSEC::IPsecAddr{IPSEC_ROUTER_NET0_ADDR}",
+		   );
+
+    if ($ret) {
+	vLogHTML('<FONT COLOR="#FF0000">NG</FONT>');
+	exit $V6evalTool::exitFatal;
+    }
+
+    $ret = vRemote(
+		   'route.rmt',
+		   'cmd=add',
+		   "addrfamily=inet",
+		   "addrtype=net",
+		   "if=$if_nut_net0",
+		   "prefix=$IPSEC::IPsecAddr{IPSEC_NET4_PREFIX}",
+		   "netmask=$IPSEC::IPsecAddr{IPSEC_NET4_NETMASK}",
+		   "gateway=$IPSEC::IPsecAddr{IPSEC_ROUTER_NET0_ADDR}",
+		   );
+
+    if ($ret) {
+	vLogHTML('<FONT COLOR="#FF0000">NG</FONT>');
+	exit $V6evalTool::exitFatal;
+    }
+
+    $ret = vRemote(
+		   'route.rmt',
+		   'cmd=add',
+		   "addrfamily=inet",
+		   "addrtype=net",
+		   "if=$if_nut_net0",
+		   "prefix=$IPSEC::IPsecAddr{IPSEC_NET6_PREFIX}",
+		   "netmask=$IPSEC::IPsecAddr{IPSEC_NET6_NETMASK}",
+		   "gateway=$IPSEC::IPsecAddr{IPSEC_ROUTER_NET0_ADDR}",
+		   );
+
+    if ($ret) {
+	vLogHTML('<FONT COLOR="#FF0000">NG</FONT>');
+	exit $V6evalTool::exitFatal;
+    }
+}
+
+######################################################################
+__END__
+
+=head1 NAME
+
+  RTU_SetAddress - set global address and default router
+                   for Router Tunnel Mode Test
+
+=head1 TARGET
+
+  Router
+
+=head1 SYNOPSIS
+
+=begin html
+<PRE>
+  <A HREF="./RTU_SetAddress.seq">RTU_SetAddress.seq</A> [-tooloption ...] -pkt <A HREF="./RTU_common.def">RTU_common.def</A>
+    -tooloption : v6eval tool option
+</PRE>
+
+=end html
+
+=head1 INITIALIZATION
+
+  NONE
+
+=head1 TEST PROCEDURE
+
+  1. Configure network
+  2. Ping
+
+=head1 JUDGMENT
+
+  NONE
+
+=head1 SEE ALSO
+
+  perldoc V6evalTool
+
+=cut
+

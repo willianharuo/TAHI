@@ -1,0 +1,102 @@
+//
+// Copyright (C) 1999, 2000, 2001, 2002, 2003 Yokogawa Electric Corporation,
+// IPA (Information-technology Promotion Agency, Japan).
+// All rights reserved.
+// 
+// Redistribution and use of this software in source and binary forms, with 
+// or without modification, are permitted provided that the following 
+// conditions and disclaimer are agreed and accepted by the user:
+// 
+// 1. Redistributions of source code must retain the above copyright 
+// notice, this list of conditions and the following disclaimer.
+// 
+// 2. Redistributions in binary form must reproduce the above copyright 
+// notice, this list of conditions and the following disclaimer in the 
+// documentation and/or other materials provided with the distribution.
+// 
+// 3. Neither the names of the copyrighters, the name of the project which 
+// is related to this software (hereinafter referred to as "project") nor 
+// the names of the contributors may be used to endorse or promote products 
+// derived from this software without specific prior written permission.
+// 
+// 4. No merchantable use may be permitted without prior written 
+// notification to the copyrighters. However, using this software for the 
+// purpose of testing or evaluating any products including merchantable 
+// products may be permitted without any notification to the copyrighters.
+// 
+// 
+// 
+// THIS SOFTWARE IS PROVIDED BY THE COPYRIGHTERS, THE PROJECT AND 
+// CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING 
+// BUT NOT LIMITED THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS 
+// FOR A PARTICULAR PURPOSE, ARE DISCLAIMED.  IN NO EVENT SHALL THE 
+// COPYRIGHTERS, THE PROJECT OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, 
+// INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES 
+// (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR 
+// SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) 
+// HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN 
+// CONTRACT,STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) 
+// ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF 
+// THE POSSIBILITY OF SUCH DAMAGE.
+//
+// $TAHI: ct/natpt/rfc2765_4.2_icmpv6error.def,v 1.3 2001/10/11 01:41:47 akisada Exp $
+//
+
+#include "natpt.def"
+
+Payload payload_udp_v4
+	{
+		data = left(_PACKET_IPV4_NAME(ipv4_udp),28);
+	}
+Payload payload_udp_v6
+	{
+		data = left(_PACKET_IPV6_NAME(ipv6_udp),48);
+	}
+FEM_udp_ipv4(ipv4_udp, _HETHER_tn2nut, 
+        { _SRC(TN_LINK1_V4_ADDRESS); _DST(TN_LINK0_V4_ADDRESS); DF=1; TTL=64;},
+        { SourcePort = 1234; DestinationPort = 23; Checksum = 0x7896;}, 
+	data_size_1422)
+FEM_udp(ipv6_udp, _HETHER_tn2nut, 
+        { _SRC(TN_LINK1_SIIT_ADDRESS); _DST(TN_LINK0_SIIT_ADDRESS);},
+        { SourcePort = 1234; DestinationPort = 23; Checksum = 0x7896;}, 
+	data_size_1422)
+
+// ICMPv6 Type 1 (Destination Unreachable):
+FEM_send_icmp6_error(icmpv6_unreach_0, 1, 0, payload_udp_v6, 0)
+FEM_send_icmp6_error(icmpv6_unreach_1, 1, 1, payload_udp_v6, 0)
+FEM_send_icmp6_error(icmpv6_unreach_2, 1, 2, payload_udp_v6, 0)
+FEM_send_icmp6_error(icmpv6_unreach_3, 1, 3, payload_udp_v6, 0)
+FEM_send_icmp6_error(icmpv6_unreach_4, 1, 4, payload_udp_v6, 0)
+FEM_recv_icmp4_error(icmpv4_unreach_1, 3, 1, payload_udp_v4, 0)
+FEM_recv_icmp4_error(icmpv4_unreach_3, 3, 3, payload_udp_v4, 0)
+FEM_recv_icmp4_error(icmpv4_unreach_10, 3, 10, payload_udp_v4, 0)
+
+// ICMPv6 Type 2 (Packet Too Big):
+FEM_send_icmp6_error(icmpv6_packet_too_big1280, 2, 0, payload_udp_v6, 1280)
+FEM_recv_icmp4_error(icmpv4_unreach_mtu1252, 3, 4, payload_udp_v4, 1252)
+
+// ICMPv6 Type 3 (Time Exceeded):
+FEM_send_icmp6_error(icmpv6_time_exceeded, 3, 0, payload_udp_v6, 0)
+FEM_recv_icmp4_error(icmpv4_time_exceeded, 11, 0, payload_udp_v4, 0)
+
+// ICMPv6 Type 4, Code 0 (Parameter Problem):
+FEM_send_icmp6_error(icmpv6_par_prob_0, 4, 0, payload_udp_v6, 0)
+FEM_send_icmp6_error(icmpv6_par_prob_4, 4, 0, payload_udp_v6, 4)
+FEM_send_icmp6_error(icmpv6_par_prob_6, 4, 0, payload_udp_v6, 6)
+FEM_send_icmp6_error(icmpv6_par_prob_7, 4, 0, payload_udp_v6, 7)
+FEM_send_icmp6_error(icmpv6_par_prob_8, 4, 0, payload_udp_v6, 8)
+FEM_send_icmp6_error(icmpv6_par_prob_24, 4, 0, payload_udp_v6, 24)
+FEM_send_icmp6_error(icmpv6_par_prob_notdef, 4, 0, payload_udp_v6, 1)
+FEM_recv_icmp4_error(icmpv4_par_prob_0, 12, 0, payload_udp_v4, 0)
+FEM_recv_icmp4_error(icmpv4_par_prob_2, 12, 0, payload_udp_v4, 2)
+FEM_recv_icmp4_error(icmpv4_par_prob_9, 12, 0, payload_udp_v4, 9)
+FEM_recv_icmp4_error(icmpv4_par_prob_8, 12, 0, payload_udp_v4, 8)
+FEM_recv_icmp4_error(icmpv4_par_prob_12, 12, 0, payload_udp_v4, 12)
+FEM_recv_icmp4_error(icmpv4_par_prob_16, 12, 0, payload_udp_v4, 16)
+FEM_recv_icmp4_error(icmpv4_par_prob_notdef, 12, 0, payload_udp_v4, 0xff)
+
+// ICMPv6 Type 4, Code 1 (Unrecognized Next Header):
+FEM_send_icmp6_error(icmpv6_par_prob_protocol, 4, 1, payload_udp_v6, 6)
+FEM_recv_icmp4_error(icmpv4_unreach_proto, 3, 2, payload_udp_v4, 0)
+
+

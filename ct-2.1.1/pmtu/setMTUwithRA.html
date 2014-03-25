@@ -1,0 +1,172 @@
+<HTML>
+<HEAD>
+<TITLE>setMTUwithRA - Verify changing MTU w/ received RA</TITLE>
+<LINK REV="made" HREF="mailto:hackers@FreeBSD.org">
+</HEAD>
+
+<BODY>
+
+<!-- INDEX BEGIN -->
+<!--
+
+<UL>
+
+	<LI><A HREF="#NAME">NAME</A>
+	<LI><A HREF="#TARGET">TARGET</A>
+	<LI><A HREF="#SYNOPSIS">SYNOPSIS</A>
+	<LI><A HREF="#NETWORK_CONFIGURATION">NETWORK CONFIGURATION</A>
+	<LI><A HREF="#INITIALIZATION">INITIALIZATION</A>
+	<LI><A HREF="#TEST_PROCEDURE">TEST PROCEDURE</A>
+	<LI><A HREF="#JUDGMENT">JUDGMENT</A>
+	<LI><A HREF="#SEE_ALSO">SEE ALSO</A>
+</UL>
+-->
+<!-- INDEX END -->
+
+<P>
+<H1><A NAME="NAME">NAME</A></H1>
+<P>
+<PRE>        setMTUwithRA - Verify changing MTU w/ received RA
+</PRE>
+<P>
+<HR>
+<H1><A NAME="TARGET">TARGET</A></H1>
+<P>
+<PRE>        Host
+</PRE>
+<P>
+<HR>
+<H1><A NAME="SYNOPSIS">SYNOPSIS</A></H1>
+<P>
+<PRE>        setMTUwithRA.seq [-tooloption ...] -p setMTUwithRA.def
+</PRE>
+<P>
+<HR>
+<H1><A NAME="NETWORK_CONFIGURATION">NETWORK CONFIGURATION</A></H1>
+<P>
+<PRE>        This test evaluate the behavior of NUT when it receive the RA
+        with MTU option.
+        In this test, NUT is a host and TN plays a Roll of Router and 
+        other host.
+        
+        Phisical Network configuration
+        
+        --------+---------------+----------
+                |               |
+                NUT             TN
+</PRE>
+<P>
+<PRE>        Logical Network Configuration
+</PRE>
+<P>
+<PRE>                                NUT
+                                |
+        ----------------+-------+--------
+                        |
+                        Router-A
+                        |
+        ----------------+-------+--------
+                                | 
+                                HOST
+</PRE>
+<P>
+<PRE>        In this test, NUT receives RA with MTU.
+</PRE>
+<P>
+<HR>
+<H1><A NAME="INITIALIZATION">INITIALIZATION</A></H1>
+<P>
+<PRE>        The TN send a RA to assign global address prefix.
+</PRE>
+<P>
+<PRE>           TN          NUT
+           |            |
+        ---+------------+------
+</PRE>
+<P>
+<PRE>        ===multicast RA===&gt;
+        src=TN's link-local
+        dst=LinkLocal-all-node                   
+        M=0, O=0,
+        Lifetime=3600, ReachableTime=60000, RetransTimer=1005
+        Prefix:
+           L=1, A=1,                       
+           ValidLifetime=3600005, PreferredLifetime=3600005
+           Prefix=3ffe:501:ffff:100::, PrefixLength=64                      
+        option
+           MTU=1400
+   
+          Wait (5 sec.)
+                 Ignoring DAD packets for global address.                 
+</PRE>
+<P>
+<HR>
+<H1><A NAME="TEST_PROCEDURE">TEST PROCEDURE</A></H1>
+<P>
+<PRE>        &quot;setMTUwithRA&quot; verify NUT's behavior when it receives RA with MTU option.
+</PRE>
+<P>
+<PRE>           TN          NUT
+           |            |
+        ---+------------+------
+</PRE>
+<P>
+<PRE>        1. RA (MTU=1400)
+        TN send RA with MTU=1400.
+        TN === RA(MTU=1400) ===&gt; NUT
+</PRE>
+<P>
+<PRE>        2. TN Sends Fragmented Echo Request
+        TN send Echo Request.  
+        TN ==== echo request(1400) ===&gt; NUT
+</PRE>
+<P>
+<PRE>        4. NUT Sends Fragmented Echo Reply
+        NUT send Echo Reply.
+        &lt;&lt; JUDGMENT 1 &gt;&gt;
+        TN &lt;=== echo reply(1400) ====== NUT
+</PRE>
+<P>
+<PRE>        3. TN Sends Fragmented Echo Request
+        TN send Echo Request.  
+        TN === echo request(1/2 of 1500 MTU=1400) ===&gt; NUT
+        TN === echo request(2/2 of 1500 MTU=1400) ===&gt; NUT
+</PRE>
+<P>
+<PRE>        4. NUT Sends Fragmented Echo Reply
+        NUT send Echo Reply 
+        &lt;&lt; JUDGMENT 1 &gt;&gt;
+        TN &lt;=== echo reply(1/2 of 1500 MTU=1400) === NUT
+        TN &lt;=== echo reply(2/2 of 1500 MTU=1400) === NUT
+</PRE>
+<P>
+<HR>
+<H1><A NAME="JUDGMENT">JUDGMENT</A></H1>
+<P>
+<PRE>        &lt;&lt; JUDGMENT 1 -PASS- &gt;&gt;
+                NUT sends Echo Reply
+</PRE>
+<P>
+<PRE>                &quot;PASS&quot; means that NUT set valid MTU in received RA.
+                And fragmented packets are correct.
+                But if the NUT doesn't support PMTU Discovery, the NUT MUST NOT send echo reply greater than Minimum MTU.
+</PRE>
+<P>
+<PRE>        &lt;&lt; JUDGMENT 2 -PASS- &gt;&gt;
+                NUT sends Echo Reply
+</PRE>
+<P>
+<PRE>                &quot;PASS&quot; means that NUT sets valid MTU in received RA.
+                And fragmented packets are correct.
+                But if the NUT is LCNA, it may not be able to deal with packets greater than Minimum MTU, in this case NUT doesn't transmit echo reply. And also it could not fragment packets, in this case NUT doesn't transmit echo reply. Both cases are allowed in LCNA specification.
+</PRE>
+<P>
+<HR>
+<H1><A NAME="SEE_ALSO">SEE ALSO</A></H1>
+<P>
+<PRE>        perldoc V6evalTool
+        perldoc V6evalRemote
+</PRE>
+</BODY>
+
+</HTML>

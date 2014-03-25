@@ -1,0 +1,118 @@
+<HTML>
+<HEAD>
+<TITLE>hostRecvRs - Verifying that NS has no effect on a host's neighbor cache entry</TITLE>
+<LINK REV="made" HREF="mailto:hackers@FreeBSD.org">
+</HEAD>
+
+<BODY>
+
+<!-- INDEX BEGIN -->
+<!--
+
+<UL>
+
+	<LI><A HREF="#NAME">NAME</A>
+	<LI><A HREF="#TARGET">TARGET</A>
+	<LI><A HREF="#SYNOPSIS">SYNOPSIS</A>
+	<LI><A HREF="#INITIALIZATION">INITIALIZATION</A>
+	<LI><A HREF="#TEST_PROCEDURE">TEST PROCEDURE</A>
+	<LI><A HREF="#JUDGMENT">JUDGMENT</A>
+	<LI><A HREF="#TERMINATION">TERMINATION</A>
+	<LI><A HREF="#NOTE">NOTE</A>
+	<LI><A HREF="#SEE_ALSO">SEE ALSO</A>
+</UL>
+-->
+<!-- INDEX END -->
+
+<P>
+<H1><A NAME="NAME">NAME</A></H1>
+<P>
+hostRecvRs - Verifying that NS has no effect on a host's neighbor cache
+entry
+
+<P>
+<HR>
+<H1><A NAME="TARGET">TARGET</A></H1>
+<P>
+Host and Router
+
+<P>
+<HR>
+<H1><A NAME="SYNOPSIS">SYNOPSIS</A></H1>
+<P>
+<PRE>  hostRecvRs.seq [-tooloption ...] -p hostRecvRs.def
+</PRE>
+<P>
+<HR>
+<H1><A NAME="INITIALIZATION">INITIALIZATION</A></H1>
+<P>
+<PRE>  Clear NC state for TN.
+</PRE>
+<P>
+<HR>
+<H1><A NAME="TEST_PROCEDURE">TEST PROCEDURE</A></H1>
+<P>
+<STRONG>hostRecvRs</STRONG> verifies that NS has no effect on a host's neighbor cache entry.
+
+<PRE>
+  TN               NUT
+  ----------------------
+  State: NONCE (for TN)
+<BR>
+  ==== <A HREF="#JDG1">RS</A> ===>
+       valid RS:
+           src=TN's link-local
+           dst=all-router
+           w/ SLLA
+       invalid RS:
+<BR>
+  <A HREF="#JDG1">Judgment</A>: <A HREF="nd.html">Examining NUT's neighbor cache state</A>
+
+<P>
+<HR>
+<H1><A NAME="JUDGMENT">JUDGMENT</A></H1>
+<PRE>
+<A NAME="JDG1"></A>
+  1. A host must silently discard any received RA messages.
+<HR>
+6.2.6.  Processing Router Solicitations
+<BR>
+   <B>A host MUST silently discard any received Router Solicitation
+   messages.</B>
+<HR>
+  ===============================================+===========================
+  RS sent by TN                                  | NUT's Neighbor Cache
+                                                 | Entry State
+  ---------------------+--------------+----------+--------+------------------
+  Destination          | SLLA         | Validity | Current | New
+  =====================+==============+==========+========+==================
+  all-router           | TN's LLA     | valid    | NONCE  | unchanged
+  ---------------------+--------------+----------+--------+------------------
+  all-node             | TN's LLA     | invalid  | NONCE  | unchanged
+  ---------------------+--------------+----------+--------+------------------
+  NUT's link-local     | TN's LLA     | invalid  | NONCE  | unchanged
+  =====================+==============+==========+========+==================
+</PRE>
+
+<P>
+<HR>
+<H1><A NAME="TERMINATION">TERMINATION</A></H1>
+<P>
+<PRE>  N/A
+</PRE>
+<P>
+<HR>
+<H1><A NAME="NOTE">NOTE</A></H1>
+<P>
+<PRE>  The test does not invoke any remote command.
+</PRE>
+<P>
+<HR>
+<H1><A NAME="SEE_ALSO">SEE ALSO</A></H1>
+<P>
+<PRE>  perldoc V6evalTool
+  perldoc V6evalRemote
+</PRE>
+</BODY>
+
+</HTML>

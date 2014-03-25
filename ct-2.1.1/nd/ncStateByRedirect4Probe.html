@@ -1,0 +1,325 @@
+<HTML>
+<HEAD>
+<TITLE>ncStateByRedirect4Probe - Verifying State Machine: Redirect vs. PROBE</TITLE>
+<LINK REV="made" HREF="mailto:hackers@FreeBSD.org">
+</HEAD>
+
+<BODY>
+
+<!-- INDEX BEGIN -->
+<!--
+
+<UL>
+
+	<LI><A HREF="#NAME">NAME</A>
+	<LI><A HREF="#TARGET">TARGET</A>
+	<LI><A HREF="#SYNOPSIS">SYNOPSIS</A>
+	<LI><A HREF="#INITIALIZATION">INITIALIZATION</A>
+	<UL>
+
+		<LI><A HREF="#Cache_a_LLA_of_TN">Cache a LLA of TN</A>
+		<LI><A HREF="#Cache_a_bogus_LLA">Cache a bogus LLA</A>
+	</UL>
+
+	<LI><A HREF="#TEST_PROCEDURE">TEST PROCEDURE</A>
+	<LI><A HREF="#JUDGMENT">JUDGMENT</A>
+	<LI><A HREF="#TERMINATION">TERMINATION</A>
+	<LI><A HREF="#NOTE">NOTE</A>
+	<LI><A HREF="#SEE_ALSO">SEE ALSO</A>
+</UL>
+-->
+<!-- INDEX END -->
+
+<P>
+<H1><A NAME="NAME">NAME</A></H1>
+<P>
+ncStateByRedirect4Probe - Verifying State Machine: Redirect vs. PROBE
+
+<P>
+<HR>
+<H1><A NAME="TARGET">TARGET</A></H1>
+<P>
+Host only
+
+<P>
+<HR>
+<H1><A NAME="SYNOPSIS">SYNOPSIS</A></H1>
+<P>
+<PRE>  ncStateByRedirect4Probe.seq [-tooloption ...] -p ncStateByRedirect4Probe.def
+</PRE>
+<P>
+<HR>
+<H1><A NAME="INITIALIZATION">INITIALIZATION</A></H1>
+<OL>
+  <LI>Set R1 as the default router by sending RA and NA.
+  <LI>Set TN's Neighbor Cache State to PROBE.
+  <LI>Cache either <A HREF="#Cache_a_LLA_of_TN">TN's LLA</A>, or
+      <A HREF="#Cache_a_bogus_LLA">a bogus LLA</A>
+</OL>
+<BR>
+
+<P>
+<HR>
+<H2><A NAME="Cache_a_LLA_of_TN">Cache a LLA of TN</A></H2>
+<PRE>
+  TN                 NUT
+  ----------------------
+<BR>
+  State: NONCE (for all)
+<BR>
+  ==== unsolicited RA ===>
+       src=R1's link-local
+       dst=all-node
+       M=0, O=0
+       RouterLifetime=600
+       ReachableTime=0
+       RetransTimer=0
+       w/ SLLA
+       Prefix Option:
+           L=1, A=1
+           ValidLifetime=2592000
+           PreferredLifetime=604800
+           Prefix=3ffe:501:ffff:100::/64
+<BR>
+  State: STALE (for R1), NONCE (for TN)
+<BR>
+  ==== solicited NA ===>
+        src=R1's link-local
+        dst=NUT's link-local
+        R=1, S=1, O=1
+        target=R1's link-local
+        TLLA=R1's LLA
+<BR>
+  State: REACHABLE (for R1), NONCE (for TN)
+<BR>
+  Wait (3 sec) for DAD NS
+<BR>
+  ==== unsolicited RA ===>
+       src=TN's link-local
+       dst=all-node
+       M=0, O=0
+       RouterLifetime=600
+       ReachableTime=0
+       RetransTimer=0
+       w/ SLLA
+       Prefix Option:
+           L=1, A=1
+           ValidLifetime=2592000
+           PreferredLifetime=604800
+           Prefix=3ffe:501:ffff:100::/64
+<BR>
+  State: REACHABLE (for R1), STALE (for TN)
+<BR>
+  ==== solicited NA ===>
+        src=TN's link-local
+        dst=NUT's link-local
+        R=1, S=1, O=1
+        target=R1's link-local
+        <B>TLLA=TN's LLA</B>
+<BR>
+  State: REACHABLE (for R1), REACHABLE (for TN)
+<BR>
+  Wait (REACHABLE_TIME * MAX_RANDOM_FACTOR)
+<BR>
+  State: REACHABLE (for R1), STALE (for TN)
+<BR>
+  ==== echo-request ===>
+      src=TN's link-local
+      dst=NUT's link-local
+<BR>
+  <=== echo-reply ====
+      src=NUT's link-local
+      dst=TN's link-local
+      timeout=2 sec
+<BR>
+  State: DELAY
+<BR>
+  Wait (DELAY_FIRST_PROBE_TIME)
+<BR>
+  State: REACHABLE (for R1), PROBE (for TN)
+</PRE>
+
+<P>
+<HR>
+<H2><A NAME="Cache_a_bogus_LLA">Cache a bogus LLA</A></H2>
+<PRE>
+  TN                 NUT
+  ----------------------
+<BR>
+  State: NONCE (for all)
+<BR>
+  ==== unsolicited RA ===>
+       src=R1's link-local
+       dst=all-node
+       M=0, O=0
+       RouterLifetime=600
+       ReachableTime=0
+       RetransTimer=0
+       w/ SLLA
+       Prefix Option:
+           L=1, A=1
+           ValidLifetime=2592000
+           PreferredLifetime=604800
+           Prefix=3ffe:501:ffff:100::/64
+<BR>
+  State: STALE (for R1), NONCE (for TN)
+<BR>
+  ==== solicited NA ===>
+        src=R1's link-local
+        dst=NUT's link-local
+        R=1, S=1, O=1
+        target=R1's link-local
+        TLLA=R1's LLA
+<BR>
+  State: REACHABLE (for R1), NONCE (for TN)
+<BR>
+  Wait (3 sec) for DAD NS
+<BR>
+  ==== unsolicited RA ===>
+       src=TN's link-local
+       dst=all-node
+       M=0, O=0
+       RouterLifetime=600
+       ReachableTime=0
+       RetransTimer=0
+       w/ SLLA
+       Prefix Option:
+           L=1, A=1
+           ValidLifetime=2592000
+           PreferredLifetime=604800
+           Prefix=3ffe:501:ffff:100::/64
+<BR>
+  State: REACHABLE (for R1), STALE (for TN)
+<BR>
+  ==== solicited NA ===>
+        src=TN's link-local
+        dst=NUT's link-local
+        R=1, S=1, O=1
+        target=R1's link-local
+        <B>TLLA=bogus LLA</B>
+<BR>
+  State: REACHABLE (for R1), REACHABLE (for TN)
+<BR>
+  Wait (REACHABLE_TIME * MAX_RANDOM_FACTOR)
+<BR>
+  State: REACHABLE (for R1), STALE (for TN)
+<BR>
+  ==== echo-request ===>
+      src=TN's link-local
+      dst=NUT's link-local
+<BR>
+  <=== echo-reply ====
+      src=NUT's link-local
+      dst=TN's link-local
+      timeout=2 sec
+<BR>
+  State: DELAY
+<BR>
+  Wait (DELAY_FIRST_PROBE_TIME)
+<BR>
+  State: REACHABLE (for R1), PROBE (for TN)
+</PRE>
+
+<P>
+<HR>
+<H1><A NAME="TEST_PROCEDURE">TEST PROCEDURE</A></H1>
+<P>
+<STRONG>ncStateByRedirect4Probe</STRONG> verifies that state transition for a NUT in PROBE state when receiving a
+Redirect.
+
+<PRE>
+  TN               NUT
+  ----------------------
+<BR>
+  State: REACHABLE (for R1), PROBE (for TN)
+<BR>
+  ==== <A HREF="#JDG1">Redirect</A> ===>
+      src=R1's link-local
+      dst=NUT's link-local
+      icmp target=TN's link-local
+      icmp dst=H1's global
+      w/ or w/o TLL option (i.e. TN's LLA)
+      w/ or w/o Redirected header option
+<BR>
+  <A HREF="#JDG1">Judgment</A>: <A HREF="nd.html">Examining NUT's neighbor cache state</A>
+</PRE>
+
+<P>
+<HR>
+<H1><A NAME="JUDGMENT">JUDGMENT</A></H1>
+<A NAME="JDG1"></A>
+<PRE>
+<HR>
+8.3.  Host Specification
+<BR>
+   <A NAME="NO_TLL"><B>If the redirect contains a Target Link-Layer Address option the host
+   either creates or updates the Neighbor Cache entry for the target.</A></B>
+   In both cases the cached link-layer address is copied from the Target
+   Link-Layer Address option.  If a Neighbor Cache entry is created for
+   the target its reachability state MUST be set to STALE as specified
+   in Section 7.3.3.  <A NAME="STATE_A"><B>If a cache entry already existed and it is updated
+   with a different link-layer address, its reachability state MUST also
+   be set to STALE.</A></B>  <A NAME="STATE_B"><B>If the link-layer address is the same as that
+   already in the cache, the cache entry's state remains unchanged.</A></B>
+<HR>
+  =====================+=====================+===========+=============================
+  IP                   |ICMP                 |Option     |NC state
+  ----------+----------+----------+----------+-----+-----+---------+---------+---------
+  Src       |Dst       |Target    |Dst       |TLLA |R'ed |Current   |New      |LLA
+  ==========+==========+==========+==========+=====+=====+=========+=========+=========
+  R1's      |NUT's     |TN's      |H1's      |none |none |PROBE    |<A HREF="#NO_TLL">PROBE    |unchanged</A>
+  link-local|link-local|link-local|global    |     |     |         |         |
+  ----------+----------+----------+----------+-----+-----+---------+---------+---------
+  R1's      |NUT's     |TN's      |H1's      |same |none |PROBE    |<A HREF="#STATE_B">PROBE    |unchanged</A>
+  link-local|link-local|link-local|global    |     |     |         |         |
+  ----------+----------+----------+----------+-----+-----+---------+---------+---------
+  R1's      |NUT's     |TN's      |H1's      |diff.|none |PROBE    |<A HREF="#STATE_A">STALE    |updated</A>
+  link-local|link-local|link-local|global    |     |     |         |         |
+  ----------+----------+----------+----------+-----+-----+---------+---------+---------
+  R1's      |NUT's     |TN's      |H1's      |diff.|exist|PROBE    |<A HREF="#STATE_A">STALE    |updated</A>
+  link-local|link-local|link-local|global    |     |     |         |         |
+  ----------+----------+----------+----------+-----+-----+---------+---------+---------
+  R1's      |NUT's     |TN's      |H1's      |diff.|exist|PROBE    |<A HREF="#STATE_A">STALE    |updated</A>
+  link-local|link-local|link-local|global    |     |>1280|         |         |
+  ==========+==========+==========+==========+=====+=====+=========+=========+=========
+</PRE>
+
+<P>
+<HR>
+<H1><A NAME="TERMINATION">TERMINATION</A></H1>
+<PRE>
+  TN               NUT
+  ----------------------
+<BR>
+  State: any (for TN)
+<BR>
+  ==== Redirect ===>
+      src=TN's link-local
+      dst=NUT's link-local
+      icmp target=R1's link-local
+      icmp dst=H1's global
+      w/o TLL option
+      w/o Redirected header option
+<BR>
+  ==== RA (at the end of the test) ===>
+      src=R1's link-local
+      dst=allnode
+      RouterLifetime=0
+</PRE>
+
+<P>
+<HR>
+<H1><A NAME="NOTE">NOTE</A></H1>
+<P>
+<PRE>  The test does not invoke any remote command.
+</PRE>
+<P>
+<HR>
+<H1><A NAME="SEE_ALSO">SEE ALSO</A></H1>
+<P>
+<PRE>  perldoc V6evalTool
+  perldoc V6evalRemote
+</PRE>
+</BODY>
+
+</HTML>

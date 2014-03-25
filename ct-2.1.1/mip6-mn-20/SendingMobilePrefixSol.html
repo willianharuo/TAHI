@@ -1,0 +1,196 @@
+<HTML>
+<HEAD>
+<TITLE>SendingMobilePrefixSol - MN sends Mobile Node Prefix Solicitation when Home Address expires</TITLE>
+<LINK REV="made" HREF="mailto:hackers@FreeBSD.org">
+</HEAD>
+
+<BODY>
+
+<!-- INDEX BEGIN -->
+<!--
+
+<UL>
+
+	<LI><A HREF="#NAME">NAME</A>
+	<LI><A HREF="#TARGET">TARGET</A>
+	<LI><A HREF="#SYNOPSIS">SYNOPSIS</A>
+	<LI><A HREF="#TOPOLOGY">TOPOLOGY</A>
+	<LI><A HREF="#TEST_PROCEDURE">TEST PROCEDURE</A>
+	<LI><A HREF="#JUDGEMENT">JUDGEMENT</A>
+	<LI><A HREF="#REFERENCE">REFERENCE</A>
+</UL>
+-->
+<!-- INDEX END -->
+
+<P>
+<H1><A NAME="NAME">NAME</A></H1>
+<P>
+SendingMobilePrefixSol - MN sends Mobile Node Prefix Solicitation when Home
+Address expires
+
+<P>
+<HR>
+<H1><A NAME="TARGET">TARGET</A></H1>
+<PRE>
+Host
+</PRE>
+
+<P>
+<HR>
+<H1><A NAME="SYNOPSIS">SYNOPSIS</A></H1>
+<PRE>
+<A HREF="./SendingMobilePrefixSol.seq">SendingMobilePrefixSol.seq</A> [-tooloption ...] -pkt <A HREF="./MN_Common.def">MN_Common.def</A>
+</PRE>
+<BLOCKQUOTE>
+<PRE>
+-tooloption: v6eval tool option
+</PRE>
+</BLOCKQUOTE>
+
+<P>
+<HR>
+<H1><A NAME="TOPOLOGY">TOPOLOGY</A></H1>
+<PRE>
+                                      |
+                                      R       TN
+                                      |       |
+                              --------+-------+--------------- LinkZ
+</PRE>
+<BR><BR><BR>
+<PRE>
+                                      |
+                                      R2             NUT2
+                                      |               |
+                              --------+---------------+------- LinkY
+</PRE>
+<BR><BR><BR>
+<PRE>
+                                      |       |
+                                      HA2     R1     NUT1
+                                      |       |       |
+                              --------+-------+-------+------- LinkX
+</PRE>
+<BR><BR><BR>
+<PRE>
+                          |           |
+             NUT0        HA1          HA0
+              |           |           |
+Link0 --------+-----------+-----------+-----------------------
+</PRE>
+<BLOCKQUOTE>
+<TABLE BORDER>
+<TR>
+<TD><TT>Link0</TT></TD>
+<TD><TT>3ffe:501:ffff:100::/64</TT></TD>
+<TD><TT>home link</TT></TD>
+</TR>
+<TR>
+<TD><TT>LinkX</TT></TD>
+<TD><TT>3ffe:501:ffff:102::/64</TT></TD>
+<TD><TT>&nbsp;</TT></TD>
+</TR>
+<TR>
+<TD><TT>LinkY</TT></TD>
+<TD><TT>3ffe:501:ffff:103::/64</TT></TD>
+<TD><TT>&nbsp;</TT></TD>
+</TR>
+<TR>
+<TD><TT>LinkZ</TT></TD>
+<TD><TT>3ffe:501:ffff:104::/64</TT></TD>
+<TD><TT>&nbsp;</TT></TD>
+</TR>
+<TR>
+<TD><TT>HA0(Link0)</TT></TD>
+<TD><TT>3ffe:501:ffff:100:200:ff:fe00:a1a1/64</TT></TD>
+<TD><TT>&nbsp;</TT></TD>
+</TR>
+<TR>
+<TD><TT>HA1(Link0)</TT></TD>
+<TD><TT>3ffe:501:ffff:100:200:ff:fe00:a2a2/64</TT></TD>
+<TD><TT>&nbsp;</TT></TD>
+</TR>
+<TR>
+<TD><TT>HA2(LinkX)</TT></TD>
+<TD><TT>3ffe:501:ffff:102:200:ff:fe00:a3a3</TT></TD>
+<TD><TT>&nbsp;</TT></TD>
+</TR>
+<TR>
+<TD><TT>R1(LinkX)</TT></TD>
+<TD><TT>3ffe:501:ffff:102:200:ff:fe00:a4a4</TT></TD>
+<TD><TT>&nbsp;</TT></TD>
+</TR>
+<TR>
+<TD><TT>R2(LinkY)</TT></TD>
+<TD><TT>3ffe:501:ffff:103:200:ff:fe00:a5a5</TT></TD>
+<TD><TT>&nbsp;</TT></TD>
+</TR>
+<TR>
+<TD><TT>TN(LinkZ)</TT></TD>
+<TD><TT>3ffe:501:ffff:104:200:ff:fe00:a6a6</TT></TD>
+<TD><TT>&nbsp;</TT></TD>
+</TR>
+</TABLE>
+</BLOCKQUOTE>
+
+<P>
+<HR>
+<H1><A NAME="TEST_PROCEDURE">TEST PROCEDURE</A></H1>
+<PRE>
+<B>MN sends Mobile Node Prefix Solicitation when Home Address expires</B>
+</PRE>
+<P>
+<PRE>
+       HA0     NUT0     R1
+        |       |       |
+        | ----> |       | RA
+        |       |       |
+        |      NUT1     |
+        |       |       |
+        |       | <---- | RA
+        |       |       |
+        | <---- |       | Binding Update (*1)
+        | ----> |       | Binding Acknowledgement
+        |       |       |
+        |       |       | wait for home address expiration
+        |       |       |
+        | <---- |       | Mobile Node Prefix Solicitation (*2)
+        | ----> |       | Solicited Mobile Prefix Advertisement
+        |       |       |
+</PRE>
+
+<P>
+<HR>
+<H1><A NAME="JUDGEMENT">JUDGEMENT</A></H1>
+<PRE>
+(*1) PASS: HA0 receives Binding Update from NUT1
+</PRE>
+<PRE>
+(*2) PASS: HA0 receives Mobile Node Prefix Solicitation from NUT1
+</PRE>
+
+<P>
+<HR>
+<H1><A NAME="REFERENCE">REFERENCE</A></H1>
+<PRE>
+<A HREF="./draft-ietf-mobileip-ipv6-20.txt">draft-ietf-mobileip-ipv6-20.txt</A>
+</PRE>
+11.4.2 Sending Mobile Prefix Solicitations
+</PRE>
+<PRE>
+   When a mobile node has a home address that is about to become
+   invalid, it sends a Mobile Prefix Solicitation to its home agent in
+   an attempt to acquire fresh routing prefix information.  The new
+   information also enables the mobile node to participate in
+   renumbering operations affecting the home network, as described in
+   Section 10.6.
+</PRE>
+<PRE>
+   The mobile node MUST use the Home Address destination option to carry
+   its home address and SHOULD use IPsec to protect the solicitation.
+   The mobile node MUST set the Identifier field in the ICMP header to a
+   random value.
+</PRE>
+
+</BODY>
+
+</HTML>

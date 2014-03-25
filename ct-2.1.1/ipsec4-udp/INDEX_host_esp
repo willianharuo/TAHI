@@ -1,0 +1,81 @@
+##
+## $Name: REL_2_1_1 $
+##
+## $TAHI: ct/ipsec4-udp/INDEX_host_esp,v 1.4 2003/05/23 02:37:11 ozoe Exp $
+##
+##<seq>:<def>:[<opt>]:[<log>]:<desc>
+##
+
+#======================================================================
+&print:<B>Host Transport ESP Outbound</B>
+
+&print:ESP Outbound without authentication
+
+../ipsec/HTR_E_Out_descbc.seq:./HTR_E_descbc.def:-cpp="-include ./ipsecaddr.def"::Outbound ESP packet (DES-CBC)
+../ipsec/HTR_E_Out_3descbc.seq:./HTR_E_3descbc.def:-cpp="-include ./ipsecaddr.def"::Outbound ESP packet (3DES-CBC)
+
+&print:ESP Outbound with authentication
+
+../ipsec/HTR_E_Out_null_hmacmd5.seq:./HTR_E_null_hmacmd5.def:-cpp="-include ./ipsecaddr.def"::Outbound ESP packet (NULL, HMAC-MD5)
+../ipsec/HTR_E_Out_null_hmacsha1.seq:./HTR_E_null_hmacsha1.def:-cpp="-include ./ipsecaddr.def"::Outbound ESP packet (NULL, HMAC-SHA1)
+../ipsec/HTR_E_Out_descbc_hmacmd5.seq:./HTR_E_descbc_hmacmd5.def:-cpp="-include ./ipsecaddr.def"::Outbound ESP packet (DES-CBC, HMAC-MD5)
+../ipsec/HTR_E_Out_descbc_hmacsha1.seq:./HTR_E_descbc_hmacsha1.def:-cpp="-include ./ipsecaddr.def"::Outbound ESP packet (DES-CBC, HMAC-SHA1)
+../ipsec/HTR_E_Out_3descbc_hmacmd5.seq:./HTR_E_3descbc_hmacmd5.def:-cpp="-include ./ipsecaddr.def"::Outbound ESP packet (3DES-CBC, HMAC-MD5)
+../ipsec/HTR_E_Out_3descbc_hmacsha1.seq:./HTR_E_3descbc_hmacsha1.def:-cpp="-include ./ipsecaddr.def"::Outbound ESP packet (3DES-CBC, HMAC-SHA1)
+
+&print:ESP Outbound Padding
+
+../ipsec/HTR_E_Out_Padding_null_hmacmd5.seq:./HTR_E_Padding_null_hmacmd5.def:-cpp="-include ./ipsecaddr.def"::Outbound Padding (NULL, HMAC-MD5)
+../ipsec/HTR_E_Out_Padding_descbc.seq:./HTR_E_Padding_descbc.def:-cpp="-include ./ipsecaddr.def"::Outbound Padding (DES-CBC, HMAC-MD5)
+../ipsec/HTR_E_Out_Padding_3descbc.seq:./HTR_E_Padding_3descbc.def:-cpp="-include ./ipsecaddr.def"::Outbound Padding (3DES-CBC, HMAC-MD5)
+
+&print:ESP Outbound Header Order
+
+&#../ipsec/HTR_E_Out_Fragment.seq:./HTR_E_Fragment.def:-cpp="-include ./ipsecaddr.def"::Header Order (Fragment Header vs ESP)
+
+&print:ESP Outbound Connect SA bundles
+
+../ipsec/HTR_E_Out_2SA_DspiDipdst_descbc.seq :./HTR_E_2SA_DspiDip_descbc.def:-cpp="-include ./ipsecaddr.def"::Connect two SA bundles with different spi, different IPdst
+../ipsec/HTR_E_Out_2SA_SspiDipdst_descbc.seq:./HTR_E_2SA_SspiDip_descbc.def:-cpp="-include ./ipsecaddr.def"::Connect two SA bundles with same spi, different IPdst
+
+#======================================================================
+
+&print:<B>Host Transport ESP Inbound</B>
+
+&print:ESP Inbound without authentication
+
+../ipsec/HTR_E_In_descbc.seq:./HTR_E_descbc.def:-cpp="-include ./ipsecaddr.def"::Inbound ESP packet (DES-CBC)
+../ipsec/HTR_E_In_3descbc.seq:./HTR_E_3descbc.def:-cpp="-include ./ipsecaddr.def"::Inbound ESP packet (3DES-CBC)
+../ipsec/HTR_E_In_EncryptKey_descbc.seq:./HTR_E_EncryptKey_descbc.def:-cpp="-include ./ipsecaddr.def"::Inbound ESP packet (Invalid Encryption Key)
+
+&print:ESP Inbound with authentication
+
+../ipsec/HTR_E_In_null_hmacmd5.seq:./HTR_E_null_hmacmd5.def:-cpp="-include ./ipsecaddr.def"::Inbound ESP packet (NULL, HMAC-MD5)
+../ipsec/HTR_E_In_null_hmacsha1.seq:./HTR_E_null_hmacsha1.def:-cpp="-include ./ipsecaddr.def"::Inbound ESP packet (NULL, HMAC-SHA1)
+../ipsec/HTR_E_In_descbc_hmacmd5.seq:./HTR_E_descbc_hmacmd5.def:-cpp="-include ./ipsecaddr.def"::Inbound ESP packet (DES-CBC, HMAC-MD5)
+../ipsec/HTR_E_In_descbc_hmacsha1.seq:./HTR_E_descbc_hmacsha1.def:-cpp="-include ./ipsecaddr.def"::Inbound ESP packet (DES-CBC, HMAC-SHA1)
+../ipsec/HTR_E_In_3descbc_hmacmd5.seq:./HTR_E_3descbc_hmacmd5.def:-cpp="-include ./ipsecaddr.def"::Inbound ESP packet (3DES-CBC, HMAC-MD5)
+../ipsec/HTR_E_In_3descbc_hmacsha1.seq:./HTR_E_3descbc_hmacsha1.def:-cpp="-include ./ipsecaddr.def"::Inbound ESP packet (3DES-CBC, HMAC-SHA1)
+
+../ipsec/HTR_E_In_AuthKey_hmacmd5.seq:./HTR_E_AuthKey_hmacmd5.def:-cpp="-include ./ipsecaddr.def"::Inbound ESP packet (Invalid Authentication Key)
+
+&print:ESP Inbound Padding
+
+../ipsec/HTR_E_In_Padding_null_hmacmd5.seq:./HTR_E_Padding_null_hmacmd5.def:-cpp="-include ./ipsecaddr.def"::Inbound Padding (NULL, HMAC-MD5)
+../ipsec/HTR_E_In_Padding_descbc.seq:./HTR_E_Padding_descbc.def:-cpp="-include ./ipsecaddr.def"::Inbound Padding (DES-CBC, HMAC-MD5)
+../ipsec/HTR_E_In_Padding_3descbc.seq:./HTR_E_Padding_3descbc.def:-cpp="-include ./ipsecaddr.def"::Inbound Padding (3DES-CBC, HMAC-MD5)
+
+../ipsec/HTR_E_In_PadLen255_descbc.seq:./HTR_E_PadLen255_descbc.def:-cpp="-include ./ipsecaddr.def"::Padding Length is 255 (max)
+../ipsec/HTR_E_In_InvalidPadding_descbc.seq:./HTR_E_InvalidPadding_descbc.def:-cpp="-include ./ipsecaddr.def"::Invalid Padding
+
+&print:ESP Inbound Header Order
+
+&#../ipsec/HTR_E_In_Fragment.seq:./HTR_E_Fragment.def:-cpp="-include ./ipsecaddr.def"::Header Order (Fragment Header vs ESP)
+
+&print:ESP Inbound Connect SA bundles
+
+../ipsec/HTR_E_In_2SA_DspiDipsrc_descbc.seq :./HTR_E_2SA_DspiDip_descbc.def:-cpp="-include ./ipsecaddr.def"::Connect two SA bundles with different spi, different IPsrc
+../ipsec/HTR_E_In_2SA_DspiSipsrc_descbc.seq:./HTR_E_2SA_DspiSip_descbc.def:-cpp="-include ./ipsecaddr.def"::Connect two SA bundles with different spi, same IPsrc
+
+#
+#########################################################################

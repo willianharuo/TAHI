@@ -1,0 +1,245 @@
+
+
+
+			CHANGELOG
+
+		$Date: 2010/07/22 13:29:38 $
+
+
+
+
+2010/07/23     Release 2.2.0
+	Official Release
+
+
+2010/07/22     Hiroki Endo
+	Update IKEv2 library
+		- libdata/kIKE/kDec.pm
+		- libdata/kIKE/kDec.pm
+		- libdata/kIKE/kGen.pm
+		- libdata/kIKE/kIKE.pm
+		- libdata/kIKE/kJudge.pm
+
+2010/05/07     Hiroki Endo
+	Modify not to use krb5_crypto_getenctype() which defined in
+	FreeBSD 8.0 
+		- bin/krb5/krb5_prf/krb5_prf.c
+
+
+2010/05/07     Hiroki Endo
+	Modify not to use krb5_crypto_getenctype() which defined in
+	FreeBSD 8.0 
+		- bin/krb5/krb5_prf/krb5_prf.c
+
+
+2010/03/31     Release 2.1.8
+	Official Release
+
+
+2010/03/31     Hiroki Endo
+	Change the name of packet capture files
+		- libdata/kCommon/kCommon.pm
+
+
+2010/03/31     Release 2.1.7
+	Official Release
+
+
+2010/03/31     Hiroki Endo
+	Modify autorun to call indexgen in v6eval to generate html log files
+		- bin/autorun/autorun.pl
+
+	Add APIs to collaborate with v6eval
+		- libdata/kCommon/kCommon.pm
+
+	Add libdata/kKINK API to use KINK test tool
+		- libdata/kKINK/kConsts.pm
+		- libdata/kKINK/kKINK.pm
+		- libdata/kKINK/ISAKMP.pm
+		- libdata/kKINK/kDec.pm
+		- libdata/kKINK/kUtil.pm
+		- libdata/kKINK/Kerberos5.pm
+		- libdata/kKINK/kConnection.pm
+		- libdata/kKINK/kEnc.pm
+
+	Add bin/krb5 tools to use Kerberos functions
+		- bin/krb5/krb5_ap_rep/krb5_ap_rep.c
+		- bin/krb5/krb5_ap_req/krb5_ap_req.c
+		- bin/krb5/krb5_cksum/krb5_cksum.c
+		- bin/krb5/krb5_decrypt/krb5_decrypt.c
+		- bin/krb5/krb5_encrypt/krb5_encrypt.c
+		- bin/krb5/krb5_init/krb5_init.c
+		- bin/krb5/krb5_prf/krb5_prf.c
+		- bin/krb5/krb5_srvtkt/krb5_srvtkt.c
+		- bin/krb5/krb5_tgt/krb5_tgt.c
+
+
+2010/03/08	Hiroki Endo
+	Correct decoding critical bit
+		- libdata/kIKE/kDec.pm
+
+	Separate the function to compute shared secret from the function
+	to decode IKEv2 message
+		- libdata/kIKE/kIKE.pm
+
+
+2009/09/15	Release 2.1.6
+	Official Release
+
+
+2009/09/09	Hiroki Endo
+	Generate SAs even though INTEG_NONE is omitted
+		- libdata/kIKE/kIKE.pm
+		- libdata/kIKE/kJudge.pm
+
+	Restrict adding Notify payload to error notification message
+		- libdata/kIKE/kJudge.pm
+
+
+2009/07/01	Release 2.1.5
+	Official Release
+
+
+2009/07/01	Hiroki Endo
+	compare Vendor ID payload correctly
+		- libdata/kIKE/kJudge.pm
+
+
+2009/06/17	Release 2.1.4
+	Official Release
+
+
+2009/06/16	Hiroki Endo
+	Update IKEv2 function to insert a paylaod to the bottom of the packet
+		- libdata/kIKE/kJudge.pm
+
+	Read just 2 bytes for command
+		- lib/kDispatcher/kDispatcher.c
+
+2008/12/25	Yoshihiro Inoue	
+	Add parser attach API
+		- include/koi.h
+		- lib/kDispatcher/kDispatcher.c
+		- lib/kDispatcher/kDispatcher.h
+		- lib/kIF/kIF.c
+		- lib/kParser/kParser.c
+		- lib/kParser/kParser.h
+		- lib/kSocket/kSocket.c
+		- libdata/kCommon/kCommon.pm
+
+
+2008/12/11	Release 2.1.3
+	Official Release
+
+
+2008/12/10	Hiroki Endo
+	Update IKEv2 function to decode multiple traffic selector
+		- libdata/kIKE/kIKE.pm
+
+	Remove unnecessary print
+		- libdata/kIKE/kGen.pm
+
+
+2008/10/20	Release 2.1.2
+	Official Release
+
+
+2008/09/19	Hiroki Endo
+	Update IKEv2 function to enable Certificate Payload
+	Update IKEv2 function to enable Certificate Request Payload
+		- libdata/kIKE/kGen.pm
+		- libdata/kIKE/kDec.pm
+		- libdata/kIKE/kPrint.pm
+		- libdata/kIKE/kConsts.pm
+
+	Update freebsd-racoon2 remote file
+		- bin/remotes/freebsd-racoon2/ikev2.rmt
+
+
+2008/09/19	Release 2.1.1
+	Official Release
+
+
+2008/09/19	Hiroki Endo
+	Update IKEv2 judgment function to enable multiple proposal matching
+		- libdata/kIKE/kJudge.pm
+
+
+2008/07/31	Release 2.1.0
+	Official Release
+
+
+2008/07/28	Release 2.0.1
+	Official Release
+
+
+2008/07/28	Yoshihiro Inoue
+	Add TLS functionality
+
+
+2008/07/28	Hiroki Endo
+	Update judgment function
+		- libdata/kIKE/kJudge.pm
+
+
+2008/06/06	Release 2.0.0
+	Official Release
+
+
+2008/06/02	Yukiyo Akisada
+	Add IKEv2 functionality
+
+
+2007/08/30	Release 1.1.1
+	Official Release
+
+
+2007/08/10	Yukiyo Akisada
+	Use exit code (${exitNS})
+		- bin/remotes/freebsd-bind9/queryHTTP.rmt
+		- bin/remotes/freebsd-bind9/queryIQUERY.rmt
+		- bin/remotes/freebsd-bind9/queryRCDS.rmt
+		- bin/remotes/freebsd-bind9/querySIP.rmt
+		- bin/remotes/freebsd-bind9/querySTATUS.rmt
+		- bin/remotes/freebsd-bind9/queryTHTTP.rmt
+
+
+2007/07/20	Release 1.1
+	Official Release
+
+
+2007/07/13	Yukiyo Akisada
+	Add remote control scripts for NSD 3.X
+		- bin/remotes/freebsd-nsd
+
+	Rename remote control scripts for NSD 2.X
+		- bin/remotes/freebsd-nsd2
+
+	Fix exit code (${exitNS}) handling
+		- bin/autorun/autorun.pl
+		- libdata/kCommon/kCommon.pm
+		- libdata/kRemote/kRemote.pm
+
+
+2007/07/03	Yukiyo Akisada
+	Fix the use of NULL parser in UDP/DNS handling
+		- lib/kParser/kParser.{c,h}
+		- lib/kParser/kParserDNS.{c,h}
+		- libdata/kCommon/kCommon.pm
+		- libdata/kDNS/kDNS.pm
+
+	Fix link-local address handling
+		- lib/kDispatcher/kDispatcher.c
+
+
+2007/04/06	Yukiyo Akisada
+	Merge with koi-sip-1.1.0
+
+
+2006/03/28	Yukiyo Akisada
+	Add remote files for NSD
+		- bin/remotes/freebsd-nsd
+
+
+2006/02/27	Release 1.0
+	Official Release

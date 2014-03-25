@@ -1,0 +1,137 @@
+<HTML>
+<HEAD>
+<TITLE>RH_AtHost - check Routing Header Processing</TITLE>
+<LINK REV="made" HREF="mailto:hackers@FreeBSD.org">
+</HEAD>
+
+<BODY>
+
+<!-- INDEX BEGIN -->
+<!--
+
+<UL>
+
+	<LI><A HREF="#NAME">NAME</A>
+	<LI><A HREF="#TARGET">TARGET</A>
+	<LI><A HREF="#SYNOPSIS">SYNOPSIS</A>
+	<LI><A HREF="#INITIALIZATION">INITIALIZATION</A>
+	<LI><A HREF="#TEST_PROCEDURE">TEST PROCEDURE</A>
+	<LI><A HREF="#JUDGMENT">JUDGMENT</A>
+	<LI><A HREF="#SEE_ALSO">SEE ALSO</A>
+</UL>
+-->
+<!-- INDEX END -->
+
+<P>
+<H1><A NAME="NAME">NAME</A></H1>
+<P>
+<PRE>  RH_AtHost - check Routing Header Processing (at Host)
+</PRE>
+<P>
+<HR>
+<H1><A NAME="TARGET">TARGET</A></H1>
+<P>
+<PRE>  Host
+</PRE>
+<P>
+<HR>
+<H1><A NAME="SYNOPSIS">SYNOPSIS</A></H1>
+<PRE>
+  <A HREF="./RH_AtHost.seq">RH_AtHost.seq</A> [-tooloption ...] -pkt <A HREF="./RH_AtHost.def">RH_AtHost.def</A>
+    -tooloption : v6eval tool option
+</PRE>
+
+<P>
+<HR>
+<H1><A NAME="INITIALIZATION">INITIALIZATION</A></H1>
+<P>
+<PRE>  1. Reboot Target
+  2. Send Router Advertisement
+  3. Wait Neighbor Solicitation (DAD)
+</PRE>
+<P>
+<HR>
+<H1><A NAME="TEST_PROCEDURE">TEST PROCEDURE</A></H1>
+<P>
+<PRE>  Tester                      Target
+    |                           |
+    |--------------------------&gt;|
+    |   ICMP Echo Request       |
+    |                           |
+    |&lt;--------------------------|
+    |   ICMP Echo Reply         |
+    |                           |
+    v                           v
+</PRE>
+<P>
+<PRE>  1. Send Echo Request
+  2. Receive Echo Reply
+</PRE>
+<P>
+<PRE>  Network topology
+</PRE>
+<P>
+<PRE>                                                      (Link0)
+                                               Tester         Target
+    Host1 ------ Router1 ------ Router2 ------ Router3 ------ Host2
+         Global 6       Global 4       Global 2       Global 0
+</PRE>
+<P>
+<PRE>  ICMP Echo Request is:
+</PRE>
+<P>
+<PRE>        IPv6 Header
+            Version            = 6
+            Traffic Class      = 0
+            FlowLabel          = 0
+            PayloadLength      = 72
+            NextHeader         = 43 (Routing Header)
+            SourceAddress      = Global 6 Address (Host1)
+            DestinationAddress = Global 0 Address (Host2)
+</PRE>
+<P>
+<PRE>        Routing Header
+            NextHeader      = 58 (ICMP)
+            HeaderExtLength = 6 
+            RoutingType     = 0 
+            SegmentsLeft    = 0 
+            Address[1]      = Global 6 Address (Router1)
+            Address[2]      = Global 4 Address (Router2)
+            Address[3]      = Global 2 Address (Router3)
+</PRE>
+<P>
+<PRE>        ICMP Echo Request
+            Type = 128 (Echo Request)
+</PRE>
+<P>
+<HR>
+<H1><A NAME="JUDGMENT">JUDGMENT</A></H1>
+<P>
+<PRE>  PASS: ICMP Echo Reply received
+</PRE>
+<P>
+<PRE>    ICMP Echo Reply is:
+</PRE>
+<P>
+<PRE>        IPv6 Header
+            Version            = 6
+            Traffic Class      = 0
+            FlowLabel          = 0
+            PayloadLength      = 16
+            NextHeader         = 58 (ICMP)
+            SourceAddress      = Global 0 Address (Host2)
+            DestinationAddress = Global 6 Address (Host1)
+</PRE>
+<P>
+<PRE>        ICMP Echo Reply
+            Type = 129 (Echo Reply)
+</PRE>
+<P>
+<HR>
+<H1><A NAME="SEE_ALSO">SEE ALSO</A></H1>
+<P>
+<PRE>  perldoc V6evalTool
+</PRE>
+</BODY>
+
+</HTML>

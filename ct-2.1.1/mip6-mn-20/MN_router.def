@@ -1,0 +1,466 @@
+/* 
+ *
+ * Copyright (C) 2003 Yokogawa Electric Corporation , 
+ * INTAP(Interoperability Technology Association for Information 
+ * Processing, Japan) , IPA (Information-technology Promotion Agency,Japan)
+ * Copyright (C) IBM Corporation 2003.
+ * All rights reserved.
+ *
+ * Redistribution and use of this software in source and binary forms, with 
+ * or without modification, are permitted provided that the following 
+ * conditions and disclaimer are agreed and accepted by the user:
+ *
+ * 1. Redistributions of source code must retain the above copyright 
+ * notice, this list of conditions and the following disclaimer.
+ *
+ * 2. Redistributions in binary form must reproduce the above copyright 
+ * notice, this list of conditions and the following disclaimer in the 
+ * documentation and/or other materials provided with the distribution.
+ *
+ * 3. Neither the names of the copyrighters, the name of the project which 
+ * is related to this software (hereinafter referred to as "project") nor 
+ * the names of the contributors may be used to endorse or promote products 
+ * derived from this software without specific prior written permission.
+ *
+ * 4. No merchantable use may be permitted without prior written 
+ * notification to the copyrighters. However, using this software for the 
+ * purpose of testing or evaluating any products including merchantable 
+ * products may be permitted without any notification to the copyrighters.
+ *
+ *
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHTERS, THE PROJECT AND 
+ * CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING 
+ * BUT NOT LIMITED THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS 
+ * FOR A PARTICULAR PURPOSE, ARE DISCLAIMED.  IN NO EVENT SHALL THE 
+ * COPYRIGHTERS, THE PROJECT OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, 
+ * INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES 
+ * (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR 
+ * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) 
+ * HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN 
+ * CONTRACT,STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) 
+ * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF 
+ * THE POSSIBILITY OF SUCH DAMAGE.
+ *
+ *    Author: Kazuo Hiekata <hiekata@yamato.ibm.com>
+ *
+ */
+
+
+/*-----------------------------------------------------------------------------------*
+ *  Default
+ *-----------------------------------------------------------------------------------*/
+// Router Advertisement
+#ifndef RTR_LIFETIME
+#define RTR_LIFETIME 15
+#endif
+#ifndef RTR_REACHABLETIME
+#define RTR_REACHABLETIME 10000
+#endif
+
+// Home Agent Information Option
+#ifndef HA_LIFETIME
+#define HA_LIFETIME 1800
+#endif
+#ifndef HA_PREFERENCE
+#define HA_PREFERENCE 0
+#endif
+/*-----------------------------------------------------------------------------------*
+ *  Router Solicitation
+ *-----------------------------------------------------------------------------------*/
+//================================================================
+//  Router Solicitation
+//  RS: NUT ----> Multicast
+FEM_icmp6_rs(
+	rs,
+	_HETHER_nut2allrouters,
+	{
+		HopLimit = 255;
+		_SRC(NUT0_LLOCAL_UCAST);
+		_DST(v6(_ALLROUTERS_MCAST_ADDR));
+	},
+	{
+		option=_SLLOPT_nut;
+	}
+)
+/*-----------------------------------------------------------------------------------*
+ *  Router Advertisement
+ *-----------------------------------------------------------------------------------*/
+//================================================================
+//  Router Advertisement(unsolicited multicast/home link)
+//  RA: HA0 ----> NUT0(multicast)
+#ifdef ALL_HA_INFO
+FEM_icmp6_ra(
+	ra_ha0_to_multi,
+	_HETHER_ha0_to_all,
+	{
+		HopLimit = 255;
+		_SRC(v6(HA0_LLOCAL_UCAST));
+		_DST(v6(_ALLNODES_MCAST_ADDR));
+	},
+	{
+		HFlag    = 1;
+		LifeTime = RTR_LIFETIME;
+		ReachableTime = RTR_REACHABLETIME;
+		option   = opt_sll_ha0;
+		option   = opt_mtu_1500;
+		option   = opt_prefixinformation_ha0;
+		option   = opt_prefixinformation_ha1;
+	}
+)
+#else
+FEM_icmp6_ra(
+	ra_ha0_to_multi,
+	_HETHER_ha0_to_all,
+	{
+		HopLimit = 255;
+		_SRC(v6(HA0_LLOCAL_UCAST));
+		_DST(v6(_ALLNODES_MCAST_ADDR));
+	},
+	{
+		HFlag    = 1;
+		LifeTime = RTR_LIFETIME;
+		ReachableTime = RTR_REACHABLETIME;
+		option   = opt_sll_ha0;
+		option   = opt_mtu_1500;
+		option   = opt_prefixinformation_ha0;
+	}
+)
+#endif
+//================================================================
+//  Router Advertisement(unsolicited multicast/home link, home agent information option)
+//  RA: HA0 ----> NUT0(multicast)
+#ifdef ALL_HA_INFO
+FEM_icmp6_ra(
+	ra_ha0_to_multi_opthainfo,
+	_HETHER_ha0_to_all,
+	{
+		HopLimit = 255;
+		_SRC(v6(HA0_LLOCAL_UCAST));
+		_DST(v6(_ALLNODES_MCAST_ADDR));
+	},
+	{
+		HFlag    = 1;
+		LifeTime = RTR_LIFETIME;
+		ReachableTime = RTR_REACHABLETIME;
+		option   = opt_sll_ha0;
+		option   = opt_mtu_1500;
+		option   = opt_prefixinformation_ha0;
+		option   = opt_prefixinformation_ha1;
+		option   = opt_hainformation;
+	}
+)
+#else
+FEM_icmp6_ra(
+	ra_ha0_to_multi_opthainfo,
+	_HETHER_ha0_to_all,
+	{
+		HopLimit = 255;
+		_SRC(v6(HA0_LLOCAL_UCAST));
+		_DST(v6(_ALLNODES_MCAST_ADDR));
+	},
+	{
+		HFlag    = 1;
+		LifeTime = RTR_LIFETIME;
+		ReachableTime = RTR_REACHABLETIME;
+		option   = opt_sll_ha0;
+		option   = opt_mtu_1500;
+		option   = opt_prefixinformation_ha0;
+		option   = opt_hainformation;
+	}
+)
+#endif
+//================================================================
+//  Router Advertisement(unsolicited multicast/home link)
+//  RA: HA1 --> NUT0(multicast)
+#ifdef ALL_HA_INFO
+FEM_icmp6_ra(
+	ra_ha1_to_multi,
+	_HETHER_ha1_to_all,
+	{
+		HopLimit = 255;
+		_SRC(v6(HA1_LLOCAL_UCAST));
+		_DST(v6(_ALLNODES_MCAST_ADDR));
+	},
+	{
+		HFlag    = 1;
+		LifeTime = RTR_LIFETIME;
+		ReachableTime = RTR_REACHABLETIME;
+		option   = opt_sll_ha1;
+		option   = opt_mtu_1500;
+		option   = opt_prefixinformation_ha1;
+		option   = opt_prefixinformation_ha0;
+	}
+)
+#else
+FEM_icmp6_ra(
+	ra_ha1_to_multi,
+	_HETHER_ha1_to_all,
+	{
+		HopLimit = 255;
+		_SRC(v6(HA1_LLOCAL_UCAST));
+		_DST(v6(_ALLNODES_MCAST_ADDR));
+	},
+	{
+		HFlag    = 1;
+		LifeTime = RTR_LIFETIME;
+		ReachableTime = RTR_REACHABLETIME;
+		option   = opt_sll_ha1;
+		option   = opt_mtu_1500;
+		option   = opt_prefixinformation_ha1;
+	}
+)
+#endif
+//================================================================
+//  Router Advertisement(unsolicited multicast/home link, home agent information option)
+//  RA: HA1 --> NUT0(multicast)
+#ifdef ALL_HA_INFO
+FEM_icmp6_ra(
+	ra_ha1_to_multi_opthainfo,
+	_HETHER_ha1_to_all,
+	{
+		HopLimit = 255;
+		_SRC(v6(HA1_LLOCAL_UCAST));
+		_DST(v6(_ALLNODES_MCAST_ADDR));
+	},
+	{
+		HFlag    = 1;
+		LifeTime = RTR_LIFETIME;
+		ReachableTime = RTR_REACHABLETIME;
+		option   = opt_sll_ha1;
+		option   = opt_mtu_1500;
+		option   = opt_prefixinformation_ha1;
+		option   = opt_prefixinformation_ha0;
+		option   = opt_hainformation;
+	}
+)
+#else
+FEM_icmp6_ra(
+	ra_ha1_to_multi_opthainfo,
+	_HETHER_ha1_to_all,
+	{
+		HopLimit = 255;
+		_SRC(v6(HA1_LLOCAL_UCAST));
+		_DST(v6(_ALLNODES_MCAST_ADDR));
+	},
+	{
+		HFlag    = 1;
+		LifeTime = RTR_LIFETIME;
+		ReachableTime = RTR_REACHABLETIME;
+		option   = opt_sll_ha1;
+		option   = opt_mtu_1500;
+		option   = opt_prefixinformation_ha1;
+		option   = opt_hainformation;
+	}
+)
+#endif
+//================================================================
+//  Router Advertisement(unsolicited multicast/LinkX)
+//  Router Advertisement: HA2 --> NUT1(multicast)
+FEM_icmp6_ra(
+	ra_ha2_to_multi,
+	_HETHER_ha2_to_all,
+	{
+		HopLimit = 255;
+		_SRC(v6(HA2_LLOCAL_UCAST));
+		_DST(v6(_ALLNODES_MCAST_ADDR));
+	},
+	{
+		HFlag    = 1;
+		LifeTime = RTR_LIFETIME;
+		ReachableTime = RTR_REACHABLETIME;
+		option   = opt_sll_ha2;
+		option   = opt_mtu_1500;
+		option   = opt_prefixinformation_ha2;
+	}
+)
+//================================================================
+//  Router Advertisement(unsolicited multicast/LinkX)
+//  Router Advertisement: HA2 --> NUT1(multicast)
+
+FEM_icmp6_ra(
+	ra_ha2_to_multi_opthainfo,
+	_HETHER_ha2_to_all,
+	{
+		HopLimit = 255;
+		_SRC(v6(HA2_LLOCAL_UCAST));
+		_DST(v6(_ALLNODES_MCAST_ADDR));
+	},
+	{
+		HFlag    = 1;
+		LifeTime = RTR_LIFETIME;
+		ReachableTime = RTR_REACHABLETIME;
+		option   = opt_sll_ha2;
+		option   = opt_mtu_1500;
+		option   = opt_prefixinformation_ha2;
+		option   = opt_hainformation;
+	}
+)
+//================================================================
+//  Router Advertisement(unsolicited multicast/LinkX)
+//  Router Advertisement: R1 --> NUT1(multicast)
+
+FEM_icmp6_ra(
+	ra_r1_to_multi,
+	_HETHER_r1_to_all,
+	{
+		HopLimit = 255;
+		_SRC(v6(R1_LLOCAL_UCAST));
+		_DST(v6(_ALLNODES_MCAST_ADDR));
+	},
+	{
+		HFlag    = 0;
+		LifeTime = RTR_LIFETIME;
+		ReachableTime = RTR_REACHABLETIME;
+		option   = opt_sll_r1;
+		option   = opt_mtu_1500;
+		option   = opt_prefixinformation_r1;
+	}
+)
+//================================================================
+//  Router Advertisement(unsolicited multicast/LinkY)
+//  Router Advertisement: R2 --> NUT2(multicast)
+
+FEM_icmp6_ra(
+	ra_r2_to_multi,
+	_HETHER_r2_to_all,
+	{
+		HopLimit = 255;
+		_SRC(v6(R2_LLOCAL_UCAST));
+		_DST(v6(_ALLNODES_MCAST_ADDR));
+	},
+	{
+		HFlag    = 0;
+		LifeTime = RTR_LIFETIME;
+		ReachableTime = RTR_REACHABLETIME;
+		option   = opt_sll_r2;
+		option   = opt_mtu_1500;
+		option   = opt_prefixinformation_r2;
+	}
+)
+//================================================================
+//  Router Advertisement(to delete HA)
+//  Router Advertisement(Hbit=0): HA0 ----> NUT0(multicast)
+FEM_icmp6_ra(
+	ra_delete_ha0_to_multi,
+	_HETHER_ha0_to_all,
+	{
+		HopLimit = 255;
+		_SRC(v6(HA0_LLOCAL_UCAST));
+		_DST(v6(_ALLNODES_MCAST_ADDR));
+	},
+	{
+		HFlag    = 0;
+		LifeTime = 0;
+		option   = opt_sll_ha0;
+		option   = opt_mtu_1500;
+		option   = opt_prefixinformation_ha0;
+	}
+)
+//================================================================
+//  Router Advertisement(to delete HA)
+//  Router Advertisement(Hbit=0): HA1 ----> NUT0(multicast)
+FEM_icmp6_ra(
+	ra_delete_ha1_to_multi,
+	_HETHER_ha1_to_all,
+	{
+		HopLimit = 255;
+		_SRC(v6(HA1_LLOCAL_UCAST));
+		_DST(v6(_ALLNODES_MCAST_ADDR));
+	},
+	{
+		HFlag    = 0;
+		LifeTime = 0;
+		option   = opt_sll_ha1;
+		option   = opt_mtu_1500;
+		option   = opt_prefixinformation_ha1;
+	}
+)
+//================================================================
+//  Router Advertisement(to delete HA)
+//  Router Advertisement(Hbit=0): HA2 ----> NUT1(multicast)
+FEM_icmp6_ra(
+	ra_delete_ha2_to_multi,
+	_HETHER_ha2_to_all,
+	{
+		HopLimit = 255;
+		_SRC(v6(HA2_LLOCAL_UCAST));
+		_DST(v6(_ALLNODES_MCAST_ADDR));
+	},
+	{
+		HFlag    = 0;
+		LifeTime = 0;
+		option   = opt_sll_ha2;
+		option   = opt_mtu_1500;
+		option   = opt_prefixinformation_ha2;
+	}
+)
+Opt_ICMPv6_SLL opt_sll_ha0 {
+	LinkLayerAddress = ether(HA0_MAC_ADDR);
+}
+Opt_ICMPv6_SLL opt_sll_ha1 {
+	LinkLayerAddress = ether(HA1_MAC_ADDR);
+}
+Opt_ICMPv6_SLL opt_sll_ha2 {
+	LinkLayerAddress = ether(HA2_MAC_ADDR);
+}
+Opt_ICMPv6_SLL opt_sll_r1 {
+	LinkLayerAddress = ether(R1_MAC_ADDR);
+}
+Opt_ICMPv6_SLL opt_sll_r2 {
+	LinkLayerAddress = ether(R2_MAC_ADDR);
+}
+Opt_ICMPv6_MTU opt_mtu_1500 {
+	MTU = 1500;
+}
+Opt_ICMPv6_Prefix opt_prefixinformation_ha0 {
+	LFlag             = 1;
+	AFlag             = 1;
+	RFlag             = 1;
+	Reserved1         = 0;
+	ValidLifetime     = 2592000; //2592000;
+	PreferredLifetime = 604800; //604800;
+	Prefix            = v6(HA0_GLOBAL_UCAST);
+}
+Opt_ICMPv6_Prefix opt_prefixinformation_ha1 {
+	LFlag             = 1;
+	AFlag             = 1;
+	RFlag             = 1;
+	Reserved1         = 0;
+	ValidLifetime     = 2592000;
+	PreferredLifetime = 604800;
+	Prefix            = v6(HA1_GLOBAL_UCAST);
+}
+Opt_ICMPv6_Prefix opt_prefixinformation_ha2 {
+	LFlag             = 1;
+	AFlag             = 1;
+	RFlag             = 1;
+	Reserved1         = 0;
+	ValidLifetime     = 2592000;
+	PreferredLifetime = 604800;
+	Prefix            = v6(HA2_GLOBAL_UCAST);
+}
+Opt_ICMPv6_Prefix opt_prefixinformation_r1 {
+	LFlag             = 1;
+	AFlag             = 1;
+	RFlag             = 1;
+	Reserved1         = 0;
+	ValidLifetime     = 2592000;
+	PreferredLifetime = 604800;
+	Prefix            = v6(R1_GLOBAL_UCAST);
+}
+Opt_ICMPv6_Prefix opt_prefixinformation_r2 {
+	LFlag             = 1;
+	AFlag             = 1;
+	RFlag             = 1;
+	Reserved1         = 0;
+	ValidLifetime     = 2592000;
+	PreferredLifetime = 604800;
+	Reserved2         = 0;
+	Prefix            = v6(R2_GLOBAL_UCAST);
+}
+Opt_ICMPv6_HomeAgentInfo opt_hainformation {
+	Reserved             = 0;
+	Preference  = HA_PREFERENCE;
+	Lifetime    = HA_LIFETIME;
+}

@@ -1,0 +1,197 @@
+#!/usr/bin/perl
+#
+# Copyright (C) 1999, 2000, 2001, 2002, 2003 Yokogawa Electric Corporation,
+# IPA (Information-technology Promotion Agency, Japan).
+# All rights reserved.
+# 
+# Redistribution and use of this software in source and binary forms, with 
+# or without modification, are permitted provided that the following 
+# conditions and disclaimer are agreed and accepted by the user:
+# 
+# 1. Redistributions of source code must retain the above copyright 
+# notice, this list of conditions and the following disclaimer.
+# 
+# 2. Redistributions in binary form must reproduce the above copyright 
+# notice, this list of conditions and the following disclaimer in the 
+# documentation and/or other materials provided with the distribution.
+# 
+# 3. Neither the names of the copyrighters, the name of the project which 
+# is related to this software (hereinafter referred to as "project") nor 
+# the names of the contributors may be used to endorse or promote products 
+# derived from this software without specific prior written permission.
+# 
+# 4. No merchantable use may be permitted without prior written 
+# notification to the copyrighters. However, using this software for the 
+# purpose of testing or evaluating any products including merchantable 
+# products may be permitted without any notification to the copyrighters.
+# 
+# 
+# 
+# THIS SOFTWARE IS PROVIDED BY THE COPYRIGHTERS, THE PROJECT AND 
+# CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING 
+# BUT NOT LIMITED THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS 
+# FOR A PARTICULAR PURPOSE, ARE DISCLAIMED.  IN NO EVENT SHALL THE 
+# COPYRIGHTERS, THE PROJECT OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, 
+# INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES 
+# (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR 
+# SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) 
+# HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN 
+# CONTRACT,STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) 
+# ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF 
+# THE POSSIBILITY OF SUCH DAMAGE.
+#
+# $TAHI: ct/natpt/rfc2766_5.3.2_checksum_icmp.seq,v 1.3 2001/10/11 01:41:48 akisada Exp $
+#
+
+BEGIN { $V6evalTool::TestVersion = '$Name: REL_2_1_1 $'; }
+use V6evalTool;
+use natpt;
+
+checkNUT(router);
+
+# Interface 
+$IF="Link0";
+$IF1="Link1";
+vCapture($IF);
+vCapture($IF1);
+
+%pktdesc = (
+  icmpv6_unreach_noroute    => 'Send ICMPv6 (Type 1, Code 0)',
+  icmpv4_unreach_host       => 'Recv ICMPv4 (Type 3, Code 1)',
+
+  arp_nut2tn_request => 'Recv ARP request on Link1 (TN IPv4addr)',
+  arp_tn2nut_reply   => 'Send ARP reply on Link1 (TN IPv4addr)',
+  ns_nut2tn_natpt0   => 'Recv Neighbor Solicitation on Link0 (NATPT V6addr)',
+  na_tn2nut_natpt0   => 'Send Neighbor Advertisement on Link0 (NATPT V6addr)',
+);
+
+$result = $V6evalTool::exitPass;
+$result += send_recv($IF,'icmpv6_unreach_noroute', $IF1,'icmpv4_unreach_host');
+
+if($result == $V6evalTool::exitPass) {
+    vLogHTML("<H3>OK</H3>");
+    exit $V6evalTool::exitPass;
+}
+
+error:
+vLogHTML("<FONT COLOR=#FF0000><H3>NG</H3></FONT>");
+exit $V6evalTool::exitFail;
+
+########################################################################
+__END__
+
+=head1 NAME
+
+	rfc2766_5.3.2_checksum_icmp.seq - Verify IPv6 <-> IPv4 header 
+        translation in accordance with RFC2766 [NATPT]
+
+=head1 TARGET
+
+	Router
+
+=head1 SYNOPSIS
+
+	rfc2766_5.3.2_checksum_icmp.seq [-tooloption ...] 
+        -p rfc2766_5.3.2_checksum_icmp.def
+
+=head1 INITIALIZATION
+
+=begin html
+<PRE>
+	Before this test starts, run <A HREF="./initialize_natpt.html">initialize_natpt.seq</A>.
+</PRE>
+
+=end html
+
+=head1 TEST PROCEDURE
+
+	This test verifies that NUT adjusts header checksum for ICMP packets.
+	
+	Network Topology
+
+	Link0
+	--------------------------
+	    |               |
+	   TN              NUT
+	    |               |
+	--------------------------
+	Link1
+
+	TN -- (Link0) -- NUT        NUT -- (Link1) -- TN
+	
+	---------------------      ------------------------
+
+=begin html <HR WIDTH=80%>
+
+	1.1.
+	===================>
+	IPv6 ICMP packet
+		IPv6 Header
+			src address : TN LINK0 IPv4 embedded IPv6 address
+			dst address : TN LINK1 IPv4 embedded IPv6 address
+                ICMPv6 Destination Unreachable
+                        Type = 1
+                        Code = 0
+                Payload (48 bytes)
+			IPv6 Header (40 bytes)
+				src address : TN LINK0 IPv4 embedded IPv6 address
+				dst address : TN LINK1 IPv4 embedded IPv6 address
+                        	NextHeader = 17
+                        UDP packet (first 8 bytes)
+                        	Checksum including IPv6 pseudo header
+                        	data = repeat(0xff,1422)
+	1.2.
+	<<JUDGMENT>>
+                                   ===================>
+	IPv4 ICMP packet
+                IPv4 Header
+			src address : TN LINK0 IPv4 address
+			dst address : TN LINK1 IPv4 address
+                        DF = 1
+                ICMPv4 Destination Unreachable
+                        Type = 3
+                        Code = 1
+                Payload (28 bytes)
+                        IPv4 Header (20 bytes)
+        			src address : TN LINK0 IPv4 address
+				dst address : TN LINK1 IPv4 address
+                        	DF = 1
+                                Protocol = 17
+                	UDP packet (first 8 bytes)
+                        	Checksum including IPv4 pseudo header
+                        	data = repeat(0xff,1422)
+
+=head1 JUDGMENT
+
+	<< PASS >>
+		NUT will translate ICMPv6 Destination Unreachable
+                to ICMPv4 Destination Unreachable.
+                NUT will translate the inner IPv6 UDP packet to the
+                equivalent IPv4 UDP packet.
+                NUT will update checksums for the inner and outer
+                IP headers.
+		
+	<< FAIL >>	
+                NUT does not translate correctly.
+
+=head1 NOTE
+
+=head1 REFERENCE
+
+B<RFC2766>
+
+5.3.2 TCP/UDP/ICMP Checksum Update from IPv6 to IPv4
+
+   The checksum calculation for a V4 ICMP header needs to be derived
+   from the V6 ICMP header by running the checksum adjustment algorithm
+   [NAT] to remove the V6 pseudo header from the computation. Note, the
+   adjustment must additionally take into account changes to the
+   checksum as a result of updates to the source and destination
+   addresses (and transport ports in the case of NAPT-PT) made to the
+   payload carried within ICMP.
+
+=head1 SEE ALSO
+
+	perldoc V6evalTool
+
+=cut

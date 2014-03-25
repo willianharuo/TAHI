@@ -1,0 +1,84 @@
+				README of
+		IPv6 Conformance Test for Neighbor Discovery
+
+			      TAHI Project
+
+		     $Date: 2002/02/27 01:08:24 $
+
+* First of all
+
+	This is a set of conformance tests for IPv6 neighbor discovery
+	that is based upon RFC2461.
+
+* Test coverage
+
+	The test coverage is the followings:
+
+	----------------+-------------------------------
+			| the NUT type			
+	                +---------------+---------------
+	Category	| host		| router	
+	----------------+---------------+---------------
+	ns/na		 done	 	 done
+	rs/ra		 done		 done
+	redirect	 done		 done
+	surprise	 TBD		 TBD
+	----------------+---------------+---------------
+
+	TBD: To be done
+
+* Invoking commands on NUT via serial line.
+
+	The following tests need to invoke commands on NUT with serial line.
+
+	---------------------------------+--------------------------------
+	Test Name			 Invoked Commands on NUT
+	---------------------------------+--------------------------------
+	---RS/RA---			 | ---
+	hostSendRs			 | Rebooting
+	hostSendRsAfterUnsolicitedRa	 | Rebooting
+	hostSendRsAfterSolicitedRa	 | Rebooting
+	hostRecvRas			 | Deleting the Prefix List
+	hostRecvRas2			 | Deleting the Prefix List
+	hostRecvRaNHD			 | Deleting the Prefix List
+					 | Deleting the Default Router List
+	routerRecvRs			 | Starting/Stoping to send RAs
+	routerRecvRsInvalid		 | Starting/Stoping to send RAs
+	ncStateByRs4NoNce		 | Starting/Stoping to send RAs
+	ncStateByRs4Incomplete		 | Starting/Stoping to send RAs
+	ncStateByRs4Reachable		 | Starting/Stoping to send RAs
+	ncStateByRs4Stale		 | Starting/Stoping to send RAs
+	ncStateByRs4Probe		 | Starting/Stoping to send RAs
+	routerSendUnsolRaDefault	 | Starting/Stoping to send RAs
+	routerSendUnsolRaDefault2	 | Starting/Stoping to send RAs
+	routerSendSolRaDefault		 | Starting/Stoping to send RAs
+	routerSendUnsolRaMin		 | Starting/Stoping to send RAs
+	routerSendUnsolRaMax		 | Starting/Stoping to send RAs
+	routerRecvRa			 | Starting/Stoping to send RAs
+	---------------------------------+--------------------------------
+	---REDIRECT---			 | ---
+	hostRecvRedirect4OnlinkDC	 | Deleting IPv6 routes
+	hostRecvRedirect4OfflinkDC	 | Deleting IPv6 routes
+	hostRecvRedirect4OnlinkNUD	 | Deleting IPv6 routes
+	hostRecvRedirect4OfflinkNUD 	 | Deleting IPv6 routes
+	hostRecvRedirect4RFlag 		 | Deleting IPv6 routes
+	hostRecvRedirect4RFlag2 	 | Deleting IPv6 routes
+	hostRecvRedirect4RouterLifetime0 | Deleting IPv6 routes
+	hostRecvRedirect4RouterLifetime02| Deleting IPv6 routes
+	hostRecvRedirect4Nonce		 | Deleting IPv6 routes
+	---------------------------------+--------------------------------
+
+* How to run the tests
+
+	# vi /usr/local/v6eval/etc/tn.def
+	# vi /usr/local/v6eval/etc/nut.def
+	% cp -Rp /usr/local/v6eval/ct $SOMEWHERE
+	% cd $SOMEWHERE
+	% make test
+	% netscape index.html
+
+	If you know more about it,
+	please see /usr/local/v6eval/doc/INSTALL.ct.
+
+
+							[end of README]

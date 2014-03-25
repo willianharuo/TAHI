@@ -1,0 +1,211 @@
+<HTML>
+<HEAD>
+<TITLE>recvNsInvalid - Verify that NUT ignores invalid NSs</TITLE>
+<LINK REV="made" HREF="mailto:hackers@FreeBSD.org">
+</HEAD>
+
+<BODY>
+
+<!-- INDEX BEGIN -->
+<!--
+
+<UL>
+
+	<LI><A HREF="#NAME">NAME</A>
+	<LI><A HREF="#TARGET">TARGET</A>
+	<LI><A HREF="#SYNOPSIS">SYNOPSIS</A>
+	<LI><A HREF="#INITIALIZATION">INITIALIZATION</A>
+	<LI><A HREF="#TEST_PROCEDURE">TEST PROCEDURE</A>
+	<LI><A HREF="#JUDGMENT">JUDGMENT</A>
+	<LI><A HREF="#TERMINATION">TERMINATION</A>
+	<LI><A HREF="#NOTE">NOTE</A>
+	<LI><A HREF="#SEE_ALSO">SEE ALSO</A>
+</UL>
+-->
+<!-- INDEX END -->
+
+<P>
+<H1><A NAME="NAME">NAME</A></H1>
+<P>
+recvNsInvalid - Verify that NUT ignores invalid NSs
+
+<P>
+<HR>
+<H1><A NAME="TARGET">TARGET</A></H1>
+<P>
+Host and Router
+
+<P>
+<HR>
+<H1><A NAME="SYNOPSIS">SYNOPSIS</A></H1>
+<P>
+<PRE>  recvNsInvalid.seq [-tooloption ...] -p recvNsInvalid.def
+</PRE>
+<P>
+<HR>
+<H1><A NAME="INITIALIZATION">INITIALIZATION</A></H1>
+<P>
+<PRE>  Clear NC state for TN.
+</PRE>
+<P>
+<HR>
+<H1><A NAME="TEST_PROCEDURE">TEST PROCEDURE</A></H1>
+<P>
+<STRONG>recvNsInvalid</STRONG> verifies that NUT ignores invalid NSs.
+
+<PRE>
+  TN                 NUT
+  ----------------------
+<BR>
+  State: NONCE
+<BR>
+  ==== <A HREF="#JDG1">invalid NS</A> ===>
+<BR>
+  <A HREF="#JDG2">Judgment #2:</A> Not to capture any packet from NUT within 5 sec.
+</PRE>
+
+<P>
+<HR>
+<H1><A NAME="JUDGMENT">JUDGMENT</A></H1>
+<PRE>
+<A NAME="JDG1"></A>
+  1. NUT must ignore the following NS:
+<BR>
+  Source      |Destination         |Hop|Target             |SLL
+  ============+====================+===+===================+======
+  link-local   link-local           255 *all-node multicast exist
+  ------------+--------------------+---+-------------------+------
+  *unspecified *link-local          255 link-local          none
+  ------------+--------------------+---+-------------------+------
+  <A HREF="#NOTE2">*unspecified sol-node[link-local] 255 link-local          *exist</A>
+  ------------+--------------------+---+-------------------+------
+  <A HREF="#NOTE3">link         *sol-node[link-local]255 link-local          *none</A>
+  ------------+--------------------+---+-------------------+------
+  link-local   link-local           *2  link-local          exist
+  ============+====================+===+===================+======
+<A NAME="JDG2"></A>
+  2. NUT does not sends any packet.
+</PRE>
+
+<P>
+<HR>
+<H1><A NAME="TERMINATION">TERMINATION</A></H1>
+<P>
+<PRE>  N/A
+</PRE>
+<P>
+<HR>
+<H1><A NAME="NOTE">NOTE</A></H1>
+<PRE>
+  1. The test does not invoke any remote command.
+<BR>
+<A NAME="NOTE2"></A>
+  2. An implementation may send a NA in response to the NS (src=unspecified,
+     with SLLA option) because of backward compatibility with RFC1970.
+     RFC defined the NS as valid, whereas RFC2461 defined the NS as invalid.
+     In such case, this test judges "WARN" that never means the implementation
+     is wrong. The test intends to inform such behavior.
+<BR>
+<BLOCKQUOTE>
+RFC1970
+<HR>
+4.3.  Neighbor Solicitation Message Format
+<BR>
+IP Fields:
+<BR>
+   Source Address
+                  Either an address assigned to the interface from which
+                  this message is sent or (if Duplicate Address
+                  Detection is in progress [ADDRCONF]) <B>the unspecified
+                  address.</B>
+<BR>
+Possible options:
+<BR>
+   Source link-layer address
+                  The link-layer address for the sender.  <B>On link layers
+                  that have addresses this option MUST be included in
+                  multicast solicitations</B> and SHOULD be included in
+                  unicast solicitations.
+<HR>
+RFC2461
+<HR>
+4.3.  Neighbor Solicitation Message Format
+<BR>
+   Possible options:
+<BR>
+      Source link-layer address
+                     The link-layer address for the sender.  <B>MUST NOT be
+                     included when the source IP address is the
+                     unspecified address.</B>  Otherwise, on link layers
+                     that have addresses this option MUST be included in
+                     multicast solicitations and SHOULD be included in
+                     unicast solicitations.
+<HR>
+</BLOCKQUOTE>
+<BR>
+<A NAME="NOTE3"></A>
+  3. An implementation may send a NA in response to the NS (src=solicited-node
+     multicast, without SLLA option). The NS is not invalid as a receiver side,
+     whereas it is invalid as a sender side (please see the following).
+     In such case, this test judges "WARN" that never means the implementation
+     is wrong. The test intends to inform such behavior.
+<BR>
+<BLOCKQUOTE>
+RFC2461
+Sender side:
+<HR>
+4.3.  Neighbor Solicitation Message Format
+<BR>
+   Possible options:
+<BR>
+      Source link-layer address
+                     The link-layer address for the sender.  MUST NOT be
+                     included when the source IP address is the
+                     unspecified address.  Otherwise, <B>on link layers
+                     that have addresses this option MUST be included in
+                     multicast solicitations</B> and SHOULD be included in
+                     unicast solicitations.
+<HR>
+RFC2461
+Receiver side:
+<HR>
+7.1.1.  Validation of Neighbor Solicitations
+<BR>
+   A node must silently discard any received Neighbor Solicitation
+   messages that do not satisfy all of the following validity checks:
+<BR>
+   - The IP Hop Limit field has a value of 255, i.e., the packet
+     could not possibly have been forwarded by a router.
+<BR>
+   - If the message includes an IP Authentication Header, the message
+     authenticates correctly.
+<BR>
+   - ICMP Checksum is valid.
+<BR>
+   - ICMP Code is 0.
+<BR>
+   - ICMP length (derived from the IP length) is 24 or more octets.
+<BR>
+   - Target Address is not a multicast address.
+<BR>
+   - All included options have a length that is greater than zero.
+<BR>
+   - If the IP source address is the unspecified address, the IP
+     destination address is a solicited-node multicast address.
+<BR>
+   - If the IP source address is the unspecified address, there is no
+     source link-layer address option in the message.
+<HR>
+</BLOCKQUOTE>
+</PRE>
+
+<P>
+<HR>
+<H1><A NAME="SEE_ALSO">SEE ALSO</A></H1>
+<P>
+<PRE>  perldoc V6evalTool
+  perldoc V6evalRemote
+</PRE>
+</BODY>
+
+</HTML>

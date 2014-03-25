@@ -1,0 +1,6 @@
+vLog("Reading LLOCAL.def.pktdesc") if $debug > 0;
+
+require "BASIC.def.pktdesc";
+
+1;
+#end

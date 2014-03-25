@@ -1,0 +1,51 @@
+##
+## $Name: REL_2_1_1 $
+##
+## $TAHI: ct/ipsec/INDEX_host_ah,v 1.29 2001/10/05 06:38:55 masaxmasa Exp $
+##
+##<seq>:<def>:[<opt>]:[<log>]:<desc>
+##
+&print:<B>Host Transport AH Outbound</B>
+&print:Host Transport AH Outbound with authentication
+
+./HTR_A_Out_hmacmd5.seq:./HTR_A_hmacmd5.def:::Outbound AH packet (HMAC-MD5)
+./HTR_A_Out_hmacsha1.seq:./HTR_A_hmacsha1.def:::Outbound AH packet (HMAC-SHA1)
+
+&print:Host Transport AH Outbound Header Order
+./HTR_A_Out_Fragment.seq:./HTR_A_Fragment.def:::Outbound Header Order (Fragment Header vs AH)
+
+&print:Host Transport AH Outbound Connect SA bundles
+./HTR_A_Out_2SA_DspiDipdst.seq :./HTR_A_2SA_DspiDip.def:::Connect two SA bundles with different spi, different IPdst
+./HTR_A_Out_2SA_SspiDipdst.seq :./HTR_A_2SA_SspiDip.def:::Connect two SA bundles with same spi, different IPdst
+
+&print:<B>Host Transport AH Inbound</B>
+&print:Host Transport AH Inbound with authentication
+
+./HTR_A_In_hmacmd5.seq:./HTR_A_hmacmd5.def:::Inbound AH packet (HMAC-MD5)
+./HTR_A_In_hmacsha1.seq:./HTR_A_hmacsha1.def:::Inbound AH packet (HMAC-SHA1)
+
+&print:Host Transport AH Inbound Header Order
+./HTR_A_In_Fragment.seq:./HTR_A_Fragment.def:::Inbound Header Order (Fragment Header vs AH)
+
+
+&print:Host Transport AH Inbound Connect SA bundles
+./HTR_A_In_2SA_DspiDipsrc.seq :./HTR_A_2SA_DspiDip.def:::Connect two SA bundles with different spi, different IPsrc
+./HTR_A_In_2SA_DspiSipsrc.seq :./HTR_A_2SA_DspiSip.def:::Connect two SA bundles with different spi, same IPsrc
+
+&print:Host Transport AH Inbound, Detect modification of packet with AH
+./HTR_A_In_DM_IPv6H_dst.seq  :./HTR_A_DM_IPv6H.def:::Detect modification of IPv6 header IP dst address with AH
+./HTR_A_In_DM_IPv6H_src.seq  :./HTR_A_DM_IPv6H.def:::Detect modification of IPv6 header IP src address with AH
+./HTR_A_In_DM_IPv6H_hlim.seq  :./HTR_A_DM_IPv6H.def:::Undetect modification of IPv6 header hoplimit with AH
+./HTR_A_In_DM_RH_ipv6h_dst.seq  :./HTR_A_DM_RH.def:::Detect modification of IPv6 header IP dst address with Routing header and AH
+./HTR_A_In_DM_RH_lastaddr.seq  :./HTR_A_DM_RH.def:::Detect modification of Routing header "last router address" with AH
+./HTR_A_In_DM_DSTH_opttype.seq   :./HTR_A_DM_DSTH_opttype.def:::Detect modification of DstOpt header option type before AH
+./HTR_A_In_DM_DSTH_optlen.seq   :./HTR_A_DM_DSTH_optlen.def:::Detect modification of DstOpt header option len before AH
+./HTR_A_In_DM_DSTH_optdata.seq   :./HTR_A_DM_DSTH_optdata.def:::Detect modification of DstOpt header option data before AH
+./HTR_A_In_DM_DSTH_optdata.seq   :./HTR_A_DM_DSTH2_optdata.def::HTR_A_In_DM_DSTH_optdata_afterAH.html:Detect modification of DstOpt header option data after AH
+./HTR_A_In_DM_HBHH_opttype.seq   :./HTR_A_DM_HBHH_opttype.def:::Detect modification of HBHOpt header option type with AH
+./HTR_A_In_DM_HBHH_optlen.seq   :./HTR_A_DM_HBHH_optlen.def:::Detect modification of HBHOpt header option len with AH
+./HTR_A_In_DM_HBHH_optdata.seq   :./HTR_A_DM_HBHH_optdata.def:::Detect modification of HBHOpt header option data with AH
+./HTR_A_In_DM_Payload.seq :./HTR_A_DM_Payload.def:::Detect modification of payload with AH
+
+#
+#########################################################################

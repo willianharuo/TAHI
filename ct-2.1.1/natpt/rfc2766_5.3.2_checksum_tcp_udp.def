@@ -1,0 +1,112 @@
+//
+// Copyright (C) 1999, 2000, 2001, 2002, 2003 Yokogawa Electric Corporation,
+// IPA (Information-technology Promotion Agency, Japan).
+// All rights reserved.
+// 
+// Redistribution and use of this software in source and binary forms, with 
+// or without modification, are permitted provided that the following 
+// conditions and disclaimer are agreed and accepted by the user:
+// 
+// 1. Redistributions of source code must retain the above copyright 
+// notice, this list of conditions and the following disclaimer.
+// 
+// 2. Redistributions in binary form must reproduce the above copyright 
+// notice, this list of conditions and the following disclaimer in the 
+// documentation and/or other materials provided with the distribution.
+// 
+// 3. Neither the names of the copyrighters, the name of the project which 
+// is related to this software (hereinafter referred to as "project") nor 
+// the names of the contributors may be used to endorse or promote products 
+// derived from this software without specific prior written permission.
+// 
+// 4. No merchantable use may be permitted without prior written 
+// notification to the copyrighters. However, using this software for the 
+// purpose of testing or evaluating any products including merchantable 
+// products may be permitted without any notification to the copyrighters.
+// 
+// 
+// 
+// THIS SOFTWARE IS PROVIDED BY THE COPYRIGHTERS, THE PROJECT AND 
+// CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING 
+// BUT NOT LIMITED THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS 
+// FOR A PARTICULAR PURPOSE, ARE DISCLAIMED.  IN NO EVENT SHALL THE 
+// COPYRIGHTERS, THE PROJECT OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, 
+// INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES 
+// (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR 
+// SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) 
+// HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN 
+// CONTRACT,STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) 
+// ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF 
+// THE POSSIBILITY OF SUCH DAMAGE.
+//
+// $TAHI: ct/natpt/rfc2766_5.3.2_checksum_tcp_udp.def,v 1.3 2001/10/11 01:41:48 akisada Exp $
+//
+
+#include "natpt.def"
+
+#define ipv4_hdr          _SRC(TN_LINK0_V4_ADDRESS); _DST(TN_LINK1_V4_ADDRESS)
+#define ipv4_hdr_df       ipv4_hdr; DF=1
+#define ipv4_hdr_mf       ipv4_hdr; MF=1
+#define udp_hdr           SourcePort = 1234; DestinationPort = 5678
+#define chksum            Checksum = 0xffff
+#define tcp_hdr           SourcePort = 1234; DestinationPort = 5678
+#define length            TotalLength = 92
+#define offset            FragmentOffset = 9
+
+#define ipv6_hdr _SRC(TN_LINK0_NATPT_ADDRESS); _DST(TN_LINK1_NATPT_ADDRESS)
+
+
+// Send IPv4 UDP fragments (Checksum OK) on link1
+FEM_udp_ipv4( ipv4_udp,
+	_HETHER_nut2tn, {ipv4_hdr; DF=1; }, {udp_hdr;}, data_size_128)
+FEM_v4_fragment( ipv4_udp_frag1,
+	_HETHER_nut2tn, { ipv4_hdr; MF=1; Protocol = 17; }, 
+	{ data = substr(_PACKET_IPV4_NAME(ipv4_udp), 20, 72); })
+FEM_v4_fragment( ipv4_udp_frag2,
+	_HETHER_nut2tn, { ipv4_hdr; offset; Protocol = 17; }, 
+	{ data = substr(_PACKET_IPV4_NAME(ipv4_udp), 92, 64); })
+
+// Send IPv4 UDP fragments (Checksum Zero) on link1
+FEM_udp_ipv4( ipv4_udp_zero,
+	_HETHER_nut2tn, {ipv4_hdr; DF=1; }, {udp_hdr; chksum;}, data_size_128)
+FEM_v4_fragment( ipv4_udp_zero_frag1,
+	_HETHER_nut2tn, { ipv4_hdr; MF=1; Protocol = 17; }, 
+	{ data = substr(_PACKET_IPV4_NAME(ipv4_udp_zero), 20, 72); })
+FEM_v4_fragment( ipv4_udp_zero_frag2,
+	_HETHER_nut2tn, { ipv4_hdr; offset; Protocol = 17; }, 
+	{ data = substr(_PACKET_IPV4_NAME(ipv4_udp_zero), 92, 64); })
+
+// Recv IPv6 UDP fragments on Link0
+FEM_udp( ipv6_udp,
+	_HETHER_tn2nut, {ipv6_hdr;}, {udp_hdr;},data_size_128)
+FEM_add_fragment_hdr(ipv6_udp_frag, 
+	_HETHER_tn2nut, ipv6_udp, { NextHeader = 17; })
+FEM_fragment(ipv6_udp_frag1,
+	     _HETHER_tn2nut, { ipv6_hdr; }, { MFlag = 1; NextHeader = 17; },
+             { data = substr(_PACKET_IPV6_NAME(ipv6_udp), 40, 72); })
+FEM_fragment(ipv6_udp_frag2,
+	     _HETHER_tn2nut, { ipv6_hdr; }, { offset; NextHeader = 17; },
+             { data = substr(_PACKET_IPV6_NAME(ipv6_udp), 112, 64); })
+
+
+
+// Send IPv4 TCP fragments on link1
+FEM_tcp_ipv4( ipv4_tcp,
+	_HETHER_nut2tn, {ipv4_hdr; DF=1; }, {tcp_hdr;}, data_size_128)
+FEM_v4_fragment( ipv4_tcp_frag1,
+	_HETHER_nut2tn, { ipv4_hdr; MF=1; Protocol = 6; }, 
+	{ data = substr(_PACKET_IPV4_NAME(ipv4_tcp), 20, 72); })
+FEM_v4_fragment( ipv4_tcp_frag2,
+	_HETHER_nut2tn, { ipv4_hdr; offset; Protocol = 6; }, 
+	{ data = substr(_PACKET_IPV4_NAME(ipv4_tcp), 92, 64); })
+
+// Recv IPv6 TCP fragments on link1
+FEM_tcp( ipv6_tcp,
+	_HETHER_tn2nut, {ipv6_hdr;}, {tcp_hdr;}, data_size_128)
+FEM_fragment(ipv6_tcp_frag1,
+	     _HETHER_tn2nut, { ipv6_hdr; }, { MFlag = 1; NextHeader = 6; },
+             { data = substr(_PACKET_IPV6_NAME(ipv6_tcp), 40, 72); })
+FEM_fragment(ipv6_tcp_frag2,
+	     _HETHER_tn2nut, { ipv6_hdr; }, { offset; NextHeader = 6; },
+             { data = substr(_PACKET_IPV6_NAME(ipv6_tcp), 112, 64); })
+

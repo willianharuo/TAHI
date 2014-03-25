@@ -1,0 +1,178 @@
+<HTML>
+<HEAD>
+<TITLE>pmtuStore - Verify if NUT can store PMTU for multiple Destinations.</TITLE>
+<LINK REV="made" HREF="mailto:hackers@FreeBSD.org">
+</HEAD>
+
+<BODY>
+
+<!-- INDEX BEGIN -->
+<!--
+
+<UL>
+
+	<LI><A HREF="#NAME">NAME</A>
+	<LI><A HREF="#TARGET">TARGET</A>
+	<LI><A HREF="#SYNOPSIS">SYNOPSIS</A>
+	<LI><A HREF="#NETWORK_CONFIGURATION">NETWORK CONFIGURATION</A>
+	<LI><A HREF="#INITIALIZATION">INITIALIZATION</A>
+	<LI><A HREF="#TEST_PROCEDURE">TEST PROCEDURE</A>
+	<LI><A HREF="#JUDGMENT">JUDGMENT</A>
+	<LI><A HREF="#SEE_ALSO">SEE ALSO</A>
+</UL>
+-->
+<!-- INDEX END -->
+
+<P>
+<H1><A NAME="NAME">NAME</A></H1>
+<P>
+<PRE>        pmtuStore - Verify if NUT can store PMTU for multiple Destinations.
+</PRE>
+<P>
+<HR>
+<H1><A NAME="TARGET">TARGET</A></H1>
+<P>
+<PRE>        Host
+</PRE>
+<P>
+<HR>
+<H1><A NAME="SYNOPSIS">SYNOPSIS</A></H1>
+<P>
+<PRE>        pmtuStore.seq [-tooloption ...] -p pmtuStore.def
+</PRE>
+<P>
+<HR>
+<H1><A NAME="NETWORK_CONFIGURATION">NETWORK CONFIGURATION</A></H1>
+<P>
+<PRE>        This test evaluate the behavior of NUT when it receive the ICMP
+        Packet Too Big Message for multiple destinations.
+        In this test, NUT is a host and TN plays a Roll of Routers and 
+        other hosts.
+        
+        Phisical Network configuration
+        
+        --------+---------------+----------
+                |               |
+                NUT             TN
+</PRE>
+<P>
+<PRE>        Logical Network Configuration
+</PRE>
+<P>
+<PRE>                                NUT
+                                |
+        ----------------+-------+--------
+                        |
+                        Router-1
+                        |
+        --------+-------+-------+--------
+                |               | 
+             Router-2         HOST-1
+                |
+        --------+-------+-------+--------
+                        |       |
+                     Router-n  HOST-2
+                        |
+        ----------------+-------+--------
+                                | 
+                              HOST-n
+                                : 
+                                : 
+        
+</PRE>
+<P>
+<PRE>        In this test, NUT receives Packet Too Big Messages for multiple
+        destinations. 
+        - Register PMTU for multiple HOST
+        - Verify PMTU for multiple HOST
+</PRE>
+<P>
+<HR>
+<H1><A NAME="INITIALIZATION">INITIALIZATION</A></H1>
+<P>
+<PRE>        The TN send a RA to assign global address prefix.
+</PRE>
+<P>
+<PRE>           TN          NUT
+           |            |
+        ---+------------+------
+</PRE>
+<P>
+<PRE>        ===multicast RA===&gt;
+        src=TN's link-local
+        dst=LinkLocal-all-node                                                  
+        M=0, O=0,
+        Lifetime=3600, ReachableTime=60000, RetransTimer=1005
+        Prefix:
+           L=1, A=1,                       
+           ValidLifetime=3600005, PreferredLifetime=3600005
+           Prefix=3ffe:501:ffff:100::, PrefixLength=64                      
+   
+          Wait (5 sec.)
+                 Ignoring DAD packets for global address.                 
+</PRE>
+<P>
+<HR>
+<H1><A NAME="TEST_PROCEDURE">TEST PROCEDURE</A></H1>
+<P>
+<PRE>        &quot;pmtuStore&quot; verify NUT's behavior when it receives 
+         ICMP Packet Too Big Mesg for multiple destinations.
+</PRE>
+<P>
+<PRE>           TN          NUT
+           |            |
+        ---+------------+------
+</PRE>
+<P>
+<PRE>        1. Register PMTU for multiple destinations
+        1.1
+        TN send Echo Request.
+        TN(n) === echo request(1500) ===&gt; NUT
+</PRE>
+<P>
+<PRE>        1.2
+        NUT send Echo Reply.
+</PRE>
+<P>
+<PRE>        TN(n) &lt;=== echo reply(1500) === NUT
+</PRE>
+<P>
+<PRE>        1.3
+        TN send ICMPv6 Too Big Mesg with MTU (1280+n*8).
+        
+        TN(n) === ICMPv6 Too Big Mesg(MTU=1280+n*8) ===&gt; NUT
+</PRE>
+<P>
+<PRE>        2. Confirm PMTU for multiple destinations
+        2.1
+        TN send Echo Request.
+        TN(n) === echo request(1500) ===&gt; NUT
+</PRE>
+<P>
+<PRE>        2.2
+        NUT send Echo Reply 
+        &lt;&lt; JUDGMENT 1 &gt;&gt;
+        TN(n) &lt;=== echo reply(1280+n*8 1/2) === NUT
+        TN(n) &lt;=== echo reply( 276-n*8 2/2) === NUT
+</PRE>
+<P>
+<HR>
+<H1><A NAME="JUDGMENT">JUDGMENT</A></H1>
+<P>
+<PRE>        &lt;&lt; JUDGMENT 1 -PASS- &gt;&gt;
+                NUT send Echo Reply
+</PRE>
+<P>
+<PRE>                &quot;PASS&quot; means that NUT set valid MTU in received Packet Too Big message for multiple destinations.
+                And fragmented packets are correct.
+</PRE>
+<P>
+<HR>
+<H1><A NAME="SEE_ALSO">SEE ALSO</A></H1>
+<P>
+<PRE>        perldoc V6evalTool
+        perldoc V6evalRemote
+</PRE>
+</BODY>
+
+</HTML>

@@ -1,0 +1,9 @@
+vLog("Reading GLOBAL0_valRA.def.pktdesc") if $debug > 0;
+
+require "BASIC_init.def.pktdesc";
+require "BASIC.def.pktdesc";
+
+$main::pktdesc{usolra} = "send valid RA";
+
+1;
+#end

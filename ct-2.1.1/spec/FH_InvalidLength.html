@@ -1,0 +1,163 @@
+<HTML>
+<HEAD>
+<TITLE>FH_InvalidLength - check Fragment Reassembly</TITLE>
+<LINK REV="made" HREF="mailto:hackers@FreeBSD.org">
+</HEAD>
+
+<BODY>
+
+<!-- INDEX BEGIN -->
+<!--
+
+<UL>
+
+	<LI><A HREF="#NAME">NAME</A>
+	<LI><A HREF="#TARGET">TARGET</A>
+	<LI><A HREF="#SYNOPSIS">SYNOPSIS</A>
+	<LI><A HREF="#INITIALIZATION">INITIALIZATION</A>
+	<LI><A HREF="#TEST_PROCEDURE">TEST PROCEDURE</A>
+	<LI><A HREF="#JUDGMENT">JUDGMENT</A>
+	<LI><A HREF="#REFERENCE">REFERENCE</A>
+	<LI><A HREF="#SEE_ALSO">SEE ALSO</A>
+</UL>
+-->
+<!-- INDEX END -->
+
+<P>
+<H1><A NAME="NAME">NAME</A></H1>
+<P>
+<PRE>  FH_InvalidLength - check Fragment Reassembly (Invalid Length)
+</PRE>
+<P>
+<HR>
+<H1><A NAME="TARGET">TARGET</A></H1>
+<P>
+<PRE>  Host and Router
+</PRE>
+<P>
+<HR>
+<H1><A NAME="SYNOPSIS">SYNOPSIS</A></H1>
+<PRE>
+  <A HREF="./FH_InvalidLength.seq">FH_InvalidLength.seq</A> [-tooloption ...] -pkt <A HREF="./FH_InvalidLength.def">FH_InvalidLength.def</A>
+    -tooloption : v6eval tool option
+</PRE>
+
+<P>
+<HR>
+<H1><A NAME="INITIALIZATION">INITIALIZATION</A></H1>
+<P>
+<PRE>  1. Ping to Target (create Neighbor Cache Entries, if not exist)
+  2. Override Neighbor Cache Entries
+</PRE>
+<P>
+<HR>
+<H1><A NAME="TEST_PROCEDURE">TEST PROCEDURE</A></H1>
+<P>
+<PRE>  Tester                      Target
+    |                           |
+    |--------------------------&gt;|
+    |   Echo Request (1st)      |
+    |                           |
+    |                           |
+    |--------------------------&gt;|
+    |   Echo Request (2nd)      |
+    |                           |
+    |                           |
+    |&lt;--------------------------|
+    |   ICMP Error              |
+    |                           |
+    |                           |
+    v                           v
+</PRE>
+<P>
+<PRE>  1. Send Echo Request (1st fragment)
+  2. Send Echo Request (2nd fragment)
+  3. Receive ICMP Error
+</PRE>
+<P>
+<PRE>  Echo Request (1st fragment) is:
+</PRE>
+<P>
+<PRE>        IPv6 Header
+            Version            = 6
+            Traffic Class      = 0
+            FlowLabel          = 0
+            PayloadLength      = 527 (not multiple of 8 octets)
+            NextHeader         = 56 (Fragment Header)
+            SourceAddress      = Tester Link Local Address
+            DestinationAddress = Target Link Local Address
+</PRE>
+<P>
+<PRE>        Fragment Header 
+            NextHeader         = 58 (ICMP)
+            FragmentOffset     = 0 (1st fragment)
+            MFlag              = 1 (more fragment)
+</PRE>
+<P>
+<HR>
+<H1><A NAME="JUDGMENT">JUDGMENT</A></H1>
+<P>
+<PRE>  PASS: ICMP Error Received
+</PRE>
+<P>
+<PRE>        IPv6 Header
+            Version             = 6
+            Traffic Class       = 0
+            FlowLabel           = 0
+            PayloadLength       = 575
+            NextHeader          = 58 (ICMP)
+            SourceAddress       = Target Link Local Address
+            Destination Address = Tester Link Local Address
+</PRE>
+<P>
+<PRE>        ICMP Error
+            Type           = 4 (Parameter Problem)
+            Code           = 0 (erroneous header field encountered)
+            Checksum       = (auto)
+            Pointer        = 4 (Pointer to Payload Length in IPv6 Header)
+            PayloadData    = (1st Fragment of Echo Request)
+</PRE>
+<P>
+<HR>
+<H1><A NAME="REFERENCE">REFERENCE</A></H1>
+<P>
+RFC2460
+
+<P>
+4.5 Fragment Header
+
+<P>
+<PRE>                        :
+</PRE>
+<P>
+<PRE>   The following error conditions may arise when reassembling fragmented
+   packets:
+</PRE>
+<P>
+<PRE>      If insufficient fragments are received to complete reassembly of a
+      packet within 60 seconds of the reception of the first-arriving
+      fragment of that packet, reassembly of that packet must be
+      abandoned and all the fragments that have been received for that
+      packet must be discarded.  If the first fragment (i.e., the one
+      with a Fragment Offset of zero) has been received, an ICMP Time
+      Exceeded -- Fragment Reassembly Time Exceeded message should be
+      sent to the source of that fragment.
+</PRE>
+<PRE>
+      <B>If the length of a fragment, as derived from the fragment packet's
+      Payload Length field, is not a multiple of 8 octets and the M flag
+      of that fragment is 1, then that fragment must be discarded and an
+      ICMP Parameter Problem, Code 0, message should be sent to the
+      source of the fragment, pointing to the Payload Length field of   
+      the fragment packet.</B>
+</PRE>
+
+<P>
+<HR>
+<H1><A NAME="SEE_ALSO">SEE ALSO</A></H1>
+<P>
+<PRE>  perldoc V6evalTool
+</PRE>
+</BODY>
+
+</HTML>

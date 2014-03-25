@@ -1,0 +1,75 @@
+##
+## $Name: REL_2_1_1 $
+##
+## $TAHI: ct/ipsec4/INDEX_router_esp,v 1.4 2001/10/05 06:38:59 masaxmasa Exp $
+##
+##<seq>:<def>:[<opt>]:[<log>]:<desc>
+##
+#======================================================================
+&print:<B>Router Tunnel ESP Outbound</B>
+
+&print:ESP Outbound without authentication
+
+../ipsec/RTU_E_Out_descbc.seq:../ipsec/RTU_E_descbc.def:-cpp="-include ./ipsecaddr.def"::Outbound ESP packet (DES-CBC):2
+../ipsec/RTU_E_Out_3descbc.seq:../ipsec/RTU_E_3descbc.def:-cpp="-include ./ipsecaddr.def"::Outbound ESP packet (3DES-CBC):2
+
+&print:ESP Outbound with authentication
+
+../ipsec/RTU_E_Out_null_hmacmd5.seq:../ipsec/RTU_E_null_hmacmd5.def:-cpp="-include ./ipsecaddr.def"::Outbound ESP packet (NULL, HMAC-MD5):2
+../ipsec/RTU_E_Out_null_hmacsha1.seq:../ipsec/RTU_E_null_hmacsha1.def:-cpp="-include ./ipsecaddr.def"::Outbound ESP packet (NULL, HMAC-SHA1):2
+../ipsec/RTU_E_Out_descbc_hmacmd5.seq:../ipsec/RTU_E_descbc_hmacmd5.def:-cpp="-include ./ipsecaddr.def"::Outbound ESP packet (DES-CBC, HMAC-MD5):2
+../ipsec/RTU_E_Out_descbc_hmacsha1.seq:../ipsec/RTU_E_descbc_hmacsha1.def:-cpp="-include ./ipsecaddr.def"::Outbound ESP packet (DES-CBC, HMAC-SHA1):2
+../ipsec/RTU_E_Out_3descbc_hmacmd5.seq:../ipsec/RTU_E_3descbc_hmacmd5.def:-cpp="-include ./ipsecaddr.def"::Outbound ESP packet (3DES-CBC, HMAC-MD5):2
+../ipsec/RTU_E_Out_3descbc_hmacsha1.seq:../ipsec/RTU_E_3descbc_hmacsha1.def:-cpp="-include ./ipsecaddr.def"::Outbound ESP packet (3DES-CBC, HMAC-SHA1):2
+
+&print:ESP Outbound Padding
+
+../ipsec/RTU_E_Out_Padding_null.seq:../ipsec/RTU_E_Padding_null.def:-cpp="-include ./ipsecaddr.def"::Outbound Padding (NULL):2
+../ipsec/RTU_E_Out_Padding_descbc.seq:../ipsec/RTU_E_Padding_descbc.def:-cpp="-include ./ipsecaddr.def"::Outbound Padding (DES-CBC):2
+../ipsec/RTU_E_Out_Padding_3descbc.seq:../ipsec/RTU_E_Padding_3descbc.def:-cpp="-include ./ipsecaddr.def"::Outbound Padding (3DES-CBC):2
+
+&print:ESP Outbound Connect SA bundles
+
+../ipsec/RTU_E_Out_2SA_DspiDipdst.seq :../ipsec/RTU_E_2SA_DspiDip.def:-cpp="-include ./ipsecaddr.def"::Connect two SA bundles with different spi, different IPdst:2
+../ipsec/RTU_E_Out_2SA_SspiDipdst.seq:../ipsec/RTU_E_2SA_SspiDip.def:-cpp="-include ./ipsecaddr.def"::Connect two SA bundles with same spi, different IPdst:2
+
+#======================================================================
+
+&print:<B>Router Tunnel ESP Inbound</B>
+
+../ipsec/RTU_E_In.seq:../ipsec/RTU_E_common.def:-cpp="-include ./ipsecaddr.def"::Inbound ESP Tunnel packet (with SPD entry):2
+
+&print:ESP Inbound without authentication
+
+../ipsec/RTU_E_In_descbc.seq:../ipsec/RTU_E_descbc.def:-cpp="-include ./ipsecaddr.def"::Inbound ESP packet (DES-CBC):2
+../ipsec/RTU_E_In_3descbc.seq:../ipsec/RTU_E_3descbc.def:-cpp="-include ./ipsecaddr.def"::Inbound ESP packet (3DES-CBC):2
+
+../ipsec/RTU_E_In_EncryptKey.seq:../ipsec/RTU_E_EncryptKey.def:-cpp="-include ./ipsecaddr.def"::Inbound ESP packet (Invalid Encryption Key):2
+
+&print:ESP Inbound with authentication
+
+../ipsec/RTU_E_In_null_hmacmd5.seq:../ipsec/RTU_E_null_hmacmd5.def:-cpp="-include ./ipsecaddr.def"::Inbound ESP packet (NULL, HMAC-MD5):2
+../ipsec/RTU_E_In_null_hmacsha1.seq:../ipsec/RTU_E_null_hmacsha1.def:-cpp="-include ./ipsecaddr.def"::Inbound ESP packet (NULL, HMAC-SHA1):2
+../ipsec/RTU_E_In_descbc_hmacmd5.seq:../ipsec/RTU_E_descbc_hmacmd5.def:-cpp="-include ./ipsecaddr.def"::Inbound ESP packet (DES-CBC, HMAC-MD5):2
+../ipsec/RTU_E_In_descbc_hmacsha1.seq:../ipsec/RTU_E_descbc_hmacsha1.def:-cpp="-include ./ipsecaddr.def"::Inbound ESP packet (DES-CBC, HMAC-SHA1):2
+../ipsec/RTU_E_In_3descbc_hmacmd5.seq:../ipsec/RTU_E_3descbc_hmacmd5.def:-cpp="-include ./ipsecaddr.def"::Inbound ESP packet (3DES-CBC, HMAC-MD5):2
+../ipsec/RTU_E_In_3descbc_hmacsha1.seq:../ipsec/RTU_E_3descbc_hmacsha1.def:-cpp="-include ./ipsecaddr.def"::Inbound ESP packet (3DES-CBC, HMAC-SHA1):2
+
+../ipsec/RTU_E_In_AuthKey.seq:../ipsec/RTU_E_AuthKey.def:-cpp="-include ./ipsecaddr.def"::Inbound ESP packet (Invalid Authentication Key):2
+
+&print:ESP Inbound Padding
+
+../ipsec/RTU_E_In_Padding_null.seq:../ipsec/RTU_E_Padding_null.def:-cpp="-include ./ipsecaddr.def"::Inbound Padding (NULL):2
+../ipsec/RTU_E_In_Padding_descbc.seq:../ipsec/RTU_E_Padding_descbc.def:-cpp="-include ./ipsecaddr.def"::Inbound Padding (DES-CBC):2
+../ipsec/RTU_E_In_Padding_3descbc.seq:../ipsec/RTU_E_Padding_3descbc.def:-cpp="-include ./ipsecaddr.def"::Inbound Padding (3DES-CBC):2
+
+../ipsec/RTU_E_In_PadLen255.seq:../ipsec/RTU_E_PadLen255.def:-cpp="-include ./ipsecaddr.def"::Padding Length is 255 (max):2
+../ipsec/RTU_E_In_InvalidPadding.seq:../ipsec/RTU_E_InvalidPadding.def:-cpp="-include ./ipsecaddr.def"::Invalid Padding:2
+
+&print:ESP Inbound Connect SA bundles
+
+../ipsec/RTU_E_In_2SA_DspiDipsrc.seq :../ipsec/RTU_E_2SA_DspiDip.def:-cpp="-include ./ipsecaddr.def"::Connect two SA bundles with different spi, different IPsrc:2
+../ipsec/RTU_E_In_2SA_DspiSipsrc.seq:../ipsec/RTU_E_2SA_DspiSip.def:-cpp="-include ./ipsecaddr.def"::Connect two SA bundles with different spi, same IPsrc:2
+
+#
+#########################################################################

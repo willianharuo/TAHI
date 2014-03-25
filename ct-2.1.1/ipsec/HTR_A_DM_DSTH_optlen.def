@@ -1,0 +1,188 @@
+//
+// Copyright (C) 1999, 2000, 2001, 2002, 2003 Yokogawa Electric Corporation,
+// IPA (Information-technology Promotion Agency, Japan).
+// All rights reserved.
+// 
+// Redistribution and use of this software in source and binary forms, with 
+// or without modification, are permitted provided that the following 
+// conditions and disclaimer are agreed and accepted by the user:
+// 
+// 1. Redistributions of source code must retain the above copyright 
+// notice, this list of conditions and the following disclaimer.
+// 
+// 2. Redistributions in binary form must reproduce the above copyright 
+// notice, this list of conditions and the following disclaimer in the 
+// documentation and/or other materials provided with the distribution.
+// 
+// 3. Neither the names of the copyrighters, the name of the project which 
+// is related to this software (hereinafter referred to as "project") nor 
+// the names of the contributors may be used to endorse or promote products 
+// derived from this software without specific prior written permission.
+// 
+// 4. No merchantable use may be permitted without prior written 
+// notification to the copyrighters. However, using this software for the 
+// purpose of testing or evaluating any products including merchantable 
+// products may be permitted without any notification to the copyrighters.
+// 
+// 
+// 
+// THIS SOFTWARE IS PROVIDED BY THE COPYRIGHTERS, THE PROJECT AND 
+// CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING 
+// BUT NOT LIMITED THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS 
+// FOR A PARTICULAR PURPOSE, ARE DISCLAIMED.  IN NO EVENT SHALL THE 
+// COPYRIGHTERS, THE PROJECT OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, 
+// INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES 
+// (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR 
+// SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) 
+// HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN 
+// CONTRACT,STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) 
+// ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF 
+// THE POSSIBILITY OF SUCH DAMAGE.
+//
+// $Name: REL_2_1_1 $
+//
+// $TAHI: ct/ipsec/HTR_A_DM_DSTH_optlen.def,v 1.5 2001/10/05 06:38:52 masaxmasa Exp $
+//
+
+#include "./HTR_A_common.def"
+//======================================================================
+//
+// AH/ESP definition
+//
+
+//======================================================================
+//
+// Dst Opt Hdr predefinition
+//
+// highest-order three bits of option type
+//   00x - skip over this option and continue processing the header.
+//   xx0 - Option Data does not change en-route
+//   xx1 - Option Data may change en-route
+
+// Type000
+Hdr_Destination opt_Type000 {
+	option = _Type000;
+}
+Opt_ANY _Type000 {
+	OptionType = 0x02;
+	data = {0x0f,0x0f,0x00,0x00};
+}
+
+// Type001
+Hdr_Destination opt_Type001 {
+	option = _Type001;
+}
+Opt_ANY _Type001 {
+	OptionType = 0x22;
+	data = {0x0f,0x0f,0x00,0x00};
+}
+
+
+//======================================================================
+//
+// Real packet definition with IPsec AH
+//
+
+FEM_icmp6_echo_request_exth(
+	echo_request_from_host1_dstopt_ah,
+	hether_router2nut,
+	{
+		_SRC(v6(IPSEC_HOST1_NET5_ADDR));
+		_DST(v6(IPSEC_NUT_NET3_ADDR));
+	},
+	{
+		header = _HDR_IPV6_NAME(echo_request_from_host1_dstopt_ah);
+		exthdr = opt_Type000;
+		exthdr = ah_from_host_sn2;
+		upper = _ICMPV6_NAME(echo_request_from_host1_dstopt_ah);
+	},
+	{
+		payload = IPSEC_ECHO_DATA;
+	}
+)
+
+
+FEM_icmp6_echo_request_exth(
+	echo_request_from_host1_ah_real_000,
+	hether_router2nut,
+	{
+		_SRC(v6(IPSEC_HOST1_NET5_ADDR));
+		_DST(v6(IPSEC_NUT_NET3_ADDR));
+	},
+	{
+		header = _HDR_IPV6_NAME(echo_request_from_host1_ah_real_000);
+		exthdr = opt_Type000;
+		exthdr = ah_from_host_sn3;
+		upper = _ICMPV6_NAME(echo_request_from_host1_ah_real_000);
+	},
+	{
+		payload = IPSEC_ECHO_DATA;
+	}
+)
+
+FEM_icmp6_echo_request_exth(
+	echo_request_from_host1_ah_real_001,
+	hether_router2nut,
+	{
+		_SRC(v6(IPSEC_HOST1_NET5_ADDR));
+		_DST(v6(IPSEC_NUT_NET3_ADDR));
+	},
+	{
+		header = _HDR_IPV6_NAME(echo_request_from_host1_ah_real_001);
+		exthdr = opt_Type001;
+		exthdr = ah_from_host_sn4;
+		upper = _ICMPV6_NAME(echo_request_from_host1_ah_real_001);
+	},
+	{
+		payload = IPSEC_ECHO_DATA;
+	}
+)
+
+
+//======================================================================
+//
+// Modified packet definition with IPsec AH
+//
+
+// Common use Ether Header
+Hdr_Ether hether_router2nut_0x86dd {
+	SourceAddress=ether(IPSEC_ROUTER_NET3_MAC_ADDR);
+	DestinationAddress=nutether();
+	Type=0x86dd; // need to specify IPv6
+}
+
+
+// Dst Opt Hdr option len is modified
+Frame_Ether echo_request_from_host1_ah_dm_dsth_000optlen {
+	header=hether_router2nut_0x86dd;
+	packet=echo_request_from_host1_ah_modpkt1;
+}
+
+Payload echo_request_from_host1_ah_modpkt1 {
+	data=substr(echo_request_from_host1_ah_real_000, 14, 42);
+	data=0x02; // option type
+	data=0x02; // option len modified, orig=0x04
+	data={0x0f, 0x0f, 0x00, 0x00}; // option data
+	data=substr(echo_request_from_host1_ah_real_000, 62, 40);
+}
+
+// Dst Opt Hdr option len is modified
+Frame_Ether echo_request_from_host1_ah_dm_dsth_001optlen {
+	header=hether_router2nut_0x86dd;
+	packet=echo_request_from_host1_ah_modpkt2;
+}
+
+Payload echo_request_from_host1_ah_modpkt2 {
+	data=substr(echo_request_from_host1_ah_real_001, 14, 42);
+	data=0x22; // option type
+	data=0x02; // option len modified, orig=0x04
+	data={0x0f, 0x0f, 0x00, 0x00}; // option data
+	data=substr(echo_request_from_host1_ah_real_001, 62, 40);
+}
+
+//end
+
+
+
+
+

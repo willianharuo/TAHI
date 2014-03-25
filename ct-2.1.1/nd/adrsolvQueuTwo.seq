@@ -1,0 +1,258 @@
+#!/usr/bin/perl
+#
+# Copyright (C) 1999, 2000, 2001, 2002, 2003 Yokogawa Electric Corporation,
+# IPA (Information-technology Promotion Agency, Japan).
+# All rights reserved.
+# 
+# Redistribution and use of this software in source and binary forms, with 
+# or without modification, are permitted provided that the following 
+# conditions and disclaimer are agreed and accepted by the user:
+# 
+# 1. Redistributions of source code must retain the above copyright 
+# notice, this list of conditions and the following disclaimer.
+# 
+# 2. Redistributions in binary form must reproduce the above copyright 
+# notice, this list of conditions and the following disclaimer in the 
+# documentation and/or other materials provided with the distribution.
+# 
+# 3. Neither the names of the copyrighters, the name of the project which 
+# is related to this software (hereinafter referred to as "project") nor 
+# the names of the contributors may be used to endorse or promote products 
+# derived from this software without specific prior written permission.
+# 
+# 4. No merchantable use may be permitted without prior written 
+# notification to the copyrighters. However, using this software for the 
+# purpose of testing or evaluating any products including merchantable 
+# products may be permitted without any notification to the copyrighters.
+# 
+# 
+# 
+# THIS SOFTWARE IS PROVIDED BY THE COPYRIGHTERS, THE PROJECT AND 
+# CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING 
+# BUT NOT LIMITED THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS 
+# FOR A PARTICULAR PURPOSE, ARE DISCLAIMED.  IN NO EVENT SHALL THE 
+# COPYRIGHTERS, THE PROJECT OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, 
+# INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES 
+# (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR 
+# SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) 
+# HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN 
+# CONTRACT,STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) 
+# ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF 
+# THE POSSIBILITY OF SUCH DAMAGE.
+#
+# $TAHI: ct/nd/adrsolvQueuTwo.seq,v 1.18 2002/02/27 01:08:24 masaxmasa Exp $
+
+########################################################################
+BEGIN { $V6evalTool::TestVersion = '$Name: REL_2_1_1 $ '; }
+
+use V6evalTool;
+use nd;
+
+ndOptions(@ARGV);
+
+# The following generate debugging messages.
+$nd::debug=$ndOpt_v|$ndOpt_vv;
+
+# You can specifies debug options to a remote control program.
+# If you want to know more detail, please see the following:
+# - V6evalTool.pm: perldoc V6evalTool
+# - V6evalRemote.pm: perldoc V6evalRemote
+$nd::remote_debug="-o1" if $ndOpt_vv;
+
+$IF=Link0;
+
+#$MAX_MULTICAST_SOLICIT=3;
+#$RETRANS_TIMER=1;
+
+$wait_ns=$nd::RETRANS_TIMER * $nd::MAX_MULTICAST_SOLICIT;
+$wait_echo=2;
+
+#
+# Start capture buffer
+#
+vLogHTML("<FONT SIZE=\"+1\">Initialization</FONT><BR>");
+vCapture($IF);
+
+#
+# Need to clear neighbor cache entries of the target.
+#
+goto error if nd2NoNce($IF) != 0;
+
+#
+#
+#
+vLogHTML("<FONT SIZE=\"+1\">Test</FONT><BR>");
+
+#
+# Send an echo-request A (src:tn's link, dst:nut's link)
+#
+$pktdesc{echo_request_a}="Send an echo-request A (TN ==> NUT)";
+%ret=vSend($IF, echo_request_a);
+
+#
+# Send an echo-request B (src:tn's link, dst:nut's link)
+#
+$pktdesc{echo_request_b}="Send an echo-request B (TN ==> NUT)";
+%ret=vSend($IF, echo_request_b);
+
+#
+# Should capture a NS (src:nut's link, dst:solnode[tn's link])
+#
+$pktdesc{multicast_ns}="Got multicast NS (TN <== NUT), then INCOMPLETE";
+%ret=vRecv($IF, $wait_ns, 0, 1, multicast_ns);
+goto error if $ret{status} != 0;
+
+#
+# Send a solicited NA (src:tn's link, dst:nut's link)
+#
+$pktdesc{na}="Send NA (TN ==> NUT)";
+%ret=vSend($IF, na);
+
+#
+# Should capture an echo-request A or B.
+#
+$pktdesc{echo_reply_a}="Got echo-reply A (TN <== NUT), then REACHABLE";
+$pktdesc{echo_reply_b}="Got echo-reply B (TN <== NUT), then REACHABLE";
+
+vLogHTML("Wait for echo-reply<BR>");
+%ret=vRecv($IF, $wait_echo, $ret{sentTime1}, 1,
+	   echo_reply_a,
+	   echo_reply_b
+	   );
+goto error if $ret{status} != 0;
+$last_packet=$ret{recvFrame};
+
+#
+# Might capture an echo-request A or B.
+#
+vLogHTML("Wait for echo-reply<BR>");
+%ret=vRecv($IF, $wait_echo, 0, 1,
+	   echo_reply_a,
+	   echo_reply_b
+	   );
+if($ret{status} != 0) {
+    #
+    # Got an echo-reply.
+    # Therefor, the captured echo-reply should be the one
+    # that the latest echo-request respond.
+    # that is echo-reply B.
+    #
+    if($last_packet ne echo_reply_b) {
+	vLogHTML(ndErrmsg("ERROR: The queue must hold latest packet ".
+			  "when overflowing<BR>"));
+	goto error;
+    }
+    vLogHTML("The queue can hold a packet<BR>");
+} else {
+    #
+    # Well done. Got both echo-reply's.
+    #
+    vLogHTML("The queue can hold more than a packet<BR>") if $_ == 2;
+}
+
+vLogHTML("OK<BR>");
+exit $V6evalTool::exitPass;
+
+ error:
+    vLogHTML(vErrmsg(%ret)."<BR>");
+    vLogHTML(ndErrmsg("NG<BR>"));
+    exit $V6evalTool::exitFail;
+
+########################################################################
+__END__
+
+=head1 NAME
+
+adrsolvQueuTwo - Verifying address resolution queue
+
+=head1 TARGET
+
+Host and Router
+
+=head1 SYNOPSIS
+
+  adrsolvQueuTwo.seq [-tooloption ...] -p adrsolvQueuTwo.def
+
+=head1 INITIALIZATION
+
+  Clear NC state for TN.
+
+=head1 TEST PROCEDURE
+
+B<adrsolvQueuTwo> verifies that a NUT queues at the least one packet
+for an address whose LLA is not resolved.
+If NUT's queue has one entry the latest packet must be queued.
+
+=begin html
+<PRE>
+  TN		   NUT
+  ----------------------
+<BR>
+  State: NONCE
+<BR>
+  ==== echo-request A ===>
+	src=TN's link-local
+	dst=NUT's link-local
+<BR>
+  ==== echo-request B ===>
+	src=TN's link-local
+	dst=NUT's link-local
+<BR>
+  State: INCOMPLETE
+<BR>
+  <=== <A HREF="#JDG1">Judgment #1</A>: multicast NS ====
+	src=NUT's link-local
+	dst=solicited-node[TN's link-local]
+	w/ SLLA
+	timeout: $RETRANS_TIMER * $MAX_MULTICAST_SOLICIT
+<BR>
+  ==== solicited NA ===>
+	src=TN's link-local
+	dst=NUT's link-local
+	R=0, S=1, O=1
+	w/ TLLA
+<BR>
+  State: REACHABLE
+	
+  <=== <A HREF="#JDG2">Judgment #2</A>: echo-reply B ====
+	src=NUT's link-local
+	dst=TN's link-local
+	
+  <=== <A HREF="#JDG3">Judgment #3</A>: echo-reply A ====
+	src=NUT's link-local
+	dst=TN's link-local
+</PRE>
+
+=end html
+
+=head1 JUDGMENT
+
+=begin html
+<PRE>
+<A NAME="JDG1"></A>
+  1. NUT must send at the least one multicast NS.
+     src=NUT's link-local, dst=sol-node[TN's link-local], w/SLLA
+<A NAME="JDG2"></A>
+  2. NUT must send an echo-reply B.
+     src=NUT's link-local, dst=TN's link-local
+<A NAME="JDG3"></A>
+  3. NUT may send an echo-reply A.
+     src=NUT's link-local, dst=TN's link-local
+</PRE>
+
+=end html
+
+=head1 TERMINATION
+
+  N/A
+
+=head1 NOTE
+
+  The test does not invoke any remote command.
+
+=head1 SEE ALSO
+
+  perldoc V6evalTool
+  perldoc V6evalRemote
+
+=cut

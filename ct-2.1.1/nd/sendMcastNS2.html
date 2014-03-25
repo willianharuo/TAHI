@@ -1,0 +1,185 @@
+<HTML>
+<HEAD>
+<TITLE>sendMcastNS2 - Verify that NUT sends multicast NS by the configured rules</TITLE>
+<LINK REV="made" HREF="mailto:hackers@FreeBSD.org">
+</HEAD>
+
+<BODY>
+
+<!-- INDEX BEGIN -->
+<!--
+
+<UL>
+
+	<LI><A HREF="#NAME">NAME</A>
+	<LI><A HREF="#TARGET">TARGET</A>
+	<LI><A HREF="#SYNOPSIS">SYNOPSIS</A>
+	<LI><A HREF="#INITIALIZATION">INITIALIZATION</A>
+	<UL>
+
+		<LI><A HREF="#A_CASE_OF_A_HOST">A CASE OF A HOST</A>
+		<LI><A HREF="#A_CASE_OF_A_ROUTER">A CASE OF A ROUTER</A>
+	</UL>
+
+	<LI><A HREF="#TEST_PROCEDURE">TEST PROCEDURE</A>
+	<LI><A HREF="#JUDGMENT">JUDGMENT</A>
+	<LI><A HREF="#TERMINATION">TERMINATION</A>
+	<UL>
+
+		<LI><A HREF="#A_CASE_OF_A_HOST">A CASE OF A HOST</A>
+		<LI><A HREF="#A_CASE_OF_A_ROUTER">A CASE OF A ROUTER</A>
+	</UL>
+
+	<LI><A HREF="#NOTE">NOTE</A>
+	<LI><A HREF="#SEE_ALSO">SEE ALSO</A>
+</UL>
+-->
+<!-- INDEX END -->
+
+<P>
+<H1><A NAME="NAME">NAME</A></H1>
+<P>
+sendMcastNS2 - Verify that NUT sends multicast NS by the configured rules
+
+<P>
+<HR>
+<H1><A NAME="TARGET">TARGET</A></H1>
+<P>
+Host and Router
+
+<P>
+Host only
+
+<P>
+<HR>
+<H1><A NAME="SYNOPSIS">SYNOPSIS</A></H1>
+<P>
+<PRE>  sendMcastNS2.seq [-tooloption ...] -p sendMcastNS2.def
+</PRE>
+<P>
+<HR>
+<H1><A NAME="INITIALIZATION">INITIALIZATION</A></H1>
+<P>
+<HR>
+<H2><A NAME="A_CASE_OF_A_HOST">A CASE OF A HOST</A></H2>
+<OL>
+  <LI> Send RA with RetransTimer=3sec to initiate NUT's retrans time.
+  <LI> Clear NC state for TN.
+</OL>
+
+<P>
+<PRE>  TN                   NUT
+  ------------------------
+  ==== unsolicited RA ===&gt;
+        src=X's link-local
+        dst=all-node
+        M=0, O=0
+        Lifetime=600, ReachableTime=0, RetransTimer=3000
+</PRE>
+<P>
+<HR>
+<H2><A NAME="A_CASE_OF_A_ROUTER">A CASE OF A ROUTER</A></H2>
+<P>
+<PRE>  Clear NC state for TN.
+</PRE>
+<P>
+<HR>
+<H1><A NAME="TEST_PROCEDURE">TEST PROCEDURE</A></H1>
+<P>
+<STRONG>sendMcastNS</STRONG> verifies NUT send multicast NSs by the rules that are configured by a
+<CODE>RA(in</CODE> host cast) or manual (in router cast).
+
+<PRE>
+  TN                           NUT
+  --------------------------------
+<BR>
+  State: NONCE (for TN)
+<BR>
+  ==== echo-request ===>
+  	src=TN's link-local
+  	dst=NUT's link-local
+<BR>
+  State: INCOMPLETE (for TN)
+<BR>
+  Wait (3 sec. * MAX_MULTICAST_SOLICIT)
+<BR>
+  <=== <A HREF="#JDG1">Judgment #1</A>: multicast NS ===
+  	src=NUT's link-local
+  	dst=solicited-node[TN's link-local]
+  	w/ SLLA
+<BR>
+  <=== <A HREF="#JDG1">Judgment #1</A>: multicast NS ===
+  	src=NUT's link-local
+  	dst=solicited-node[TN's link-local]
+  	w/ SLLA
+<BR>
+  <=== <A HREF="#JDG1">Judgment #1</A>: multicast NS ===
+  	src=NUT's link-local
+  	dst=solicited-node[TN's link-local]
+  	w/ SLLA
+</PRE>
+
+<P>
+<HR>
+<H1><A NAME="JUDGMENT">JUDGMENT</A></H1>
+<A NAME="JDG1">
+
+<P>
+<PRE>  1. NUT sends the following multicast NSs:
+     src=NUT's link-local, dst=solicited-node[TN's link-local], w/ SLLA
+     
+     1.1. A Number of the multicast NSs &lt;= MAX_MULTICAST_SOLICIT(3)
+</PRE>
+<P>
+<PRE>     1.2. Intervals between the multicast NSs &gt;= 3.0 sec.
+</PRE>
+<P>
+<HR>
+<H1><A NAME="TERMINATION">TERMINATION</A></H1>
+<P>
+<HR>
+<H2><A NAME="A_CASE_OF_A_HOST">A CASE OF A HOST</A></H2>
+<OL>
+  <LI> Set NUT's retrans time to the default (1 sec)
+       with RA with RetransTimer=1sec.
+  <LI> Send RA with RouterLifetime=0 to flush the Default Router List.
+</OL>
+
+<P>
+<PRE>  X                    NUT
+  ------------------------
+  ==== unsolicited RA ===&gt;
+        src=X's link-local
+        dst=all-node
+        M=0, O=0
+        Lifetime=600, ReachableTime=0, RetransTimer=1000
+</PRE>
+<P>
+<PRE>  ==== unsolicited RA ===&gt;
+        src=X's link-local
+        dst=all-node
+        M=0, O=0
+        Lifetime=0, ReachableTime=0, RetransTimer=0
+</PRE>
+<P>
+<HR>
+<H2><A NAME="A_CASE_OF_A_ROUTER">A CASE OF A ROUTER</A></H2>
+<P>
+<PRE>  N/A
+</PRE>
+<P>
+<HR>
+<H1><A NAME="NOTE">NOTE</A></H1>
+<P>
+<PRE>  The test does not invoke any remote command.
+</PRE>
+<P>
+<HR>
+<H1><A NAME="SEE_ALSO">SEE ALSO</A></H1>
+<P>
+<PRE>  perldoc V6evalTool
+  perldoc V6evalRemote
+</PRE>
+</BODY>
+
+</HTML>

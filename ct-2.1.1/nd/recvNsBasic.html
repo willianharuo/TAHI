@@ -1,0 +1,305 @@
+<HTML>
+<HEAD>
+<TITLE>recvNsBasic - Verifying that NUT acknowledges valid NSs</TITLE>
+<LINK REV="made" HREF="mailto:hackers@FreeBSD.org">
+</HEAD>
+
+<BODY>
+
+<!-- INDEX BEGIN -->
+<!--
+
+<UL>
+
+	<LI><A HREF="#NAME">NAME</A>
+	<LI><A HREF="#TARGET">TARGET</A>
+	<LI><A HREF="#SYNOPSIS">SYNOPSIS</A>
+	<LI><A HREF="#CASE_I_A_valid_NS_with_SLLA">CASE I. A valid NS with SLLA</A>
+	<UL>
+
+		<LI><A HREF="#INITIALIZATION">INITIALIZATION</A>
+		<LI><A HREF="#TEST_PROCEDURE">TEST PROCEDURE</A>
+		<LI><A HREF="#JUDGMENT">JUDGMENT</A>
+	</UL>
+
+	<LI><A HREF="#CASE_II_A_valid_NS_without_SLLA">CASE II. A valid NS without SLLA</A>
+	<UL>
+
+		<LI><A HREF="#INITIALIZATION">INITIALIZATION</A>
+		<LI><A HREF="#TEST_PROCEDURE">TEST PROCEDURE</A>
+		<LI><A HREF="#JUDGMENT">JUDGMENT</A>
+	</UL>
+
+	<LI><A HREF="#TERMINATION">TERMINATION</A>
+	<LI><A HREF="#NOTE">NOTE</A>
+	<LI><A HREF="#REFERENCE">REFERENCE</A>
+	<LI><A HREF="#SEE_ALSO">SEE ALSO</A>
+</UL>
+-->
+<!-- INDEX END -->
+
+<P>
+<H1><A NAME="NAME">NAME</A></H1>
+<P>
+recvNsBasic - Verifying that NUT acknowledges valid NSs
+
+<P>
+<HR>
+<H1><A NAME="TARGET">TARGET</A></H1>
+<P>
+Host and Router
+
+<P>
+<HR>
+<H1><A NAME="SYNOPSIS">SYNOPSIS</A></H1>
+<P>
+<PRE>  recvNsBasic.seq [-tooloption ...] -p recvNsBasic.def
+</PRE>
+<P>
+<HR>
+<H1><A NAME="CASE_I_A_valid_NS_with_SLLA">CASE I. A valid NS with SLLA</A></H1>
+<P>
+<STRONG>recvNsBasic</STRONG> verify that NUT acknowledges <STRONG>a valid NS w/ SLLA</STRONG>, then returns a valid NA.
+
+<P>
+<HR>
+<H2><A NAME="INITIALIZATION">INITIALIZATION</A></H2>
+<DL>
+<DT><STRONG><A NAME="item_A">A CASE OF A HOST</A></STRONG><DD>
+<OL>
+  <LI>Set a global prefix (3ffe:501:ffff:100::/64) with RA.
+  <LI>Clear NC state for TN.
+</OL>
+
+<P>
+<PRE>  TN                   NUT
+  ------------------------
+  ==== unsolicited RA ===&gt;
+        src=X's link-local
+        dst=NUT's link-local
+        M=0, O=0
+        LifeTime=600;
+        ReachableTime=0;
+        RetransTimer=0;
+        Prefix Option:
+                L=1, A=1
+                ValidLifetime=2592000;
+                PreferredLifetime=604800;
+</PRE>
+<DT><STRONG>A CASE OF A ROUTER</STRONG><DD>
+<OL>
+  <LI>NUT must be configured its interface under test (Link0)
+      to have a global prefix of "3ffe:501:ffff:100::/64".
+  <LI>Clear NC state for TN.
+</OL>
+
+</DL>
+<P>
+<HR>
+<H2><A NAME="TEST_PROCEDURE">TEST PROCEDURE</A></H2>
+<PRE>
+  TN	              NUT
+  -----------------------
+<BR>
+  State: NONCE
+<BR>
+  ==== <A HREF="#JDG11">NS</A> ===>
+	src=TN's link-local, global
+	dst=NUT's link-local or global or 
+            solicited-node[NUT's link-local] or
+            solicited-node[global]
+	w/ SLL
+<BR>
+  State: INCOMPLETE
+<BR>
+  <=== <A HREF="#JDG11">Judgment #1</A>: NA ====
+	src=NUT's link-local or global
+	dst=TN's link-local or global
+	w/ or w/o TLL
+</PRE>
+
+<P>
+<HR>
+<H2><A NAME="JUDGMENT">JUDGMENT</A></H2>
+<PRE>
+  <A NAME="JDG11">Input & output</A>
+  ===============================+===================================
+   NS (input)                    | NA (expected)
+  -------+---------------+-------+-----------+------+-+-+-+----------
+   Src   | Dst           | SLLA  | Src       | Dst  |<A HREF="#RFLAG">r</A>|<A HREF="#SFLAG">s</A>|<A HREF="#OFLAG">o</A>| <A HREF="#TLL">TLLA</A>
+  =======+===============+=======+===========+======+=+=+=+==========
+  link    link            exist  |link        link   * 1 0 none
+                                 |link        link   * 1 1 exist
+  -------+---------------+-------+-----------+------+-+-+-+----------
+  link    global          exist  |link/global link   * 1 0 none
+                                 |link/global link   * 1 1 exist
+  -------+---------------+-------+-----------+------+-+-+-+----------
+  global  link            exist  |link/global global * 1 0 none
+                                 |link/global global * 1 1 exist
+  -------+---------------+-------+-----------+------+-+-+-+----------
+  global  global          exist  |global      global * 1 0 none
+                                 |global      global * 1 1 exist
+  =======+===============+=======+===========+======+=+=+=+==========
+  link    sol-node[link]  exist  |link/global link   * 1 1 exist
+  -------+---------------+-------+-----------+------+-+-+-+----------
+  link    sol-node[global]exist  |link/global link   * 1 1 exist
+  -------+---------------+-------+-----------+------+-+-+-+----------
+  global  sol-node[link]  exist  |link/global global * 1 1 exist
+  -------+---------------+-------+-----------+------+-+-+-+----------
+  global  sol-node[global]exist  |link/global global * 1 1 exist
+  =======+===============+=======+===========+======+=+=+=+==========
+  *If NUT is a host, r-flag must be the zero.
+  *If NUT is a router, r-flag is must be the one.
+</PRE>
+
+<P>
+<HR>
+<H1><A NAME="CASE_II_A_valid_NS_without_SLLA">CASE II. A valid NS without SLLA</A></H1>
+<P>
+<STRONG>recvNsBasic</STRONG> verify that NUT acknowledges <STRONG>a valid NS w/o SLLA</STRONG>, then returns a valid NA.
+
+<P>
+<HR>
+<H2><A NAME="INITIALIZATION">INITIALIZATION</A></H2>
+<P>
+<PRE>  Clear NC state for TN.
+</PRE>
+<P>
+<HR>
+<H2><A NAME="TEST_PROCEDURE">TEST PROCEDURE</A></H2>
+<PRE>
+  TN		                NUT
+  ---------------------------------
+<BR>
+  State: NONCE
+<BR>
+  ==== <A HREF="#JDG21">unicast NS</A> ===>
+	src=TN's link-local
+	dst=NUT's link-local
+	w/o SLL
+<BR>
+  State: INCOMPLETE
+<BR>
+  <=== <A HREF="#JDG22">Judgment #2</A>: multicast NS ====
+	src=NUT's link-local or global
+	dst=solicited-node[TN's link-local]
+	w/ SLL
+<BR>
+  ==== solicited NA ===>
+	src=TN's link-local
+	dst=NUT's link-local
+	R=0, S=1, O=1
+	w/ TLL
+<BR>
+  State: REACHABLE
+<BR>
+  <=== <A HREF="#JDG23">Judgment #3</A>: solicited NA (if any) ====
+	src=NUT's link-local or global
+	dst=TN's link-local
+	R=0/1, S=1, O=0
+	w/ or w/o TLL
+</PRE>
+
+<P>
+<HR>
+<H2><A NAME="JUDGMENT">JUDGMENT</A></H2>
+<PRE>
+<A NAME="JDG21"></A>
+  1. Input and output
+  ===============================+===================================
+   NS (input)                    | NA (expected)
+  -------+---------------+-------+-----------+------+-+-+-+----------
+   Src   | Dst           | SLLA  | Src       | Dst  |<A HREF="#RFLAG">r</A>|<A HREF="#SFLAG">s</A>|<A HREF="#OFLAG">o</A>| <A HREF="#TLL">TLLA</A>
+  =======+===============+=======+===========+======+=+=+=+==========
+  link    link            none   |link/global link   * 1 0 none
+                                 |link/global link   * 1 0 exist
+  =======+===============+=======+===========+======+=+=+=+==========
+  *If NUT is a host, r-flag must be the zero.
+  *If NUT is a router, r-flag is must be the one.
+<A NAME="JDG22"></A>
+  2. <A HREF="#NOSLL">NUT may send at the least one multicast NS.</A>
+     src=NUT's link-local, dst=solicited-node[TN's link-local], w/ SLL
+<A NAME="JDG23"></A>
+  3. NUT may send a solicited NA.
+<BR>
+     3.1. NUT is a host
+          src=NUT's link-local, dst=TN's link-local,
+          r=0, s=1, O=0, w/ or w/o TLL
+<BR>
+     3.2. NUT is a router
+          src=NUT's link-local, dst=TN's link-local,
+          r=1, s=1, O=0, w/ or w/o TLL
+</PRE>
+
+<P>
+<HR>
+<H1><A NAME="TERMINATION">TERMINATION</A></H1>
+<P>
+<PRE>  Send RA with RouterLifetime=0 to clear the Default Router List.
+</PRE>
+<P>
+<HR>
+<H1><A NAME="NOTE">NOTE</A></H1>
+<A NAME="NODE1"></A>
+
+<P>
+<PRE>  1. The command does not invoke any remote command.
+</PRE>
+<P>
+<HR>
+<H1><A NAME="REFERENCE">REFERENCE</A></H1>
+<PRE>
+RFC2461
+<HR>
+7.2.4.  Sending Solicited Neighbor Advertisements
+<BR>
+   A node sends a Neighbor Advertisement in response to a valid Neighbor
+   Solicitation targeting one of the node's assigned addresses.  <B>The
+   Target Address of the advertisement is copied from the Target Address
+   of the solicitation.</B>  <A NAME="TLL"><B>If the solicitation's IP Destination Address is
+   not a multicast address, the Target Link-Layer Address option MAY be
+   omitted; the neighboring node's cached value must already be current
+   in order for the solicitation to have been received.  If the
+   solicitation's IP Destination Address is a multicast address, the
+   Target Link-Layer option MUST be included in the advertisement.</B></A>
+   Furthermore, <A NAME="RFLAG"><B>if the node is a router, it MUST set the Router flag to
+   one; otherwise it MUST set the flag to zero.</B></A>
+<BR>
+   <A NAME="OFLAG"><B>If the Target Address is either an anycast address or a unicast
+   address for which the node is providing proxy service, or the Target
+   Link-Layer Address option is not included, the Override flag SHOULD
+   be set to zero.  Otherwise, the Override flag SHOULD be set to one.</B></A>
+   Proper setting of the Override flag ensures that nodes give
+   preference to non-proxy advertisements, even when received after
+   proxy advertisements, and also ensures that the first advertisement
+   for an anycast address "wins".
+<BR>
+   <A NAME="SFLAG"><B>If the source of the solicitation is the unspecified address, the
+   node MUST set the Solicited flag to zero and multicast the
+   advertisement to the all-nodes address.  Otherwise, the node MUST set
+   the Solicited flag to one and unicast the advertisement to the Source
+   Address of the solicitation.</B></A>
+<BR>
+   If the Target Address is an anycast address the sender SHOULD delay
+   sending a response for a random time between 0 and
+   MAX_ANYCAST_DELAY_TIME seconds.
+<BR>
+   <A NAME="NOSLL"><B>Because unicast Neighbor Solicitations are not required to include a
+   Source Link-Layer Address, it is possible that a node sending a
+   solicited Neighbor Advertisement does not have a corresponding link-
+   layer address for its neighbor in its Neighbor Cache.  In such
+   situations, a node will first have to use Neighbor Discovery to
+   determine the link-layer address of its neighbor (i.e, send out a
+   multicast Neighbor Solicitation).</B></A>
+</PRE>
+
+<P>
+<HR>
+<H1><A NAME="SEE_ALSO">SEE ALSO</A></H1>
+<P>
+<PRE>  perldoc V6evalTool
+  perldoc V6evalRemote
+</PRE>
+</BODY>
+
+</HTML>

@@ -1,0 +1,114 @@
+<HTML>
+<HEAD>
+<TITLE>automatic_decapsulation_host.seq - Verify that node 
+	decapsulate IPv6 datagram in IPv4</TITLE>
+<LINK REV="made" HREF="mailto:hackers@FreeBSD.org">
+</HEAD>
+
+<BODY>
+
+<!-- INDEX BEGIN -->
+<!--
+
+<UL>
+
+	<LI><A HREF="#NAME">NAME</A>
+	<LI><A HREF="#TARGET">TARGET</A>
+	<LI><A HREF="#SYNOPSIS">SYNOPSIS</A>
+	<LI><A HREF="#INITIALIZATION">INITIALIZATION</A>
+	<LI><A HREF="#TEST_PROCEDURE">TEST PROCEDURE</A>
+	<LI><A HREF="#JUDGMENT">JUDGMENT</A>
+	<LI><A HREF="#SEE_ALSO">SEE ALSO</A>
+</UL>
+-->
+<!-- INDEX END -->
+
+<P>
+<H1><A NAME="NAME">NAME</A></H1>
+<P>
+<PRE>        automatic_decapsulation_host.seq - Verify that node 
+        decapsulate IPv6 datagram in IPv4
+</PRE>
+<P>
+<HR>
+<H1><A NAME="TARGET">TARGET</A></H1>
+<P>
+<PRE>        Host 
+</PRE>
+<P>
+<HR>
+<H1><A NAME="SYNOPSIS">SYNOPSIS</A></H1>
+<P>
+<PRE>        automatic_decapsulation_host.seq [-tooloption ...] -p 
+        automatic_decapsulation_host.def
+</PRE>
+<P>
+<HR>
+<H1><A NAME="INITIALIZATION">INITIALIZATION</A></H1>
+<PRE>
+	Before this test starts, run <A HREF="initialize.html">initialize.seq</A>.
+</PRE>
+
+<P>
+<HR>
+<H1><A NAME="TEST_PROCEDURE">TEST PROCEDURE</A></H1>
+<P>
+<PRE>        This test verifies that NUT decapsulates a IPv6 packet in 
+        automatic tunnel.
+        
+</PRE>
+<P>
+<PRE>        TN                      NUT
+</PRE>
+<P>
+<PRE>        ---------------------------
+</PRE>
+<P>
+<PRE>        1.
+         === IPv4 packet encapsulating IPv6 packet ===&gt;
+                Outer Header (IPv4)     
+                        src address : Off-link IPv4 address
+                        dst address : NUT's IPv4 address        
+                Inner Header (IPv6)     
+                        src address : Off-link IPv4 compatible IPv6 address
+                        dst address : NUT's IPv4 compatible IPv6 address        
+        2.
+        In NUT, received IPv4 packet is decapsulated, and NUT creates the 
+        IPv6 Echo reply packet in response to encapsulated IPv6 Echo Reply.
+</PRE>
+<P>
+<PRE>        3.
+        &lt;&lt; JUDGMENT &gt;&gt;
+</PRE>
+<P>
+<PRE>         &lt;=== IPv4 packet encapsulating IPv6 packet ===
+                Outer Header (IPv4)     
+                        src address : NUT's IPv4 address        
+                        dst address : Off-link IPv4 address
+                Inner Header (IPv6)     
+                        src address : NUT's IPv6 address
+                        dst address : Offlink IPv6 global address
+          
+</PRE>
+<P>
+<HR>
+<H1><A NAME="JUDGMENT">JUDGMENT</A></H1>
+<P>
+<PRE>        &lt;&lt; PASS &gt;&gt;
+                NUT received IPv4 packet encapsulating IPv6 packet 
+                
+</PRE>
+<P>
+<PRE>        &lt;&lt; FAIL &gt;&gt;      
+                NUT did not receive IPv4 packet encapsulating IPv6 packet 
+                
+</PRE>
+<P>
+<HR>
+<H1><A NAME="SEE_ALSO">SEE ALSO</A></H1>
+<P>
+<PRE>          perldoc V6evalTool
+</PRE>
+</BODY>
+
+</HTML>

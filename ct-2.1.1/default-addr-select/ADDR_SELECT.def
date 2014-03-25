@@ -1,0 +1,844 @@
+//
+// Copyright (C) 2003 Yokogawa Electric Corporation, 
+// INTAP(Interoperability Technology Association
+// for Information Processing, Japan).  All rights reserved.
+// 
+// Redistribution and use of this software in source and binary forms, with 
+// or without modification, are permitted provided that the following 
+// conditions and disclaimer are agreed and accepted by the user:
+// 
+// 1. Redistributions of source code must retain the above copyright 
+// notice, this list of conditions and the following disclaimer.
+// 
+// 2. Redistributions in binary form must reproduce the above copyright 
+// notice, this list of conditions and the following disclaimer in the 
+// documentation and/or other materials provided with the distribution.
+// 
+// 3. Neither the names of the copyrighters, the name of the project which 
+// is related to this software (hereinafter referred to as "project") nor 
+// the names of the contributors may be used to endorse or promote products 
+// derived from this software without specific prior written permission.
+// 
+// 4. No merchantable use may be permitted without prior written 
+// notification to the copyrighters. However, using this software for the 
+// purpose of testing or evaluating any products including merchantable 
+// products may be permitted without any notification to the copyrighters.
+// 
+// 
+// 
+// THIS SOFTWARE IS PROVIDED BY THE COPYRIGHTERS, THE PROJECT AND 
+// CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING 
+// BUT NOT LIMITED THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS 
+// FOR A PARTICULAR PURPOSE, ARE DISCLAIMED.  IN NO EVENT SHALL THE 
+// COPYRIGHTERS, THE PROJECT OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, 
+// INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES 
+// (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR 
+// SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) 
+// HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN 
+// CONTRACT,STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) 
+// ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF 
+// THE POSSIBILITY OF SUCH DAMAGE.
+//
+// $TAHI: ct/default-addr-select/ADDR_SELECT.def,v 1.8 2003/05/06 07:44:06 kenta Exp $
+//
+
+
+#define DEFAULT_ROUTER tnv6()
+#define NUT_LINK_LOCAL nutv6()
+
+#define DST_ETHER ether("FF:EE:DD:CC:BB:AA")
+#define DST_ETHER_U ether("AA:BB:CC:DD:EE:FF")
+
+#ifdef SOURCE1
+#else
+	#define SOURCE1 "::1"
+#endif
+
+#ifdef SOURCE2
+#else
+	#define SOURCE2 "::1"
+#endif
+
+#ifdef SOURCE3
+#else
+	#define SOURCE3 "::1"
+#endif
+
+#ifdef SOURCE4
+#else
+	#define SOURCE4 "::1"
+#endif
+
+#ifdef DESTINATION
+#else
+	#define DESTINATION "::1"
+#endif
+
+#ifdef RECEIVE_SOURCE
+#else
+	#define RECEIVE_SOURCE "::1"
+#endif
+
+#ifdef G_PREFIX
+#else
+	#define G_PREFIX "1111::"
+#endif
+
+#ifdef G_PREFIX_LEN
+#else
+	#define G_PREFIX_LEN 64
+#endif
+
+#ifdef DST_FQDN
+#else
+	#define DST_FQDN "default.tahi.org"
+#endif
+
+#ifdef SOURCE_PORT
+#else
+	#define SOURCE_PORT 0
+#endif
+
+#ifdef DNS_ID
+#else
+	#define DNS_ID 0
+#endif
+
+#ifdef DESTINATION1
+#else
+	#define DESTINATION1 "::1"
+#endif
+
+#ifdef DESTINATION2
+#else
+	#define DESTINATION2 "::1"
+#endif
+
+#ifdef DESTINATION3
+#else
+	#define DESTINATION3 "::1"
+#endif
+
+#ifdef DNS_ADDR
+#else
+	#define DNS_ADDR "::1"
+#endif
+
+#define TN_LINK0_V4_ADDRESS	v4(_IPV40A1N_UCAST_ADDR)
+#define NUT_LINK0_V4_ADDRESS v4(_IPV40A2N_UCAST_ADDR)
+
+
+_HETHER_define(HETHER_nut2tn_oneof,  nutether(), oneof(tnether(),_ETHER_SOLNODE_MCAST(DEFAULT_ROUTER),_ETHER_SOLNODE_MCAST(v6(DESTINATION)),_ETHER_SOLNODE_MCAST(v6(DNS_ADDR))))
+_HETHER_define(HETHER_nut2dst_oneof,  nutether(), oneof(DST_ETHER,_ETHER_SOLNODE_MCAST(v6(DESTINATION))))
+_HETHER_define(HETHER_dst2nut,  DST_ETHER, nutether())
+_HETHER_define(HETHER_nut2dst,  nutether(), oneof(DST_ETHER,v62ethermulti(v6(DESTINATION))))
+_HETHER_define(HETHER_dst_u2nut,  DST_ETHER_U, nutether())
+_TLLOPT_define(_TLLOPT_dst_onlink,  DST_ETHER)
+_TLLOPT_define(_TLLOPT_dst_u_onlink,  DST_ETHER_U)
+
+_HETHER_define(HETHER_nut2DESTINATION_oneof,  nutether(), oneof(tnether(),v62ethermulti(v6(DESTINATION))))
+
+
+//
+// ICMPv6 echo request (src=DESTINATION , dst=SOURCE1)
+//
+FEM_icmp6_echo_request(
+	echo_request_DESTINATION2SOURCE1,
+	_HETHER_tn2nut,
+	{
+		_SRC(v6(DESTINATION));
+		_DST(v6(SOURCE1));
+	},
+	{
+		payload = ping6_data;
+	}
+)
+
+//
+// ICMP echo reply (src=SOURCE1 , dst=DESTINATION)
+//
+
+FEM_icmp6_echo_reply(
+	echo_reply_SOURCE12DESTINATION,
+	_HETHER_nut2tn,
+	{
+		_SRC(v6(SOURCE1));
+		_DST(v6(DESTINATION));
+	},
+	{
+		payload = ping6_data;
+	}
+)
+
+//
+// Ping6 Data
+//
+Payload ping6_data {
+	data = {1,2,3,4,5,6,7,8};
+}
+
+//
+// ICMPv6 echo request (src=any , dst=DESTINATION)
+//
+FEM_icmp6_echo_request(
+	echo_request_NUT2DESTINATION,
+	_HETHER_nut2tn,
+	{
+		_SRC(v6(SOURCE1));
+		_DST(v6(DESTINATION));
+	},
+	{
+		Identifier = any;
+		SequenceNumber = any;
+		payload = any;
+	}
+)
+
+//
+// ICMPv6 echo request (src=any , dst=DESTINATION)
+//
+FEM_icmp6_echo_request(
+	echo_request_NUT2DESTINATION_ON_LINK,
+	HETHER_nut2dst,
+	{
+		_SRC(v6(SOURCE1));
+		_DST(v6(DESTINATION));
+	},
+	{
+		Identifier = any;
+		SequenceNumber = any;
+		payload = any;
+	}
+)
+
+//
+// ICMPv6 echo request (src=any , dst=DESTINATION)
+//
+FEM_icmp6_echo_request(
+	echo_request_NUT2DESTINATION_oneof,
+	_HETHER_nut2tn,
+	{
+		_SRC(oneof(NUT_LINK_LOCAL,v6(SOURCE1),v6(SOURCE2),v6(SOURCE3),v6(SOURCE4)));
+		_DST(v6(DESTINATION));
+	},
+	{
+		Identifier = any;
+		SequenceNumber = any;
+		payload = any;
+	}
+)
+
+//
+// ICMPv6 echo request (src=any , dst=DESTINATION)
+//
+FEM_icmp6_echo_request(
+	echo_request_NUT2DESTINATION_ON_LINK_oneof,
+	HETHER_nut2dst,
+	{
+		_SRC(oneof(NUT_LINK_LOCAL,v6(SOURCE1),v6(SOURCE2),v6(SOURCE3),v6(SOURCE4)));
+		_DST(v6(DESTINATION));
+	},
+	{
+		Identifier = any;
+		SequenceNumber = any;
+		payload = any;
+	}
+)
+
+//
+// ICMPv6 echo request (src=any , dst=DESTINATION)
+//
+FEM_icmp6_echo_request(
+	echo_request_NUT2DESTINATION_any,
+	_HETHER_nut2tn,
+	{
+		_SRC(any);
+		_DST(v6(DESTINATION));
+	},
+	{
+		Identifier = any;
+		SequenceNumber = any;
+		payload = any;
+	}
+)
+
+//
+// ICMPv6 echo request (src=any , dst=DESTINATION)
+//
+FEM_icmp6_echo_request(
+	echo_request_NUT2DESTINATION_ON_LINK_any,
+	HETHER_nut2dst,
+	{
+		_SRC(any);
+		_DST(v6(DESTINATION));
+	},
+	{
+		Identifier = any;
+		SequenceNumber = any;
+		payload = any;
+	}
+)
+
+//
+// Neighbor Solicitation with Source link layer address option
+// (src=<NUT all address> , dst=<DEFAULT_ROUTER/Solicited-Node address> , target=DEFAULT_ROUTER)
+//
+FEM_icmp6_ns(
+	ns_NUT2DEFAULT_ROUTER_SLLA,
+	HETHER_nut2tn_oneof,
+	{
+		_SRC(oneof(NUT_LINK_LOCAL,v6(SOURCE1),v6(SOURCE2),v6(SOURCE3),v6(SOURCE4)));
+		_DST(oneof(DEFAULT_ROUTER,_IPV6_SOLNODE_MCAST(DEFAULT_ROUTER)));
+		HopLimit = 255;
+	},
+	{
+		TargetAddress = DEFAULT_ROUTER;
+		option = _SLLOPT_nut;
+	}
+)
+
+//
+// Neighbor Solicitation with Source link layer address option
+// (src=<NUT all address> , dst=<DEFAULT_ROUTER/Solicited-Node address> , target=DEFAULT_ROUTER)
+//
+FEM_icmp6_ns(
+	ns_NUT2DEFAULT_ROUTER_SLLA_any,
+	HETHER_nut2tn_oneof,
+	{
+		_SRC(any);
+		_DST(oneof(DEFAULT_ROUTER,_IPV6_SOLNODE_MCAST(DEFAULT_ROUTER)));
+		HopLimit = 255;
+	},
+	{
+		TargetAddress = DEFAULT_ROUTER;
+		option = _SLLOPT_nut;
+	}
+)
+
+//
+// Neighbor Solicitation without option
+// (src=<NUT All Address> , dst=<DEFAULT_ROUTER/Solicited-Node address> , target=DEFAULT_ROUTER)
+//
+FEM_icmp6_ns(
+	ns_NUT2DEFAULT_ROUTER_noOPT,
+	HETHER_nut2tn_oneof,
+	{
+		_SRC(oneof(NUT_LINK_LOCAL,v6(SOURCE1),v6(SOURCE2),v6(SOURCE3),v6(SOURCE4)));
+		_DST(oneof(DEFAULT_ROUTER,_IPV6_SOLNODE_MCAST(DEFAULT_ROUTER)));
+		HopLimit = 255;
+	},
+	{
+		TargetAddress = DEFAULT_ROUTER;
+	}
+)
+
+//
+// Neighbor Solicitation without option
+// (src=<NUT All Address> , dst=<DEFAULT_ROUTER/Solicited-Node address> , target=DEFAULT_ROUTER)
+//
+FEM_icmp6_ns(
+	ns_NUT2DEFAULT_ROUTER_noOPT_any,
+	HETHER_nut2tn_oneof,
+	{
+		_SRC(any);
+		_DST(oneof(DEFAULT_ROUTER,_IPV6_SOLNODE_MCAST(DEFAULT_ROUTER)));
+		HopLimit = 255;
+	},
+	{
+		TargetAddress = DEFAULT_ROUTER;
+	}
+)
+
+//
+// Neighbor Advertisement
+// (src=DEFAULT_ROUTER , dst=<NUT address> , target=DEFAULT_ROUTER)
+//
+FEM_icmp6_na(
+	na_DEFAULT_ROUTER2NUT_TLLA,
+	_HETHER_tn2nut,
+	{
+		_SRC(DEFAULT_ROUTER);
+		_DST(v6(RECEIVE_SOURCE));
+		HopLimit = 255;
+	},
+	{
+		RFlag = 1;
+		SFlag = 1;
+		OFlag = 1;
+		TargetAddress = DEFAULT_ROUTER;
+		option = _TLLOPT_tn;
+	}
+)
+
+//
+// Neighbor Solicitation with Source link layer address option
+// (src=<NUT all address> , dst=<DESTINATION/Solicited-Node address> , target=DESTINATION)
+//
+FEM_icmp6_ns(
+	ns_NUT2DESTINATION_SLLA,
+	HETHER_nut2tn_oneof,
+	{
+		_SRC(oneof(NUT_LINK_LOCAL,v6(SOURCE1),v6(SOURCE2),v6(SOURCE3),v6(SOURCE4)));
+		_DST(oneof(v6(DESTINATION),_IPV6_SOLNODE_MCAST(v6(DESTINATION))));
+		HopLimit = 255;
+	},
+	{
+		TargetAddress = v6(DESTINATION);
+		option = _SLLOPT_nut;
+	}
+)
+
+//
+// Neighbor Solicitation with Source link layer address option
+// (src=<NUT all address> , dst=<DESTINATION/Solicited-Node address> , target=DESTINATION)
+//
+FEM_icmp6_ns(
+	ns_NUT2DESTINATION_SLLA_any,
+	HETHER_nut2tn_oneof,
+	{
+		_SRC(any);
+		_DST(oneof(v6(DESTINATION),_IPV6_SOLNODE_MCAST(v6(DESTINATION))));
+		HopLimit = 255;
+	},
+	{
+		TargetAddress = v6(DESTINATION);
+		option = _SLLOPT_nut;
+	}
+)
+
+//
+// Neighbor Solicitation with Source link layer address option
+// (src=<NUT all address> , dst=<DESTINATION/Solicited-Node address> , target=DESTINATION)
+//
+FEM_icmp6_ns(
+	ns_NUT2DESTINATION_ON_LINK_SLLA,
+	HETHER_nut2dst_oneof,
+	{
+		_SRC(oneof(NUT_LINK_LOCAL,v6(SOURCE1),v6(SOURCE2),v6(SOURCE3),v6(SOURCE4)));
+		_DST(oneof(v6(DESTINATION),_IPV6_SOLNODE_MCAST(v6(DESTINATION))));
+		HopLimit = 255;
+	},
+	{
+		TargetAddress = v6(DESTINATION);
+		option = _SLLOPT_nut;
+	}
+)
+
+//
+// Neighbor Solicitation with Source link layer address option
+// (src=<NUT all address> , dst=<DESTINATION/Solicited-Node address> , target=DESTINATION)
+//
+FEM_icmp6_ns(
+	ns_NUT2DESTINATION_ON_LINK_SLLA_any,
+	HETHER_nut2dst_oneof,
+	{
+		_SRC(any);
+		_DST(oneof(v6(DESTINATION),_IPV6_SOLNODE_MCAST(v6(DESTINATION))));
+		HopLimit = 255;
+	},
+	{
+		TargetAddress = v6(DESTINATION);
+		option = _SLLOPT_nut;
+	}
+)
+
+//
+// Neighbor Solicitation without option
+// (src=<NUT All Address> , dst=<DESTINATION/Solicited-Node address> , target=DESTINATION)
+//
+FEM_icmp6_ns(
+	ns_NUT2DESTINATION_noOPT,
+	HETHER_nut2tn_oneof,
+	{
+		_SRC(oneof(NUT_LINK_LOCAL,v6(SOURCE1),v6(SOURCE2),v6(SOURCE3),v6(SOURCE4)));
+		_DST(oneof(v6(DESTINATION),_IPV6_SOLNODE_MCAST(v6(DESTINATION))));
+		HopLimit = 255;
+	},
+	{
+		TargetAddress = v6(DESTINATION);
+	}
+)
+
+//
+// Neighbor Solicitation without option
+// (src=<NUT All Address> , dst=<DESTINATION/Solicited-Node address> , target=DESTINATION)
+//
+FEM_icmp6_ns(
+	ns_NUT2DESTINATION_noOPT_any,
+	HETHER_nut2tn_oneof,
+	{
+		_SRC(any);
+		_DST(oneof(v6(DESTINATION),_IPV6_SOLNODE_MCAST(v6(DESTINATION))));
+		HopLimit = 255;
+	},
+	{
+		TargetAddress = v6(DESTINATION);
+	}
+)
+
+//
+// Neighbor Solicitation without option
+// (src=<NUT All Address> , dst=<DESTINATION/Solicited-Node address> , target=DESTINATION)
+//
+FEM_icmp6_ns(
+	ns_NUT2DESTINATION_ON_LINK_noOPT,
+	HETHER_nut2dst_oneof,
+	{
+		_SRC(oneof(NUT_LINK_LOCAL,v6(SOURCE1),v6(SOURCE2),v6(SOURCE3),v6(SOURCE4)));
+		_DST(oneof(v6(DESTINATION),_IPV6_SOLNODE_MCAST(v6(DESTINATION))));
+		HopLimit = 255;
+	},
+	{
+		TargetAddress = v6(DESTINATION);
+	}
+)
+
+//
+// Neighbor Solicitation without option
+// (src=<NUT All Address> , dst=<DESTINATION/Solicited-Node address> , target=DESTINATION)
+//
+FEM_icmp6_ns(
+	ns_NUT2DESTINATION_ON_LINK_noOPT_any,
+	HETHER_nut2dst_oneof,
+	{
+		_SRC(any);
+		_DST(oneof(v6(DESTINATION),_IPV6_SOLNODE_MCAST(v6(DESTINATION))));
+		HopLimit = 255;
+	},
+	{
+		TargetAddress = v6(DESTINATION);
+	}
+)
+
+// Neighbor Advertisement
+// (src=DESTINATION , dst=<NUT address> , target=DESTINATION)
+//
+FEM_icmp6_na(
+	na_DESTINATION_R_2NUT_TLLA,
+	_HETHER_tn2nut,
+	{
+		_SRC(v6(DESTINATION));
+		_DST(v6(RECEIVE_SOURCE));
+		HopLimit = 255;
+	},
+	{
+		RFlag = 1;
+		SFlag = 1;
+		OFlag = 1;
+		TargetAddress = v6(DESTINATION);
+		option = _TLLOPT_tn;
+	}
+)
+
+//
+// Neighbor Advertisement
+// (src=DESTINATION , dst=<NUT address> , target=DESTINATION)
+//
+FEM_icmp6_na(
+	na_DESTINATION2NUT_ON_LINK_TLLA,
+	HETHER_dst2nut,
+	{
+		_SRC(v6(DESTINATION));
+		_DST(v6(RECEIVE_SOURCE));
+		HopLimit = 255;
+	},
+	{
+		SFlag = 1;
+		OFlag = 1;
+		TargetAddress = v6(DESTINATION);
+		option = _TLLOPT_dst_onlink;
+	}
+)
+
+//
+// Neighbor Solicitation with Source link layer address option
+// (src=<NUT all address> , dst=<DNS_ADDR/Solicited-Node address> , target=DNS_ADDR)
+//
+FEM_icmp6_ns(
+	ns_NUT2DNS_SLLA_any,
+	HETHER_nut2tn_oneof,
+	{
+		_SRC(any);
+		_DST(oneof(v6(DNS_ADDR),_IPV6_SOLNODE_MCAST(v6(DNS_ADDR))));
+		HopLimit = 255;
+	},
+	{
+		TargetAddress = v6(DNS_ADDR);
+		option = _SLLOPT_nut;
+	}
+)
+
+//
+// Neighbor Solicitation without option
+// (src=<NUT All Address> , dst=<DNS_ADDR/Solicited-Node address> , target=DNS_ADDR)
+//
+FEM_icmp6_ns(
+	ns_NUT2DNS_noOPT_any,
+	HETHER_nut2tn_oneof,
+	{
+		_SRC(any);
+		_DST(oneof(v6(DNS_ADDR),_IPV6_SOLNODE_MCAST(v6(DNS_ADDR))));
+		HopLimit = 255;
+	},
+	{
+		TargetAddress = v6(DNS_ADDR);
+	}
+)
+
+//
+// Neighbor Advertisement
+// (src=DNS_ADDR , dst=<NUT address> , target=DNS_ADDR)
+//
+FEM_icmp6_na(
+	na_DNS2NUT_TLLA,
+	_HETHER_tn2nut,
+	{
+		_SRC(v6(DNS_ADDR));
+		_DST(v6(RECEIVE_SOURCE));
+		HopLimit = 255;
+	},
+	{
+		RFlag = 1;
+		SFlag = 1;
+		OFlag = 1;
+		TargetAddress = v6(DNS_ADDR);
+		option = _TLLOPT_tn;
+	}
+)
+
+//
+// Router Advertisement (deprecated)
+// (src=DESTINATION , dst=<ALL> , prefix=G_PREFIX)
+//
+FEM_icmp6_ra(
+	ra_DEPRECATED,
+	_HETHER_tn2allnodes,
+	{
+		_SRC(DEFAULT_ROUTER);
+		_DST(v6(_ALLNODES_MCAST_ADDR));
+		HopLimit = 255;
+	},
+	{
+		CurHopLimit=64;
+		LifeTime=30000;
+		ReachableTime=0;
+		RetransTimer=0;
+		//LifeTime=0;
+		option = _SLLOPT_tn;
+		option = prefix_opt_deprecated;
+	}
+)
+
+Opt_ICMPv6_Prefix prefix_opt_deprecated {
+        PrefixLength=64;
+        LFlag=1;
+        AFlag=1;        
+        ValidLifetime=_Default_AdvValidLifetime;
+        PreferredLifetime=1;
+        Prefix=v6(G_PREFIX);
+}
+
+
+//
+// Router Advertisement
+// (src=DESTINATION , dst=<ALL> , prefix=G_PREFIX)
+//
+FEM_icmp6_ra(
+	ra_NORMAL,
+	_HETHER_tn2allnodes,
+	{
+		_SRC(DEFAULT_ROUTER);
+		_DST(v6(_ALLNODES_MCAST_ADDR));
+		HopLimit = 255;
+	},
+	{
+		CurHopLimit=64;
+		LifeTime=30000;
+		ReachableTime=0;
+		RetransTimer=0;
+		//LifeTime=0;
+		option = _SLLOPT_tn;
+		option = prefix_opt;
+	}
+)
+
+Opt_ICMPv6_Prefix prefix_opt {
+        PrefixLength=64;
+        LFlag=1;
+        AFlag=1;        
+        ValidLifetime=_Default_AdvValidLifetime;
+        PreferredLifetime=_Default_AdvPreferredLifetime;
+        Prefix=v6(G_PREFIX);
+}
+
+
+//
+// DNS query (question)
+// (src=NUT_LINK_LOCAL , dst=DEFAULT_ROUTER , name=DST_FQDN type=<AAAA> class=<IN>) 
+//
+
+FEM_udp6_dns(
+	dns_question_AAAA,
+	_HETHER_nut2tn,
+	{
+		_SRC(oneof(NUT_LINK_LOCAL,v6(SOURCE1),v6(SOURCE2),v6(SOURCE3),v6(SOURCE4)));
+		_DST(v6(DNS_ADDR));
+	},
+	{
+		SourcePort = any;
+		DestinationPort = 53;
+	},
+	{
+		Identifier = any;
+		QR = 0;
+		RD = any;
+		question = dns_question_AAAA_Question;
+	}
+)
+
+DNS_Question dns_question_AAAA_Question {
+	entry = question_entry_AAAA;
+}
+
+DNS_QuestionEntry question_entry_AAAA{
+	Name = dnsname(DST_FQDN);
+	Type = 28;
+}
+
+//
+// DNS query (answer x2)
+// (src=DEFAULT_ROUTER , dst=NUT_LINK_LOCAL , name=DST_FQDN type=<AAAA> class=<IN>,
+//  ttl=0 rdata=DESTINATION1, ttl=0 rdata=DESTINATION2) 
+//
+
+FEM_udp6_dns(
+	dns_answer_AAAA2,
+	_HETHER_tn2nut,
+	{
+		_SRC(v6(DNS_ADDR));
+		_DST(v6(RECEIVE_SOURCE));
+	},
+	{
+		SourcePort = 53;
+		DestinationPort = SOURCE_PORT;
+	},
+	{
+		Identifier = DNS_ID;
+		QR = 1;
+		question = dns_question_AAAA_Question;
+		answer = dns_answer_AAAA2_Answer;
+	}
+)
+
+DNS_Answer dns_answer_AAAA2_Answer {
+	rr = rr_aaaa1;
+	rr = rr_aaaa2;
+}
+
+DNS_RR_AAAA rr_aaaa1 {
+	Name = dnsname(DST_FQDN);
+	TTL = 0;
+	Address = v6(DESTINATION1);
+}
+
+DNS_RR_AAAA rr_aaaa2 {
+	Name = dnsname(DST_FQDN);
+	TTL = 0;
+	Address = v6(DESTINATION2);
+}
+
+//
+// DNS query (answer x3)
+// (src=DEFAULT_ROUTER , dst=NUT_LINK_LOCAL , name=DST_FQDN type=<AAAA> class=<IN>,
+//  ttl=0 rdata=DESTINATION1, ttl=0 rdata=DESTINATION2, ttl=0 rdata=DESTINATION3) 
+//
+
+FEM_udp6_dns(
+	dns_answer_AAAA3,
+	_HETHER_tn2nut,
+	{
+		_SRC(v6(DNS_ADDR));
+		_DST(v6(RECEIVE_SOURCE));
+	},
+	{
+		SourcePort = 53;
+		DestinationPort = SOURCE_PORT;
+	},
+	{
+		Identifier = DNS_ID;
+		QR = 1;
+		question = dns_question_AAAA_Question;
+		answer = dns_answer_AAAA3_Answer;
+	}
+)
+
+DNS_Answer dns_answer_AAAA3_Answer {
+	rr = rr_aaaa1;
+	rr = rr_aaaa2;
+	rr = rr_aaaa3;
+}
+
+DNS_RR_AAAA rr_aaaa3 {
+	Name = dnsname(DST_FQDN);
+	TTL = 0;
+	Address = v6(DESTINATION3);
+}
+
+//
+// IPv4 Echo Request
+// TN (Link0) --> NUT (Link0)
+FEM_icmp4_echo_request(
+	echo_request_LINK0_v4_tn2nut,
+	_HETHER_tn2nut,
+		{
+		SourceAddress=TN_LINK0_V4_ADDRESS;
+		DestinationAddress=NUT_LINK0_V4_ADDRESS;	
+	},
+		{
+		payload=ping6_data;
+	}
+)
+
+//
+// IPv4 Echo Reply
+// TN (Link0) <-- NUT (Link0)
+FEM_icmp4_echo_reply (
+	echo_reply_LINK0_v4_nut2tn,
+	_HETHER_nut2tn,
+		{
+		SourceAddress=NUT_LINK0_V4_ADDRESS;
+		DestinationAddress=TN_LINK0_V4_ADDRESS;	
+	},
+		{
+		payload=ping6_data;
+	}
+)
+
+// ARP Request Packet
+// TN (Link0) <-- NUT (Link0)
+FEM_hdr_arp(
+    arp_LINK0_nut2tn_request,
+    _HETHER_nut2broadcast,
+        {
+        Operation=1;
+        SenderHAddr=nutether();
+        SenderPAddr=NUT_LINK0_V4_ADDRESS;
+        TargetHAddr=any;
+        TargetPAddr=TN_LINK0_V4_ADDRESS;
+    }
+)
+
+//
+// ARP Reply Packet
+// TN (Link0) --> NUT (Link0)
+FEM_hdr_arp(
+    arp_LINK0_tn2nut_reply,
+    _HETHER_tn2nut,
+        {
+        Operation=2;
+        SenderHAddr=tnether();
+        SenderPAddr=TN_LINK0_V4_ADDRESS;
+        TargetHAddr=nutether();
+        TargetPAddr=NUT_LINK0_V4_ADDRESS;
+    }
+)

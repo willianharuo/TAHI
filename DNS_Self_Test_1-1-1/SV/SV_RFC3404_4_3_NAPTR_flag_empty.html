@@ -1,0 +1,501 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<title>SV_RFC3404_4_3_NAPTR_flag_empty - Flag in NAPTR resource record</title>
+<link rev="made" href="mailto:akisada@ifrit.64translator.com" />
+</head>
+
+<body style="background-color: white">
+
+<p><a name="__index__"></a></p>
+<!-- INDEX BEGIN -->
+<!--
+
+<ul>
+
+	<li><a href="#name">NAME</a></li>
+	<li><a href="#verification_points">VERIFICATION POINTS</a></li>
+	<li><a href="#target">TARGET</a></li>
+	<li><a href="#synopsis">SYNOPSIS</a></li>
+	<li><a href="#initialization">INITIALIZATION</a></li>
+	<li><a href="#test_procedure">TEST PROCEDURE</a></li>
+	<li><a href="#judgment">JUDGMENT</a></li>
+	<li><a href="#termination">TERMINATION</a></li>
+	<li><a href="#reference">REFERENCE</a></li>
+</ul>
+-->
+<!-- INDEX END -->
+
+<p>
+</p>
+<h1><a name="name">NAME</a></h1>
+<pre>
+        SV_RFC3404_4_3_NAPTR_flag_empty - Flag in NAPTR resource record (empty)</pre>
+<p>
+</p>
+<hr />
+<h1><a name="verification_points">VERIFICATION POINTS</a></h1>
+<pre>
+        Verify that a NUT transmits correct message including NAPTR resource record without flag</pre>
+<UL>
+	<DD><LI>NAPTR RDATA field
+	<DD><TABLE BORDER="0">
+		<TBODY>
+		<TR>
+			<TD VALIGN="top">
+			<B>FLAGS :</B>
+			</TD>
+			<TD>
+			<B>A &lt;character-string&gt; containing flags to control aspects of the
+			rewriting and interpretation of the fields in the record.  Flags
+			are single characters from the set A-Z and 0-9.  The case of the
+			alphabetic characters is not significant.  The field can be empty</B>
+			</TD>
+		</TR>
+		</TBODY>
+	</TABLE>
+	<DD><LI>Flags<br>
+   At this time only four flags, "S", "A", "U", and "P", are defined.
+   The "S", "A" and "U" flags are for a terminal lookup.  This means
+   that the Rule is the last one and that the flag determines what the
+   next stage should be.
+	</UL><p>
+</p>
+<hr />
+<h1><a name="target">TARGET</a></h1>
+<pre>
+        Authoritative Server</pre>
+<p>
+</p>
+<hr />
+<h1><a name="synopsis">SYNOPSIS</a></h1>
+<PRE>
+	<A HREF="./SV_RFC3404_4_3_NAPTR_flag_empty.seq">SV_RFC3404_4_3_NAPTR_flag_empty.seq</A> [-tooloption ...]: KOI tool option
+	See also <A HREF="../DNSConfig.pm">DNSConfig.pm</A>
+</PRE><p>
+</p>
+<hr />
+<h1><a name="initialization">INITIALIZATION</a></h1>
+<UL>
+	<DD><LI><STRONG>Network Topology</STRONG></LI> 
+	<PRE>
+        AP Server1 (TN)
+          |3ffe:501:ffff:101::10
+          |192.168.1.10
+          |
+Net-y   --+--------+-------------------------- 3ffe:501:ffff:101::/64 
+                   |                           192.168.1/24
+                   |
+                   |
+                 Router (TN)
+                   |3ffe:501:ffff:100::1
+                   |192.168.0.1
+                   |
+                   |
+Net-z   --+--------+-----------------+-------- 3ffe:501:ffff:100::/64 
+          |                          |          192.168.0/24
+          |                          |
+        DNS Server1 (NUT)            DNS Client1 (TN)
+           3ffe:501:ffff:100::XXXX     3ffe:501:ffff:100::20 
+           3ffe:501:ffff:100::10
+           192.168.0.10                192.168.0.20
+	<BR>
+	XXXX: EUI64
+	</PRE>
+	<DD><LI><STRONG>Setup</STRONG></LI><BR>
+	<BR>
+	<DD>Set the DNS Server1's (NUT) address as above mentioned Network Topology.<BR>
+	<DD>Configure the Server1's (NUT) zone file to response query from TN.<BR>
+	<BR>
+	<DD>Example of example.com zone file:<BR>
+	<PRE>
+$TTL    86400           ; TTL of 1 day
+@ IN SOA NS1.example.com. root.example.com. (
+	2005081600	; serial
+	3600		; refresh every 1 hr
+	900		; retry every 15 min
+	604800		; expire after a week
+	3600		; Minimum TTL of a 1 hr
+)
+;
+	IN	NS	NS1.example.com.
+;
+NS1	IN	A	192.168.0.10
+;
+A	IN	A	192.168.1.10
+	</PRE>
+	<DD>Example of cid.urn.arpa. domain zone file:<BR>
+	<PRE>
+$TTL	86400		; TTL of 1 day
+@ IN SOA NS1.example.com. root.example.com. (
+	2005081600	; serial
+	3600		; refresh after 1 hr
+	900		; retry after 15 min
+	604800		; expire after 1 week
+	3600		; Minimum TTL of 1 hr
+)
+;
+	IN	NS	NS1.example.com.
+;
+cid.urn.arpa. IN NAPTR 100 10 "" ""  "!^urn:cid:.+@([^\\.]+\\.)(.*)$!\\2!i" .
+	</PRE>
+	</UL><p>
+</p>
+<hr />
+<h1><a name="test_procedure">TEST PROCEDURE</a></h1>
+<pre>
+        This test sequence is following.</pre>
+<pre>
+    DNS Client1 (TN)                       DNS Server1 (NUT)
+        |                                      |
+        |-------------------------------------&gt;|
+        |   1. Send standard query             |
+        |      QNAME = cid.urn.arpa.           |
+        |      QTYPE= NAPTR                    |
+        |                                      |
+        |&lt;-------------------------------------|
+        |   2. Standard query response         |
+        |                                      |
+        |                                      |
+        v                                      v</pre>
+<pre>
+        1. TN send standard query
+           QNAME=cid.urn.arpa.,
+           QTYPE=NAPTR to NUT.
+        2. NUT reply query response w/ NAPTR resource record to TN (Judgment *2)</pre>
+<UL>
+	<DD><LI>Packet Description</LI><BR>
+	<BR>
+	<DD>1st packet.
+	<P></P>
+	<DD><TABLE BORDER="1">
+		<TBODY>
+		<TR>
+			<TD COLSPAN="3">
+			<CENTER>Standard query from DNS Client1 (TN) to Server1 (NUT) </CENTER>
+			</TD>
+		</TR>
+		<TR>
+			<TD ROWSPAN="2">IP Header</TD>
+			<TD>Source Address</TD>
+			<TD>CL1_NETZ</TD>
+		</TR>
+		<TR>
+			<TD>Destination Address</TD>
+			<TD>NUT_NETZ</TD>
+		</TR>
+		<TR>
+			<TD COLSPAN="1" ROWSPAN="2">UDP Header</TD>
+			<TD>Src Port</TD>
+			<TD>2000</TD>
+		</TR>
+		<TR>
+			<TD>Dst Port</TD>
+			<TD>53</TD>
+		</TR>
+		<TR>
+			<TD COLSPAN="1" ROWSPAN="13">DNS Header</TD>
+			<TD>ID</TD>
+			<TD>0x1000</TD>
+		</TR>
+		<TR>
+			<TD>QR</TD>
+			<TD>0</TD>
+		</TR>
+		<TR>
+			<TD>OPCODE</TD>
+			<TD>0</TD>
+		</TR>
+		<TR>
+			<TD>AA</TD>
+			<TD>0</TD>
+		</TR>
+		<TR>
+			<TD>TC</TD>
+			<TD>0</TD>
+		</TR>
+		<TR>
+			<TD>RD</TD>
+			<TD>1</TD>
+		</TR>
+		<TR>
+			<TD>RA</TD>
+			<TD>0</TD>
+		</TR>
+		<TR>
+			<TD>Z</TD>
+			<TD>0</TD>
+		</TR>
+		<TR>
+			<TD>RCODE</TD>
+			<TD>0</TD>
+		</TR>
+		<TR>
+			<TD>QDCOUNT</TD>
+			<TD>1</TD>
+		</TR>
+		<TR>
+			<TD>ANCOUNT</TD>
+			<TD>0</TD>
+		</TR>
+		<TR>
+			<TD>NSCOUNT</TD>
+			<TD>0</TD>
+		</TR>
+		<TR>
+			<TD>ARCOUNT</TD>
+			<TD>0</TD>
+		</TR>
+		<TR>
+			<TD COLSPAN="1" ROWSPAN="3">DNS Question section</TD>
+			<TD>QNAME</TD>
+			<TD>cid.urn.arpa.</TD>
+		</TR>
+		<TR>
+			<TD>QTYPE</TD>
+			<TD>NAPTR (0x0023)</TD>
+		</TR>
+		<TR>
+			<TD>QCLASS</TD>
+			<TD>IN (0x0001)</TD>
+		</TR>
+		</TBODY>
+	</TABLE>
+	<BR>
+	<DD>2nd packet.
+	<P></P>
+	<DD><TABLE BORDER="1">
+		<TBODY>
+		<TR>
+			<TD COLSPAN="3">
+			<CENTER>Standard query response from DNS Server1 (NUT) to Client (TN) </CENTER>
+			</TD>
+		</TR>
+		<TR>
+			<TD ROWSPAN="2">IP Header</TD>
+			<TD>Source Address</TD>
+			<TD>NUT_NETZ</TD>
+		</TR>
+		<TR>
+			<TD>Destination Address</TD>
+			<TD>CL1_NETZ</TD>
+		</TR>
+		<TR>
+			<TD COLSPAN="1" ROWSPAN="2">UDP Header</TD>
+			<TD>Src Port</TD>
+			<TD>53</TD>
+		</TR>
+		<TR>
+			<TD>Dst Port</TD>
+			<TD>2000</TD>
+		</TR>
+		<TR>
+			<TD COLSPAN="1" ROWSPAN="13">DNS Header</TD>
+			<TD>ID</TD>
+			<TD>0x1000</TD>
+		</TR>
+		<TR>
+			<TD>QR</TD>
+			<TD>1</TD>
+		</TR>
+		<TR>
+			<TD>OPCODE</TD>
+			<TD>0</TD>
+		</TR>
+		<TR>
+			<TD>AA</TD>
+			<TD>1</TD>
+		</TR>
+		<TR>
+			<TD>TC</TD>
+			<TD>0</TD>
+		</TR>
+		<TR>
+			<TD>RD</TD>
+			<TD>0</TD>
+		</TR>
+		<TR>
+			<TD>RA</TD>
+			<TD>0</TD>
+		</TR>
+		<TR>
+			<TD>Z</TD>
+			<TD>ANY</TD>
+		</TR>
+		<TR>
+			<TD>RCODE</TD>
+			<TD>0</TD>
+		</TR>
+		<TR>
+			<TD>QDCOUNT</TD>
+			<TD>1</TD>
+		</TR>
+		<TR>
+			<TD>ANCOUNT</TD>
+			<TD>1</TD>
+		</TR>
+		<TR>
+			<TD>NSCOUNT</TD>
+			<TD>1</TD>
+		</TR>
+		<TR>
+			<TD>ARCOUNT</TD>
+			<TD>1</TD>
+		</TR>
+		<TR>
+			<TD COLSPAN="1" ROWSPAN="3">DNS Question section</TD>
+			<TD>QNAME</TD>
+			<TD>
+			cid.urn.arpa.
+			</TD>
+		</TR>
+		<TR>
+			<TD>QTYPE</TD>
+			<TD>NAPTR (0x0023)</TD>
+		</TR>
+		<TR>
+			<TD>QCLASS</TD>
+			<TD>IN (0x0001)</TD>
+		</TR>
+		<TR>
+			<TD COLSPAN="1" ROWSPAN="11">DNS Answer section</TD>
+			<TD>NAME</TD>
+			<TD>cid.urn.arpa. (Pointer 0xC00C)</TD>
+		</TR>
+		<TR>
+			<TD>TYPE</TD>
+			<TD>NAPTR (0x0023)</TD>
+		</TR>
+		<TR>
+			<TD>CLASS</TD>
+			<TD>IN (0x0001)</TD>
+		</TR>
+		<TR>
+			<TD>TTL</TD>
+			<TD>86400sec</TD>
+		</TR>
+		<TR>
+			<TD>RDLENGTH</TD>
+			<TD>41</TD>
+		</TR>
+		<TR>
+			<TD>ORDER</TD>
+			<TD>100</TD>
+		</TR>
+		<TR>
+			<TD>PREFERENCE</TD>
+			<TD>10</TD>
+		</TR>
+		<TR>
+			<TD>FLAGS</TD>
+			<TD></TD>
+		</TR>
+		<TR>
+			<TD>SERVICES</TD>
+			<TD></TD>
+		</TR>
+		<TR>
+			<TD>REGEXP</TD>
+			<TD>!^urn:cid:.+@([^\.]+\.)(.*)$!\2!i</TD>
+		</TR>
+		<TR>
+			<TD>REPLACEMENT</TD>
+			<TD>.</TD>
+		</TR>
+		<TR>
+			<TD COLSPAN="1" ROWSPAN="6">DNS Authority section</TD>
+			<TD>NAME</TD>
+			<TD>cid.urn.arpa. (Pointer 0xC00C)</TD>
+		</TR>
+		<TR>
+			<TD>TYPE</TD>
+			<TD>NS (0x0002)</TD>
+		</TR>
+		<TR>
+			<TD>CLASS</TD>
+			<TD>IN (0x0001)</TD>
+		</TR>
+		<TR>
+			<TD>TTL</TD>
+			<TD>1 day (86400)</TD>
+		</TR>
+		<TR>
+			<TD>RDLENGTH</TD>
+			<TD>17</TD>
+		</TR>
+		<TR>
+			<TD>NSDNAME</TD>
+			<TD>NS1.example.com</TD>
+		</TR>
+		<TR>
+			<TD COLSPAN="1" ROWSPAN="6">DNS Additional section</TD>
+			<TD>NAME</TD>
+			<TD>NS1.example.com (Pointer 0xC05F)</TD>
+		</TR>
+		<TR>
+			<TD>TYPE</TD>
+			<TD>A (0x0001)</TD>
+		</TR>
+		<TR>
+			<TD>CLASS</TD>
+			<TD>IN (0x0001)</TD>
+		</TR>
+		<TR>
+			<TD>TTL</TD>
+			<TD>1 day (86400)</TD>
+		</TR>
+		<TR>
+			<TD>RDLENGTH</TD>
+			<TD>4</TD>
+		</TR>
+		<TR>
+			<TD>ADDRESS</TD>
+			<TD>192.168.0.10</TD>
+		</TR>
+		</TBODY>
+	</TABLE>
+	<BR>
+	<BR>
+	<DD>Exp.
+	<BR>
+	<DD><TABLE BORDER="1">
+		<TBODY>
+		<TR>
+			<TD>NUT_NETZ</TD>
+			<TD>DNS Server1's (NUT) Net-z address</TD>
+		</TR>
+		<TR>
+			<TD>CL1_NETZ</TD>
+			<TD>DNS Client1's (TN) Net-z address</TD>
+		</TR>
+		</TBODY>
+	</TABLE>
+	</UL><p>
+</p>
+<hr />
+<h1><a name="judgment">JUDGMENT</a></h1>
+<pre>
+        2. Received standard query response including NAPTR resource record.</pre>
+<p>
+</p>
+<hr />
+<h1><a name="termination">TERMINATION</a></h1>
+<pre>
+        None</pre>
+<p>
+</p>
+<hr />
+<h1><a name="reference">REFERENCE</a></h1>
+<pre>
+        RFC3403 Dynamic Delegation Discovery System (DDDS)
+                Part Three: The Domain Name System (DNS) Database
+        4.1 Packet Format</pre>
+<pre>
+        RFC3403 Dynamic Delegation Discovery System (DDDS)
+                Part Four: The Uniform Resource Identifiers (URI)
+                Resolution Application
+        4.3 Flags</pre>
+
+</body>
+
+</html>

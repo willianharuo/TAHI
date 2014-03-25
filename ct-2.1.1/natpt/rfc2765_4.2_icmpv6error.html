@@ -1,0 +1,212 @@
+<HTML>
+<HEAD>
+<TITLE>rfc2765_3.3_icmpv4error.seq - Verify IPv6 <-> IPv4 header 
+        translation in accordance with RFC2765 [SIIT]</TITLE>
+<LINK REV="made" HREF="mailto:hackers@FreeBSD.org">
+</HEAD>
+
+<BODY>
+
+<!-- INDEX BEGIN -->
+<!--
+
+<UL>
+
+	<LI><A HREF="#NAME">NAME</A>
+	<LI><A HREF="#TARGET">TARGET</A>
+	<LI><A HREF="#SYNOPSIS">SYNOPSIS</A>
+	<LI><A HREF="#INITIALIZATION">INITIALIZATION</A>
+	<LI><A HREF="#TEST_PROCEDURE">TEST PROCEDURE</A>
+	<LI><A HREF="#JUDGMENT">JUDGMENT</A>
+	<LI><A HREF="#NOTE">NOTE</A>
+	<LI><A HREF="#REFERENCE">REFERENCE</A>
+	<LI><A HREF="#SEE_ALSO">SEE ALSO</A>
+</UL>
+-->
+<!-- INDEX END -->
+
+<P>
+<H1><A NAME="NAME">NAME</A></H1>
+<P>
+<PRE>        rfc2765_3.3_icmpv4error.seq - Verify IPv6 &lt;-&gt; IPv4 header 
+        translation in accordance with RFC2765 [SIIT]
+</PRE>
+<P>
+<HR>
+<H1><A NAME="TARGET">TARGET</A></H1>
+<P>
+<PRE>        Router
+</PRE>
+<P>
+<HR>
+<H1><A NAME="SYNOPSIS">SYNOPSIS</A></H1>
+<P>
+<PRE>        rfc2765_3.3_icmpv4error.seq [-tooloption ...] 
+        -p rfc2765_3.3_icmpv4error.def
+</PRE>
+<P>
+<HR>
+<H1><A NAME="INITIALIZATION">INITIALIZATION</A></H1>
+<PRE>
+	Before this test starts, run <A HREF="./initialize.html">initialize.seq</A>.
+</PRE>
+
+<P>
+<HR>
+<H1><A NAME="TEST_PROCEDURE">TEST PROCEDURE</A></H1>
+<P>
+<PRE>        This test verifies that NUT can translate ICMPv6 error messages
+        in accordance to RFC2765.
+        
+        Network Topology
+</PRE>
+<P>
+<PRE>        Link0
+        --------------------------
+            |               |
+           TN              NUT
+            |               |
+        --------------------------
+        Link1
+</PRE>
+<P>
+<PRE>        TN -- (Link0) -- NUT        NUT -- (Link1) -- TN
+        
+        ---------------------      ------------------------
+</PRE>
+<P>
+<PRE>   ICMPv6 (Type 1, Code 0)             =&gt;  ICMPv4 (Type 3, Code 1)
+   ICMPv6 (Type 1, Code 1)             =&gt;  ICMPv4 (Type 3, Code 10)
+   ICMPv6 (Type 1, Code 2)             =&gt;  ICMPv4 (Type 3, Code 1)
+   ICMPv6 (Type 1, Code 3)             =&gt;  ICMPv4 (Type 3, Code 1)
+   ICMPv6 (Type 1, Code 4)             =&gt;  ICMPv4 (Type 3, Code 3)
+   ICMPv6 (Type 2, Code 0, MTU 1280)   =&gt;  ICMPv4 (Type 3, Code 4, MTU 1252)
+   ICMPv6 (Type 3, Code 0)             =&gt;  ICMPv4 (Type 11, Code 0)
+   ICMPv6 (Type 4, Code 0, Pointer 0)  &lt;=  ICMPv4 (Type 12, Code 0, Pointer 0)
+   ICMPv6 (Type 4, Code 0, Pointer 4)  &lt;=  ICMPv4 (Type 12, Code 0, Pointer 2)
+   ICMPv6 (Type 4, Code 0, Pointer 6)  &lt;=  ICMPv4 (Type 12, Code 0, Pointer 9)
+   ICMPv6 (Type 4, Code 0, Pointer 7)  &lt;=  ICMPv4 (Type 12, Code 0, Pointer 8)
+   ICMPv6 (Type 4, Code 0, Pointer 8)  &lt;=  ICMPv4 (Type 12, Code 0, Pointer 12)
+   ICMPv6 (Type 4, Code 0, Pointer 24) &lt;=  ICMPv4 (Type 12, Code 0, Pointer 16)
+   ICMPv6 (Type 4, Code 0, Pointer 1)  &lt;=  ICMPv4 (Type 12, Code 0, Pointer -1)
+   ICMPv6 (Type 4, Code 1)             =&gt;  ICMPv4 (Type 3, Code 2)
+</PRE>
+<P>
+<HR>
+<H1><A NAME="JUDGMENT">JUDGMENT</A></H1>
+<P>
+<PRE>        &lt;&lt; PASS &gt;&gt;
+                NUT translates ICMPv6 error messages in accordance with
+                RFC2765, including translating the inner IP-header.
+                
+        &lt;&lt; FAIL &gt;&gt;      
+                NUT fails to translate ICMPv6 errors correctly, or doesn't
+                drop untranslatable ICMPv6 error types. 
+</PRE>
+<P>
+<HR>
+<H1><A NAME="NOTE">NOTE</A></H1>
+<P>
+<HR>
+<H1><A NAME="REFERENCE">REFERENCE</A></H1>
+<P>
+<STRONG>RFC2765</STRONG>
+
+
+
+<P>
+4.2. Translating ICMPv6 Headers into ICMPv4 Headers
+
+<P>
+<PRE>   All ICMP messages that are to be translated require that the ICMP
+   checksum field be updated as part of the translation since ICMPv6,
+   unlike ICMPv4, has a pseudo-header checksum just like UDP and TCP.
+</PRE>
+<P>
+<PRE>   In addition all ICMP packets need to have the Type value translated
+   and for ICMP error messages the included IP header also needs
+   translation.
+</PRE>
+<P>
+<PRE>   The actions needed to translate various ICMPv6 messages are:
+</PRE>
+<P>
+<PRE>      ICMPv6 error messages:
+</PRE>
+<P>
+<PRE>        Destination Unreachable (Type 1)
+           Set the Type field to 3.  Translate the code field as
+           follows:
+              Code 0 (no route to destination):
+                     Set Code to 1 (host unreachable).
+</PRE>
+<P>
+<PRE>              Code 1 (communication with destination administratively
+                     prohibited):
+                     Set Code to 10 (communication with destination host
+                     administratively prohibited).
+</PRE>
+<P>
+<PRE>              Code 2 (beyond scope of source address):
+                     Set Code to 1 (host unreachable).  Note that this
+                     error is very unlikely since the IPv4-translatable
+                     source address is considered to have global scope.
+</PRE>
+<P>
+<PRE>              Code 3 (address unreachable):
+                     Set Code to 1 (host unreachable).
+</PRE>
+<P>
+<PRE>              Code 4 (port unreachable):
+                     Set Code to 3 (port unreachable).
+</PRE>
+<P>
+<PRE>        Packet Too Big (Type 2)
+           Translate to an ICMPv4 Destination Unreachable with code 4.
+           The MTU field needs to be adjusted for the difference between
+           the IPv4 and IPv6 header sizes taking into account whether or
+           not the packet in error includes a Fragment header.
+</PRE>
+<P>
+<PRE>        Time Exceeded (Type 3)
+           Set the Type to 11.  The Code field is unchanged.
+</PRE>
+<P>
+<PRE>        Parameter Problem (Type 4)
+           If the Code is 1 translate this to an ICMPv4 protocol
+           unreachable (Type 3, Code 2).  Otherwise set the Type to 12
+           and the Code to zero.  The Pointer needs to be updated to
+           point to the corresponding field in the translated include IP
+           header.
+</PRE>
+<P>
+<PRE>        Unknown error messages
+           Silently drop.
+</PRE>
+<P>
+<STRONG>http://www.cs.washington.edu/research/networking/napt/reports/usenix98/</STRONG>
+
+
+
+<P>
+A.4 Translating ICMPv6 to ICMPv4
+
+<P>
+<PRE>     Parameter Problem (Type 4): 
+     If the Code is 2 then set Type to 12, Code to 0, and Pointer to -1. 
+     If the Code is 1 translate this to an ICMPv4 protocol unreachable
+     (Type 3, Code 2) message.
+     If the Code is 0 then set the Type to 12, the Code to 0, and
+     translate the Pointer values as follows:
+     0-to-0, 4-to-2, 7-to-8, 6-to-9, 8-to-12, 24-to-16, and for all
+     other ICMPv6 Pointer values set the ICMPv4 Pointer value to -1.
+</PRE>
+<P>
+<HR>
+<H1><A NAME="SEE_ALSO">SEE ALSO</A></H1>
+<P>
+<PRE>        perldoc V6evalTool
+</PRE>
+</BODY>
+
+</HTML>

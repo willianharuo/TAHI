@@ -1,0 +1,82 @@
+14. Reliability of Client Initiated Message Exchanges
+
+   DHCP clients are responsible for reliable delivery of messages in the
+   client-initiated message exchanges described in sections 17 and 18.
+   If a DHCP client fails to receive an expected response from a server,
+   the client must retransmit its message.  This section describes the
+   retransmission strategy to be used by clients in client-initiated
+   message exchanges.
+
+   Note that the procedure described in this section is slightly
+   modified when used with the Solicit message.  The modified procedure
+   is described in section 17.1.2.
+
+   The client begins the message exchange by transmitting a message to
+   the server.  The message exchange terminates when either the client
+   successfully receives the appropriate response or responses from a
+   server or servers, or when the message exchange is considered to have
+   failed according to the retransmission mechanism described below.
+
+   The client retransmission behavior is controlled and described by the
+   following variables:
+
+      RT     Retransmission timeout
+
+      IRT    Initial retransmission time
+
+      MRC    Maximum retransmission count
+
+      MRT    Maximum retransmission time
+
+      MRD    Maximum retransmission duration
+
+      RAND   Randomization factor
+
+   With each message transmission or retransmission, the client sets RT
+   according to the rules given below.  If RT expires before the message
+   exchange terminates, the client recomputes RT and retransmits the
+   message.
+
+   Each of the computations of a new RT include a randomization factor
+   (RAND), which is a random number chosen with a uniform distribution
+   between -0.1 and +0.1.  The randomization factor is included to
+   minimize synchronization of messages transmitted by DHCP clients.
+   The algorithm for choosing a random number does not need to be
+   cryptographically sound.  The algorithm SHOULD produce a different
+   sequence of random numbers from each invocation of the DHCP client.
+
+   RT for the first message transmission is based on IRT:
+
+      RT = IRT + RAND*IRT
+
+
+   RT for each subsequent message transmission is based on the previous
+   value of RT:
+
+      RT = 2*RTprev + RAND*RTprev
+
+
+   MRT specifies an upper bound on the value of RT (disregarding the
+   randomization added by the use of RAND). If MRT has a value of 0,
+   there is no upper limit on the value of RT. Otherwise:
+
+    if (RT > MRT)
+       RT = MRT + RAND*MRT
+
+
+   MRC specifies an upper bound on the number of times a client may
+   retransmit a message.  Unless MRC is zero, the message exchange fails
+   once the client has transmitted the message MRC times.
+
+   MRD specifies an upper bound on the length of time a client may
+   retransmit a message.  Unless MRD is zero, the message exchange fails
+   once MRD seconds have elapsed since the client first transmitted the
+   message.
+
+   If both MRC and MRD are non-zero, the message exchange fails whenever
+   either of the conditions specified in the previous two paragraphs are
+   met.
+
+   If both MRC and MRD are zero, the client continues to transmit the
+   message until it receives a response.
+

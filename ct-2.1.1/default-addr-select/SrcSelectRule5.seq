@@ -1,0 +1,291 @@
+#!/usr/bin/perl
+#
+# Copyright (C) 2003 Yokogawa Electric Corporation, 
+# INTAP(Interoperability Technology Association
+# for Information Processing, Japan).  All rights reserved.
+# 
+# Redistribution and use of this software in source and binary forms, with 
+# or without modification, are permitted provided that the following 
+# conditions and disclaimer are agreed and accepted by the user:
+# 
+# 1. Redistributions of source code must retain the above copyright 
+# notice, this list of conditions and the following disclaimer.
+# 
+# 2. Redistributions in binary form must reproduce the above copyright 
+# notice, this list of conditions and the following disclaimer in the 
+# documentation and/or other materials provided with the distribution.
+# 
+# 3. Neither the names of the copyrighters, the name of the project which 
+# is related to this software (hereinafter referred to as "project") nor 
+# the names of the contributors may be used to endorse or promote products 
+# derived from this software without specific prior written permission.
+# 
+# 4. No merchantable use may be permitted without prior written 
+# notification to the copyrighters. However, using this software for the 
+# purpose of testing or evaluating any products including merchantable 
+# products may be permitted without any notification to the copyrighters.
+# 
+# 
+# 
+# THIS SOFTWARE IS PROVIDED BY THE COPYRIGHTERS, THE PROJECT AND 
+# CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING 
+# BUT NOT LIMITED THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS 
+# FOR A PARTICULAR PURPOSE, ARE DISCLAIMED.  IN NO EVENT SHALL THE 
+# COPYRIGHTERS, THE PROJECT OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, 
+# INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES 
+# (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR 
+# SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) 
+# HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN 
+# CONTRACT,STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) 
+# ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF 
+# THE POSSIBILITY OF SUCH DAMAGE.
+#
+# $TAHI: ct/default-addr-select/SrcSelectRule5.seq,v 1.5 2003/04/22 03:57:47 akisada Exp $
+#
+######################################################################
+BEGIN {
+	$V6evalTool::TestVersion = '$Name: REL_2_1_1 $';
+}
+
+use V6evalTool;
+use ADDR_SELECT;
+
+$TRUE = $ADDR_SELECT::TRUE;
+$FALSE = $ADDR_SELECT::FALSE;
+$IF = $ADDR_SELECT::IF;
+$IF_OTHER = 'Link1';
+
+$NUT_LLA = nutLLA($IF);
+$TEST_STRING = "Test for Default Source Address Selection Rule5(Prefer outgoing interface)";
+$C_BLUE = $ADDR_SELECT::C_BLUE;
+
+@RESULT;
+$RESULT_TABLE = "<TABLE BORDER=1><TR><TH><BR></TH><TH>Destination Address & Candidate Source Address</TH><TH>Judgment</TH></TR>";
+$RESULT_TEST = $TRUE;
+
+#====== Test #======
+vLogHTML("<FONT COLOR=$C_BLUE>#### $TEST_STRING ####</FONT><BR>");
+vLogHTML("<A HREF=\"#RESULT\">#### Jump to Test Result ####</A><BR>");
+
+$RESULT[@RESULT] = check_NoOpt("01",$FALSE,"3fff::2","3ffe::1","3ffd::1","fec0::1","3ffe::3","3ffd::3","fec0::3");
+$RESULT[@RESULT] = check_NoOpt("02",$FALSE,"fec0::2","3ffe::1","3ffd::1","","3ffe::3","3ffd::3","");
+
+#$RESULT[@RESULT] = check_NoOpt("02",$FALSE,"ff08::2","3ffe::1","3ffd::1","fec0::1","3ffe::3","3ffd::3","fec0::3");
+
+#====== Test Result #======
+vLogHTML("<A NAME=\"RESULT\"><HR><B><FONT COLOR=$C_BLUE>#### Test ($TEST_STRING) Result ####</FONT></B><BR>");
+$RESULT_TABLE .= "</TABLE>";
+vLogHTML("$RESULT_TABLE");
+
+foreach $RESULT_CHECK (@RESULT){
+	if(!$RESULT_CHECK){
+		$RESULT_TEST = $FALSE;
+	}
+}
+
+if($RESULT_TEST){
+	vLogHTML("<FONT COLOR=$C_BLUE>#### All Check: PASS ####</FONT><BR>");
+	exit $V6evalTool::exitPass;
+}else{
+	vLogHTML('<FONT COLOR="#FF0000">#### One of Check is Fail: NG ####</FONT><BR>');
+	exit $V6evalTool::exitFail;
+}
+
+#======================================================================
+# check_NoOpt($CHECK_NUM,$NEED_NCE_DST,$DESTINATION,$SOURCE1,$SOURCE2,$SOURCE3,$TEST_DST1,$TEST_DST2,$TEST_DST3)
+# 	$CHECK_NUM : check number
+#	$NEED_NCE_DST : need nutMakeNCE_Destination() flag
+#	$DESTINATION
+#	$SOURCE1 (Link0)
+#	$SOURCE2 (Link1)
+#	$SOURCE3 (Link0)
+#	$TEST_DST1 : destination of SOURCE1 at checkNUT_SrcAddr
+#	$TEST_DST2 : destination of SOURCE2 at checkNUT_SrcAddr
+#	$TEST_DST3 : destination of SOURCE3 at checkNUT_SrcAddr
+#======================================================================
+sub check_NoOpt($$$$$$$$$) {
+	my ($CHECK_NUM,$ON_LINK,$DESTINATION,$SOURCE1,$SOURCE2,$SOURCE3,$TEST_DST1,$TEST_DST2,$TEST_DST3) = @_;
+
+	my $Link0_dev = $V6evalTool::NutDef{Link0_device};
+	my $Link1_dev = $V6evalTool::NutDef{Link1_device};
+
+	my $SOURCE4 = $NUT_LLA;
+	my $CHECK_TXT = "Destination = $DESTINATION<BR> Candidate Source = $SOURCE1%$Link0_dev, $SOURCE2%$Link1_dev, $SOURCE3%$Link0_dev, SOURCE4=$SOURCE4%$Link0_de<BR> Expected Source = $SOURCE1%$Link0_dev";
+	my $RESULT_LINE = "<TR><TD><A HREF=\"#C$CHECK_NUM\">$CHECK_NUM</A></TD><TD>$CHECK_TXT</TD><TD>";
+	my $RESULT = $TRUE;
+
+	#====== Check : Initialize  Add source address & NCE in NUT #======
+	vLogHTML("<A NAME=\"C$CHECK_NUM\"><HR><FONT size=\"+2\" COLOR=$C_BLUE>#### Check $CHECK_NUM: Start ($CHECK_TXT) ####</FONT><BR>");
+
+	nutInitialize() || exit $V6evalTool::exitFatal;
+
+	$CPP = "-DSOURCE1=\\\"$SOURCE1\\\" -DSOURCE2=\\\"$SOURCE2\\\"  -DSOURCE4=\\\"$SOURCE4\\\" -DDESTINATION=\\\"$DESTINATION\\\"";
+	if($SOURCE3 ne ''){
+		$CPP .= " -DSOURCE3=\\\"$SOURCE3\\\"";
+	}
+	vCPP($CPP);
+
+	nutIPv6AddrAdd($SOURCE1,"64") || exit $V6evalTool::exitFatal;
+	nutIPv6AddrAdd_Any($SOURCE2,"64",$IF_OTHER) || exit $V6evalTool::exitFatal;
+	if($SOURCE3 ne ''){
+		nutIPv6AddrAdd($SOURCE3,"64") || exit $V6evalTool::exitFatal;
+	}
+
+	$ret = checkNUT_SrcAddr($CPP,$SOURCE1,$TEST_DST1,$SOURCE3,$TEST_DST3);
+	$ret2 = checkNUT_SrcAddr_Any($CPP,$SOURCE2,$TEST_DST2,$IF_OTHER);
+	if (!$ret || !$ret2) {
+		vLogHTML("<FONT COLOR=\"#FF0000\">#### Check $CHECK_NUM: Fail ####</FONT><BR>");
+		nutReboot() || exit $V6evalTool::exitFatal;
+		$RESULT_LINE .= "<FONT COLOR=\"#FF0000\">Fail</FONT></TD></TR>";
+		$RESULT_TABLE .= $RESULT_LINE;
+		return $FALSE;
+	}
+
+	if($RESULT){
+		if(!nutPing62Dest($CPP,$DESTINATION,$ON_LINK,$TRUE)){
+			$RESULT = $FALSE;
+		}
+	}
+
+
+	if($RESULT){
+		vLogHTML("<FONT size=\"+2\" COLOR=$C_BLUE>#### Check $CHECK_NUM: PASS ####</FONT><BR>");
+		$RESULT_LINE .= "<FONT COLOR=$C_BLUE>PASS</FONT></TD></TR>";
+		$RESULT_TABLE .= $RESULT_LINE;
+		nutClear($SOURCE1,"64",$SOURCE3,"64") || exit $V6evalTool::exitFatal;
+		nutIPv6AddrDelete_Any($SOURCE2,"64",$IF_OTHER) || exit $V6evalTool::exitFatal;
+		return $TRUE;
+	}else{
+		vLogHTML("<FONT size=\"+2\" COLOR=\"#FF0000\">#### Check $CHECK_NUM: Fail ####</FONT><BR>");
+		$RESULT_LINE .= "<FONT COLOR=\"#FF0000\">Fail</FONT></TD></TR>";
+		$RESULT_TABLE .= $RESULT_LINE;
+		nutClear($SOURCE1,"64",$SOURCE3,"64") || exit $V6evalTool::exitFatal;
+		nutIPv6AddrDelete_Any($SOURCE2,"64",$IF_OTHER) || exit $V6evalTool::exitFatal;
+		return $FALSE;
+	}
+}
+######################################################################
+__END__
+
+=head1 NAME
+
+  SrcSelectRule5.seq - Source Address Selection
+                       check Rule 5(Prefer outgoing interface.)
+
+  Rule 5: Prefer outgoing interface. 
+    If SA is assigned to the interface that will be used to send to D 
+    and SB is assigned to a different interface, then prefer SA. 
+
+  Source addresses used for this test are "preferred address".
+
+=head1 TARGET
+
+  Host and Router
+
+=head1 SYNOPSIS
+
+  *This Test use Link0 & Link1
+
+=begin html
+<PRE>
+  <A HREF="./SrcSelectRule5.seq">SrcSelectRule5.seq</A> [-tooloption ...] -pkt <A HREF="./ADDR_SELECT.def">ADDR_SELECT.def</A>
+    -tooloption : v6eval tool option
+</PRE>
+
+=end html
+
+=head1 INITIALIZATION
+
+  None
+
+=head1 TEST PROCEDURE
+
+  This TEST performs the following Check procedures for
+  every address group defined by Check 01 - *.
+    
+  *Check procedure
+  
+  1. Initialize :
+     1.1. Set IPv6 Default Route in NUT
+          (Default Router address = <TN-Link0-LinkLocalAddress>)
+     1.2. Add Candidate Source Addresses in NUT
+     1.3. Check Candidate Source Addresses by Ping6 (TN->NUT)
+  2. Send Ping6 from NUT to Destination
+     2.1. NUT send ICMPv6 echo request (NUT->TN)
+  3. Judgment : don't recive packet & check ping6 result
+  4. Cleanup :
+     4.1. Delete Candidate Source Addresses in NUT
+     4.2. Clear prefix list & NCE & default router list in NUT
+
+	NUT    TN  Default Router  Destination
+	 |      |      |           |
+	 ======(INITIALIZE)=========
+	 |      |      |           |
+	 |<-<-<-+      |           | Set IPv6 Default Route
+	 |<-<-<-+      |           | Add Candidate Source Addresses (Link0)
+	 |<-<-<-+      |           | Add Candidate Source Addresses (Link1)
+	 |      |      |           |
+	 |<------------+           | Echo Request to Candidate Source Addresses 1 (Liunk0)
+	 +------------>|           | Echo Reply (Liunk0)
+	 |      |      |           |
+	 |<------------+           | Echo Request to Candidate Source Addresses 2 (Liunk0)
+	 +------------>|           | Echo Reply (Liunk0)
+	 |      |      |           |
+	 |<------------+           | Echo Request to Candidate Source Addresses (Liunk1)
+	 +------------>|           | Echo Reply (Liunk1)
+	 |      |      |           |
+	 ======(INITIALIZE)=========
+	 |      |      |           |
+	 |<-<-<-+      |           | Excute ping6 command
+	 |      |      |           |
+	 +------------------------>| Echo Request (Liunk0)
+	 |      |      |           |
+
+  LLA(Link Local Address)
+
+  * default route face to Link0
+  *Following address grouup does not match Rule 1-4
+
+  Check 01:
+    Destination: 3fff::2
+    Candidate Source Addresses: 3ffe::1(Link0) or 3ffd::1(Link1) or fec0::1(Link0) or LLA(Link0)
+    Result: 3ffe::1(Link0)
+
+  Check 02:
+    Destination: ff08::2
+    Candidate Source Addresses: 3ffe::1(Link0) or 3ffd::1(Link1) or fec0::1(Link0) or LLA(Link0)
+    Result: 3ffe::1(Link0)
+
+  Check 03:
+    Destination: fec0::2
+    Candidate Source Addresses: 3ffe::1(Link0) or 3ffd::1(Link1) or LLA(Link0)
+    Result: 3ffe::1(Link0)
+
+=head1 JUDGEMENT
+
+  Check 01:
+    PASS: Receive Echo Request & source address = 3ffe::1
+
+  Check 02:
+    PASS: Receive Echo Request & source address = 3ffe::1
+
+  Check 03:
+    PASS: Receive Echo Request & source address = 3ffe::1
+
+  TEST
+    PASS: All Check = PASS
+
+=head1 SEE ALSO
+
+  perldoc V6evalTool
+
+=begin html
+<PRE>
+  <A HREF="ADDR_SELECT.html">ADDR_SELECT.html</A> "Default Address Selection for IPv6" Test Common Utility<BR>
+  <A HREF="das_rules.html">das_rules.html</A> "Default Address Selection for IPv6" Rules
+</PRE>
+
+=end html
+
+=cut
+

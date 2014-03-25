@@ -1,0 +1,1192 @@
+#!/usr/bin/perl
+#
+# Copyright (C) 2003 Yokogawa Electric Corporation, 
+# INTAP(Interoperability Technology Association
+# for Information Processing, Japan).  All rights reserved.
+# 
+# Redistribution and use of this software in source and binary forms, with 
+# or without modification, are permitted provided that the following 
+# conditions and disclaimer are agreed and accepted by the user:
+# 
+# 1. Redistributions of source code must retain the above copyright 
+# notice, this list of conditions and the following disclaimer.
+# 
+# 2. Redistributions in binary form must reproduce the above copyright 
+# notice, this list of conditions and the following disclaimer in the 
+# documentation and/or other materials provided with the distribution.
+# 
+# 3. Neither the names of the copyrighters, the name of the project which 
+# is related to this software (hereinafter referred to as "project") nor 
+# the names of the contributors may be used to endorse or promote products 
+# derived from this software without specific prior written permission.
+# 
+# 4. No merchantable use may be permitted without prior written 
+# notification to the copyrighters. However, using this software for the 
+# purpose of testing or evaluating any products including merchantable 
+# products may be permitted without any notification to the copyrighters.
+# 
+# 
+# 
+# THIS SOFTWARE IS PROVIDED BY THE COPYRIGHTERS, THE PROJECT AND 
+# CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING 
+# BUT NOT LIMITED THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS 
+# FOR A PARTICULAR PURPOSE, ARE DISCLAIMED.  IN NO EVENT SHALL THE 
+# COPYRIGHTERS, THE PROJECT OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, 
+# INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES 
+# (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR 
+# SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) 
+# HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN 
+# CONTRACT,STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) 
+# ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF 
+# THE POSSIBILITY OF SUCH DAMAGE.
+#
+# $TAHI: ct/pd/RRDelayedAuthProto.seq,v 1.4 2003/06/11 09:31:13 ozoe Exp $
+#
+######################################################################
+BEGIN { $V6evalTool::TestVersion = '$Name: REL_2_1_1 $ '; }
+
+use V6evalTool;
+use pd;
+
+%pktdesc = (
+	ns              => 'Recv Neighbor Solicitation',
+	na              => 'Send Neighbor Advertisement',
+	rs              => 'Send Router Solicitation',
+	ra              => 'Recv Router Advertisement',
+	ra1             => 'Recv Router Advertisement including mtu option',
+	ra2             => 'Recv Router Advertisement including multiple prefix information',
+	ra3             => 'Recv Router Advertisement including mtu option and multiple prefix information',
+	dhcp_sol_auth       => 'Recv DHCP Solicit message w/ Authentication option and w/o Option Request option',
+	dhcp_sol_any_auth   => 'Recv DHCP Solicit message w/ Authentication option',
+	dhcp_adv_auth       => 'Send DHCP Advertise message w/ Authentication option',
+	dhcp_req_auth       => 'Recv DHCP Request message w/ Authentication option and w/o Option Request option',
+	dhcp_req_any_auth   => 'Recv DHCP Request message w/ Authentication option',
+	dhcp_req_any1_auth  => 'Recv DHCP Request message w/ Authentication option w/o Option Request and IA_PD Prefix option',
+	dhcp_req_any2_auth  => 'Recv DHCP Request message w/ Authentication option and w/o IA_PD Prefix option',
+	dhcp_rep_auth	    => 'Send DHCP Reply message w/ Authentication option',
+);
+
+pdOptions(@ARGV);
+
+# The following generate debugging messages.
+$pd::debug=$pdOpt_v|$pdOpt_vv;
+
+# You can specifies debug options to a remote control program.
+# If you want to know more detail, please see the following:
+# - V6evalTool.pm: perldoc V6evalTool
+# - V6evalRemote.pm: perldoc V6evalRemote
+$pd::remote_debug="-o1" if $pdOpt_vv;
+
+#
+#
+$IF = Link0;
+$IF1 = Link1;
+$exit_rtn=$V6evalTool::exitPass;
+$idx=0;
+$wait_ras=$pd::MIN_DELAY_BETWEEN_RAS+1;
+
+#
+#
+$delegateprefix="3ffe:501:ff9f::";
+$preferredlifetime="600";
+$validlifetime="1200";
+#
+$wait_time=16;
+$maxcount = 4;
+# time is Jan 1, 2000 (UTC), modulo 2^32
+$t64 = time() - 946684800;
+foreach($count = 0; $count < $maxcount; $count++){
+    $sid_duid_time[$count] = ($t64 & 0xffffffff);
+    $t64 = $t64 + 86400; #1 day after
+}
+
+@sid_link_addr = (
+    "00:00:00:00:a0:a0",
+    "00:00:00:00:a1:a1",
+    "00:00:00:00:a2:a2",
+    "00:00:00:00:a3:a3",
+);
+
+#
+#
+#
+$type=$V6evalTool::NutDef{Type};
+if($type eq host) {
+    vLogHTML("This test is for the router only<BR>");
+    exit $V6evalTool::exitRouterOnly;
+}
+
+$type=$V6evalTool::NutDef{Type};
+if($type ne router) {
+    vLogHTML(pdErrmsg("ERROR: $V6evalTool::NutDef{Type}: ".
+                      "Unknown target type<BR>"));
+    exit $V6evalTool::exitFail;
+}
+
+#
+#
+#
+vLogHTML("<FONT SIZE=\"+1\">Initialization</FONT><BR>");
+vLogHTML("Trying to setup NUT<BR>");
+pdStartDefaultRA() || exit $V6evalTool::exitFail;
+pdStopDHCP6Client() || exit $V6evalTool::exitFail;
+$vcpp = pdSetVCPP($pd::INITIAL, $delegateprefix, 0, 0,
+	$maxcount, @sid_duid_time, @sid_link_addr, %ret);
+vCPP($vcpp);
+#
+pdStartDelayedAuthDHCP6Client() || exit $V6evalTool::exitFail;
+#
+vCapture($IF);
+#
+#
+vLogHTML("<FONT SIZE=\"+1\">Test</FONT><BR>");
+
+%ret = vRecv($IF, $wait_time, 0, 0, dhcp_sol_auth, dhcp_sol_any_auth);
+
+if($ret{status} != 0) {
+	vLogHTML('No response from NUT, Configuration Problem ?<BR>');
+	vLogHTML('<FONT COLOR="#FF0000">NG</FONT>');
+	pdAsyncWait() || exit $V6evalTool::exitFatal;
+	exit $V6evalTool::exitFail;
+}
+
+if($ret{status} == 0) {
+        $title{$idx}="<TD>$pktdesc{'dhcp_sol_auth'}</TD><TD>exp:sending DHCP Solicit message with Authentication option</TD>";
+	$title{$idx}.="<TD>result:sent DHCP Solicit message with Authentication option</TD>";
+	$result{$idx}=$V6evalTool::exitPass;
+	vLogHTML("<A NAME=\"T$idx\">OK</A><BR>");
+	$idx++;
+
+	$vcpp = pdSetVCPP($pd::SOLICIT, $delegateprefix, $preferredlifetime, $validlifetime,
+		$maxcount, @sid_duid_time, @sid_link_addr, %ret);
+	vCPP($vcpp);
+
+        vSend($IF, dhcp_adv_auth);
+
+        %ret = vRecv($IF, $wait_time/2, 0, 0, ns,
+			dhcp_req_auth, dhcp_req_any_auth,
+			dhcp_req_any1_auth, dhcp_req_any2_auth);
+	if ($ret{recvFrame} eq 'ns') {
+		vSend($IF, na);
+		%ret = vRecv($IF, $wait_time/2, 0, 0,
+			dhcp_req_auth, dhcp_req_any_auth,
+			dhcp_req_any1_auth, dhcp_req_any2_auth);
+	}
+
+        $title{$idx}="<TD>$pktdesc{'dhcp_req_auth'}</TD><TD>exp:sending DHCP Request message with Authentication option</TD>";
+	if ($ret{status} == 0) {
+		$title{$idx}.="<TD>result:sent DHCP Requet message with Authentication option</TD>";
+		$result{$idx}=$V6evalTool::exitPass;
+		vLogHTML("<A NAME=\"T$idx\">OK</A><BR>");
+	        $idx++;
+	}
+	else{
+		vLogHTML('Cannot receive DHCP Request message with Authentication option<BR>');
+		vLogHTML('<FONT COLOR="#FF0000">NG</FONT>');
+		pdAsyncWait() || exit $V6evalTool::exitFatal;
+		exit $V6evalTool::exitFail;
+	}
+
+	$vcpp = pdSetVCPP($pd::REQUEST, $delegateprefix, $preferredlifetime, $validlifetime,
+		$maxcount, @sid_duid_time, @sid_link_addr, %ret);
+	vCPP($vcpp);
+
+	vSend($IF, dhcp_rep_auth);
+        %ret = vRecv($IF, $wait_time/2, 0, 0, ns);
+        if($ret{status} == 0) {
+		vSend($IF, na);
+	}
+}
+else{
+        vLogHTML('Cannot receive DHCP Solicit message with Authentication option<BR>');
+        vLogHTML('<FONT COLOR="#FF0000">NG</FONT>');
+	pdAsyncWait() || exit $V6evalTool::exitFatal;
+        exit $V6evalTool::exitFail;
+}
+
+pdAsyncWait() || exit $V6evalTool::exitFatal;
+vSleep($wait_time);
+
+vCapture($IF1);
+$wait_ra=2;
+
+vSend($IF1, rs);
+$title{$idx}="<TD>$pktdesc{'ra'}</TD><TD>exp:sending RA</TD>";
+%ret = vRecv($IF1, $wait_ra, $ret{sentTime1}, 0, ra, ra1, ra2, ra3);
+
+if ($ret{status} == 0) {
+	$title{$idx}.="<TD>result:sent RA</TD>";
+        $result{$idx}=$V6evalTool::exitPass;
+        vLogHTML("<A NAME=\"T$idx\">OK:sent RA.</A><BR>");
+} else {
+	$title{$idx}.="<TD>result:NOT sent RA</TD>";
+	$result{$idx}=$V6evalTool::exitFail;
+	$exit_rtn=$V6evalTool::exitFail;
+	vLogHTML("<A NAME=\"T$idx\">".pdErrmsg(NG)."</A><BR>");
+}
+
+vSleep($wait_ras, "Wait for MIN_DELAY_BETWEEN_RAS (3 sec)");
+
+#
+#
+#
+@col=('PTN', 'EXP', 'RESULT');
+pdPrintSummaryHTML("*** Test Summary: PE vs CPE ***", @col,
+                   %title, %result, $idx);
+
+#
+#
+#
+exit $exit_rtn;
+
+######################################################################
+__END__
+
+=head1 NAME
+
+  RRDelayedAuthProto.seq - Requesting Router behavior for Prefix Delegation using Delayed Authentication Protocol
+
+=head1 TARGET
+
+  Router for DHCP Client
+
+=head1 SYNOPSIS
+
+=begin html
+  &nbsp;&nbsp;<A HREF="./RRDelayedAuthProto.seq">RRDelayedAuthProto.seq</A> [-tooloption ...] -pkt <A HREF="./RRDelayedAuthProto.def">RRDelayedAuthProto.def</A> -tooloption : v6eval tool option
+
+=end html
+
+=head1 TOPOLOGY
+
+=begin html
+<BLOCKQUOTE>
+<PRE>
+   TN
+    |                     ISP site
+  --+----+--------------- Link0
+         |
+        NUT     Host
+         |       |        Customer site
+  -------+-------+------- Link1 3ffe:501:ff9f:XXXX::/64
+</PRE>
+</BLOCKQUOTE>
+<BLOCKQUOTE>
+<TABLE border=1>
+   <TBODY>
+   <TR>
+     <TD rowSpan=4><TT>TN</TT></TD>
+     <TD><TT>Link-local</TT></TD>
+     <TD><TT>fe80::200:ff:fe00:a0a0</TT></TD>
+   </TR>
+   <TR>
+     <TD><TT>Ether</TT></TD>
+     <TD><TT>00:00:00:00:a0:a0</TT></TD>
+   </TR>
+   <TR>
+     <TD><TT>Delegate Prefix</TT></TD>
+     <TD><TT>3ffe:501:ff9f::</TT></TD>
+   </TR>
+   <TR>
+     <TD><TT>Prefix Length</TT></TD>
+     <TD><TT>48</TT></TD>
+   </TR>
+   <TR>
+     <TD rowspan="2"><TT>Host</TT></TD>
+     <TD><TT>Link-local</TT></TD>
+     <TD><TT>fe80::200:ff:fe00:101</TT></TD>
+   </TR>
+   <TR>
+     <TD><TT>ether</TT></TD>
+     <TD><TT>00:00:00:00:01:01</TT></TD></TR></TBODY>
+   </TABLE>
+</BLOCKQUOTE>
+
+=end html
+
+=head1 INITIALIZATION
+
+=begin html
+<OL>
+  <LI>NUT sets up Prefix Delegation.
+  <LI>NUT sets up Router Advertisement to the interface by the side of downstream.
+  <LI>NUT sets up DHCP Delayed Authentication Protocol
+</OL>
+<P>
+Authentication option
+</P>
+<TABLE border="1">
+  <TR>
+    <TD>protocol</TD>
+    <TD>2: Delayed Authentication Protocol</TD></TR>
+  <TR>
+    <TD>algorithm</TD>
+    <TD>1: MAC</TD></TR>
+  <TR>
+    <TD>RDM</TD>
+    <TD>0x00: a monotonically increasing counter</TD></TR>
+  <TR>
+    <TD>auth-info</TD>
+    <TD>authentication information(variable length)</TD></TR>
+</TABLE>
+<P>
+Authentication information
+</P>
+<TABLE border="1">
+  <TR>
+    <TD>DHCP realm</TD>
+    <TD>DHCP realm that identifies the key used to generate the HMAC-MD5 value<BR>
+        0x11111111 0x11111111 0x11111111 0x11111111</TD></TR>
+  <TR>
+    <TD>key ID</TD>
+    <TD>The key identifier that identified the key used to generate the HMAC-MD5 value<BR>
+        0xffffffff</TD></TR>
+  <TR>
+    <TD>HMAC-MD5</TD>
+    <TD>HMAC-MD5 computed</TD></TR>
+</TABLE>
+<P>
+Authentication key
+</P>
+<TABLE border="1">
+  <TR>
+    <TD>key</TD>
+    <TD>TAHITEST89ABCDEF</TD></TR>
+</TABLE>
+
+=end html
+
+=head1 TEST PROCEDURE
+
+=begin html
+<PRE>
+Tester as Server          Target as Client        Tester as Host
+    |                           |                           |
+    |                           |                           |
+    |<--------------------------|                           |
+    |   <A HREF="#JDG1">Judgment #1</A>             |                           |
+    |   DHCP Solicit message    |                           |
+    | w/ Authentication option  |                           |
+    |                           |                           |
+    |-------------------------->|                           |
+    |   DHCP Advertise message  |                           |
+    | w/ Authentication option  |                           |
+    |                           |                           |
+    |<--------------------------|                           |
+    |   <A HREF="#JDG2">Judgment #2</A>             |                           |
+    |   DHCP Request message    |                           |
+    | w/ Authentication option  |                           |
+    |                           |                           |
+    |-------------------------->|                           |
+    |   DHCP Reply message      |                           |
+    | w/ Authentication option  |                           |
+    |                           |                           |
+    |                           |<--------------------------|
+    |                           |    Router Solicitation    |
+    |                           |                           |
+    |                           |-------------------------->|
+    |                           |    <A HREF="#JDG3">Judgment #3</A>            |
+    |                           |    Router Advertisement   |
+    |                           |   w/ delegated prefix     |
+    |                           |                           |
+    v                           v                           v
+<BR>
+  1. Wait DHCP Solicit message with Authentication option
+  2. Send DHCP Advertise message with Authentication option
+  3. Wait DHCP Request message with Authentication option
+  4. Send DHCP Reply message with Authentication option
+  5. Send Router Solicitation with Authentication option
+  6. Wait Router Advertisement with Authentication option
+<BR>
+<b>Addresses</b>
+<BLOCKQUOTE>
+Solicit, Request messages<BR>
+<TABLE border=1>
+    <TBODY>
+    <TR>
+      <TD>Src</TD>
+      <TD>NUT link-local address</TD>
+    </TR>
+    <TR>
+      <TD>Dst</TD>
+      <TD>All_DHCP_Relay_Agents_and_Servers</TD>
+    </TR>
+    </TBODY>
+  </TABLE>
+<BR>
+All_DHCP_Relay_Agents_and_Servers FF02::1:2<BR>
+Advertise, Reply messages<BR>
+<TABLE border=1>
+    <TBODY>
+    <TR>
+      <TD>Src</TD>
+      <TD>fe80::200:ff:fe00:a0a0</TD>
+    </TR>
+    <TR>
+      <TD>Dst</TD>
+      <TD>NUT link-local address</TD>
+    </TR>
+    </TBODY>
+  </TABLE>
+</BLOCKQUOTE>
+<b>UDP Ports</b><BR>
+      Clients listen for DHCP messages on UDP port 546
+      Server listen for DHCP messages on UDP port 547<BR>
+<b>DHCP Messages</b>
+<BLOCKQUOTE>
+DHCP Solicit message<BR>
+<TABLE border=1>
+    <TR>
+      <TD colspan="2">msg-type</TD>
+      <TD><b>SOLICIT</b>(1)</TD>
+    </TR>
+    <tr>
+      <TD colspan="2">transaction-id</TD>
+      <TD>The transaction ID for this message exchange</TD>
+    </tr>
+    <TR>
+      <TD colspan="3">options</TD>
+    </TR>
+    <TR>
+      <TD colspan="3"><b>Client Identifier Option</b> (MUST)</TD>
+    </TR>
+    <tr>
+      <TD colspan="3"><b>IA_PD Option </b>(MUST)</TD> 
+    </tr>
+    <tr>
+      <TD>&nbsp;</TD>
+      <TD>Code</TD>
+      <TD>33 (TBD)</TD>
+    </tr>
+    <tr>
+      <TD>&nbsp;</TD>
+      <TD>IAID</TD>
+      <TD>The unique identifier which client specified</TD>
+    </tr>
+    <tr>
+      <TD>&nbsp;</TD>
+      <TD>T1</TD>
+      <TD>ANY</TD>
+    </tr>
+    <tr>
+      <TD>&nbsp;</TD>
+      <TD>T2</TD>
+      <TD>ANY</TD>
+    </tr>
+    <tr>
+      <TD colspan="3">Elapsed Time Option (MUST)</TD>
+    </tr>
+    <tr>
+      <TD>&nbsp;</TD>
+      <TD>elapsed-time</TD>
+      <TD>ANY</TD>
+    </tr>
+    <TR>
+      <TD colspan="3">Option Request Option (Optional)</TD>
+    </TR>
+    <tr>
+      <TD colspan="3"><b>Authentication Option</b> (MUST)</TD>  
+    </tr>
+    <tr>
+      <TD>&nbsp;</TD>
+      <TD><B>protocol</B></TD>       
+      <TD><b>2 for the Delayed Authentication Protocol</b></TD>
+    </tr>
+    <tr>
+      <TD>&nbsp;</TD>
+      <TD><B>algorithm</B></TD>
+      <TD><B>1 for HMAC-MD5</B></TD>
+    </tr>
+    <tr>
+      <TD>&nbsp;</TD>
+      <TD><B>RDM</B></TD>
+      <TD><B>0x00 a monotonically increasing counter</B></TD> 
+    </tr>
+    <tr>
+      <TD>&nbsp;</TD>
+      <TD><B>replay detection</B></TD>
+      <TD><B>0x00000000 0x00000000</B></TD> 
+    </tr>
+</TABLE>
+<BR>
+DHCP Advertise message<BR>
+<TABLE border=1>
+    <tr>
+      <TD colspan="3">msg-type</TD>
+      <TD><b>ADVERTISE</b>(2)</TD>
+    </tr>
+    <TR>
+      <TD colspan="3">transaction-id</TD>
+      <TD>The same transaction ID previous message</TD>
+    </TR>
+    <TR>
+      <TD colspan="4">options</TD>
+    </TR>
+    <TR>
+      <TD colspan="4">Client Identifier Option</TD>
+    </TR>
+    <TR>
+      <TD colspan="4">Server Identifier Option</TD>
+    </TR>
+    <TR>
+      <TD>&nbsp;</TD>
+      <TD colspan="2">DUID Contents type</TD>                    
+      <TD>1 Link-layer address plus time</TD> 
+    </TR>
+    <TR>
+      <TD>&nbsp;</TD>
+      <TD colspan="2">hardware type</TD>   
+      <TD>1 Ether</TD></TR>
+    <TR>
+      <TD>&nbsp;</TD>
+      <TD colspan="2">time</TD>
+      <TD>Time which the server included</TD> 
+    </TR>
+    <TR>
+      <TD>&nbsp;</TD>
+      <TD colspan="2">link-layer address</TD>   
+      <TD><B>00:00:00:00:a0:a0</B></TD></TR>
+    <TR>
+      <TD colspan="4">IA_PD Option</TD>
+    </TR>
+    <TR>
+      <TD>&nbsp;</TD>
+      <TD colspan="2">Code</TD>
+      <TD>33 (TBD)</TD></TR> 
+    <TR>
+      <TD>&nbsp;</TD>
+      <TD colspan="2">IAID</TD>
+      <TD>Unique identifier which client specified</TD></TR>
+    <TR>
+      <TD>&nbsp;</TD>
+      <TD colspan="2">T1</TD>
+      <TD>300</TD></TR>
+    <TR>
+      <TD>&nbsp;</TD>
+      <TD colspan="2">T2</TD>
+      <TD>480</TD></TR>
+    <TR>
+      <TD>&nbsp;</TD>
+      <TD colspan="3">IA_PD Prefix Option</TD>                   
+    </TR>
+    <TR>
+      <TD>&nbsp;</TD>
+      <TD>&nbsp;</TD>
+      <TD>Code</TD>
+      <TD>34 (TBD)</TD></TR> 
+    <TR>
+      <TD>&nbsp;</TD>
+      <TD>&nbsp;</TD>
+      <TD>preferred-lifetime</TD>
+      <TD>600</TD></TR>
+    <TR>
+      <TD>&nbsp;</TD>
+      <TD>&nbsp;</TD>
+      <TD>valid-lifetime</TD>
+      <TD>1200</TD></TR>
+    <TR>
+      <TD>&nbsp;</TD>
+      <TD>&nbsp;</TD>
+      <TD>prefix-length</TD>
+      <TD>48</TD></TR>
+    <TR>
+      <TD>&nbsp;</TD>
+      <TD>&nbsp;</TD>
+      <TD>IPv6 prefix</TD>    
+      <TD>3ffe:501:ff9f::</TD></TR>
+    <tr>
+      <TD colspan="4"><b>Authentication Option</b></TD>  
+    </tr>
+    <tr>
+      <TD>&nbsp;</TD>
+      <TD colspan="2"><B>protocol</B></TD>       
+      <TD><b>2 for the Delayed Authentication Protocol</b></TD>
+    </tr>
+    <tr>
+      <TD>&nbsp;</TD>
+      <TD colspan="2"><B>algorithm</B></TD>
+      <TD><B>1 for HMAC-MD5</B></TD>
+    </tr>
+    <tr>
+      <TD>&nbsp;</TD>
+      <TD colspan="2"><B>RDM</B></TD>
+      <TD><B>0x00 a monotonically increasing counter</B></TD> 
+    </tr>
+    <tr>
+      <TD>&nbsp;</TD>
+      <TD colspan="2"><B>replay detection</B></TD>
+      <TD><B>0x00000000 0x00000001</B></TD> 
+    </tr>
+    <tr>
+      <TD>&nbsp;</TD>
+      <TD colspan="3"><b>Authentication information</b> (MUST)</TD>               
+    </tr>
+    <tr>
+      <TD>&nbsp;</TD>
+      <TD>&nbsp;</TD>
+      <TD><B>DHCP realm</B></TD>
+      <TD><b>0x11111111 0x11111111 0x11111111 0x11111111</b></TD>
+    </tr>
+    <tr>
+      <TD>&nbsp;</TD>
+      <TD>&nbsp;</TD>
+      <TD><B>key ID</B></TD>
+      <TD><B>0xffffffff</B></TD>
+    </tr>
+    <tr>
+      <TD>&nbsp;</TD>
+      <TD>&nbsp;</TD>
+      <TD>HMAC-MD5</TD>
+      <TD>HMAC-MD5 digest of the message</TD>
+    </tr>
+</TABLE>
+<BR>
+DHCP Request message with IA_PD option<BR>
+<TABLE border=1>
+    <tr>
+      <TD colspan="3">msg-type</TD>
+      <TD><b>REQUEST</b>(3)</TD>
+    </tr>
+    <tr>
+      <TD colspan="3">transaction-id</TD>
+      <TD>The transaction ID for this message exchange</TD>
+    </tr>
+    <TR>
+      <TD colspan="4">options</TD>
+    </TR>
+    <TR>
+      <TD colspan="4"><b>Client Identifier Option </b> (MUST)</TD>
+    </TR>
+    <TR>
+      <TD colspan="4"><b>Server Identifier Option </b> (MUST)</TD>
+    </TR>
+    <TR>
+      <TD>&nbsp;</TD>
+      <TD colspan="2">DUID Contents type</TD>                    
+      <TD>1 Link-layer address plus time</TD> 
+    </TR>
+    <TR>
+      <TD>&nbsp;</TD>
+      <TD colspan="2">hardware type</TD>   
+      <TD>1 Ether</TD></TR>
+    <TR>
+      <TD>&nbsp;</TD>
+      <TD colspan="2">time</TD>
+      <TD>Time which the server included</TD> 
+    </TR>
+    <TR>
+      <TD>&nbsp;</TD>
+      <TD colspan="2">link-layer address</TD>   
+      <TD><B>00:00:00:00:a0:a0</B></TD></TR>
+    <tr>
+      <TD colspan="4"><b>IA_PD Option </b> (MUST)</TD>
+    </tr>
+    <tr>
+      <TD>&nbsp;</TD>
+      <TD colspan="2">Code</TD>
+      <TD>33 (TBD)</TD> 
+    </tr>
+    <tr>
+      <TD>&nbsp;</TD>
+      <TD colspan="2">IAID</TD>
+      <TD>Unique identifier which client specified</TD>
+    </tr>
+    <tr>
+      <TD>&nbsp;</TD>
+      <TD colspan="2">T1</TD>
+      <TD>ANY</TD>
+    </tr>
+    <tr>
+      <TD>&nbsp;</TD>
+      <TD colspan="2">T2</TD>
+      <TD>ANY</TD>
+    </tr>
+    <tr>
+      <TD>&nbsp;</TD>
+      <TD colspan="3">IA_PD Prefix Option (Optional)</TD>                
+    </tr>
+    <tr>
+      <TD>&nbsp;</TD>
+      <TD>&nbsp;</TD>
+      <TD>Code</TD>
+      <TD>34 (TBD)</TD>
+    </tr>
+    <tr>
+      <TD>&nbsp;</TD>
+      <TD>&nbsp;</TD>
+      <TD>preferred-lifetime</TD>
+      <TD>ANY</TD>
+    </tr>
+    <tr>
+      <TD>&nbsp;</TD>
+      <TD>&nbsp;</TD>
+      <TD>valid-lifetime</TD>
+      <TD>ANY</TD>
+    </tr>
+    <tr>
+      <TD>&nbsp;</TD>
+      <TD>&nbsp;</TD>
+      <TD>prefix-length</TD>
+      <TD>48</TD>
+    </tr>
+    <tr>
+      <TD>&nbsp;</TD>
+      <TD>&nbsp;</TD>
+      <TD>IPv6 prefix</TD>   
+      <TD>3ffe:501:ff9f::</TD>
+    </tr>
+    <tr>
+      <TD colspan="4"> <b> Elapsed Time Option </b> (MUST)</TD>
+    </tr>
+    <tr>
+      <TD>&nbsp;</TD>
+      <TD colspan="2">elapsed-time</TD>
+      <TD>ANY</TD>
+    </tr>
+    <tr>
+      <TD colspan="4"> Option Request Option (Optional)</TD> 
+    </tr>
+    <tr>
+      <TD colspan="4"><b>Authentication Option</b> (MUST)</TD>  
+    </tr>
+    <tr>
+      <TD>&nbsp;</TD>
+      <TD colspan="2"><B>protocol</B></TD>       
+      <TD><b>2 for the Delayed Authentication Protocol</b></TD>
+    </tr>
+    <tr>
+      <TD>&nbsp;</TD>
+      <TD colspan="2">algorithm</TD>
+      <TD><B>1 for HMAC-MD5</B></TD>
+    </tr>
+    <tr>
+      <TD>&nbsp;</TD>
+      <TD colspan="2"><B>RDM<B></TD>
+      <TD><B>0x00 a monotonically increasing counter</B></TD> 
+    </tr>
+    <tr>
+      <TD>&nbsp;</TD>
+      <TD colspan="2"><B>replay detection</B></TD>
+      <TD><B>0x00000000 0x00000002</B></TD> 
+    </tr>
+    <tr>
+      <TD>&nbsp;</TD>
+      <TD colspan="3"><b>Authentication information</b></TD>               
+    </tr>
+    <tr>
+      <TD>&nbsp;</TD>
+      <TD>&nbsp;</TD>
+      <TD><B>DHCP realm</B></TD>
+      <TD><b>0x11111111 0x11111111 0x11111111 0x11111111</b></TD>
+    </tr>
+    <tr>
+      <TD>&nbsp;</TD>
+      <TD>&nbsp;</TD>
+      <TD><B>key ID</B></TD>
+      <TD><B>0xffffffff</B></TD>
+    </tr>
+    <tr>
+      <TD>&nbsp;</TD>
+      <TD>&nbsp;</TD>
+      <TD>HMAC-MD5</TD>
+      <TD>HMAC-MD5 digest of the message</TD>
+    </tr>
+</TABLE>
+<BR>
+DHCP Reply message with IA_PD option including IA_Prefix option<BR>
+<TABLE border=1>
+    <TR>
+      <TD colspan="3">msg-type</TD>
+      <TD><b>REPLY</b>(7)</TD>
+    </TR>
+    <tr>
+      <TD colspan="3">transaction-id</TD>
+      <TD>The same transaction ID previous message</TD> 
+    </tr>
+    <TR>
+      <TD colspan="4">options</TD>
+    </TR>
+    <TR>
+      <TD colspan="4">Client Identifier Option</TD>
+    </TR>
+    <TR>
+      <TD colspan="4">Server Identifier Option</TD>
+    </TR>
+    <TR>
+      <TD>&nbsp;</TD>
+      <TD colspan="2">DUID Contents type</TD>                   
+      <TD>1 Link-layer address plus time</TD> 
+    </TR>
+    <TR>
+      <TD>&nbsp;</TD>
+      <TD colspan="2">hardware type</TD>   
+      <TD>1 Ether</TD></TR>
+    <TR>
+      <TD>&nbsp;</TD>
+      <TD colspan="2">time</TD>
+      <TD>Time which the server included</TD> 
+    </TR>
+    <TR>
+      <TD>&nbsp;</TD>
+      <TD colspan="2">link-layer address</TD>   
+      <TD>00:00:00:00:a0:a0</TD></TR>
+    <TR>
+      <TD colspan="4"><b>IA_PD Option</b></TD> 
+    </TR>
+    <TR>
+      <TD>&nbsp;</TD>
+      <TD colspan="2">Code</TD>
+      <TD>33 (TBD)</TD></TR>
+    <tr>
+      <TD>&nbsp;</TD>
+      <TD colspan="2">IAID</TD>
+      <TD>Unique identifier which client specified</TD>
+    </tr>
+    <TR>
+      <TD>&nbsp;</TD>
+      <TD colspan="2">T1</TD>
+      <TD>300</TD></TR>
+    <TR>
+      <TD>&nbsp;</TD>
+      <TD colspan="2">T2</TD>
+      <TD>480</TD></TR>
+    <tr>
+      <TD>&nbsp;</TD>
+      <TD colspan="3"><b>IA_PD Prefix Option</b></TD>                   
+    </tr>
+    <tr>
+      <TD>&nbsp;</TD>
+      <TD>&nbsp;</TD>
+      <TD>Code</TD>
+      <TD>34 (TBD)</TD>
+    </tr>
+    <tr>
+      <TD>&nbsp;</TD>
+      <TD>&nbsp;</TD>
+      <TD>preferred-lifetime</TD>
+      <TD>600</TD>
+    </tr>
+    <tr>
+      <TD>&nbsp;</TD>
+      <TD>&nbsp;</TD>
+      <TD>valid-lifetime</TD>
+      <TD>1200</TD>
+    </tr>
+    <tr>
+      <TD>&nbsp;</TD>
+      <TD>&nbsp;</TD>
+      <TD>prefix-length</TD>
+      <TD>48</TD>
+    </tr>
+    <tr>
+      <TD>&nbsp;</TD>
+      <TD>&nbsp;</TD>
+      <TD>IPv6 prefix</TD>    
+      <TD>3ffe:501:ff9f::</TD>
+    </tr>
+    <tr>
+      <TD colspan="4"><b>Authentication Option</b> (MUST)</TD>  
+    </tr>
+    <tr>
+      <TD>&nbsp;</TD>
+      <TD colspan="2"><B>protocol</B></TD>       
+      <TD><b>2 for the Delayed Authentication Protocol</b></TD>
+    </tr>
+    <tr>
+      <TD>&nbsp;</TD>
+      <TD colspan="2">algorithm</TD>
+      <TD><B>1 for HMAC-MD5</B></TD>
+    </tr>
+    <tr>
+      <TD>&nbsp;</TD>
+      <TD colspan="2"><B>RDM</B></TD>
+      <TD><B>0x00 a monotonically increasing counter</B></TD> 
+    </tr>
+    <tr>
+      <TD>&nbsp;</TD>
+      <TD colspan="2"><B>replay detection</B></TD>
+      <TD><B>0x00000000 0x00000003</B></TD> 
+    </tr>
+    <tr>
+      <TD>&nbsp;</TD>
+      <TD colspan="3"><b>Authentication information</b></TD>               
+    </tr>
+    <tr>
+      <TD>&nbsp;</TD>
+      <TD>&nbsp;</TD>
+      <TD><B>DHCP realm</B></TD>
+      <TD><b>0x11111111 0x11111111 0x11111111 0x11111111</b></TD>
+    </tr>
+    <tr>
+      <TD>&nbsp;</TD>
+      <TD>&nbsp;</TD>
+      <TD><B>key ID</B></TD>
+      <TD><B>0xffffffff</B></TD>
+    </tr>
+    <tr>
+      <TD>&nbsp;</TD>
+      <TD>&nbsp;</TD>
+      <TD>HMAC-MD5</TD>
+      <TD>HMAC-MD5 digest of the message</TD>
+    </tr>
+</TABLE>
+</BLOCKQUOTE>
+</PRE>
+
+=end html
+
+=head1 JUDGEMENT
+
+=begin html
+<PRE>
+<A NAME="JDG1"></A>
+  1. DHCP Solicit message is recieved with Authentication option
+<A NAME="JDG2"></A>
+  2. DHCP Request message is recieved with Authentication option
+<A NAME="JDG3"></A>
+  3. Router Advertisement is recieved include delegated prefix
+</PRE>
+
+=end html
+
+=head1 TERMINATION
+
+  N/A
+
+=head1 REFERENCE
+
+=begin html
+<PRE>
+draft-ietf-dhc-dhcpv6-opt-prefix-delegation-01.txt
+<HR>
+14. Security Considerations <BR>
+   Security considerations in DHCP are described in the section
+   "Security Considerations" of the DHCP specification [6].  <BR>
+   A rogue delegating router can issue bogus prefixes to a requesting
+   router.  This may cause denial of service due to unreachability.  <BR>
+   An intruder requesting router may be able to mount a denial of
+   service attack by repeated requests for delegated prefixes that
+   exhaust the delegating router's available prefixes.  <BR>
+   <B>To guard against attacks through prefix delegation, requesting
+   routers and delegating routers SHOULD use DHCP authentication as
+   described in section "Authentication of DHCP messages" in the DHCP
+   specification [6].</B>  For point to point links, where one trusts that
+   there is no man in the middle, or one trusts layer two
+   authentication, DHCP authentication or IPsec may not be necessary.
+   Because a requesting router and delegating routers must each have at
+   least one assigned IPv6 address, the routers may be able to use IPsec
+   for authentication of DHCPv6 messages.  The details of using IPsec
+   for DHCPv6 are under development.
+<HR>
+draft-ietf-dhc-dhcpv6-28.txt
+<HR>
+21.2. Summary of DHCP Authentication <BR>
+   Authentication of DHCP messages is accomplished through the use of
+   the Authentication option (see section 22.11).  The authentication
+   information carried in the Authentication option can be used to
+   reliably identify the source of a DHCP message and to confirm that
+   the contents of the DHCP message have not been tampered with.  <BR>
+   The Authentication option provides a framework for multiple
+   authentication protocols.  Two such protocols are defined here.
+   Other protocols defined in the future will be specified in separate
+   documents.  <BR>
+   <B>Any DHCP message MUST NOT include more than one Authentication
+   option.</B>  <BR>
+   The protocol field in the Authentication option identifies the
+   specific protocol used to generate the authentication information
+   carried in the option.  The algorithm field identifies a specific
+   algorithm within the authentication protocol; for example, the
+   algorithm field specifies the hash algorithm used to generate the
+   message authentication code (MAC) in the authentication option.  The
+   replay detection method (RDM) field specifies the type of replay
+   detection used in the replay detection field.  <BR>
+21.3. Replay Detection <BR>
+   The Replay Detection Method (RDM) field determines the type of replay
+   detection used in the Replay Detection field.  <BR>
+   <B>If the RDM field contains 0x00, the replay detection field MUST
+   be set to the value of a monotonically increasing counter.</B>  Using
+   a counter value such as the current time of day (for example, an
+   NTP-format timestamp [13]) can reduce the danger of replay attacks.
+   This method MUST be supported by all protocols.  <BR>
+21.4. Delayed Authentication Protocol <BR>
+   <B>If the protocol field is 2, the message is using the "delayed
+   authentication" mechanism.</B>  In delayed authentication, the client
+   requests authentication in its Solicit message and the server replies
+   with an Advertise message that includes authentication information.
+   This authentication information contains a nonce value generated by
+   the source as a message authentication code (MAC) to provide message
+   authentication and entity authentication.  <BR>
+   The use of a particular technique based on the HMAC protocol [12]
+   using the MD5 hash [20] is defined here.  <BR>
+21.4.1. Use of the Authentication Option in the Delayed Authentication
+   Protocol <BR>
+   <B>In a Solicit message, the client fills in the protocol, algorithm
+   and RDM fields in the Authentication option with the client's
+   preferences.  The client sets the replay detection field to zero and
+   omits the authentication information field.  The client sets the
+   option-len field to 11.</B> <BR>
+   <B>In all other messages, the protocol and algorithm fields identifies
+   the method used to construct the contents of the authentication
+   information field.</B>  The RDM field identifies the method used to
+   construct the contents of the replay detection field.  <BR>
+   The format of the Authentication information is: <BR>
+   0                   1                   2                   3
+   0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
+  +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+  |                          DHCP realm                           |
+  |                      (variable length)                        |
+  .                                                               .
+  .                                                               .
+  +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+  |                            key ID                             |
+  +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+  |                                                               |
+  |                           HMAC-MD5                            |
+  |                          (128 bits)                           |
+  |                                                               |
+  +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+<BR>
+      DHCP realm  The DHCP realm that identifies the key used to
+                  generate the HMAC-MD5 value <BR>
+      key ID      The key identifier that identified the key used to
+                  generate the HMAC-MD5 value <BR>
+      HMAC-MD5    The message authentication code generated by applying
+                  MD5 to the DHCP message using the key identified by
+                  the DHCP realm, client DUID and key ID <BR>
+   The sender computes the MAC using the HMAC generation algorithm [12]
+   and the MD5 hash function [20].  The entire DHCP message (setting
+   the MAC field of the authentication option to zero), including the
+   DHCP message header and the options field, is used as input to the
+   HMAC-MD5 computation function.  <BR>
+   DISCUSSION: <BR>
+      Algorithm 1 specifies the use of HMAC-MD5.  Use of a
+      different technique, such as HMAC-SHA, will be specified as
+      a separate protocol.  <BR>
+      The DHCP realm used to identify authentication keys is
+      chosen to be unique among administrative domains.  Use of
+      the DHCP realm allows DHCP administrators to avoid conflict
+      in the use of key identifiers, and allows a host using
+      DHCP to use authenticated DHCP while roaming among DHCP
+      administrative domains.  <BR>
+21.4.2. Message Validation <BR>
+   <B>Any DHCP message that includes more than one authentication option
+   MUST be discarded.</B> <BR>
+   To validate an incoming message, the receiver first checks that
+   the value in the replay detection field is acceptable according to
+   the replay detection method specified by the RDM field.  Next, the
+   receiver computes the MAC as described in [12].  The entire DHCP
+   message (setting the MAC field of the authentication option to 0),
+   is used as input to the HMAC-MD5 computation function.  <B>If the MAC
+   computed by the receiver does not match the MAC contained in the
+   authentication option, the receiver MUST discard the DHCP message.</B> <BR>
+21.4.3. Key Utilization <BR>
+   Each DHCP client has a set of keys.  Each key is identifier by &lt;DHCP
+   realm, client DUID, key id&gt;.  Each key also has a lifetime.  The key
+   may not be used past the end of its lifetime.  The client's keys
+   are initially distributed to the client through some out-of-band
+   mechanism.  The lifetime for each key is distributed with the key.
+   Mechanisms for key distribution and lifetime specification are beyond
+   the scope of this document.  <BR>
+   The client and server use one of the client's keys to authenticate
+   DHCP messages during a session (until the next Solicit message
+   broadcast by the client).  <BR>
+21.4.4. Client Considerations for Delayed Authentication Protocol <BR>
+   The client announces its intention to use DHCP authentication by
+   including an Authentication option in its Solicit message.  The
+   server selects a key for the client based on the client's DUID. The
+   client and server use that key to authenticate all DHCP messages
+   exchanged during the session.  <BR>
+21.4.4.1. Sending Solicit Messages <BR>
+   <B>When the client sends a Solicit message and wishes to use
+   authentication, it includes an Authentication option with the desired
+   protocol, algorithm and RDM as described in section 21.4.  The client
+   does not include any replay detection or authentication information
+   in the Authentication option.</B> <BR>
+21.4.4.2. Receiving Advertise Messages <BR>
+   <B>The client validates any Advertise messages containing an
+   Authentication option specifying the delayed authentication protocol
+   using the validation test described in section 21.4.2.</B> <BR>
+   Client behavior if no Advertise messages include authentication
+   information or pass the validation test is controlled by local policy
+   on the client.  According to client policy, the client MAY choose to
+   respond to a Advertise message that has not been authenticated.  <BR>
+   The decision to set local policy to accept unauthenticated messages
+   should be made with care.  Accepting an unauthenticated Advertise
+   message can make the client vulnerable to spoofing and other
+   attacks.  If local users are not explicitly informed that the client
+   has accepted an unauthenticated Advertise message, the users may
+   incorrectly assume that the client has received an authenticated
+   address and is not subject to DHCP attacks through unauthenticated
+   messages.  <BR>
+   <B>A client MUST be configurable to discard unauthenticated messages,
+   and SHOULD be configured by default to discard unauthenticated
+   messages if the client has been configured with an authentication
+   key or other authentication information.</B>  A client MAY choose to
+   differentiate between Advertise messages with no authentication
+   information and Advertise messages that do not pass the validation
+   test; for example, a client might accept the former and discard the
+   latter.  If a client does accept an unauthenticated message, the
+   client SHOULD inform any local users and SHOULD log the event.  <BR>
+21.4.4.3. Sending Request, Confirm, Renew, Rebind, Decline or Release
+   Messages <BR>
+   <B>If the client authenticated the Advertise message through which the
+   client selected the server, the client MUST generate authentication
+   information for subsequent Request, Confirm, Renew, Rebind or Release
+   messages sent to the server as described in section 21.4.  When the
+   client sends a subsequent message, it MUST use the same key used by
+   the server to generate the authentication information.</B> <BR>
+21.4.4.5. Receiving Reply Messages <BR>
+   <B>If the client authenticated the Advertise it accepted, the client
+   MUST validate the associated Reply message from the server.  The
+   client MUST discard the Reply if the message fails to pass the
+   validation test and MAY log the validation failure.  If the Reply
+   fails to pass the validation test, the client MUST restart the DHCP
+   configuration process by sending a Solicit message.</B>  <BR>
+   If the client accepted an Advertise message that did not include
+   authentication information or did not pass the validation test, the
+   client MAY accept an unauthenticated Reply message from the server.  <BR>
+22.11. Authentication Option <BR>
+   The Authentication option carries authentication information to
+   authenticate the identity and contents of DHCP messages.  The use of
+   the Authentication option is described in section 21.  The format of
+   the Authentication option is: <BR>
+    0                   1                   2                   3
+    0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
+   +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+   |          OPTION_AUTH          |          option-len           |
+   +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+   |   protocol    |   algorithm   |      RDM      |               |
+   +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+               |
+   |                                                               |
+   |          replay detection (64 bits)           +-+-+-+-+-+-+-+-+
+   |                                               |   auth-info   |
+   +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+               |
+   .                   authentication information                  .
+   .                       (variable length)                       .
+   +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+<BR>
+      option-code                  OPTION_AUTH (11) <BR>
+      option-len                   15 + length of authentication
+                                   information field <BR>
+      protocol                     The authentication protocol used in
+                                   this authentication option <BR>
+      algorithm                    The algorithm used in the
+                                   authentication protocol <BR>
+      RDM                          The replay detection method used in
+                                   this authentication option <BR>
+      Replay detection             The replay detection information for
+                                   the RDM <BR>
+      authentication information   The authentication information,
+                                   as specified by the protocol and
+                                   algorithm used in this authentication
+                                   option
+</PRE>
+
+=end html
+
+=head1 SEE ALSO
+
+  perldoc V6evalTool
+
+=cut
+

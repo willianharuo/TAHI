@@ -1,0 +1,207 @@
+<HTML>
+<HEAD>
+<TITLE>hostRecvRedirect4Nonce - Verifying Redirect vs. NONCE</TITLE>
+<LINK REV="made" HREF="mailto:hackers@FreeBSD.org">
+</HEAD>
+
+<BODY>
+
+<!-- INDEX BEGIN -->
+<!--
+
+<UL>
+
+	<LI><A HREF="#NAME">NAME</A>
+	<LI><A HREF="#TARGET">TARGET</A>
+	<LI><A HREF="#SYNOPSIS">SYNOPSIS</A>
+	<LI><A HREF="#INITIALIZATION">INITIALIZATION</A>
+	<LI><A HREF="#TEST_PROCEDURE">TEST PROCEDURE</A>
+	<LI><A HREF="#JUDGMENT">JUDGMENT</A>
+	<LI><A HREF="#TERMINATION">TERMINATION</A>
+	<LI><A HREF="#NOTE">NOTE</A>
+	<LI><A HREF="#SEE_ALSO">SEE ALSO</A>
+</UL>
+-->
+<!-- INDEX END -->
+
+<P>
+<H1><A NAME="NAME">NAME</A></H1>
+<P>
+hostRecvRedirect4Nonce - Verifying Redirect (to a better router) vs. NONCE
+
+<P>
+<HR>
+<H1><A NAME="TARGET">TARGET</A></H1>
+<P>
+Host only
+
+<P>
+<HR>
+<H1><A NAME="SYNOPSIS">SYNOPSIS</A></H1>
+<P>
+<PRE>  hostRecvRedirect4Nonce.seq [-tooloption ...]
+                              -p hostRecvRedirect4Nonce.def
+</PRE>
+<P>
+<HR>
+<H1><A NAME="INITIALIZATION">INITIALIZATION</A></H1>
+<OL>
+  <LI>Clear IPv6 routes.
+  <LI>Clear NC state for TN.
+  <LI>Set R1 as the default router by sending RA and NA.
+</OL>
+<BR>
+<PRE>
+  TN                 NUT
+  ----------------------
+<BR>
+  State: NONCE (for R1)
+<BR>
+  ==== unsolicited RA ===>
+       src=R1's link-local
+       dst=all-node
+       M=0, O=0
+       RouterLifetime=600
+       ReachableTime=0
+       RetransTimer=0
+       w/ SLLA
+       Prefix Option:
+           L=1, A=1
+           ValidLifetime=2592000
+           PreferredLifetime=604800
+           Prefix=3ffe:501:ffff:100::/64
+<BR>
+  State: STALE (for R1)
+<BR>
+  ==== solicited NA ===>
+        src=R1's link-local
+        dst=NUT's link-local
+        R=1, S=1, O=1
+        target=R1's link-local
+        TLLA=R1's LLA
+<BR>
+  State: REACHABLE (for R1)
+<BR>
+  Wait (3 sec) for DAD NS
+</PRE>
+
+<P>
+<HR>
+<H1><A NAME="TEST_PROCEDURE">TEST PROCEDURE</A></H1>
+<P>
+<STRONG>hostRecvRedirect4Nonce</STRONG> verifies that an entry of Destination Cache updated by a redirect message
+(ICMP Target != ICMP Destination) is removed if its Neighbor Cache entry is
+removed.
+
+<P>
+<OL>
+  <LI>Send echo-request (src:H1, dst:NUT)
+  <LI>Verify that NUT send echo-reply to the default router, R1
+  <LI>Send redirect message to NUT.
+  <LI>Send echo-request (src:H1, dst:NUT) again.
+  <LI>Verify that NUT threw send echo-reply to the better router, TN.
+  <LI>Wait for NUT's neighbor cache state being removed.
+  <LI>Send echo-request (src:H1, dst:NUT) again.
+  <LI>Verify that NUT send echo-reply to the default router, R1
+</OL>
+<PRE>
+  TN               NUT
+  ----------------------
+<BR>
+  State: REACHABLE (for R1), NONCE (for TN)
+<BR>
+  ==== echo-request ===>
+       src=H1(off-link global), prefix=3ffe:501:ffff:109::/64,
+           but LLA is R1's one
+       dst=NUT's global, prefix=3ffe:501:ffff:100::/64
+<BR>
+  <=== <A HREF="#JDG1">Judgment #1</A>: echo-reply ====
+       src=NUT's global, prefix=3ffe:501:ffff:100::/64
+       dst=H1(off-link global), prefix=3ffe:501:ffff:109::/64,
+           but LLA is R1's one
+<BR>
+  ==== redirect ===>
+       src=R1's link-local
+       dst=NUT's link-local
+       icmp target=TN's link-local
+       icmp destination=H1's global
+       w/  TLLA
+       w/o Redirected header
+<BR>
+  State: REACHABLE (for R1), STALE (for TN)
+<BR>
+  ==== echo-request ===>
+       src=H1(off-link global), prefix=3ffe:501:ffff:109::/64,
+           but LLA is R1's one
+       dst=NUT's global, prefix=3ffe:501:ffff:100::/64
+<BR>
+  <=== <A HREF="#JDG2">Judgment #2</A>: echo-reply ====
+       src=NUT's global, prefix=3ffe:501:ffff:100::/64
+       dst=H1(off-link global), prefix=3ffe:501:ffff:109::/64,
+           but LLA is TN's one
+<BR>
+  State: REACHABLE (for R1), DELAY (for TN)
+<BR>
+  Wait (6 sec)
+<BR>
+  State: REACHABLE (for R1), PROBE (for TN)
+<BR>
+  <=== unicast NS ====
+       src=NUT's link-local
+       dst=TN's link-local
+       target=TN's link-local
+       w/ or w/o SLLA
+<BR>
+  State: REACHABLE (for R1), NONCE (for TN)
+<BR>
+  ==== echo-request ===>
+       src=H1(off-link global), prefix=3ffe:501:ffff:109::/64,
+           but LLA is R1's one
+       dst=NUT's global, prefix=3ffe:501:ffff:100::/64
+<BR>
+  <=== <A HREF="#JDG3">Judgment #1</A>: echo-reply ====
+       src=NUT's global, prefix=3ffe:501:ffff:100::/64
+       dst=H1(off-link global), prefix=3ffe:501:ffff:109::/64,
+           but LLA is R1's one
+</PRE>
+
+<P>
+<HR>
+<H1><A NAME="JUDGMENT">JUDGMENT</A></H1>
+<A NAME="JDG1"></A>
+
+<P>
+<PRE>  1. NUT must throw echo-reply whose destination is off-link global
+    to the default router (i.e. R1).
+</PRE>
+<A NAME="JDG2"></A>
+
+<P>
+<PRE>  2. NUT must throw echo-reply to the better router (i.e. TN).
+</PRE>
+<P>
+<HR>
+<H1><A NAME="TERMINATION">TERMINATION</A></H1>
+<P>
+<PRE>  Send RA with RouterLifetime=0 to clear the Default Router List.
+</PRE>
+<P>
+<PRE>  Clear IPv6 routes by remote command. XXX
+</PRE>
+<P>
+<HR>
+<H1><A NAME="NOTE">NOTE</A></H1>
+<P>
+<PRE>  The test invokes the following command:
+  - Clear IPv6 routes
+</PRE>
+<P>
+<HR>
+<H1><A NAME="SEE_ALSO">SEE ALSO</A></H1>
+<P>
+<PRE>  perldoc V6evalTool
+  perldoc V6evalRemote
+</PRE>
+</BODY>
+
+</HTML>

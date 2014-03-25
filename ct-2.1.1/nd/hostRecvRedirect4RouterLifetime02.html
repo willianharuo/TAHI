@@ -1,0 +1,284 @@
+<HTML>
+<HEAD>
+<TITLE>hostRecvRedirect4RouterLifetime02 - Verifying Redirect vs. RA w/ RouterLifetime=0</TITLE>
+<LINK REV="made" HREF="mailto:hackers@FreeBSD.org">
+</HEAD>
+
+<BODY>
+
+<!-- INDEX BEGIN -->
+<!--
+
+<UL>
+
+	<LI><A HREF="#NAME">NAME</A>
+	<LI><A HREF="#TARGET">TARGET</A>
+	<LI><A HREF="#SYNOPSIS">SYNOPSIS</A>
+	<LI><A HREF="#INITIALIZATION">INITIALIZATION</A>
+	<LI><A HREF="#TEST_PROCEDURE">TEST PROCEDURE</A>
+	<LI><A HREF="#JUDGMENT">JUDGMENT</A>
+	<LI><A HREF="#TERMINATION">TERMINATION</A>
+	<LI><A HREF="#NOTE">NOTE</A>
+	<LI><A HREF="#SEE_ALSO">SEE ALSO</A>
+</UL>
+-->
+<!-- INDEX END -->
+
+<P>
+<H1><A NAME="NAME">NAME</A></H1>
+<P>
+hostRecvRedirect4RouterLifetime02 - Verifying Redirect (to a better router)
+vs. RA w/ RouterLifetime=0
+
+<P>
+<HR>
+<H1><A NAME="TARGET">TARGET</A></H1>
+<P>
+Host only
+
+<P>
+<HR>
+<H1><A NAME="SYNOPSIS">SYNOPSIS</A></H1>
+<P>
+<PRE>  hostRecvRedirect4RouterLifetime02.seq [-tooloption ...]
+                                        -p hostRecvRedirect4RouterLifetime02.def
+</PRE>
+<P>
+<HR>
+<H1><A NAME="INITIALIZATION">INITIALIZATION</A></H1>
+<OL>
+  <LI>Clear IPv6 routes.
+  <LI>Clear NC state for TN.
+  <LI>Set R1 as the default router by sending RA and NA.
+  <LI>Set TN as the second router by sending RA and NA.
+</OL>
+<BR>
+<PRE>
+  TN                 NUT
+  ----------------------
+<BR>
+  State: NONCE (for R1, TN)
+<BR>
+  ==== unsolicited RA ===>
+       src=R1's link-local
+       dst=all-node
+       M=0, O=0
+       RouterLifetime=600
+       ReachableTime=0
+       RetransTimer=0
+       w/ SLLA
+       Prefix Option:
+           L=1, A=1
+           ValidLifetime=2592000
+           PreferredLifetime=604800
+           Prefix=3ffe:501:ffff:100::/64
+<BR>
+  State: STALE (for R1), NONCE (for TN)
+<BR>
+  ==== solicited NA ===>
+        src=R1's link-local
+        dst=NUT's link-local
+        R=1, S=1, O=1
+        target=R1's link-local
+        TLLA=R1's LLA
+<BR>
+  State: REACHABLE (for R1), NONCE (for TN)
+<BR>
+  Wait (3 sec) for DAD NS
+</PRE>
+
+<P>
+<HR>
+<H1><A NAME="TEST_PROCEDURE">TEST PROCEDURE</A></H1>
+<P>
+<STRONG>hostRecvRedirect4RouterLifetime02</STRONG> verifies that an entry of Destination Cache updated by a redirect message
+(ICMP Target != ICMP Destination) is removed by RA w/ RouterLifetime=0.
+
+<P>
+<OL>
+  <LI>Send echo-request (src:H1, dst:NUT)
+  <LI>Verify that NUT send echo-reply to the default router, R1
+  <LI>Send redirect message to NUT.
+  <LI>Send RA whose RouterLifetime is 0.
+  <LI>Send echo-request (src:H1, dst:NUT) again.
+  <OL>
+    <LI>CASE 1:<BR>
+        Verify that NUT send echo-reply to the default router, R1.
+    <LI><A HREF="#NOTE">CASE 2</A>:<BR>
+        Verify that NUT send echo-reply to the better router, TN,<BR>
+        but NUD flush the redirected entries.
+  </OL>
+</OL>
+<PRE>
+  TN               NUT
+  ----------------------
+<BR>
+  State: REACHABLE (for R1), NONCE (for TN)
+<BR>
+  ==== echo-request ===>
+       src=H1(off-link global), prefix=3ffe:501:ffff:109::/64,
+           but LLA is R1's one
+       dst=NUT's global, prefix=3ffe:501:ffff:100::/64
+<BR>
+  <=== <A HREF="#JDG1">Judgment #1</A>: echo-reply ====
+       src=NUT's global, prefix=3ffe:501:ffff:100::/64
+       dst=H1(off-link global), prefix=3ffe:501:ffff:109::/64,
+           but LLA is R1's one
+<BR>
+  ==== redirect ===>
+       src=R1's link-local
+       dst=NUT's link-local
+       icmp target=TN's link-local
+       icmp destination=H1's global
+       w/  TLLA
+       w/o Redirected header
+<BR>
+  State: REACHABLE (for R1), STALE (for TN)
+<BR>
+  ==== unsolicited RA ===>
+       src=TN's link-local
+       dst=all-node
+       M=0, O=0
+       RouterLifetime=0
+       ReachableTime=0
+       RetransTimer=0
+       w/ SLLA
+<BR>
+  ==== echo-request ===>
+       src=H1(off-link global), prefix=3ffe:501:ffff:109::/64,
+           but LLA is R1's one
+       dst=NUT's global, prefix=3ffe:501:ffff:100::/64
+<BR>
+  CASE 1: Redirected entries are flushed by RA w/ RouterLifetime=0
+  ********************************************************************
+<BR>
+  <=== <A HREF="#JDG1">Judgment #1</A>: echo-reply ====
+       src=NUT's global, prefix=3ffe:501:ffff:100::/64
+       dst=H1(off-link global), prefix=3ffe:501:ffff:109::/64,
+           but LLA is R1's one
+<BR>
+  State: REACHABLE (for R1), STALE (for TN)
+<BR>
+  ********************************************************************
+<BR>
+  <A HREF="#NOTE">CASE 2</A>: Redirected entries are flushed by not RA w/ RouterLifetime=0,
+          but Neighbor Unreachability Detection.
+  ********************************************************************
+<BR>
+  <=== <A HREF="#JDG2">Judgment #2</A>: echo-reply ====
+       src=NUT's global, prefix=3ffe:501:ffff:100::/64
+       dst=H1(off-link global), prefix=3ffe:501:ffff:109::/64,
+           but LLA is TN's one
+<BR>
+  State: REACHABLE (for R1), DELAY (for TN)
+<BR>
+  Wait (5 sec)
+<BR>
+  State: REACHABLE (for R1), PROBE (for TN)
+<BR>
+  <=== NS ====
+       src=NUT's link-local
+       dst=TN's link-local
+       target=TN's link-local
+<BR>
+  <=== NS ====
+       src=NUT's link-local
+       dst=TN's link-local
+       target=TN's link-local
+<BR>
+  <=== NS ====
+       src=NUT's link-local
+       dst=TN's link-local
+       target=TN's link-local
+<BR>
+  State: REACHABLE (for R1), NONCE (for TN)
+<BR>
+  ==== echo-request ===>
+       src=H1(off-link global), prefix=3ffe:501:ffff:109::/64,
+           but LLA is R1's one
+       dst=NUT's global, prefix=3ffe:501:ffff:100::/64
+<BR>
+  <=== <A HREF="#JDG1">Judgment #1</A>: echo-reply ====
+       src=NUT's global, prefix=3ffe:501:ffff:100::/64
+       dst=H1(off-link global), prefix=3ffe:501:ffff:109::/64,
+           but LLA is R1's one
+<BR>
+  ********************************************************************
+</PRE>
+
+<P>
+<HR>
+<H1><A NAME="JUDGMENT">JUDGMENT</A></H1>
+<A NAME="JDG1"></A>
+
+<P>
+<PRE>  1. NUT must throw echo-reply whose destination is off-link global
+     to the default router (i.e. R1).
+</PRE>
+<A NAME="JDG2"></A>
+
+<P>
+<PRE>  2. NUT must throw echo-reply whose destination is off-link global
+     to the better router (i.e. TN).
+</PRE>
+<A NAME="NOTE"></A>
+
+<P>
+<HR>
+<H1><A NAME="TERMINATION">TERMINATION</A></H1>
+<P>
+<PRE>  Send RA with RouterLifetime=0 to clear the Default Router List. XXX
+</PRE>
+<P>
+<PRE>  Clear IPv6 routes by remote command. XXX
+</PRE>
+<P>
+<HR>
+<H1><A NAME="NOTE">NOTE</A></H1>
+<PRE>
+  1. It is not fail that NUT does not flush the redirected entries
+     with RA w/ RouterLifetime=0. Because RFC2461 does not mention
+     the case where a router's address is not present in NUT's
+     Default Router List and received Router Lifetime value is zero:
+<BLOCKQUOTE>
+<HR>
+6.3.4.  Processing Received Router Advertisements
+<BR>
+   On receipt of a valid Router Advertisement, a host extracts the
+   source address of the packet and does the following:
+<BR>
+      - If the address is not already present in the host's Default
+        Router List, and the advertisement's Router Lifetime is non-
+        zero, create a new entry in the list, and initialize its
+        invalidation timer value from the advertisement's Router
+        Lifetime field.
+<BR>
+      - If the address is already present in the host's Default Router
+        List as a result of a previously-received advertisement, reset
+        its invalidation timer to the Router Lifetime value in the
+        newly-received advertisement.
+<BR>
+      - If the address is already present in the host's Default Router
+        List and the received Router Lifetime value is zero, immediately
+        time-out the entry as specified in Section 6.3.5.
+<HR>
+</BLOCKQUOTE>
+     If NUT is so, the test verify if NUT's NUD can flush the redirected
+     entries or not. However, if NUT's Reachable Time is long, the redirected
+     entries will remain for a while. This is why the test judges NUT
+     WARN in stead of FAIL in the case.
+<BR>
+  2. The test invokes the following command:
+     - Clear IPv6 routes
+</PRE>
+
+<P>
+<HR>
+<H1><A NAME="SEE_ALSO">SEE ALSO</A></H1>
+<P>
+<PRE>  perldoc V6evalTool
+  perldoc V6evalRemote
+</PRE>
+</BODY>
+
+</HTML>

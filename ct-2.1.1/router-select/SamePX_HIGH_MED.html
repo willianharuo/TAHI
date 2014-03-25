@@ -1,0 +1,200 @@
+<HTML>
+<HEAD>
+<TITLE>./SamePX_HIGH_MED.seq</TITLE>
+<LINK REV="made" HREF="mailto:hackers@FreeBSD.org">
+</HEAD>
+
+<BODY>
+
+<!-- INDEX BEGIN -->
+<!--
+
+<UL>
+
+	<LI><A HREF="#NAME">NAME</A>
+	<LI><A HREF="#TARGET">TARGET</A>
+	<LI><A HREF="#SYNOPSIS">SYNOPSIS</A>
+	<LI><A HREF="#TOPOLOGY">TOPOLOGY</A>
+	<LI><A HREF="#INITIALIZATION">INITIALIZATION</A>
+	<LI><A HREF="#TEST_PROCEDURE">TEST PROCEDURE</A>
+	<LI><A HREF="#JUDGEMENT">JUDGEMENT</A>
+	<LI><A HREF="#SEE_ALSO">SEE ALSO</A>
+</UL>
+-->
+<!-- INDEX END -->
+
+<P>
+<H1><A NAME="NAME">NAME</A></H1>
+<PRE>
+RA w/ Route Information Option (Link1:Preference=HIGH) vs.
+RA w/ Route Information Option (Link1:Preference=MED)
+</PRE>
+
+<P>
+<HR>
+<H1><A NAME="TARGET">TARGET</A></H1>
+<PRE>
+Host
+</PRE>
+
+<P>
+<HR>
+<H1><A NAME="SYNOPSIS">SYNOPSIS</A></H1>
+<PRE>
+<A HREF="./SamePX_HIGH_MED.seq">SamePX_HIGH_MED.seq</A> [-tooloption ...] -pkt <A HREF="./RTINFO.def">RTINFO.def</A>
+</PRE>
+<BLOCKQUOTE>
+<PRE>
+-tooloption: v6eval tool option
+</PRE>
+</BLOCKQUOTE>
+
+<P>
+<HR>
+<H1><A NAME="TOPOLOGY">TOPOLOGY</A></H1>
+<BLOCKQUOTE>
+<PRE>
+                         HOST1
+                           |
+            -------+-------+-------+------- Link1
+                   |               |
+                  RT2             RT1
+                   |               |
+            -------+-------+-------+------- Link0
+                           |
+                          NUT
+</PRE>
+</BLOCKQUOTE>
+<BLOCKQUOTE>
+<TABLE BORDER>
+<TR>
+<TD><TT>Link0</TT></TD>
+<TD><TT>global</TT></TD>
+<TD><TT>3ffe:501:ffff:100::/64</TT></TD>
+<TD><TT>Testing link</TT></TD>
+</TR>
+<TR>
+<TD><TT>Link1</TT></TD>
+<TD><TT>global</TT></TD>
+<TD><TT>3ffe:501:ffff:101::/64</TT></TD>
+<TD><TT>other link</TT></TD>
+</TR>
+<TR>
+<TD ROWSPAN="3"><TT>RT1(Link0)</TT></TD>
+<TD><TT>global</TT></TD>
+<TD><TT>3ffe:501:ffff:100::a0a0</TT></TD>
+<TD ROWSPAN="3"><TT>Alternative router</TT></TD>
+</TR>
+<TR>
+<TD><TT>link-local</TT></TD>
+<TD><TT>fe80::200:ff:fe00:a0a0</TT></TD>
+</TR>
+<TR>
+<TD><TT>ether</TT></TD>
+<TD><TT>00:00:00:00:a0:a0</TT></TD>
+</TR>
+<TR>
+<TD ROWSPAN="3"><TT>RT2(Link0)</TT></TD>
+<TD><TT>global</TT></TD>
+<TD><TT>3ffe:501:ffff:100::a1a1</TT></TD>
+<TD ROWSPAN="3"><TT>Alternative router</TT></TD>
+</TR>
+<TR>
+<TD><TT>link-local</TT></TD>
+<TD><TT>fe80::200:ff:fe00:a1a1</TT></TD>
+</TR>
+<TR>
+<TD><TT>ether</TT></TD>
+<TD><TT>00:00:00:00:a1:a1</TT></TD>
+</TR>
+<TR>
+<TD><TT>HOST1</TT></TD>
+<TD><TT>global</TT></TD>
+<TD><TT>3ffe:501:ffff:101::1</TT></TD>
+<TD><TT>Host on Link1</TT></TD>
+</TR>
+</TABLE>
+</BLOCKQUOTE>
+
+<P>
+<HR>
+<H1><A NAME="INITIALIZATION">INITIALIZATION</A></H1>
+<BLOCKQUOTE>
+<PRE>
+Flush Default Router List
+Flush Routing Table
+Flush Neighbor Cache
+Flush Prefix List
+</PRE>
+</BLOCKQUOTE>
+
+<P>
+<HR>
+<H1><A NAME="TEST_PROCEDURE">TEST PROCEDURE</A></H1>
+<BLOCKQUOTE>
+<PRE>
+NUT             RT1             RT2    HOST1
+ |               |               |       |
+ ==================(INITIALIZE)===========
+ |               |               |       |
+ | Link1Pref=HIGH|               |       |
+ |       Pref=MED|               |       |
+ |<--------------+               |       | RA from RT1
+ |               |  Link1Pref=MED|       |
+ |               |       Pref=MED|       |
+ |<------------------------------+       | RA from RT2
+ |               |               |       |
+ |<--------------#-----------------------+ Echo Request (via RT1)
+ +---------------#---------------------->| Echo Reply   (via RT1)(*1)
+ |               |               |       |
+ ==================(INITIALIZE)===========
+ |               |               |       |
+ |  Link1Pref=MED|               |       |
+ |       Pref=MED|               |       |
+ |<--------------+               |       | RA from RT1
+ |               | Link1Pref=HIGH|       |
+ |               |       Pref=MED|       |
+ |<------------------------------+       | RA from RT2
+ |               |               |       |
+ |<--------------#-----------------------+ Echo Request (via RT1)
+ +-------------------------------#------>| Echo Reply   (via RT2)(*2)
+ |               |               |       |
+</PRE>
+</BLOCKQUOTE>
+<P>
+<PRE>
+(INITIALIZATION)
+1. RT1 Sends RA w/ Preference=MED, RouteInfoOption(Link1:Preference=HIGH)
+2. RT2 Sends RA w/ Preference=MED, RouteInfoOption(Link1:Preference=MED)
+3. HOST1 Sends Echo Request
+4. NUT Sends Echo Reply to HOST1 via RT1(*1)
+(INITIALIZATION)
+5. RT1 Sends RA w/ Preference=MED, RouteInfoOption(Link1:Preference=MED)
+6. RT2 Sends RA w/ Preference=MED, RouteInfoOption(Link1:Preference=HIGH)
+7. HOST1 Sends Echo Request
+8. NUT Sends Echo Reply to HOST1 via RT2(*2)
+</PRE>
+
+<P>
+<HR>
+<H1><A NAME="JUDGEMENT">JUDGEMENT</A></H1>
+<PRE>
+(*1)
+    PASS: HOST1 receives Echo Reply via RT1
+</PRE>
+<PRE>
+(*2)
+    PASS: HOST1 receives Echo Reply via RT2
+</PRE>
+
+<P>
+<HR>
+<H1><A NAME="SEE_ALSO">SEE ALSO</A></H1>
+<PRE>
+<A HREF="./ROUTE.pm">ROUTE.pm</A>
+<A HREF="./RTINFO.def">RTINFO.def</A>
+</PRE>
+
+</BODY>
+
+</HTML>

@@ -1,0 +1,837 @@
+//
+// Copyright (C) 2003 Yokogawa Electric Corporation, 
+// INTAP(Interoperability Technology Association
+// for Information Processing, Japan).  All rights reserved.
+// 
+// Redistribution and use of this software in source and binary forms, with 
+// or without modification, are permitted provided that the following 
+// conditions and disclaimer are agreed and accepted by the user:
+// 
+// 1. Redistributions of source code must retain the above copyright 
+// notice, this list of conditions and the following disclaimer.
+// 
+// 2. Redistributions in binary form must reproduce the above copyright 
+// notice, this list of conditions and the following disclaimer in the 
+// documentation and/or other materials provided with the distribution.
+// 
+// 3. Neither the names of the copyrighters, the name of the project which 
+// is related to this software (hereinafter referred to as "project") nor 
+// the names of the contributors may be used to endorse or promote products 
+// derived from this software without specific prior written permission.
+// 
+// 4. No merchantable use may be permitted without prior written 
+// notification to the copyrighters. However, using this software for the 
+// purpose of testing or evaluating any products including merchantable 
+// products may be permitted without any notification to the copyrighters.
+// 
+// 
+// 
+// THIS SOFTWARE IS PROVIDED BY THE COPYRIGHTERS, THE PROJECT AND 
+// CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING 
+// BUT NOT LIMITED THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS 
+// FOR A PARTICULAR PURPOSE, ARE DISCLAIMED.  IN NO EVENT SHALL THE 
+// COPYRIGHTERS, THE PROJECT OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, 
+// INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES 
+// (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR 
+// SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) 
+// HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN 
+// CONTRACT,STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) 
+// ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF 
+// THE POSSIBILITY OF SUCH DAMAGE.
+//
+// $TAHI: ct/dd/dd_common.def,v 1.3 2003/04/22 04:04:45 akisada Exp $
+//
+
+#include "./dd_addr.def"
+
+//
+// DHCP parametor
+//
+#define CLIENT_DHCP_PORT	546
+#define SERVER_RELAY_DHCP_PORT	547
+
+#ifndef OPTION_DNS_SERVERS
+#define OPTION_DNS_SERVERS 25
+#endif
+
+#ifndef OPTION_DOMAIN_LIST
+#define OPTION_DOMAIN_LIST 26
+#endif
+
+#define HARDWARETYPE 1 // Ethernet
+
+#ifndef DHCP_ID
+#define DHCP_ID 0
+#endif
+
+#ifndef CID_DUID_HARDWARETYPE
+#define CID_DUID_HARDWARETYPE 0
+#define CID_DUID_TIME 0
+#define CID_DUID_LINKLAYERADDRESS "0:0:0:0:0:0"
+#endif
+#ifndef SID_DUID_TIME
+#define SID_DUID_TIME 0
+#endif
+
+//
+// DNS response parametor
+//
+#ifndef DNS_PORT
+#define DNS_PORT 0
+#endif
+
+#ifndef DNS_ID
+#define DNS_ID 0
+#endif
+
+#ifndef RD_BIT
+#define RD_BIT 1
+#endif
+
+//
+// NS
+//
+#ifndef TGT_ADDR
+#define TGT_ADDR _UNSPEC_ADDR 
+#endif
+
+//
+// NA
+//
+#ifndef NUT_ADDR
+#define NUT_ADDR _UNSPEC_ADDR 
+#endif
+
+//
+// ICMP echo
+//
+#ifndef PING_ID
+#define PING_ID 0xffff
+#endif
+
+#ifndef PING_SN
+#define PING_SN 0x0000
+#endif
+
+#ifndef PING_DATA
+#define PING_DATA {0,0}
+#endif
+
+//////////////////////////////////////////////////////////
+
+// FEM_ADDRCONF_dadns
+//    for dadns_from_NUT,chkconf_dadns_to_NUT
+
+#define FEM_ADDRCONF_dadns(_pNAME, _pETHER, _oHDR_IPV6, _oICMPV6_NS) \
+FEM_icmp6_ns(  _pNAME, _pETHER, \
+            {  _SRC(v6(_UNSPEC_ADDR)); \
+               HopLimit=255; \
+               _oHDR_IPV6 \
+            }, \
+            { \
+               _oICMPV6_NS \
+            } \
+)
+
+#define GA0  v6merge( TN_LINK0_PREFIX, TN_LINK0_PREFIX_LEN, nutv6())
+
+//////////////////////////////////////////////////////////
+//
+_HETHER_define(hether_nut2tentsolnode,
+               nutether(), _ETHER_SOLNODE_MCAST(nutv6()))
+_HETHER_define(hether_tn2tentsolnode,
+               ether(TN_LINK0_ETHER_ADR), _ETHER_SOLNODE_MCAST(nutv6()))
+_HETHER_define(hether_tn2nutsolnode,
+               ether(TN_LINK0_ETHER_ADR), _ETHER_SOLNODE_MCAST(nutv6()))
+//
+
+_HETHER_define(_HETHER_tn2nut_define,
+        ether(TN_LINK0_ETHER_ADR),
+        nutether()
+)
+_HETHER_define(_HETHER_nut2tn_define,
+        nutether(),
+        ether(TN_LINK0_ETHER_ADR)
+)
+_TLLOPT_define(_TLLOPT_tn_define, ether(TN_LINK0_ETHER_ADR))
+
+_HETHER_define(_HETHER_nut2tn_define_solnode,  nutether(), _ETHER_SOLNODE_MCAST(v6ether(TN_LINK0_ETHER_ADR)))
+
+_HETHER_define(_HETHER_tn2allnodes_define,  ether(TN_LINK0_ETHER_ADR),  v62ethermulti(v6(_ALLNODES_MCAST_ADDR)))
+
+//
+_SLLOPT_define(_SLLOPT_tn_define, ether(TN_LINK0_ETHER_ADR))
+
+//
+// DAD Neighbor Solicitation
+//  Description: 
+//    DAD NS coming from NUT on DAD
+//  Spec:
+//    valid DAD NS
+
+FEM_ADDRCONF_dadns(dadns_from_nut, hether_nut2tentsolnode,
+                   DestinationAddress=_IPV6_SOLNODE_MCAST(nutv6());
+                   ,
+                   TargetAddress=nutv6(); // Tentative Address
+                   )
+
+//
+// DAD Neighbor Solicitation
+//  Description: 
+//    DAD NS coming from NUT on DAD whose target address is global address
+//  Spec:
+//    valid DAD NS
+
+FEM_ADDRCONF_dadns(dadns_from_nut_GA0Tgt, hether_nut2tentsolnode,
+                   DestinationAddress=_IPV6_SOLNODE_MCAST(nutv6());
+                   ,
+                   TargetAddress=GA0; // Tentative Address
+                   )
+
+//
+// Neighbor Solicitation for address resolution
+//
+FEM_icmp6_ns(
+	ns_from_nut_solnode,
+        _HETHER_nut2tn_define_solnode,
+        {
+                _SRC(oneof(nutv6(),nut2v6(TN_LINK0_PREFIX,TN_LINK0_PREFIX_LEN,"Link0")));
+                _DST(oneof(_IPV6_SOLNODE_MCAST(v6ether(TN_LINK0_ETHER_ADR)), v6("ff02::1:ff00:1")));
+                HopLimit = 255;
+        },
+        {
+                TargetAddress = oneof(v6ether(TN_LINK0_ETHER_ADR), v6(TN_LINK0_GLOBAL_ADR));
+                option = _SLLOPT_nut;
+        }
+)
+
+//
+// Neighbor Solicitation for neighbor unreachability detection 
+//
+
+FEM_icmp6_ns(
+	ns_from_nut,
+        _HETHER_nut2tn_define,
+        {
+                _SRC(oneof(nutv6(),nut2v6(TN_LINK0_PREFIX,TN_LINK0_PREFIX_LEN,"Link0")));
+                _DST(oneof(v6ether(TN_LINK0_ETHER_ADR), v6(TN_LINK0_GLOBAL_ADR)));
+                HopLimit = 255;
+        },
+        {
+                TargetAddress = v6ether(TN_LINK0_ETHER_ADR);
+                option = _SLLOPT_nut;
+        }
+)
+
+//
+// Neighbor Advertisement for address resolution
+//
+
+FEM_icmp6_na(
+	na_to_nut_solnode,
+	_HETHER_tn2nut_define,
+	{
+		_SRC(v6ether(TN_LINK0_ETHER_ADR));
+		_DST(v6(NUT_ADDR));
+		HopLimit = 255;
+	},
+	{
+		SFlag = 1;
+		OFlag = 1;
+		TargetAddress = v6(TGT_ADDR);
+		option = _TLLOPT_tn_define;
+	}
+)
+
+//
+// Neighbor Advertisement for neighbor unreachability detection 
+//
+
+FEM_icmp6_na(
+	na_to_nut,
+	_HETHER_tn2nut_define,
+	{
+		_SRC(v6ether(TN_LINK0_ETHER_ADR));
+		_DST(nutv6());
+		HopLimit = 255;
+	},
+	{
+		SFlag = 1;
+		OFlag = 1;
+		TargetAddress = v6ether(TN_LINK0_ETHER_ADR);
+	}
+)
+
+//----------------------------------------------------------------------
+// Muliticast Listener Report
+//      NUT(link-local) ==> TN(FF02::1:2)
+//      multicast address = All_DHCP_Relay_Agents_and_Servers(FF02::1:2) 
+//----------------------------------------------------------------------
+FEM_icmp6_mldreport(MLReportAllDHCPRelayAgentsandServers, _HETHER_nut2alldhcpservers,
+        {
+         _SRC(nutv6());
+	 _DST(v6(_ALLDHCPAGENTS_MCAST_ADDR));
+        },
+        {
+         MulticastAddress=v6(_ALLDHCPAGENTS_MCAST_ADDR);
+        }
+)
+
+//----------------------------------------------------------------------
+// Muliticast Listener Report
+//      NUT(link-local) ==> TN(FF05::1:3)
+//      multicast address = All_DHCP_Servers (FF05::1:3)
+//----------------------------------------------------------------------
+FEM_icmp6_mldreport(MLReportAllDHCPServers, _HETHER_nut2alldhcpservers,
+        {
+         _SRC(nutv6());
+	 _DST(v6(_SLOCAL_ALLDHCPSERVERS_MCAST_ADDR));
+        },
+        {
+         MulticastAddress=v6(_ALLDHCPSERVERS_MCAST_ADDR);
+        }
+)
+
+//----------------------------------------------------------------------
+//  RS from link-local
+//      TN(link-local) ==> all-router
+//      w/ SLLA option
+//----------------------------------------------------------------------
+FEM_icmp6_rs(rs_from_nut,_HETHER_nut2allrouters,
+        {   
+         _SRC(nutv6());
+         _DST(v6(_ALLROUTERS_MCAST_ADDR));
+         HopLimit=255;
+        },
+        {
+        }
+)
+
+FEM_icmp6_rs(rs_from_nut_wSLL, _HETHER_nut2allrouters,
+        {
+         _SRC(nutv6());
+         _DST(v6(_ALLROUTERS_MCAST_ADDR));
+         HopLimit=255;
+        },
+        {
+         option=_SLLOPT_nut;
+        }
+)
+
+//----------------------------------------------------------------------
+//  multicast RA from link-local
+//      NUT(link-local) ==> all-node
+//      w/ {SLL and Prefix}
+//----------------------------------------------------------------------
+FEM_icmp6_ra(ra_to_nut, _HETHER_tn2allnodes_define,
+        {
+         _SRC(v6ether(TN_LINK0_ETHER_ADR));
+         _DST(v6(_ALLNODES_MCAST_ADDR));
+         HopLimit=255;
+        },
+        {
+         CurHopLimit=64;
+         MFlag=_Default_AdvManagedFlag;
+         OFlag=1;
+         LifeTime=_Default_AdvDefaultLifetime;
+         ReachableTime=_Default_AdvReachableTime;
+         RetransTimer=_Default_AdvRetransTimer;
+         option=_SLLOPT_tn_define;
+         option=RAprefixopt;
+        }
+)
+
+//----------------------------------------------------------------------
+Opt_ICMPv6_Prefix RAprefixopt {
+        PrefixLength=TN_LINK0_PREFIX_LEN;
+        LFlag=_Default_AdvOnLinkFlag;
+        AFlag=_Default_AdvAutonomousFlag;        
+        ValidLifetime=_Default_AdvValidLifetime;
+        PreferredLifetime=_Default_AdvPreferredLifetime;
+        Prefix=v6(TN_LINK0_PREFIX);
+}
+
+
+//
+// ICMP echo request
+//
+
+FEM_icmp6_echo_request(
+	echo_request_from_nut,
+	_HETHER_nut2tn_define,
+	{
+		Version = 6;
+		TrafficClass = 0;
+		FlowLabel = 0;
+		_SRC(nut2v6(TN_LINK0_PREFIX,TN_LINK0_PREFIX_LEN,"Link0"));
+		_DST(v6(PING_DST_ADDR));
+	},
+	{
+		Identifier = any;
+		SequenceNumber = any;
+		payload = any;
+	}
+)
+
+//
+// ICMP echo reply
+//
+
+FEM_icmp6_echo_reply(
+	echo_reply_to_nut,
+	_HETHER_tn2nut_define,
+	{
+		Version = 6;
+		_SRC(v6(PING_DST_ADDR));
+		_DST(nut2v6(TN_LINK0_PREFIX,TN_LINK0_PREFIX_LEN,"Link0"));
+	},
+	{
+		Identifier = PING_ID;
+		SequenceNumber = PING_SN;
+		payload = echo_data;
+	}
+)
+
+
+//
+// Payload Data
+//
+
+Payload echo_data {
+	data = PING_DATA;
+}
+
+////////////////////////////////////////////////////////////////
+//
+// DHCPv6 Msg
+//
+////////////////////////////////////////////////////////////////
+
+//
+// DHCPv6 Information-request Msg
+//
+////////////////////////////////
+FEM_dhcp6_information_request(
+        dhcp_inforeq,
+        _HETHER_nut2alldhcpagents,
+        {
+                _SRC(nutv6());
+                _DST(v6(_ALLDHCPAGENTS_MCAST_ADDR));
+        },
+        {
+                _SPORT(any);
+                _DPORT(SERVER_RELAY_DHCP_PORT);
+        },
+        {
+                Identifier      = any;
+                option          = comb(opt_cid_any, opt_or, opt_et_any);
+        }
+)
+
+FEM_dhcp6_information_request(
+        dhcp_inforeq_comb,
+        _HETHER_nut2alldhcpagents,
+        {
+                _SRC(nutv6());
+                _DST(v6(_ALLDHCPAGENTS_MCAST_ADDR));
+        },
+        {
+                _SPORT(any);
+                _DPORT(SERVER_RELAY_DHCP_PORT);
+        },
+        {
+                Identifier      = any;
+                option          = comb(opt_cid_any, opt_or_comb, opt_et_any);
+        }
+)
+
+//
+// DHCPv6 Reply Msg
+//
+////////////////////////////////
+
+#if (CLIENT_DUID_TYPE == DUID_LLT)
+FEM_dhcp6_reply(
+        dhcp_rep,
+	_HETHER_tn2nut_define,
+        {
+                _SRC(v6ether(TN_LINK0_ETHER_ADR));
+                _DST(nutv6());
+        },
+        {
+                _SPORT(SERVER_RELAY_DHCP_PORT);
+                _DPORT(CLIENT_DHCP_PORT);
+        },
+        {
+                Identifier      = DHCP_ID;
+                option          = opt_cid;
+                option          = opt_sid;
+                option          = opt_dns_servers;
+        }
+)
+FEM_dhcp6_reply(
+        dhcp_rep_comb,
+	_HETHER_tn2nut_define,
+        {
+                _SRC(v6ether(TN_LINK0_ETHER_ADR));
+                _DST(nutv6());
+        },
+        {
+                _SPORT(SERVER_RELAY_DHCP_PORT);
+                _DPORT(CLIENT_DHCP_PORT);
+        },
+        {
+                Identifier      = DHCP_ID;
+                option          = opt_cid;
+                option          = opt_sid;
+                option          = opt_dns_servers;
+                option          = opt_dns_searchlist;
+        }
+)
+#else
+FEM_dhcp6_reply(
+        dhcp_rep,
+	_HETHER_tn2nut_define,
+        {
+                _SRC(v6ether(TN_LINK0_ETHER_ADR));
+                _DST(nutv6());
+        },
+        {
+                _SPORT(SERVER_RELAY_DHCP_PORT);
+                _DPORT(CLIENT_DHCP_PORT);
+        },
+        {
+                Identifier      = DHCP_ID;
+                option          = opt_cid_ll;
+                option          = opt_sid;
+                option          = opt_dns_servers;
+        }
+)
+FEM_dhcp6_reply(
+        dhcp_rep_comb,
+	_HETHER_tn2nut_define,
+        {
+                _SRC(v6ether(TN_LINK0_ETHER_ADR));
+                _DST(nutv6());
+        },
+        {
+                _SPORT(SERVER_RELAY_DHCP_PORT);
+                _DPORT(CLIENT_DHCP_PORT);
+        },
+        {
+                Identifier      = DHCP_ID;
+                option          = opt_cid_ll;
+                option          = opt_sid;
+                option          = opt_dns_servers;
+                option          = opt_dns_searchlist;
+        }
+)
+#endif
+
+//
+// DHCPv6 Reconfigure Msg
+//
+////////////////////////////////
+
+#if (CLIENT_DUID_TYPE == DUID_LLT)
+FEM_dhcp6_reconfigure(
+        dhcp_recfg,
+	_HETHER_tn2nut_define,
+        {
+                _SRC(v6ether(TN_LINK0_ETHER_ADR));
+                _DST(nutv6());
+        },
+        {
+                _SPORT(SERVER_RELAY_DHCP_PORT);
+                _DPORT(CLIENT_DHCP_PORT);
+        },
+        {
+                Identifier      = DHCP_ID;
+                option          = opt_cid;
+                option          = opt_sid;
+                option          = opt_or;
+                option          = opt_rm_info_req;
+        }
+)
+FEM_dhcp6_reconfigure(
+        dhcp_recfg_comb,
+	_HETHER_tn2nut_define,
+        {
+                _SRC(v6ether(TN_LINK0_ETHER_ADR));
+                _DST(nutv6());
+        },
+        {
+                _SPORT(SERVER_RELAY_DHCP_PORT);
+                _DPORT(CLIENT_DHCP_PORT);
+        },
+        {
+                Identifier      = DHCP_ID;
+                option          = opt_cid;
+                option          = opt_sid;
+                option          = opt_or_comb;
+                option          = opt_rm_info_req;
+        }
+)
+#else
+FEM_dhcp6_reconfigure(
+        dhcp_recfg,
+	_HETHER_tn2nut_define,
+        {
+                _SRC(v6ether(TN_LINK0_ETHER_ADR));
+                _DST(nutv6());
+        },
+        {
+                _SPORT(SERVER_RELAY_DHCP_PORT);
+                _DPORT(CLIENT_DHCP_PORT);
+        },
+        {
+                Identifier      = DHCP_ID;
+                option          = opt_cid_ll;
+                option          = opt_sid;
+                option          = opt_or;
+                option          = opt_rm_info_req;
+        }
+)
+FEM_dhcp6_reconfigure(
+        dhcp_recfg_comb,
+	_HETHER_tn2nut_define,
+        {
+                _SRC(v6ether(TN_LINK0_ETHER_ADR));
+                _DST(nutv6());
+        },
+        {
+                _SPORT(SERVER_RELAY_DHCP_PORT);
+                _DPORT(CLIENT_DHCP_PORT);
+        },
+        {
+                Identifier      = DHCP_ID;
+                option          = opt_cid_ll;
+                option          = opt_sid;
+                option          = opt_or_comb;
+                option          = opt_rm_info_req;
+        }
+)
+#endif
+
+//
+// Client Identifier option
+//
+////////////////////////////////
+
+Opt_DHCPv6_CID opt_cid_any {
+        duid             = any;
+}
+
+Opt_DHCPv6_CID opt_cid {
+        duid             = opt_cid_duid_llt;
+}
+
+DHCPv6_DUID_LLT_Ether opt_cid_duid_llt{
+        HardwareType     = CID_DUID_HARDWARETYPE;
+        Time             = CID_DUID_TIME;
+        LinkLayerAddress = ether(CID_DUID_LINKLAYERADDRESS);
+}
+
+Opt_DHCPv6_CID opt_cid_ll {
+        duid             = opt_cid_duid_ll;
+}
+ 
+DHCPv6_DUID_LL_Ether opt_cid_duid_ll{
+        HardwareType     = CID_DUID_HARDWARETYPE;
+        LinkLayerAddress = ether(CID_DUID_LINKLAYERADDRESS);
+}
+
+//
+// Server Identifier option
+//
+////////////////////////////////
+
+Opt_DHCPv6_SID opt_sid {
+        Code             = 2;
+        duid             = opt_sid_duid_llt;
+}
+
+DHCPv6_DUID_LLT_Ether opt_sid_duid_llt{
+        HardwareType     = HARDWARETYPE;
+        Time             = SID_DUID_TIME;
+        LinkLayerAddress = ether(TN_LINK0_ETHER_ADR);
+}
+
+//
+// Elapsed Time option
+//
+////////////////////////////////
+
+Opt_DHCPv6_ElapsedTime opt_et_any {
+        Time        = any;
+}
+
+//
+// Reconfigure Message option
+// Type: 5 Renew message
+//      11 Information-request message
+////////////////////////////////
+
+Opt_DHCPv6_ReconfigureMessage opt_rm_info_req {
+        Type = 11; 
+}
+
+//
+// Option Request option
+//
+////////////////////////////////
+
+Opt_DHCPv6_OptionRequest opt_or {
+        OptionCode      = OPTION_DNS_SERVERS;
+}
+
+Opt_DHCPv6_OptionRequest opt_or_comb {
+        OptionCode      = comb(OPTION_DNS_SERVERS, OPTION_DOMAIN_LIST);
+}
+
+//
+// DNS Configuration options
+//
+////////////////////////////////
+
+//
+// Domain Name Server option
+//
+////////////////////////////////
+Opt_DHCPv6_DNS_Servers opt_dns_servers {
+        Address = v6(DNS_SRV_ADDR);
+}
+
+//
+// Domain Search List option
+//
+////////////////////////////////
+Opt_DHCPv6_DNS_SearchList opt_dns_searchlist {
+        SearchString    = dnsname(DNS_SEARCHLIST);
+}
+
+
+////////////////////////////////////////////////////////////////
+//
+// domain protocol
+// standard query
+//
+////////////////////////////////
+
+FEM_udp6_dns(
+	dns_squery,
+	_HETHER_nut2tn_define,
+	{
+		_SRC(oneof(nutv6(),nut2v6(TN_LINK0_PREFIX,TN_LINK0_PREFIX_LEN,"Link0")));
+                _DST(v6(DNS_SRV_ADDR));
+	},
+	{
+		_SPORT(any);
+		_DPORT(53);
+	},
+	{
+		Identifier	= any;
+		QR              = 0;
+		Opcode          = 0;
+		RD		= any;
+		question	= Question;
+	}
+)
+
+FEM_udp6_dns(
+	dns_squery_wellknown,
+	_HETHER_nut2tn_define,
+	{
+		_SRC(oneof(nutv6(),nut2v6(TN_LINK0_PREFIX,TN_LINK0_PREFIX_LEN,"Link0")));
+                _DST(oneof(v6(DNS_SRV_WELLKNOWN_ADDR1), v6(DNS_SRV_WELLKNOWN_ADDR2), v6(DNS_SRV_WELLKNOWN_ADDR3)));
+	},
+	{
+		_SPORT(any);
+		_DPORT(53);
+	},
+	{
+		Identifier	= any;
+		QR              = 0;
+		Opcode          = 0;
+		RD		= any;
+		question	= Question;
+	}
+)
+
+//
+// domain protocol
+// response
+//
+////////////////////////////////
+
+FEM_udp6_dns(
+	dns_response,
+	_HETHER_tn2nut_define,
+	{
+                _SRC(v6(DNS_SRV_ADDR));
+		_DST(nut2v6(TN_LINK0_PREFIX,TN_LINK0_PREFIX_LEN,"Link0"));
+	},
+	{
+		_SPORT(53);
+		_DPORT(DNS_PORT);
+	},
+	{
+		Identifier	= DNS_ID;
+		QR              = 1;
+		Opcode          = 0;
+		AA              = 1;
+		RD		= RD_BIT;
+		RA		= 1;
+		question	= Question;
+		answer		= Answer;
+	}
+)
+
+//
+// question section
+//
+////////////////////////////////
+
+DNS_Question Question {
+	entry	= question_entry;
+}
+
+//
+// answer section
+//
+////////////////////////////////
+
+DNS_Answer Answer {
+	rr	= rr_aaaa;
+}
+
+//
+// question entry
+//
+////////////////////////////////
+
+DNS_QuestionEntry question_entry {
+	Name	= dnsname(DNS_NAME);
+	Type	= 28;
+}
+
+//
+// A
+//
+////////////////////////////////
+
+DNS_RR_A rr_a {
+	Name	= dnsname(DNS_NAME);
+	Address	= v4("127.0.0.1");
+}
+
+//
+// AAAA
+//
+////////////////////////////////
+DNS_RR_AAAA rr_aaaa {
+	Name	= dnsname(DNS_NAME);
+	TTL	= TTLVALUE;
+	Address	= v6(AAAA_RECORD);
+}
+

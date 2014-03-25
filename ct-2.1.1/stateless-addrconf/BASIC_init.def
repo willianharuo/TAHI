@@ -1,0 +1,204 @@
+//
+// Copyright (C) 1999, 2000, 2001, 2002, 2003 Yokogawa Electric Corporation,
+// IPA (Information-technology Promotion Agency, Japan).
+// All rights reserved.
+// 
+// Redistribution and use of this software in source and binary forms, with 
+// or without modification, are permitted provided that the following 
+// conditions and disclaimer are agreed and accepted by the user:
+// 
+// 1. Redistributions of source code must retain the above copyright 
+// notice, this list of conditions and the following disclaimer.
+// 
+// 2. Redistributions in binary form must reproduce the above copyright 
+// notice, this list of conditions and the following disclaimer in the 
+// documentation and/or other materials provided with the distribution.
+// 
+// 3. Neither the names of the copyrighters, the name of the project which 
+// is related to this software (hereinafter referred to as "project") nor 
+// the names of the contributors may be used to endorse or promote products 
+// derived from this software without specific prior written permission.
+// 
+// 4. No merchantable use may be permitted without prior written 
+// notification to the copyrighters. However, using this software for the 
+// purpose of testing or evaluating any products including merchantable 
+// products may be permitted without any notification to the copyrighters.
+// 
+// 
+// 
+// THIS SOFTWARE IS PROVIDED BY THE COPYRIGHTERS, THE PROJECT AND 
+// CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING 
+// BUT NOT LIMITED THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS 
+// FOR A PARTICULAR PURPOSE, ARE DISCLAIMED.  IN NO EVENT SHALL THE 
+// COPYRIGHTERS, THE PROJECT OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, 
+// INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES 
+// (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR 
+// SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) 
+// HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN 
+// CONTRACT,STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) 
+// ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF 
+// THE POSSIBILITY OF SUCH DAMAGE.
+//
+// BASIC_init.def
+//
+//  This file has some basic definition and frames for DAD test about
+//  any tentative address FOR INITIALIZATION USE, and may be included
+//  from other *.def files.
+//
+// DADV6ADDR_init              : v6 Tentative address for DAD on initialization phase
+// dadns_from_NUT_init         : DAD NS coming from NUT on DAD on initialization phase
+// dadpkt_to_NUT_init          : DAD Packet send to NUT to test DAD on initialization phase
+// chkconf_dadns_to_NUT_init   : DAD NS send to NUT to check if address is configured on
+//                               initialization phase
+// chkconf_dadna_from_NUT_init : DAD NA coming from NUT if addrss is configured on
+//                               initialization phase
+//
+// $TAHI: ct/stateless-addrconf/BASIC_init.def,v 1.7 2001/10/05 06:39:19 masaxmasa Exp $
+
+#ifndef INCLUDE_BASIC_init_def
+#define INCLUDE_BASIC_init_def
+
+#include "DAD.def"
+
+//
+// DADV6ADDR_init
+//  Description: 
+//    v6 Tentative address for DAD
+//  Spec:
+//    default tentative address is autoconfigured Link-Local address
+
+#ifndef DADV6ADDR_init
+#define DADV6ADDR_init nutv6()
+#endif
+
+// some parts for frames
+_HETHER_define(hether_nut2tentsolnode_init,
+	       nutether(), _ETHER_SOLNODE_MCAST(DADV6ADDR_init))
+_HETHER_define(hether_tn2tentsolnode_init,
+	       tnether(), _ETHER_SOLNODE_MCAST(DADV6ADDR_init))
+
+
+
+//
+// dadns_from_NUT_init
+//  Description: 
+//    DAD NS coming from NUT on DAD
+//  Spec:
+//    valid DAD NS
+
+FEM_ADDRCONF_dadns(dadns_from_NUT_init, hether_nut2tentsolnode_init,
+		   DestinationAddress=_IPV6_SOLNODE_MCAST(DADV6ADDR_init);
+		   ,
+		   TargetAddress=DADV6ADDR_init; // Tentative Address
+                   )
+
+
+//
+// chkconf_dadns_to_NUT_init
+//  Description: 
+//    DAD NS send to NUT to check if address is configured
+//  Spec:
+//    valid DAD NS
+
+FEM_ADDRCONF_dadns(chkconf_dadns_to_NUT_init, hether_tn2tentsolnode_init,
+		   DestinationAddress=_IPV6_SOLNODE_MCAST(DADV6ADDR_init);
+		   ,
+		   TargetAddress=DADV6ADDR_init; // Tentative Address
+                   )
+
+
+//
+// chkconf_dadna_from_NUT_init (and plus _rf1)
+//  Description: 
+//    DAD NA coming from NUT if addrss is configured
+//  Spec:
+//    valid DAD NA
+//    NUT is a host (router if _rf1)
+
+FEM_ADDRCONF_dadna(chkconf_dadna_from_NUT_init, _HETHER_nut2allnodes,
+		   SourceAddress=oneof(DADV6ADDR_init,nutv6());
+		   ,
+	           TargetAddress=DADV6ADDR_init;
+	           option=_TLLOPT_nut;
+		   )
+
+
+FEM_ADDRCONF_dadna(chkconf_dadna_from_NUT_init_rf1, _HETHER_nut2allnodes,
+		   SourceAddress=oneof(DADV6ADDR_init,nutv6());
+		   ,
+		   RFlag=1;   // router (MUST)
+	           TargetAddress=DADV6ADDR_init;
+	           option=_TLLOPT_nut;
+		   )
+
+
+//
+// dadpkt_to_NUT_init
+//  Description: 
+//    DAD Packet send to NUT to test DAD
+//  Spec:
+//    available to force NUT state DADFinishFail
+//    valid DAD NA
+
+FEM_ADDRCONF_dadna(dadpkt_to_NUT_init, _HETHER_nut2allnodes,
+		   SourceAddress=DADV6ADDR_init; // or nutv6() is also OK
+		   ,
+	           TargetAddress=DADV6ADDR_init;
+	           option=_TLLOPT_nut;
+		   )
+
+
+//
+// dadns_any_from_NUT
+// dadns_sll_any_from_NUT
+// chkconf_dadna_any_from_NUT
+// chkconf_dadna_notll_any_from_NUT
+//
+//  Description: 
+//    DAD NS,NA of almost fields "any"
+//    to receive irregular DAD NS,NA.
+//
+_HETHER_define(hether_any2any, any, any)
+_SLLOPT_define(sllopt_any, any)
+_TLLOPT_define(tllopt_any, any)
+
+FEM_ADDRCONF_dadns(dadns_any_from_NUT, hether_any2any,
+		   SourceAddress=any;
+		   DestinationAddress=any;
+		   ,
+		   TargetAddress=DADV6ADDR; // Tentative Address
+                   )
+
+FEM_ADDRCONF_dadns(dadns_sll_any_from_NUT, hether_any2any,
+		   SourceAddress=any;
+		   DestinationAddress=any;
+		   ,
+		   TargetAddress=DADV6ADDR; // Tentative Address
+		   option=sllopt_any;
+                   )
+
+FEM_ADDRCONF_dadna(chkconf_dadna_any_from_NUT, hether_any2any,
+		   SourceAddress=any;
+		   DestinationAddress=any;
+		   ,
+                   RFlag=any;
+                   SFlag=any;
+                   OFlag=any;
+	           TargetAddress=DADV6ADDR;
+	           option=tllopt_any;
+		   )
+
+FEM_ADDRCONF_dadna(chkconf_dadna_notll_any_from_NUT, hether_any2any,
+		   SourceAddress=any;
+		   DestinationAddress=any;
+		   ,
+                   RFlag=any;
+                   SFlag=any;
+                   OFlag=any;
+	           TargetAddress=DADV6ADDR;
+		   )
+
+
+#endif //INCLUDE_BASIC_init_def
+
+//end

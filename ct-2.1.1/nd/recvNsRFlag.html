@@ -1,0 +1,241 @@
+<HTML>
+<HEAD>
+<TITLE>recvNsRFlag - Verifying that a IsRouter flag is not modified by a NS</TITLE>
+<LINK REV="made" HREF="mailto:hackers@FreeBSD.org">
+</HEAD>
+
+<BODY>
+
+<!-- INDEX BEGIN -->
+<!--
+
+<UL>
+
+	<LI><A HREF="#NAME">NAME</A>
+	<LI><A HREF="#TARGET">TARGET</A>
+	<LI><A HREF="#SYNOPSIS">SYNOPSIS</A>
+	<LI><A HREF="#INITIALIZATION">INITIALIZATION</A>
+	<UL>
+
+		<LI><A HREF="#Cache_a_LLA_of_TN">Cache a LLA of TN</A>
+		<LI><A HREF="#Cache_a_bogus_LLA">Cache a bogus LLA</A>
+	</UL>
+
+	<LI><A HREF="#TEST_PROCEDURE">TEST PROCEDURE</A>
+	<LI><A HREF="#JUDGMENT">JUDGMENT</A>
+	<LI><A HREF="#TERMINATION">TERMINATION</A>
+	<LI><A HREF="#NOTE">NOTE</A>
+	<LI><A HREF="#SEE_ALSO">SEE ALSO</A>
+</UL>
+-->
+<!-- INDEX END -->
+
+<P>
+<H1><A NAME="NAME">NAME</A></H1>
+<P>
+recvNsRFlag - Verifying that a IsRouter flag is not modified by a NS
+
+<P>
+<HR>
+<H1><A NAME="TARGET">TARGET</A></H1>
+<P>
+Host only
+
+<P>
+<HR>
+<H1><A NAME="SYNOPSIS">SYNOPSIS</A></H1>
+<P>
+<PRE>  recvNsRFlag.seq [-tooloption ...] -p recvNsRFlag.def
+</PRE>
+<P>
+<HR>
+<H1><A NAME="INITIALIZATION">INITIALIZATION</A></H1>
+<OL>
+  <LI>Set the state of neighbor cache entry to REACHABLE
+      whose IsRouter flag is true. 
+  <LI>Cache either <A HREF="#Cache_a_LLA_of_TN">TN's LLA</A> or
+      <A HREF="#Cache_a_bogus_LLA">a bogus LLA</A>
+</OL>
+
+<P>
+<HR>
+<H2><A NAME="Cache_a_LLA_of_TN">Cache a LLA of TN</A></H2>
+<PRE>
+  TN                 NUT
+  ----------------------
+  State: NONCE (for TN)
+<BR>
+  ==== unsolicited RA ===>
+       src=TN's link-local
+       dst=all-node
+       M=0, O=0
+       RouterLifetime=600
+       ReachableTime=0
+       RetransTimer=0
+       <B>SLLA=TN's LLA</B>
+       Prefix Option:
+           L=1, A=1
+	   ValidLifetime=2592000
+	   PreferredLifetime=604800
+           Prefix=3ffe:501:ffff:100::/64
+<BR>
+  State: STALE (for TN)
+<BR>
+  <=== Ns for DAD (if any) ====
+       src=unspecified
+       dst=solicited-node[NUT's global]
+       target=NUT's global
+<BR>
+  ==== NA ===>
+       src=TN's link-local
+       dst=NUT's link-local
+       R=1, S=1, O=1
+       target=TN's link-local
+       <B>TLLA=TN's LLA</B>
+<BR>
+  State: REACHABLE (for TN)
+</PRE>
+
+<P>
+<HR>
+<H2><A NAME="Cache_a_bogus_LLA">Cache a bogus LLA</A></H2>
+<PRE>
+  TN                 NUT
+  ----------------------
+  State: NONCE (for TN)
+<BR>
+  ==== unsolicited RA ===>
+       src=TN's link-local
+       dst=all-node
+       M=0, O=0
+       RouterLifetime=600
+       ReachableTime=0
+       RetransTimer=0
+       <B>SLLA=a bogus LLA</B>
+       Prefix Option:
+           L=1, A=1
+	   ValidLifetime=2592000
+	   PreferredLifetime=604800
+           Prefix=3ffe:501:ffff:100::/64
+<BR>
+  State: STALE (for TN)
+<BR>
+  <=== Ns for DAD (if any) ====
+       src=unspecified
+       dst=solicited-node[NUT's global]
+       target=NUT's global
+<BR>
+  ==== NA ===>
+       src=TN's link-local
+       dst=NUT's link-local
+       R=1, S=1, O=1
+       target=TN's link-local
+       <B>TLLA=a bogus LLA</B>
+<BR>
+  State: REACHABLE (for TN)
+</PRE>
+
+<P>
+<HR>
+<H1><A NAME="TEST_PROCEDURE">TEST PROCEDURE</A></H1>
+<P>
+<STRONG>recvNsRFlag</STRONG> verifies that a IsRouter flag is NOT modified by a NS.
+
+<PRE>
+  TN                 NUT
+  ----------------------
+<BR>
+  State: REACHABLE (for TN)
+<BR>
+  ==== <A HREF="#JDG1">NS</A> ===>
+       src=TN's link-local
+       dst=the NUT's link-local or solicited-node[NUT's link-local]
+       target=NUT's link-local
+       w/ or w/o SLL
+<BR>
+  State: REACHABLE or STALE (for TN)
+<BR>
+  ==== echo-request ===>
+       src=off-link global, but LLA is TN's one
+       dst=NUT's global
+<BR>
+  <=== <A HREF="#JDG2">Judgment #2</A>: echo-reply ====
+       src=NUT's global
+       dst=off-link global, but LLA is TN's one
+<BR>
+  State: REACHABLE or DELAY->PROBE (for TN)
+<BR>
+  <=== Ns for TN (if the state is PROBE) ====
+       src=NUT's link-local
+       dst=TN's link-local
+       target=TN's global
+<BR>
+  State: REACHABLE or NONCE (for TN)
+=end html
+
+<P>
+<HR>
+<H1><A NAME="JUDGMENT">JUDGMENT</A></H1>
+<A NAME="JDG1"></A>
+<PRE>
+1. IsRouter flag MUST NOT be modified
+<HR>
+7.2.3.  Receipt of Neighbor Solicitations
+<BR>
+   If a Neighbor Cache entry is created the IsRouter flag SHOULD be set
+   to FALSE.  This will be the case even if the Neighbor Solicitation is
+   sent by a router since the Neighbor Solicitation messages do not
+   contain an indication of whether or not the sender is a router.  In
+   the event that the sender is a router, subsequent Neighbor
+   Advertisement or Router Advertisement messages will set the correct
+   IsRouter value.  <B>If a Neighbor Cache entry already exists its
+   IsRouter flag MUST NOT be modified.</B>
+<HR>
+  ========================+=====================
+  Received NS             | a IsRouter flag
+  by NUT                  | of NUT's NCE
+  ------------+-----------+ ---------+----------
+  Dst         | SLLA      | Current  | New
+  ============+===========+==========+==========
+  unicast     | none      | 1        | unchanged
+  ------------+-----------+----------+----------
+  unicast     | same      | 1        | unchanged
+  ------------+-----------+----------+----------
+  multicast   | none      | 1        | unchanged
+  ------------+-----------+----------+----------
+  multicast   | same      | 1        | unchanged
+  ------------+-----------+----------+----------
+  unicast     | different | 1        | unchanged
+  ------------+-----------+----------+----------
+  multicast   | different | 1        | unchanged
+  ============+===========+==========+==========
+</PRE>
+
+<A NAME="JDG2"></A>
+
+<P>
+<PRE>  2. NUT sends an echo-reply that is thrown to
+     the default router (i.e. TN).
+</PRE>
+<P>
+<HR>
+<H1><A NAME="TERMINATION">TERMINATION</A></H1>
+<P>
+<PRE>  Send RA with RouterLifetime=0 to clear the Default Router List.
+</PRE>
+<P>
+<HR>
+<H1><A NAME="NOTE">NOTE</A></H1>
+<P>
+<PRE>  The command does not invoke any remote command.
+</PRE>
+<P>
+<HR>
+<H1><A NAME="SEE_ALSO">SEE ALSO</A></H1>
+<P>
+<PRE>  perldoc V6evalTool
+  perldoc V6evalRemote
+</PRE>
+</BODY>
+
+</HTML>

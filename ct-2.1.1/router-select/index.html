@@ -1,0 +1,158 @@
+<HTML>
+<TITLE>IPv6 Conformance Test</TITLE>
+<META NAME="GENERATOR" CONTENT="TAHI IPv6 Conformance Test Suite">
+<BODY BGCOLOR="#FFFFFF">
+<CENTER>
+<H1>IPv6 Conformance Test</H1>
+<HR>
+<TABLE BORDER=0>
+<TR><TD>Tool Version :</TD><TD>REL_2_1_1</TD></TR>
+<TR><TD>Test Program Version :</TD><TD>REL_2_1_1</TD></TR>
+</TABLE>
+<HR>
+<TABLE BORDER=0>
+<TR><TD>Start:</TD><TD>2003/06/11 20:01:17</TD></TR>
+<TR><TD>End :</TD><TD>2003/06/11 20:01:18</TD></TR>
+</TABLE>
+<HR>
+<HR>
+<TABLE BORDER=1>
+<TR>
+<TH>No.</TH><TH>Title</TH>
+<TH>Result</TH><TH>Log</TH><TH>Script</TH><TH>Packet</TH><TH>Dump<BR>(bin)</TH>
+</TR>
+<TR><TD><BR></TD><TD> Test for Default route preference </TD><TD><BR></TD><TD><BR></TD><TD><BR></TD><TD><BR></TD><TD><BR></TD></TR>
+<TR><TD><BR></TD><TD> <B>NUT with One Router</B></TD><TD><BR></TD><TD><BR></TD><TD><BR></TD><TD><BR></TD><TD><BR></TD></TR>
+<TR>
+<TD>1</TD><TD><A HREF="./DR_1RT.html">NUT receives multiple RAs with Different Preference value from a router</A></TD><TD ALIGN="CENTER">PASS</TD><TD ALIGN="CENTER"><A HREF="1.html">X</A></TD><TD ALIGN="CENTER"><A HREF="./DR_1RT.seq">X</A></TD><TD ALIGN="CENTER"><A HREF="ROUTE.def">X</A></TD><TD ALIGN="CENTER"><A HREF="1.html.Link0.dump">Link0</A> </TD></TR>
+<TR><TD><BR></TD><TD> <B>Different Preference for Default Router</B></TD><TD><BR></TD><TD><BR></TD><TD><BR></TD><TD><BR></TD><TD><BR></TD></TR>
+<TR>
+<TD>2</TD><TD><A HREF="./Def_HIGH_MED.html">Default Router HIGH vs. MED</A></TD><TD ALIGN="CENTER">PASS</TD><TD ALIGN="CENTER"><A HREF="2.html">X</A></TD><TD ALIGN="CENTER"><A HREF="./Def_HIGH_MED.seq">X</A></TD><TD ALIGN="CENTER"><A HREF="ROUTE.def">X</A></TD><TD ALIGN="CENTER"><A HREF="2.html.Link0.dump">Link0</A> </TD></TR>
+<TR>
+<TD>3</TD><TD><A HREF="./Def_HIGH_LOW.html">Default Router HIGH vs. LOW</A></TD><TD ALIGN="CENTER">PASS</TD><TD ALIGN="CENTER"><A HREF="3.html">X</A></TD><TD ALIGN="CENTER"><A HREF="./Def_HIGH_LOW.seq">X</A></TD><TD ALIGN="CENTER"><A HREF="ROUTE.def">X</A></TD><TD ALIGN="CENTER"><A HREF="3.html.Link0.dump">Link0</A> </TD></TR>
+<TR>
+<TD>4</TD><TD><A HREF="./Def_HIGH_UNSPEC.html">Default Router HIGH vs. UNSPEC</A></TD><TD ALIGN="CENTER">PASS</TD><TD ALIGN="CENTER"><A HREF="4.html">X</A></TD><TD ALIGN="CENTER"><A HREF="./Def_HIGH_UNSPEC.seq">X</A></TD><TD ALIGN="CENTER"><A HREF="ROUTE.def">X</A></TD><TD ALIGN="CENTER"><A HREF="4.html.Link0.dump">Link0</A> </TD></TR>
+<TR>
+<TD>5</TD><TD><A HREF="./Def_MED_LOW.html">Default Router MED  vs. LOW</A></TD><TD ALIGN="CENTER">PASS</TD><TD ALIGN="CENTER"><A HREF="5.html">X</A></TD><TD ALIGN="CENTER"><A HREF="./Def_MED_LOW.seq">X</A></TD><TD ALIGN="CENTER"><A HREF="ROUTE.def">X</A></TD><TD ALIGN="CENTER"><A HREF="5.html.Link0.dump">Link0</A> </TD></TR>
+<TR>
+<TD>6</TD><TD><A HREF="./Def_MED_UNSPEC.html">Default Router MED  vs. UNSPEC</A></TD><TD ALIGN="CENTER">PASS</TD><TD ALIGN="CENTER"><A HREF="6.html">X</A></TD><TD ALIGN="CENTER"><A HREF="./Def_MED_UNSPEC.seq">X</A></TD><TD ALIGN="CENTER"><A HREF="ROUTE.def">X</A></TD><TD ALIGN="CENTER"><A HREF="6.html.Link0.dump">Link0</A> </TD></TR>
+<TR>
+<TD>7</TD><TD><A HREF="./Def_LOW_UNSPEC.html">Default Router LOW  vs. UNSPEC</A></TD><TD ALIGN="CENTER">PASS</TD><TD ALIGN="CENTER"><A HREF="7.html">X</A></TD><TD ALIGN="CENTER"><A HREF="./Def_LOW_UNSPEC.seq">X</A></TD><TD ALIGN="CENTER"><A HREF="ROUTE.def">X</A></TD><TD ALIGN="CENTER"><A HREF="7.html.Link0.dump">Link0</A> </TD></TR>
+<TR>
+<TD>8</TD><TD><A HREF="./Def_LOW_HIGHwRTRLIFE0.html">Default Router LOW  vs. HIGH with ROUTER_LIFETIME=0</A></TD><TD ALIGN="CENTER">PASS</TD><TD ALIGN="CENTER"><A HREF="8.html">X</A></TD><TD ALIGN="CENTER"><A HREF="./Def_LOW_HIGHwRTRLIFE0.seq">X</A></TD><TD ALIGN="CENTER"><A HREF="ROUTE.def">X</A></TD><TD ALIGN="CENTER"><A HREF="8.html.Link0.dump">Link0</A> </TD></TR>
+<TR>
+<TD>9</TD><TD><A HREF="./Def_LOW_HIGH_RTRLIFE_EXPIRE.html">Default Router LOW  vs. HIGH with Shorter ROUTER_LIFETIME</A></TD><TD ALIGN="CENTER">PASS</TD><TD ALIGN="CENTER"><A HREF="9.html">X</A></TD><TD ALIGN="CENTER"><A HREF="./Def_LOW_HIGH_RTRLIFE_EXPIRE.seq">X</A></TD><TD ALIGN="CENTER"><A HREF="ROUTE.def">X</A></TD><TD ALIGN="CENTER"><A HREF="9.html.Link0.dump">Link0</A> </TD></TR>
+<TR><TD><BR></TD><TD> <B>Same Preference for Default Router</B></TD><TD><BR></TD><TD><BR></TD><TD><BR></TD><TD><BR></TD><TD><BR></TD></TR>
+<TR>
+<TD>10</TD><TD><A HREF="./Def_MED_MED.html">Default Router MED vs. MED <BR> NUT receives RAs from 2 routers with Same Preference value</A></TD><TD ALIGN="CENTER">PASS</TD><TD ALIGN="CENTER"><A HREF="10.html">X</A></TD><TD ALIGN="CENTER"><A HREF="./Def_MED_MED.seq">X</A></TD><TD ALIGN="CENTER"><A HREF="ROUTE.def">X</A></TD><TD ALIGN="CENTER"><A HREF="10.html.Link0.dump">Link0</A> </TD></TR>
+<TR><TD><BR></TD><TD> <B>Higher Preference Default Router gets unreachable</B></TD><TD><BR></TD><TD><BR></TD><TD><BR></TD><TD><BR></TD><TD><BR></TD></TR>
+<TR>
+<TD>11</TD><TD><A HREF="./Def_HIGH_LOW_UNREACH.html">Default Router gets unreachable</A></TD><TD ALIGN="CENTER">PASS</TD><TD ALIGN="CENTER"><A HREF="11.html">X</A></TD><TD ALIGN="CENTER"><A HREF="./Def_HIGH_LOW_UNREACH.seq">X</A></TD><TD ALIGN="CENTER"><A HREF="ROUTE.def">X</A></TD><TD ALIGN="CENTER"><A HREF="11.html.Link0.dump">Link0</A> </TD></TR>
+<TR><TD><BR></TD><TD> <B>Specific Route A vs. Specific Route B</TD><TD><BR></TD><TD><BR></TD><TD><BR></TD><TD><BR></TD><TD><BR></TD></TR>
+<TR>
+<TD>12</TD><TD><A HREF="./DiffPX_HIGH.html">Route Info for Net-A(HIGH) and Route Info for Net-B(HIGH)</A></TD><TD ALIGN="CENTER">PASS</TD><TD ALIGN="CENTER"><A HREF="12.html">X</A></TD><TD ALIGN="CENTER"><A HREF="./DiffPX_HIGH.seq">X</A></TD><TD ALIGN="CENTER"><A HREF="RTINFO.def">X</A></TD><TD ALIGN="CENTER"><A HREF="12.html.Link0.dump">Link0</A> </TD></TR>
+<TR>
+<TD>13</TD><TD><A HREF="./DiffPX_MED.html">Route Info for Net-A(MED) and Route Info for Net-B(MED)</A></TD><TD ALIGN="CENTER">PASS</TD><TD ALIGN="CENTER"><A HREF="13.html">X</A></TD><TD ALIGN="CENTER"><A HREF="./DiffPX_MED.seq">X</A></TD><TD ALIGN="CENTER"><A HREF="RTINFO.def">X</A></TD><TD ALIGN="CENTER"><A HREF="13.html.Link0.dump">Link0</A> </TD></TR>
+<TR>
+<TD>14</TD><TD><A HREF="./DiffPX_LOW.html">Route Info for Net-A(LOW) and Route Info for Net-B(LOW)</A></TD><TD ALIGN="CENTER">PASS</TD><TD ALIGN="CENTER"><A HREF="14.html">X</A></TD><TD ALIGN="CENTER"><A HREF="./DiffPX_LOW.seq">X</A></TD><TD ALIGN="CENTER"><A HREF="RTINFO.def">X</A></TD><TD ALIGN="CENTER"><A HREF="14.html.Link0.dump">Link0</A> </TD></TR>
+<TR><TD><BR></TD><TD> <B>Specific Route A vs. Specific Route A</B></TD><TD><BR></TD><TD><BR></TD><TD><BR></TD><TD><BR></TD><TD><BR></TD></TR>
+<TR>
+<TD>15</TD><TD><A HREF="./SamePX_HIGH_LOW.html">Route Info HIGH vs. Route Info LOW</A></TD><TD ALIGN="CENTER">PASS</TD><TD ALIGN="CENTER"><A HREF="15.html">X</A></TD><TD ALIGN="CENTER"><A HREF="./SamePX_HIGH_LOW.seq">X</A></TD><TD ALIGN="CENTER"><A HREF="RTINFO.def">X</A></TD><TD ALIGN="CENTER"><A HREF="15.html.Link0.dump">Link0</A> </TD></TR>
+<TR>
+<TD>16</TD><TD><A HREF="./SamePX_HIGH_MED.html">Route Info HIGH vs. Route Info MED</A></TD><TD ALIGN="CENTER">PASS</TD><TD ALIGN="CENTER"><A HREF="16.html">X</A></TD><TD ALIGN="CENTER"><A HREF="./SamePX_HIGH_MED.seq">X</A></TD><TD ALIGN="CENTER"><A HREF="RTINFO.def">X</A></TD><TD ALIGN="CENTER"><A HREF="16.html.Link0.dump">Link0</A> </TD></TR>
+<TR>
+<TD>17</TD><TD><A HREF="./SamePX_MED_LOW.html">Route Info MED vs. Route Info LOW</A></TD><TD ALIGN="CENTER">PASS</TD><TD ALIGN="CENTER"><A HREF="17.html">X</A></TD><TD ALIGN="CENTER"><A HREF="./SamePX_MED_LOW.seq">X</A></TD><TD ALIGN="CENTER"><A HREF="RTINFO.def">X</A></TD><TD ALIGN="CENTER"><A HREF="17.html.Link0.dump">Link0</A> </TD></TR>
+<TR>
+<TD>18</TD><TD><A HREF="./SamePX_UNSPEC_HIGH.html">Route Info UNSPEC vs. Route Info HIGH</A></TD><TD ALIGN="CENTER">PASS</TD><TD ALIGN="CENTER"><A HREF="18.html">X</A></TD><TD ALIGN="CENTER"><A HREF="./SamePX_UNSPEC_HIGH.seq">X</A></TD><TD ALIGN="CENTER"><A HREF="RTINFO.def">X</A></TD><TD ALIGN="CENTER"><A HREF="18.html.Link0.dump">Link0</A> </TD></TR>
+<TR>
+<TD>19</TD><TD><A HREF="./SamePX_UNSPEC_MED.html">Route Info UNSPEC vs. Route Info MED</A></TD><TD ALIGN="CENTER">PASS</TD><TD ALIGN="CENTER"><A HREF="19.html">X</A></TD><TD ALIGN="CENTER"><A HREF="./SamePX_UNSPEC_MED.seq">X</A></TD><TD ALIGN="CENTER"><A HREF="RTINFO.def">X</A></TD><TD ALIGN="CENTER"><A HREF="19.html.Link0.dump">Link0</A> </TD></TR>
+<TR>
+<TD>20</TD><TD><A HREF="./SamePX_UNSPEC_LOW.html">Route Info UNSPEC vs. Route Info LOW</A></TD><TD ALIGN="CENTER">PASS</TD><TD ALIGN="CENTER"><A HREF="20.html">X</A></TD><TD ALIGN="CENTER"><A HREF="./SamePX_UNSPEC_LOW.seq">X</A></TD><TD ALIGN="CENTER"><A HREF="RTINFO.def">X</A></TD><TD ALIGN="CENTER"><A HREF="20.html.Link0.dump">Link0</A> </TD></TR>
+<TR><TD><BR></TD><TD> <B>Default Router vs. Specific Route </B></TD><TD><BR></TD><TD><BR></TD><TD><BR></TD><TD><BR></TD><TD><BR></TD></TR>
+<TR>
+<TD>21</TD><TD><A HREF="./raHIGH_rtinfoHIGH.html">Defalut Router HIGH vs. Route Info HIGH</A></TD><TD ALIGN="CENTER">PASS</TD><TD ALIGN="CENTER"><A HREF="21.html">X</A></TD><TD ALIGN="CENTER"><A HREF="./raHIGH_rtinfoHIGH.seq">X</A></TD><TD ALIGN="CENTER"><A HREF="RTINFO.def">X</A></TD><TD ALIGN="CENTER"><A HREF="21.html.Link0.dump">Link0</A> </TD></TR>
+<TR>
+<TD>22</TD><TD><A HREF="./raHIGH_rtinfoMED.html">Defalut Router HIGH vs. Route Info MED</A></TD><TD ALIGN="CENTER">PASS</TD><TD ALIGN="CENTER"><A HREF="22.html">X</A></TD><TD ALIGN="CENTER"><A HREF="./raHIGH_rtinfoMED.seq">X</A></TD><TD ALIGN="CENTER"><A HREF="RTINFO.def">X</A></TD><TD ALIGN="CENTER"><A HREF="22.html.Link0.dump">Link0</A> </TD></TR>
+<TR>
+<TD>23</TD><TD><A HREF="./raHIGH_rtinfoLOW.html">Defalut Router HIGH vs. Route Info LOW</A></TD><TD ALIGN="CENTER">PASS</TD><TD ALIGN="CENTER"><A HREF="23.html">X</A></TD><TD ALIGN="CENTER"><A HREF="./raHIGH_rtinfoLOW.seq">X</A></TD><TD ALIGN="CENTER"><A HREF="RTINFO.def">X</A></TD><TD ALIGN="CENTER"><A HREF="23.html.Link0.dump">Link0</A> </TD></TR>
+<TR>
+<TD>24</TD><TD><A HREF="./raMED_rtinfoUNSPEC.html">Defalut Router MED vs. Route Info UNSPEC</A></TD><TD ALIGN="CENTER">PASS</TD><TD ALIGN="CENTER"><A HREF="24.html">X</A></TD><TD ALIGN="CENTER"><A HREF="./raMED_rtinfoUNSPEC.seq">X</A></TD><TD ALIGN="CENTER"><A HREF="RTINFO.def">X</A></TD><TD ALIGN="CENTER"><A HREF="24.html.Link0.dump">Link0</A> </TD></TR>
+<TR>
+<TD>25</TD><TD><A HREF="./raLOW_rtinfoLIFE0.html">Defalut Router LOW vs. Route Info HIGH(Lifetime=0)</A></TD><TD ALIGN="CENTER">PASS</TD><TD ALIGN="CENTER"><A HREF="25.html">X</A></TD><TD ALIGN="CENTER"><A HREF="./raLOW_rtinfoLIFE0.seq">X</A></TD><TD ALIGN="CENTER"><A HREF="RTINFO.def">X</A></TD><TD ALIGN="CENTER"><A HREF="25.html.Link0.dump">Link0</A> </TD></TR>
+<TR><TD><BR></TD><TD> <B>Default Router vs. Specific(&#58;&#58;/0) Route</B></TD><TD><BR></TD><TD><BR></TD><TD><BR></TD><TD><BR></TD><TD><BR></TD></TR>
+<TR>
+<TD>26</TD><TD><A HREF="./raHIGH_rtinfoHIGH_DEFAULT.html">Defalut Router HIGH vs. Route Info (&#58;&#58;/0) HIGH</A></TD><TD ALIGN="CENTER">PASS</TD><TD ALIGN="CENTER"><A HREF="26.html">X</A></TD><TD ALIGN="CENTER"><A HREF="./raHIGH_rtinfoHIGH_DEFAULT.seq">X</A></TD><TD ALIGN="CENTER"><A HREF="RTINFO.def">X</A></TD><TD ALIGN="CENTER"><A HREF="26.html.Link0.dump">Link0</A> </TD></TR>
+<TR>
+<TD>27</TD><TD><A HREF="./raHIGH_rtinfoMED_DEFAULT.html">Defalut Router HIGH vs. Route Info (&#58;&#58;/0) MED</A></TD><TD ALIGN="CENTER">PASS</TD><TD ALIGN="CENTER"><A HREF="27.html">X</A></TD><TD ALIGN="CENTER"><A HREF="./raHIGH_rtinfoMED_DEFAULT.seq">X</A></TD><TD ALIGN="CENTER"><A HREF="RTINFO.def">X</A></TD><TD ALIGN="CENTER"><A HREF="27.html.Link0.dump">Link0</A> </TD></TR>
+<TR>
+<TD>28</TD><TD><A HREF="./raHIGH_rtinfoLOW_DEFAULT.html">Defalut Router HIGH vs. Route Info (&#58;&#58;/0) LOW</A></TD><TD ALIGN="CENTER">PASS</TD><TD ALIGN="CENTER"><A HREF="28.html">X</A></TD><TD ALIGN="CENTER"><A HREF="./raHIGH_rtinfoLOW_DEFAULT.seq">X</A></TD><TD ALIGN="CENTER"><A HREF="RTINFO.def">X</A></TD><TD ALIGN="CENTER"><A HREF="28.html.Link0.dump">Link0</A> </TD></TR>
+<TR>
+<TD>29</TD><TD><A HREF="./raMED_rtinfoHIGH_DEFAULT.html">Defalut Router MED vs. Route Info (&#58;&#58;/0) HIGH</A></TD><TD ALIGN="CENTER">PASS</TD><TD ALIGN="CENTER"><A HREF="29.html">X</A></TD><TD ALIGN="CENTER"><A HREF="./raMED_rtinfoHIGH_DEFAULT.seq">X</A></TD><TD ALIGN="CENTER"><A HREF="RTINFO.def">X</A></TD><TD ALIGN="CENTER"><A HREF="29.html.Link0.dump">Link0</A> </TD></TR>
+<TR>
+<TD>30</TD><TD><A HREF="./raMED_rtinfoLOW_DEFAULT.html">Defalut Router MED vs. Route Info (&#58;&#58;/0) LOW</A></TD><TD ALIGN="CENTER">PASS</TD><TD ALIGN="CENTER"><A HREF="30.html">X</A></TD><TD ALIGN="CENTER"><A HREF="./raMED_rtinfoLOW_DEFAULT.seq">X</A></TD><TD ALIGN="CENTER"><A HREF="RTINFO.def">X</A></TD><TD ALIGN="CENTER"><A HREF="30.html.Link0.dump">Link0</A> </TD></TR>
+<TR>
+<TD>31</TD><TD><A HREF="./raMED_raHIGHrtinfoUNSPEC_DEFAULT.html">Defalut Router MED vs. Default Router HIGH w/ Route Info (&#58;&#58;/0) UNSPEC</A></TD><TD ALIGN="CENTER">PASS</TD><TD ALIGN="CENTER"><A HREF="31.html">X</A></TD><TD ALIGN="CENTER"><A HREF="./raMED_raHIGHrtinfoUNSPEC_DEFAULT.seq">X</A></TD><TD ALIGN="CENTER"><A HREF="RTINFO.def">X</A></TD><TD ALIGN="CENTER"><A HREF="31.html.Link0.dump">Link0</A> </TD></TR>
+<TR>
+<TD>32</TD><TD><A HREF="./raMED_raLOWrtinfoUNSPEC_DEFAULT.html">Defalut Router MED vs. Default Router LOW w/ Route Info (&#58;&#58;/0) UNSPEC</A></TD><TD ALIGN="CENTER">PASS</TD><TD ALIGN="CENTER"><A HREF="32.html">X</A></TD><TD ALIGN="CENTER"><A HREF="./raMED_raLOWrtinfoUNSPEC_DEFAULT.seq">X</A></TD><TD ALIGN="CENTER"><A HREF="RTINFO.def">X</A></TD><TD ALIGN="CENTER"><A HREF="32.html.Link0.dump">Link0</A> </TD></TR>
+<TR>
+<TD>33</TD><TD><A HREF="./raLOW_rtinfoLIFE0_DEFAULT.html">Defalut Router LOW vs. Route Info (&#58;&#58;/0) HIGH(Lifetime=0)</A></TD><TD ALIGN="CENTER">PASS</TD><TD ALIGN="CENTER"><A HREF="33.html">X</A></TD><TD ALIGN="CENTER"><A HREF="./raLOW_rtinfoLIFE0_DEFAULT.seq">X</A></TD><TD ALIGN="CENTER"><A HREF="RTINFO.def">X</A></TD><TD ALIGN="CENTER"><A HREF="33.html.Link0.dump">Link0</A> </TD></TR>
+<TR><TD><BR></TD><TD> <B>Prefix Length @ Route Info</B></TD><TD><BR></TD><TD><BR></TD><TD><BR></TD><TD><BR></TD><TD><BR></TD></TR>
+<TR>
+<TD>34</TD><TD><A HREF="./rtinfo_64_48.html">Route Info (PrefixLen=64) vs. Route Info (PrefixLen=48)</A></TD><TD ALIGN="CENTER">PASS</TD><TD ALIGN="CENTER"><A HREF="34.html">X</A></TD><TD ALIGN="CENTER"><A HREF="./rtinfo_64_48.seq">X</A></TD><TD ALIGN="CENTER"><A HREF="RTINFO.def">X</A></TD><TD ALIGN="CENTER"><A HREF="34.html.Link0.dump">Link0</A> </TD></TR>
+<TR>
+<TD>35</TD><TD><A HREF="./rtinfo_64_96.html">Route Info (PrefixLen=64) vs. Route Info (PrefixLen=96)</A></TD><TD ALIGN="CENTER">PASS</TD><TD ALIGN="CENTER"><A HREF="35.html">X</A></TD><TD ALIGN="CENTER"><A HREF="./rtinfo_64_96.seq">X</A></TD><TD ALIGN="CENTER"><A HREF="RTINFO.def">X</A></TD><TD ALIGN="CENTER"><A HREF="35.html.Link0.dump">Link0</A> </TD></TR>
+<TR>
+<TD>36</TD><TD><A HREF="./rtinfo_64_HIGH48.html">Route Info (PrefixLen=64) vs. Route Info (PrefixLen=48, Preference=HIGH)</A></TD><TD ALIGN="CENTER">PASS</TD><TD ALIGN="CENTER"><A HREF="36.html">X</A></TD><TD ALIGN="CENTER"><A HREF="./rtinfo_64_HIGH48.seq">X</A></TD><TD ALIGN="CENTER"><A HREF="RTINFO.def">X</A></TD><TD ALIGN="CENTER"><A HREF="36.html.Link0.dump">Link0</A> </TD></TR>
+<TR>
+<TD>37</TD><TD><A HREF="./rtinfo_64_LOW96.html">Route Info (PrefixLen=64) vs. Route Info (PrefixLen=96, Preference=LOW)</A></TD><TD ALIGN="CENTER">PASS</TD><TD ALIGN="CENTER"><A HREF="37.html">X</A></TD><TD ALIGN="CENTER"><A HREF="./rtinfo_64_LOW96.seq">X</A></TD><TD ALIGN="CENTER"><A HREF="RTINFO.def">X</A></TD><TD ALIGN="CENTER"><A HREF="37.html.Link0.dump">Link0</A> </TD></TR>
+<TR><TD><BR></TD><TD> <B>Multiple Route Info Options in a RA</B></TD><TD><BR></TD><TD><BR></TD><TD><BR></TD><TD><BR></TD><TD><BR></TD></TR>
+<TR>
+<TD>38</TD><TD><A HREF="./rtinfo_2.html">2 Route Info Options in a RA</A></TD><TD ALIGN="CENTER">PASS</TD><TD ALIGN="CENTER"><A HREF="38.html">X</A></TD><TD ALIGN="CENTER"><A HREF="./rtinfo_2.seq">X</A></TD><TD ALIGN="CENTER"><A HREF="RTINFO.def">X</A></TD><TD ALIGN="CENTER"><A HREF="38.html.Link0.dump">Link0</A> </TD></TR>
+<TR>
+<TD>39</TD><TD><A HREF="./rtinfo_16.html">16 Route Info Options in a RA</A></TD><TD ALIGN="CENTER">PASS</TD><TD ALIGN="CENTER"><A HREF="39.html">X</A></TD><TD ALIGN="CENTER"><A HREF="./rtinfo_16.seq">X</A></TD><TD ALIGN="CENTER"><A HREF="RTINFO.def">X</A></TD><TD ALIGN="CENTER"><A HREF="39.html.Link0.dump">Link0</A> </TD></TR>
+<TR><TD><BR></TD><TD> <B>Route Info Lifetime override Default router Lifetime</B></TD><TD><BR></TD><TD><BR></TD><TD><BR></TD><TD><BR></TD><TD><BR></TD></TR>
+<TR>
+<TD>40</TD><TD><A HREF="./rtinfo_RTRLIFE_gt_RTLIFE.html">Router Lifetime > Route Info Lifetime</A></TD><TD ALIGN="CENTER">PASS</TD><TD ALIGN="CENTER"><A HREF="40.html">X</A></TD><TD ALIGN="CENTER"><A HREF="./rtinfo_RTRLIFE_gt_RTLIFE.seq">X</A></TD><TD ALIGN="CENTER"><A HREF="RTINFO.def">X</A></TD><TD ALIGN="CENTER"><A HREF="40.html.Link0.dump">Link0</A> </TD></TR>
+<TR>
+<TD>41</TD><TD><A HREF="./rtinfo_RTRLIFE_lt_RTLIFE.html">Router Lifetime < Route Info Lifetime</A></TD><TD ALIGN="CENTER">PASS</TD><TD ALIGN="CENTER"><A HREF="41.html">X</A></TD><TD ALIGN="CENTER"><A HREF="./rtinfo_RTRLIFE_lt_RTLIFE.seq">X</A></TD><TD ALIGN="CENTER"><A HREF="RTINFO.def">X</A></TD><TD ALIGN="CENTER"><A HREF="41.html.Link0.dump">Link0</A> </TD></TR>
+<TR><TD><BR></TD><TD> <B>Expire Lifetime</B></TD><TD><BR></TD><TD><BR></TD><TD><BR></TD><TD><BR></TD><TD><BR></TD></TR>
+<TR>
+<TD>42</TD><TD><A HREF="./rtinfo_LOW_HIGH_RTLIFE_EXPIRE.html">Specific Route LOW  vs. HIGH with Shorter ROUTER_LIFETIME</A></TD><TD ALIGN="CENTER">PASS</TD><TD ALIGN="CENTER"><A HREF="42.html">X</A></TD><TD ALIGN="CENTER"><A HREF="./rtinfo_LOW_HIGH_RTLIFE_EXPIRE.seq">X</A></TD><TD ALIGN="CENTER"><A HREF="RTINFO.def">X</A></TD><TD ALIGN="CENTER"><A HREF="42.html.Link0.dump">Link0</A> </TD></TR>
+<TR><TD><BR></TD><TD> <B>Router gets Unreachable</B></TD><TD><BR></TD><TD><BR></TD><TD><BR></TD><TD><BR></TD><TD><BR></TD></TR>
+<TR>
+<TD>43</TD><TD><A HREF="./rtinfo_LOW_HIGH_UNREACH.html">Specific Route LOW  vs. HIGH , HIGHer ROUTER gets UNREACHABLE</A></TD><TD ALIGN="CENTER">PASS</TD><TD ALIGN="CENTER"><A HREF="43.html">X</A></TD><TD ALIGN="CENTER"><A HREF="./rtinfo_LOW_HIGH_UNREACH.seq">X</A></TD><TD ALIGN="CENTER"><A HREF="RTINFO.def">X</A></TD><TD ALIGN="CENTER"><A HREF="43.html.Link0.dump">Link0</A> </TD></TR>
+</TABLE>
+</CENTER>
+<HR>
+Index
+<UL>
+  <LI><A HREF="../spec/index.html">IPv6 Specification</A>
+  <LI><A HREF="../icmp/index.html">ICMPv6 for IPv6 Specification</A>
+  <LI><A HREF="../nd/index.html">Neighbor Discovery</A>
+  <LI><A HREF="../stateless-addrconf/index.html">IPv6 Stateless Address Autoconfiguration</A>
+  <LI><A HREF="../pmtu/index.html">IPv6 Path MTU Discovery</A>
+  <LI>Default Router Preferences, More-Specific Routes, and Load Sharing
+  <LI><A HREF="../ipsec/index.html">IPSec AH and ESP for IPv6</A>
+  <LI><A HREF="../ipsec-udp/index.html">IPSec ESP for IPv6(UDP)</A>
+  <LI><A HREF="../ipsec4/index.html">IPSec AH and ESP for IPv4</A>
+  <LI><A HREF="../ipsec4-udp/index.html">IPSec AH and ESP for IPv4(UDP)</A>
+  <LI><A HREF="../mip6-cn-20/index.html">Mobility Support in IPv6 (ID-20) - Correspondent Node</A>
+  <LI><A HREF="../mip6-ha-20/index.html">Mobility Support in IPv6 (ID-20) - Home Agent</A>
+  <LI><A HREF="../mip6-mn-20/index.html">Mobility Support in IPv6 (ID-20) - Mobile Node</A>
+  <LI><A HREF="../default-addr-select/index.html">Default Address Selection for Internet Protocol version 6 (IPv6)</A>
+  <LI><A HREF="../dd/index.html">DNS discovery</A>
+  <LI><A HREF="../pd/index.html">Prefix delegation</A>
+  <LI><A HREF="../tunnel/index.html">IPv6 over IPv4 Tunnel</A>
+  <LI><A HREF="../natpt/index.html">NAT-PT</A>
+  <LI><A HREF="../robust/index.html">Robustness</A>
+</UL>
+
+<UL>
+  <LI><A HREF="../index.html">Up</A>
+  <LI><A HREF="http://www.tahi.org/">TAHI Project</A>
+</UL>
+<HR>
+This Report was generated by
+<A HREF="http://www.tahi.org/">TAHI</A> IPv6 Conformance Test Suite
+</BODY>
+</HTML>

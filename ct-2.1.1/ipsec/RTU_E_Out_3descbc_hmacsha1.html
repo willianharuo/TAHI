@@ -1,0 +1,224 @@
+<HTML>
+<HEAD>
+<TITLE>RTU_E_Out_3descbc_hmacsha1 - Router Tunnel Mode ESP Outbound 3DES-CBC with HMAC-SHA1 authentication</TITLE>
+<LINK REV="made" HREF="mailto:hackers@FreeBSD.org">
+</HEAD>
+
+<BODY>
+
+<!-- INDEX BEGIN -->
+<!--
+
+<UL>
+
+	<LI><A HREF="#NAME">NAME</A>
+	<LI><A HREF="#TARGET">TARGET</A>
+	<LI><A HREF="#SYNOPSIS">SYNOPSIS</A>
+	<LI><A HREF="#INITIALIZATION">INITIALIZATION</A>
+	<LI><A HREF="#TEST_PROCEDURE">TEST PROCEDURE</A>
+	<LI><A HREF="#JUDGMENT">JUDGMENT</A>
+	<LI><A HREF="#SEE_ALSO">SEE ALSO</A>
+</UL>
+-->
+<!-- INDEX END -->
+
+<P>
+<H1><A NAME="NAME">NAME</A></H1>
+<P>
+<PRE>  RTU_E_Out_3descbc_hmacsha1 - Router Tunnel Mode ESP Outbound 3DES-CBC with HMAC-SHA1 authentication
+</PRE>
+<P>
+<HR>
+<H1><A NAME="TARGET">TARGET</A></H1>
+<P>
+<PRE>  Router
+</PRE>
+<P>
+<HR>
+<H1><A NAME="SYNOPSIS">SYNOPSIS</A></H1>
+<PRE>
+  <A HREF="./RTU_E_Out_3descbc_hmacsha1.seq">RTU_E_Out_3descbc_hmacsha1.seq</A> [-tooloption ...] -pkt <A HREF="./RTU_E_3descbc_hmacsha1.def">RTU_E_3descbc_hmacsha1.def</A>
+    -tooloption : v6eval tool option
+  See also <A HREF="./RTU_E_common.def">RTU_E_common.def</A> and <A HREF="./RTU_common.def">RTU_common.def</A>
+</PRE>
+
+<P>
+<HR>
+<H1><A NAME="INITIALIZATION">INITIALIZATION</A></H1>
+<P>
+For details of Network Topology, see <A HREF="00README">00README</A>
+</P>
+<P>
+Set NUT's SAD and SPD as following:
+</P>
+<PRE>
+                           (Link0) (Link1)
+            NET4   NET2      NET0   NET1
+  HOST1_NET4 -- SG1 -- Router -- NUT -- HOST1_NET1
+                 <====tunnel=======
+</PRE>
+<P>
+Security Association Database (SAD)
+</P>
+<TABLE border="1">
+  <TR>
+    <TD>source address</TD>
+    <TD>NUT_NET0</TD></TR>
+  <TR>
+    <TD>destination address</TD>
+    <TD>SG1_NET2</TD></TR>
+  <TR>
+    <TD>SPI</TD>
+    <TD>0x1000</TD></TR>
+  <TR>
+    <TD>mode</TD>
+    <TD>tunnel</TD></TR>
+  <TR>
+    <TD>protocol</TD>
+    <TD>ESP</TD></TR>
+  <TR>
+    <TD>ESP algorithm</TD>
+    <TD>3DES-CBC</TD></TR>
+  <TR>
+    <TD>ESP algorithm key</TD>
+    <TD>TAHITEST89ABCDEFGHIJKLMN</TD></TR>
+  <TR>
+    <TD>ESP authentication</TD>
+    <TD>HMAC-SHA1</TD></TR>
+  <TR>
+    <TD>ESP authentication key</TD>
+    <TD>TAHITEST89ABCDEF0123</TD></TR>
+</TABLE>
+<P>
+Security Policy Database (SPD)
+</P>
+<TABLE border="1">
+  <TR>
+    <TD>tunnel source address</TD>
+    <TD>NUT_NET0</TD></TR>
+  <TR>
+    <TD>tunnel destination address</TD>
+    <TD>SG1_NET2</TD></TR>
+  <TR>
+    <TD>source address</TD>
+    <TD>NET1</TD></TR>
+  <TR>
+    <TD>destination address</TD>
+    <TD>NET4</TD></TR>
+  <TR>
+    <TD>upper spec</TD>
+    <TD>any</TD></TR>
+  <TR>
+    <TD>direction</TD>
+    <TD>out</TD></TR>
+  <TR>
+    <TD>protocol</TD>
+    <TD>ESP</TD></TR>
+  <TR>
+    <TD>mode</TD>
+    <TD>tunnel</TD></TR>
+</TABLE>
+
+<P>
+<HR>
+<H1><A NAME="TEST_PROCEDURE">TEST PROCEDURE</A></H1>
+<PRE>
+ Tester                      Target                      Tester
+              (Link0)                     (Link1)
+   |                           |                           |
+   |                           |<--------------------------|
+   |                           |      ICMP Echo Reply      |
+   |                           |                           |
+   |<--------------------------|                           |
+   |      ICMP Echo Reply      |                           |
+   |        (with ESP)         |                           |
+   |                           |                           |
+   |                           |                           |
+   v                           v                           v
+</PRE>
+<OL>
+  <LI>Send ICMP Echo Reply to Link1
+  <LI>Receive ICMP Echo Reply with ESP from Link0
+</OL>
+<P>
+ICMP Echo Reply to Link1
+</P>
+<TABLE border="1">
+  <TR>
+    <TD>IP Header</TD>
+    <TD>Source Address</TD>
+    <TD>HOST1_NET1</TD></TR>
+  <TR>
+    <TD></TD>
+    <TD>Destination Address</TD>
+    <TD>HOST1_NET4</TD></TR>
+  <TR>
+    <TD>ICMP</TD>
+    <TD>Type</TD>
+    <TD>129 (Echo Reply)</TD></TR>
+</TABLE>
+<P>
+ICMP Echo Reply with ESP from Link0
+</P>
+<TABLE border="1">
+  <TR>
+    <TD>IP Header</TD>
+    <TD>Source Address</TD>
+    <TD>NUT_NET0</TD></TR>
+  <TR>
+    <TD></TD>
+    <TD>Destination Address</TD>
+    <TD>SG1_NET2</TD></TR>
+  <TR>
+    <TD>ESP</TD>
+    <TD>SPI</TD>
+    <TD>0x1000</TD></TR>
+  <TR>
+    <TD></TD>
+    <TD>Algorithm</TD>
+    <TD>3DES-CBC</TD></TR>
+  <TR>
+    <TD></TD>
+    <TD>Key</TD>
+    <TD>TAHITEST89ABCDEFGHIJKLMN/TD></TR>
+  <TR>
+    <TD></TD>
+    <TD>Authentication Algorithm</TD>
+    <TD>HAMC-SHA1</TD></TR>
+  <TR>
+    <TD></TD>
+    <TD>Authentication Key</TD>
+    <TD>TAHITEST89ABCDEF0123</TD></TR>
+  <TR>
+    <TD>IP Header</TD>
+    <TD>Source Address</TD>
+    <TD>HOST1_NET1</TD></TR>
+  <TR>
+    <TD></TD>
+    <TD>Destination Address</TD>
+    <TD>HOST1_NET4</TD></TR>
+  <TR>
+    <TD>ICMP</TD>
+    <TD>Type</TD>
+    <TD>129 (Echo Reply)</TD></TR>
+</TABLE>
+
+<P>
+<HR>
+<H1><A NAME="JUDGMENT">JUDGMENT</A></H1>
+<P>
+<PRE>  PASS: ICMP Echo Reply with ESP received
+</PRE>
+<P>
+<HR>
+<H1><A NAME="SEE_ALSO">SEE ALSO</A></H1>
+<P>
+<PRE>  perldoc V6evalTool
+</PRE>
+<PRE>
+  <A HREF="./IPSEC.html">IPSEC.html</A> IPsec Test Common Utility
+</PRE>
+
+</BODY>
+
+</HTML>

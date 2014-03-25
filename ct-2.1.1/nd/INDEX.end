@@ -1,0 +1,6 @@
+#
+# $Name: REL_2_1_1 $
+#
+&print:Terminate the NUT
+./reset.seq:/dev/null:::Termination
+# EOF

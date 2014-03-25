@@ -1,0 +1,163 @@
+<HTML>
+<HEAD>
+<TITLE>rfc2766_5.3.1_checksum_icmp.seq - Verify IPv6 <-> IPv4 header 
+        translation in accordance with RFC2766 [NATPT]</TITLE>
+<LINK REV="made" HREF="mailto:hackers@FreeBSD.org">
+</HEAD>
+
+<BODY>
+
+<!-- INDEX BEGIN -->
+<!--
+
+<UL>
+
+	<LI><A HREF="#NAME">NAME</A>
+	<LI><A HREF="#TARGET">TARGET</A>
+	<LI><A HREF="#SYNOPSIS">SYNOPSIS</A>
+	<LI><A HREF="#INITIALIZATION">INITIALIZATION</A>
+	<LI><A HREF="#TEST_PROCEDURE">TEST PROCEDURE</A>
+	<LI><A HREF="#JUDGMENT">JUDGMENT</A>
+	<LI><A HREF="#NOTE">NOTE</A>
+	<LI><A HREF="#REFERENCE">REFERENCE</A>
+	<LI><A HREF="#SEE_ALSO">SEE ALSO</A>
+</UL>
+-->
+<!-- INDEX END -->
+
+<P>
+<H1><A NAME="NAME">NAME</A></H1>
+<P>
+<PRE>        rfc2766_5.3.1_checksum_icmp.seq - Verify IPv6 &lt;-&gt; IPv4 header 
+        translation in accordance with RFC2766 [NATPT]
+</PRE>
+<P>
+<HR>
+<H1><A NAME="TARGET">TARGET</A></H1>
+<P>
+<PRE>        Router
+</PRE>
+<P>
+<HR>
+<H1><A NAME="SYNOPSIS">SYNOPSIS</A></H1>
+<P>
+<PRE>        rfc2766_5.3.1_checksum_icmp.seq [-tooloption ...] 
+        -p rfc2766_5.3.1_checksum_icmp.def
+</PRE>
+<P>
+<HR>
+<H1><A NAME="INITIALIZATION">INITIALIZATION</A></H1>
+<PRE>
+	Before this test starts, run <A HREF="./initialize_natpt.html">initialize_natpt.seq</A>.
+</PRE>
+
+<P>
+<HR>
+<H1><A NAME="TEST_PROCEDURE">TEST PROCEDURE</A></H1>
+<P>
+<PRE>        This test verifies that NUT adjusts header checksum for ICMP packets.
+        
+        Network Topology
+</PRE>
+<P>
+<PRE>        Link0
+        --------------------------
+            |               |
+           TN              NUT
+            |               |
+        --------------------------
+        Link1
+</PRE>
+<P>
+<PRE>        TN -- (Link0) -- NUT        NUT -- (Link1) -- TN
+        
+        ---------------------      ------------------------
+</PRE>
+<HR WIDTH=80%>
+
+<P>
+<PRE>        1.1.
+                                   &lt;===================
+        IPv4 ICMP packet
+                IPv4 Header
+                        src address : TN LINK1 IPv4 address
+                        dst address : TN LINK0 IPv4 address
+                        DF = 1
+                ICMPv4 Destination Unreachable
+                        Type = 3
+                        Code = 1
+                Payload (28 bytes)
+                        IPv4 Header (20 bytes)
+                                src address : TN LINK0 IPv4 address
+                                dst address : TN LINK1 IPv4 address
+                                DF = 1
+                                Protocol = 17
+                        UDP packet (first 8 bytes)
+                                Checksum including IPv4 pseudo header
+                                data = repeat(0xff,1422)
+        1.2.
+        &lt;&lt;JUDGMENT&gt;&gt;
+        &lt;===================
+        IPv6 ICMP packet
+                IPv6 Header
+                        src address : TN LINK1 IPv4 embedded IPv6 address
+                        dst address : TN LINK0 IPv4 embedded IPv6 address
+                ICMPv6 Destination Unreachable
+                        Type = 1
+                        Code = 0
+                Payload (48 bytes)
+                        IPv6 Header (40 bytes)
+                                src address : TN LINK0 IPv4 embedded IPv6 address
+                                dst address : TN LINK1 IPv4 embedded IPv6 address
+                                NextHeader = 17
+                        UDP packet (first 8 bytes)
+                                Checksum including IPv6 pseudo header
+                                data = repeat(0xff,1422)
+</PRE>
+<P>
+<HR>
+<H1><A NAME="JUDGMENT">JUDGMENT</A></H1>
+<P>
+<PRE>        &lt;&lt; PASS &gt;&gt;
+                NUT will translate ICMPv4 Destination Unreachable
+                to ICMPv6 Destination Unreachable.
+                NUT will translate the inner IPv4 UDP packet to the
+                equivalent IPv6 UDP packet.
+                NUT will update checksums for the inner and outer
+                IP headers.
+                
+        &lt;&lt; FAIL &gt;&gt;      
+                NUT does not translate correctly.
+</PRE>
+<P>
+<HR>
+<H1><A NAME="NOTE">NOTE</A></H1>
+<P>
+<HR>
+<H1><A NAME="REFERENCE">REFERENCE</A></H1>
+<P>
+<STRONG>RFC2766</STRONG>
+
+
+
+<P>
+5.3.1 TCP/UDP/ICMP Checksum Update from IPv4 to IPv6
+
+<P>
+<PRE>   ICMPv6, unlike ICMPv4, uses a pseudo-header, just like UDP and TCP
+   during checksum computation. As a result, when the ICMPv6 header
+   checksum is computed [SIIT], the checksum needs to be adjusted to
+   account for the additional pseudo-header. Note, there may also be
+   adjustments required to the checksum due to changes in the source and
+   destination addresses (and changes in TCP/UDP/ICMP identifiers in the
+   case of NAPT-PT) of the payload carried within ICMP.
+</PRE>
+<P>
+<HR>
+<H1><A NAME="SEE_ALSO">SEE ALSO</A></H1>
+<P>
+<PRE>        perldoc V6evalTool
+</PRE>
+</BODY>
+
+</HTML>

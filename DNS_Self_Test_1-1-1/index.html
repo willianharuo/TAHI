@@ -1,0 +1,932 @@
+<HTML>
+<HEAD>
+<TITLE>IPv6 Test Specification</TITLE>
+<META NAME="GENERATOR" CONTENT="TAHI IPv6 Conformance Test Suite">
+</HEAD>
+<BODY BGCOLOR="#FFFFFF">
+<CENTER>
+<H1>IPv6 Conformance Test For DNS</H1>
+<HR>
+<TABLE WIDTH="100%" BORDER=1>
+<TR>
+<TH>No.</TH><TH>Title</TH>
+</TR>
+<TR><TD><BR></TD><TD><U><B><FONT SIZE="+2">Server Test</H1></B></U></TD></TR>
+<TR><TD><BR></TD><TD><U><B><FONT SIZE="+1" COLOR="#FF0000">RFC 1034: Domain Concepts and Facilities</FONT></B></U></TD></TR>
+<TR><TD><BR></TD><TD><B>3. DOMAIN NAME SPACE AND RESOURCE RECORDS</B></TD></TR>
+<TR><TD><BR></TD><TD><B>3.1. Name space specifications and terminology</B></TD></TR>
+<TR>
+<TD>1</TD><TD><A HREF="./SV/SV_RFC1034_3_1_LabelLength.html">Label length</A></TD></TR>
+<TR>
+<TD>2</TD><TD><A HREF="./SV/SV_RFC1034_3_1_CaseInsensitiveManner.html">Case-insensitive manner</A></TD></TR>
+<TR>
+<TD>3</TD><TD><A HREF="./SV/SV_RFC1034_3_1_DomainNameLength.html">Domain Name length</A></TD></TR>
+<TR><TD><BR></TD><TD><B>3.5. Preferred name syntax</B></TD></TR>
+<TR>
+<TD>4</TD><TD><A HREF="./SV/SV_RFC1034_3_1_RuleForLabel.html">Rule for label</A></TD></TR>
+<TR><TD><BR></TD><TD><B>3.6. Resource Records</B></TD></TR>
+<TR><TD><BR></TD><TD><B>NAME</B></TD></TR>
+<TR><TD><BR></TD><TD>NAME (owner) is tested at TYPE test.</TD></TR>
+<TR><TD><BR></TD><TD><B>TYPE</B></TD></TR>
+<TR>
+<TD>5</TD><TD><A HREF="./SV/SV_RFC1034_3_6_A_type.html">A type</A></TD></TR>
+<TR>
+<TD>6</TD><TD><A HREF="./SV/SV_RFC1034_3_6_CNAME_type.html">CNAME type</A></TD></TR>
+<TR>
+<TD>7</TD><TD><A HREF="./SV/SV_RFC1034_3_6_HINFO_type.html">HINFO type</A></TD></TR>
+<TR>
+<TD>8</TD><TD><A HREF="./SV/SV_RFC1034_3_6_MX_type.html">MX type</A></TD></TR>
+<TR>
+<TD>9</TD><TD><A HREF="./SV/SV_RFC1034_3_6_NS_type.html">NS type</A></TD></TR>
+<TR>
+<TD>10</TD><TD><A HREF="./SV/SV_RFC1034_3_6_PTR_type.html">PTR type</A></TD></TR>
+<TR>
+<TD>11</TD><TD><A HREF="./SV/SV_RFC1034_3_6_SOA_type.html">SOA type</A></TD></TR>
+<TR><TD><BR></TD><TD><B>CLASS</B></TD></TR>
+<TR>
+<TD>12</TD><TD><A HREF="./SV/SV_RFC1034_3_6_IN_class.html">IN class</A></TD></TR>
+<TR><TD><BR></TD><TD>CH class</TD></TR>
+<TR><TD><BR></TD><TD><B>TTL</B></TD></TR>
+<TR><TD><BR></TD><TD><B>RDATA</B></TD></TR>
+<TR>
+<TD>13</TD><TD><A HREF="./SV/SV_RFC1034_3_6_A_IN_rdata.html">A resource data (IN class)</A></TD></TR>
+<TR><TD><BR></TD><TD>A resource data (CH class)</TD></TR>
+<TR>
+<TD>14</TD><TD><A HREF="./SV/SV_RFC1034_3_6_CNAME_rdata.html">CNAME resource data</A></TD></TR>
+<TR>
+<TD>15</TD><TD><A HREF="./SV/SV_RFC1034_3_6_HINFO_rdata.html">HINFO resource data</A></TD></TR>
+<TR>
+<TD>16</TD><TD><A HREF="./SV/SV_RFC1034_3_6_MX_rdata.html">MX resource data</A></TD></TR>
+<TR>
+<TD>17</TD><TD><A HREF="./SV/SV_RFC1034_3_6_NS_rdata.html">NS resource data</A></TD></TR>
+<TR>
+<TD>18</TD><TD><A HREF="./SV/SV_RFC1034_3_6_PTR_rdata.html">PTR resource data</A></TD></TR>
+<TR>
+<TD>19</TD><TD><A HREF="./SV/SV_RFC1034_3_6_SOA_rdata.html">SOA resource data</A></TD></TR>
+<TR><TD><BR></TD><TD><B>Caching</B></TD></TR>
+<TR>
+<TD>20</TD><TD><A HREF="./SV/SV_RFC1034_3_6_Zero_TTL.html">Zero TTL prohibits caching</A></TD></TR>
+<TR><TD><BR></TD><TD><B>3.6.2. Aliases and canonical names</B></TD></TR>
+<TR>
+<TD>21</TD><TD><A HREF="./SV/SV_RFC1034_3_6_2_no_other_data.html">CNAME RR is present at a node, no other data should be present</A></TD></TR>
+<TR>
+<TD>22</TD><TD><A HREF="./SV/SV_RFC1034_3_6_2_WILD_query_CNAME.html">* query should return just the CNAME</A></TD></TR>
+<TR><TD><BR></TD><TD><B>3.7. Queries</B></TD></TR>
+<TR>
+<TD>23</TD><TD><A HREF="./SV/SV_RFC1034_3_7_TCP.html">Carried in TCP</A></TD></TR>
+<TR>
+<TD>24</TD><TD><A HREF="./SV/SV_RFC1034_3_7_Standard.html">Standard message format</A></TD></TR>
+<TR>
+<TD>25</TD><TD><A HREF="./SV/SV_RFC1034_3_7_Opcode_Standard.html">Opcode (standard query)</A></TD></TR>
+<TR><TD><BR></TD><TD>Opcode (status query)</TD></TR>
+<TR><TD><BR></TD><TD><B>3.7.1. Standard queries</B></TD></TR>
+<TR>
+<TD>26</TD><TD><A HREF="./SV/SV_RFC1034_3_7_1_Question.html">Question section format</A></TD></TR>
+<TR><TD><BR></TD><TD><B>QTYPE</B></TD></TR>
+<TR>
+<TD>27</TD><TD><A HREF="./SV/SV_RFC1034_3_7_1_WILD_qtype.html">* type for query</A></TD></TR>
+<TR>
+<TD>28</TD><TD><A HREF="./SV/SV_RFC1034_3_7_1_WILD_qtype_response.html">* type for response</A></TD></TR>
+<TR><TD><BR></TD><TD><B>QCLASS</B></TD></TR>
+<TR>
+<TD>29</TD><TD><A HREF="./SV/SV_RFC1034_3_7_1_WILD_class.html">* class (the requestor is seeking data from more than one class)</A></TD></TR>
+<TR><TD><BR></TD><TD><B>3.7.2. Inverse queries</B> (Obsoleted by RFC3425)</TD></TR>
+<TR><TD><BR></TD><TD><B>4. NAME SERVERS</B></TD></TR>
+<TR><TD><BR></TD><TD><B>4.1. Introduction</B></TD></TR>
+<TR>
+<TD>30</TD><TD><A HREF="./SV/SV_RFC1034_4_1_AA.html">The name server returns data w/ Authoritative Answer (AA) or not.</A></TD></TR>
+<TR><TD><BR></TD><TD><B>4.2. How the database is divided into zone</B></TD></TR>
+<TR><TD><BR></TD><TD><B>4.3. Name server internals</B></TD></TR>
+<TR><TD><BR></TD><TD><B>4.3.1. Queries and responses</B></TD></TR>
+<TR>
+<TD>31</TD><TD><A HREF="./SV/SV_RFC1034_4_3_1_NoRecursive.html">No-recursive queries</A></TD></TR>
+<TR>
+<TD>32</TD><TD><A HREF="./SV/SV_RFC1034_4_3_1_RestrictRecursion.html">Name server acts in the role of a resolver</A></TD></TR>
+<TR><TD><BR></TD><TD><B>Recursive mode</B></TD></TR>
+<TR>
+<TD>33</TD><TD><A HREF="./SV/SV_RFC1034_4_3_1_Recursive.html">Recursion Available (RA) bit is set or cleared by a name server in all responses</A></TD></TR>
+<TR>
+<TD>34</TD><TD><A HREF="./SV/SV_RFC1034_4_3_1_RD.html">Recursion desired (RD)</A></TD></TR>
+<TR><TD><BR></TD><TD><B>Recursion is available case</B></TD></TR>
+<TR>
+<TD>35</TD><TD><A HREF="./SV/SV_RFC1034_4_3_1_RAwCNAME.html">The answer with CNAME to the query.</A></TD></TR>
+<TR>
+<TD>36</TD><TD><A HREF="./SV/SV_RFC1034_4_3_1_ErrIndicate_RAwCNAME.html">A name error indicating that the name does not exist.</A></TD></TR>
+<TR>
+<TD>37</TD><TD><A HREF="./SV/SV_RFC1034_4_3_1_TempErrIndicate.html">A temporary error indication.</A></TD></TR>
+<TR><TD><BR></TD><TD><B>Recursion is not available case</B></TD></TR>
+<TR>
+<TD>38</TD><TD><A HREF="./SV/SV_RFC1034_4_3_1_NameError_NotRA.html">An authoritative name error indicating that the name does not exist.</A></TD></TR>
+<TR><TD><BR></TD><TD>A temporary error indication</TD></TR>
+<TR><TD><BR></TD><TD><B>(Tested at 4.3.1. No-recursive queries)</B></TD></TR>
+<TR><TD><BR></TD><TD><B>4.3.2. Algorithm</B></TD></TR>
+<TR><TD><BR></TD><TD><B>A. And the whole of QNAME is matched</B></TD></TR>
+<TR>
+<TD>39</TD><TD><A HREF="./SV/SV_RFC1034_4_3_2_23A1_1.html">The data at the node is a CNAME, and QTYPE doesn't match CNAME case.</A></TD></TR>
+<TR>
+<TD>40</TD><TD><A HREF="./SV/SV_RFC1034_4_3_2_23A6_1.html">The data at the node is except the above-mentioned.</A></TD></TR>
+<TR><TD><BR></TD><TD><B>B. A match take QNAME out of the authoritative data, QNAME has a referral.</B></TD></TR>
+<TR>
+<TD>41</TD><TD><A HREF="./SV/SV_RFC1034_4_3_2_23B46_1.html">QNAME is found in the cache.</A></TD></TR>
+<TR>
+<TD>42</TD><TD><A HREF="./SV/SV_RFC1034_4_3_2_23B46_2.html">QNAME is not found in the cache.</A></TD></TR>
+<TR><TD><BR></TD><TD><B>C. At some label, a match is impossible.</B></TD></TR>
+<TR>
+<TD>43</TD><TD><A HREF="./SV/SV_RFC1034_4_3_2_23C_1.html">The "*" label does not exist, the name is original.</A></TD></TR>
+<TR><TD><BR></TD><TD>The "*" label does exist.</TD></TR>
+<TR><TD><BR></TD><TD><B>(Tested at 4.3.3. Wildcards)</B></TD></TR>
+<TR><TD><BR></TD><TD><B>Recursion service is available and requested via the RD bit in the query.</B></TD></TR>
+<TR><TD><BR></TD><TD><B>(Tested at 5.3.3. Algorithm.)</B></TD></TR>
+<TR><TD><BR></TD><TD><B>4.3.3. Wildcards</B></TD></TR>
+<TR>
+<TD>44</TD><TD><A HREF="./SV/SV_RFC1034_4_3_3_caching_wildcard.html">Caching wildcards queries</A></TD></TR>
+<TR>
+<TD>45</TD><TD><A HREF="./SV/SV_RFC1034_4_3_3_not_applied_wildcard.html">Wildcards is not applied case</A></TD></TR>
+<TR><TD><BR></TD><TD><B>4.3.4. Negative response caching (Optional)</B></TD></TR>
+<TR><TD><BR></TD><TD><B>4.3.5. Zone maintenance and transfers</B></TD></TR>
+<TR>
+<TD>46</TD><TD><A HREF="./SV/SV_RFC1034_4_3_5_ZoneTransfer.html">Zone maintenance and transfers</A></TD></TR>
+<TR>
+<TD>47</TD><TD><A HREF="./SV/SV_RFC1034_4_3_5_NotCompZoneTransfer.html">Zone transfer is not completed case</A></TD></TR>
+<TR>
+<TD>48</TD><TD><A HREF="./SV/SV_RFC1034_4_3_5_DistZoneTransfer.html">Distribute zone</A></TD></TR>
+<TR><TD><BR></TD><TD><B>5. RESOLVERS</B></TD></TR>
+<TR><TD><BR></TD><TD><B>5.1 Introduction</B></TD></TR>
+<TR><TD><BR></TD><TD><B>5.2. Client-resolver interface</B></TD></TR>
+<TR><TD><BR></TD><TD><B>5.2.1. Typical functions</B></TD></TR>
+<TR>
+<TD>49</TD><TD><A HREF="./SV/SV_RFC1034_5_2_return_answer.html">Returning of answer</A></TD></TR>
+<TR>
+<TD>50</TD><TD><A HREF="./SV/SV_RFC1034_5_2_return_NXDOMAIN.html">Returning of name error</A></TD></TR>
+<TR>
+<TD>51</TD><TD><A HREF="./SV/SV_RFC1034_5_2_return_no_data.html">Returning of data not found error</A></TD></TR>
+<TR><TD><BR></TD><TD><B>5.2.2. Aliases</B></TD></TR>
+<TR>
+<TD>52</TD><TD><A HREF="./SV/SV_RFC1034_5_2_2_Encunter_CNAME.html">Encounters a CNAME</A></TD></TR>
+<TR>
+<TD>53</TD><TD><A HREF="./SV/SV_RFC1034_5_2_2_mutiple_aliases.html">Multiple levels of aliases should be avoided, but should not be signaled as an error</A></TD></TR>
+<TR><TD><BR></TD><TD><B>5.2.3. Temporary failures</B></TD></TR>
+<TR><TD><BR></TD><TD><B>5.3. Resolver internals</B></TD></TR>
+<TR><TD><BR></TD><TD><B>5.3.1. Stub resolvers</B></TD></TR>
+<TR><TD><BR></TD><TD><B>5.3.2. Resources</B></TD></TR>
+<TR>
+<TD>54</TD><TD><A HREF="./SV/SV_RFC1034_5_3_2_Cache_vs_auth.html">Cache data vs authoritative data</A></TD></TR>
+<TR><TD><BR></TD><TD><B>5.3.3. Algorithm</B></TD></TR>
+<TR>
+<TD>55</TD><TD><A HREF="./SV/SV_RFC1034_5_3_3_local_info.html">Answer in local information</A></TD></TR>
+<TR>
+<TD>56</TD><TD><A HREF="./SV/SV_RFC1034_5_3_3_sending_query.html">Sending query to server</A></TD></TR>
+<TR>
+<TD>57</TD><TD><A HREF="./SV/SV_RFC1034_5_3_3_delegation.html">Analyze the response (delegation)</A></TD></TR>
+<TR>
+<TD>58</TD><TD><A HREF="./SV/SV_RFC1034_5_3_3_cache_delegation.html">Analyze the response (caching delegation)</A></TD></TR>
+<TR>
+<TD>59</TD><TD><A HREF="./SV/SV_RFC1034_5_3_3_cache_CNAME.html">Analyze the response (caching CNAME)</A></TD></TR>
+<TR>
+<TD>60</TD><TD><A HREF="./SV/SV_RFC1034_5_3_3_answer_invalid.html">Analyze the response (answer is invalid)</A></TD></TR>
+<TR>
+<TD>61</TD><TD><A HREF="./SV/SV_RFC1034_5_3_3_delegation_invalid.html">Analyze the response (delegation is invalid)</A></TD></TR>
+<TR><TD><BR></TD><TD><U><B><FONT SIZE="+1" COLOR="#FF0000">RFC 1035: Domain Implementation and Specification</FONT></B></U></TD></TR>
+<TR><TD><BR></TD><TD><B>2.3.1. Preferred name syntax</B></TD></TR>
+<TR><TD><BR></TD><TD><B>2.3.2. Data Transmission Order</B></TD></TR>
+<TR>
+<TD>62</TD><TD><A HREF="./SV/SV_RFC1035_2_3_2_order_octets.html">Order of transmission of octets and bits</A></TD></TR>
+<TR><TD><BR></TD><TD><B>2.3.3. Character Case</B></TD></TR>
+<TR><TD><BR></TD><TD><B>2.3.4. Size limits</B></TD></TR>
+<TR><TD><BR></TD><TD><B>3. DOMAIN NAME SPACE AND RR DEFINITIONS</B></TD></TR>
+<TR><TD><BR></TD><TD><B>3.1. Name space definitions</B></TD></TR>
+<TR>
+<TD>63</TD><TD><A HREF="./SV/SV_RFC1035_3_1_label_format.html">Label format</A></TD></TR>
+<TR>
+<TD>64</TD><TD><A HREF="./SV/SV_RFC1035_3_1_label_root.html">Label of root</A></TD></TR>
+<TR><TD><BR></TD><TD><B>3.2. RR definitions</B></TD></TR>
+<TR><TD><BR></TD><TD><B>3.2.1. Format</B></TD></TR>
+<TR><TD><BR></TD><TD><B>3.2.2. TYPE values</B></TD></TR>
+<TR>
+<TD>65</TD><TD><A HREF="./SV/SV_RFC1035_3_2_2_WKS_type.html">WKS type</A></TD></TR>
+<TR>
+<TD>66</TD><TD><A HREF="./SV/SV_RFC1035_3_2_2_TXT_type.html">TXT type</A></TD></TR>
+<TR><TD><BR></TD><TD><B>3.3. Standard RRs</B></TD></TR>
+<TR><TD><BR></TD><TD><B>(Tested at 3.2.2. TYPE values)</B></TD></TR>
+<TR><TD><BR></TD><TD><B>3.3.14. TXT RDATA format</B></TD></TR>
+<TR>
+<TD>67</TD><TD><A HREF="./SV/SV_RFC1035_3_3_14_TXT_rdata.html">TXT resource data</A></TD></TR>
+<TR><TD><BR></TD><TD><B>3.4. Internet specific RRs</B></TD></TR>
+<TR><TD><BR></TD><TD><B>3.4.1. A RDATA format</B></TD></TR>
+<TR><TD><BR></TD><TD><B>3.4.2. WKS RDATA format</B></TD></TR>
+<TR>
+<TD>68</TD><TD><A HREF="./SV/SV_RFC1035_3_3_WKS_rdata.html">WKS resource data</A></TD></TR>
+<TR><TD><BR></TD><TD><B>3.5. IN-ADDR.ARPA domain</B></TD></TR>
+<TR><TD><BR></TD><TD><B>(Tested at 3.3.12. PTR RDATA format)</B></TD></TR>
+<TR><TD><BR></TD><TD><B>4. MESSAGES</B></TD></TR>
+<TR><TD><BR></TD><TD><B>4.1. Format</B></TD></TR>
+<TR><TD><BR></TD><TD><B>4.1.1. Header section format</B></TD></TR>
+<TR>
+<TD>69</TD><TD><A HREF="./SV/SV_RFC1035_4_1_Header_query.html">Header section format (query)</A></TD></TR>
+<TR>
+<TD>70</TD><TD><A HREF="./SV/SV_RFC1035_4_1_Header.html">Header section format (response)</A></TD></TR>
+<TR>
+<TD>71</TD><TD><A HREF="./SV/SV_RFC1035_4_1_1_RCODE_1.html">Format error (RCODE=1)</A></TD></TR>
+<TR>
+<TD>72</TD><TD><A HREF="./SV/SV_RFC1035_4_1_1_RCODE_2.html">Server failure (RCODE=2)</A></TD></TR>
+<TR>
+<TD>73</TD><TD><A HREF="./SV/SV_RFC1035_4_1_1_RCODE_4.html">Not Implemented (RCODE=4)</A></TD></TR>
+<TR>
+<TD>74</TD><TD><A HREF="./SV/SV_RFC1035_4_1_1_RCODE_5_query.html">Refused (RCODE=5) for query</A></TD></TR>
+<TR>
+<TD>75</TD><TD><A HREF="./SV/SV_RFC1035_4_1_1_RCODE_5_zone.html">Refused (RCODE=5) for zone transfer</A></TD></TR>
+<TR><TD><BR></TD><TD><B>4.1.2. Question section format</B></TD></TR>
+<TR><TD><BR></TD><TD><B>4.1.3. Resource record format</B></TD></TR>
+<TR>
+<TD>76</TD><TD><A HREF="./SV/SV_RFC1035_4_1_3_Answer.html">Answer section format</A></TD></TR>
+<TR>
+<TD>77</TD><TD><A HREF="./SV/SV_RFC1035_4_1_3_Authority.html">Authority section format</A></TD></TR>
+<TR>
+<TD>78</TD><TD><A HREF="./SV/SV_RFC1035_4_1_3_Additional.html">Additional section format</A></TD></TR>
+<TR><TD><BR></TD><TD><B>4.1.4. Message compression</B></TD></TR>
+<TR>
+<TD>79</TD><TD><A HREF="./SV/SV_RFC1035_4_1_4_compression.html">Message compression</A></TD></TR>
+<TR>
+<TD>80</TD><TD><A HREF="./SV/SV_RFC1035_4_1_4_compression_format.html">Message compression format</A></TD></TR>
+<TR><TD><BR></TD><TD><B>4.2. Transport</B></TD></TR>
+<TR><TD><BR></TD><TD><B>4.2.1. UDP usage</B></TD></TR>
+<TR>
+<TD>81</TD><TD><A HREF="./SV/SV_RFC1035_4_2_1_UDP_restriction.html">Messages carried by UDP are restricted to 512 bytes</A></TD></TR>
+<TR>
+<TD>82</TD><TD><A HREF="./SV/SV_RFC1035_4_2_1_not_depend_order.html">Not depend on response in order</A></TD></TR>
+<TR><TD><BR></TD><TD><B>4.2.2. TCP usage</B></TD></TR>
+<TR>
+<TD>83</TD><TD><A HREF="./SV/SV_RFC1035_4_2_2_TCP_management.html">TCP connection management check</A></TD></TR>
+<TR><TD><BR></TD><TD><B>6. NAME SERVER IMPLEMENTATION</B></TD></TR>
+<TR><TD><BR></TD><TD><B>6.1. Architecture</B></TD></TR>
+<TR><TD><BR></TD><TD><B>6.1.1. Control</B></TD></TR>
+<TR>
+<TD>84</TD><TD><A HREF="./SV/SV_RFC1035_6_1_1_UDP_while_TCP.html">Accept UDP while server waits TCP connecting</A></TD></TR>
+<TR><TD><BR></TD><TD><B>6.1.2. Database</B></TD></TR>
+<TR><TD><BR></TD><TD><B>6.1.3. Time</B></TD></TR>
+<TR><TD><BR></TD><TD><B>6.2. Standard query processing</B></TD></TR>
+<TR>
+<TD>85</TD><TD><A HREF="./SV/SV_RFC1035_6_2_Processing_QCLASS_WILD.html">Processing queries with QCLASS=*</A></TD></TR>
+<TR>
+<TD>86</TD><TD><A HREF="./SV/SV_RFC1035_6_2_omit_additional.html">Duplicate answer is omitted from the additional section</A></TD></TR>
+<TR>
+<TD>87</TD><TD><A HREF="./SV/SV_RFC1035_6_2_authority_guarantee_answer.html">Authority section guarantee uniqueness of the answer</A></TD></TR>
+<TR><TD><BR></TD><TD><B>6.3. Zone refresh and reload processing</B></TD></TR>
+<TR><TD><BR></TD><TD><B>6.4. Inverse queries (Optional)</B></TD></TR>
+<TR><TD><BR></TD><TD><B>Obsoleted by RFC3425</B></TD></TR>
+<TR><TD><BR></TD><TD><B>7. RESOLVER IMPLEMENTATION</B></TD></TR>
+<TR><TD><BR></TD><TD><B>7.1. Transforming a user request into a query</B></TD></TR>
+<TR><TD><BR></TD><TD><B>7.2. Sending the queries</B></TD></TR>
+<TR><TD><BR></TD><TD><B>7.3. Processing response</B></TD></TR>
+<TR>
+<TD>88</TD><TD><A HREF="./SV/SV_RFC1035_7_3_invalid_response.html">Invalid response (query is returned)</A></TD></TR>
+<TR>
+<TD>89</TD><TD><A HREF="./SV/SV_RFC1035_7_3_invalid_RR.html">Invalid response (RRs are incorrectly formatted)</A></TD></TR>
+<TR>
+<TD>90</TD><TD><A HREF="./SV/SV_RFC1035_7_3_invalid_TTL.html">Invalid response (long TTL) (optional)</A></TD></TR>
+<TR>
+<TD>91</TD><TD><A HREF="./SV/SV_RFC1035_7_3_invalid_ID.html">Invalid response (ID does not match)</A></TD></TR>
+<TR>
+<TD>92</TD><TD><A HREF="./SV/SV_RFC1035_7_3_invalid_QS.html">Invalid response (invalid question section)</A></TD></TR>
+<TR><TD><BR></TD><TD><B>7.4. Using the cache</B></TD></TR>
+<TR>
+<TD>93</TD><TD><A HREF="./SV/SV_RFC1035_7_4_cache_RRs.html">Caching several RRs of same type</A></TD></TR>
+<TR><TD><BR></TD><TD><U><B><FONT SIZE="+1" COLOR="#FF0000">RFC 1123: Requirements for Internet Hosts -- Application and Support</FONT></B></U></TD></TR>
+<TR><TD><BR></TD><TD><B>6. SUPPORT SERVICES</B></TD></TR>
+<TR><TD><BR></TD><TD><B>6.1. DOMAIN NAME TRANSACTION</B></TD></TR>
+<TR><TD><BR></TD><TD><B>6.1.1. INTRODUCTION</B></TD></TR>
+<TR><TD><BR></TD><TD><B>6.1.2. PROTOCOL WALK-THROUGH</B></TD></TR>
+<TR><TD><BR></TD><TD><B>6.1.2.1. Resource Records with Zero TTL: RFC-1035 Section 3.2.1</B></TD></TR>
+<TR><TD><BR></TD><TD>Resource Records with Zero.</TD></TR>
+<TR><TD><BR></TD><TD><B>6.1.2.2. QCLASS Values: RFC-1035 Section 3.2.5</B></TD></TR>
+<TR><TD><BR></TD><TD><B>6.1.2.3. Unused Fields: RFC-1035 Section 4.1.1</B></TD></TR>
+<TR>
+<TD>94</TD><TD><A HREF="./SV/SV_RFC1123_6_1_2_3_Unused.html">Unused fields in a query</A></TD></TR>
+<TR><TD><BR></TD><TD>Unused fields in a query.</TD></TR>
+<TR><TD><BR></TD><TD><B>6.1.2.4. Compression: RFC-1035 Section 4.1.4</B></TD></TR>
+<TR><TD><BR></TD><TD>Message compression.</TD></TR>
+<TR><TD><BR></TD><TD><B>6.1.2.5. Misusing Configuration Info: RFC-1035 Section 6.1.2</B></TD></TR>
+<TR><TD><BR></TD><TD><B>6.1.3. SPECIFC ISSUES</B></TD></TR>
+<TR><TD><BR></TD><TD><B>6.1.3.1 Resolver Implementation</B></TD></TR>
+<TR>
+<TD>95</TD><TD><A HREF="./SV/SV_RFC1123_6_1_3_1_Multi_req.html">Multiplex concurrent requests</A></TD></TR>
+<TR><TD><BR></TD><TD><B>(A) Full-Service Resolver</B></TD></TR>
+<TR>
+<TD>96</TD><TD><A HREF="./SV/SV_RFC1123_6_1_3_1_Timeout_cache.html">Time out of cache</A></TD></TR>
+<TR><TD><BR></TD><TD><B>(B) Stub Resolver</B></TD></TR>
+<TR><TD><BR></TD><TD><B>6.1.3.2 Transport Protocols</B></TD></TR>
+<TR>
+<TD>97</TD><TD><A HREF="./SV/SV_RFC1123_6_1_3_2_TCP_query.html">Not refuse TCP query (query)</A></TD></TR>
+<TR>
+<TD>98</TD><TD><A HREF="./SV/SV_RFC1123_6_1_3_2_TCP_response.html">Not refuse TCP query (response)</A></TD></TR>
+<TR>
+<TD>99</TD><TD><A HREF="./SV/SV_RFC1123_6_1_3_2_truncated_resp.html">Caching truncated responses</A></TD></TR>
+<TR>
+<TD>100</TD><TD><A HREF="./SV/SV_RFC1123_6_1_3_2_query_while_zone_trans.html">Processing UDP query while zone transfering</A></TD></TR>
+<TR>
+<TD>101</TD><TD><A HREF="./SV/SV_RFC1123_6_1_3_2_Multicast.html">Broadcast/Multicast query</A></TD></TR>
+<TR>
+<TD>102</TD><TD><A HREF="./SV/SV_RFC1123_6_1_3_2_Multicast_ignore.html">Server ignores queries via broadcast or multicast address</A></TD></TR>
+<TR><TD><BR></TD><TD><B>6.1.3.3 Efficient Resource Usage</B></TD></TR>
+<TR>
+<TD>103</TD><TD><A HREF="./SV/SV_RFC1123_6_1_3_3_Retrans_control.html">Retransmission control</A></TD></TR>
+<TR>
+<TD>104</TD><TD><A HREF="./SV/SV_RFC1123_6_1_3_3_Cache_tmp_fail.html">Caching of temporary failure</A></TD></TR>
+<TR><TD><BR></TD><TD><B>6.1.3.4 Multihomed Hosts</B></TD></TR>
+<TR><TD><BR></TD><TD><B>6.1.3.5 Extensibility</B></TD></TR>
+<TR><TD><BR></TD><TD><B>6.1.3.6 Status of RR Types</B></TD></TR>
+<TR><TD><BR></TD><TD>Server loads zone files without obsolete RR types</TD></TR>
+<TR><TD><BR></TD><TD><B>6.1.3.7 Robustness</B></TD></TR>
+<TR>
+<TD>105</TD><TD><A HREF="./SV/SV_RFC1123_6_1_3_7_continue_service.html">Continue to provide service</A></TD></TR>
+<TR><TD><BR></TD><TD><B>6.1.3.8 Local Host Table</B></TD></TR>
+<TR><TD><BR></TD><TD><B>6.1.4. DNS USER INTERFACE</B></TD></TR>
+<TR><TD><BR></TD><TD><B>6.1.4.1 DNS Administration</B></TD></TR>
+<TR><TD><BR></TD><TD><B>6.1.4.2 DNS User Interface</B></TD></TR>
+<TR><TD><BR></TD><TD><B>6.1.4.3 Interface Abbreviation Facilities</B></TD></TR>
+<TR><TD><BR></TD><TD>Caching of negative response.</TD></TR>
+<TR><TD><BR></TD><TD><B>(Tested at 6.1.3.3. Efficient Resource Usage)</B></TD></TR>
+<TR><TD><BR></TD><TD><U><B><FONT SIZE="+1" COLOR="#FF0000">RFC 1995: Incremental Zone Transfer in DNS</FONT></B></U></TD></TR>
+<TR><TD><BR></TD><TD><B>2. Brief Description of the Protocol</B></TD></TR>
+<TR>
+<TD>106</TD><TD><A HREF="./SV/SV_RFC1995_2_IXFR_client.html">An IXFR client sends an IXFR message</A></TD></TR>
+<TR>
+<TD>107</TD><TD><A HREF="./SV/SV_RFC1995_2_IXFR_client_F.html">An IXFR client receive an IXFR response with the full zone transfer message</A></TD></TR>
+<TR>
+<TD>108</TD><TD><A HREF="./SV/SV_RFC1995_2_IXFR_client_I_add.html">An IXFR client receive an IXFR response with the incremental message (add)</A></TD></TR>
+<TR>
+<TD>109</TD><TD><A HREF="./SV/SV_RFC1995_2_IXFR_client_I_remove.html">An IXFR client receive an IXFR response with the incremental message (remove)</A></TD></TR>
+<TR>
+<TD>110</TD><TD><A HREF="./SV/SV_RFC1995_2_IXFR_client_I_change.html">An IXFR client receive an IXFR response with the incremental message (change)</A></TD></TR>
+<TR>
+<TD>111</TD><TD><A HREF="./SV/SV_RFC1995_2_IXFR_client_I_all.html">An IXFR client receive an IXFR response with the incremental message (remove/add/change)</A></TD></TR>
+<TR>
+<TD>112</TD><TD><A HREF="./SV/SV_RFC1995_2_IXFR_client_AXFR.html">An IXFR client tries an AXFR, if the query type is not recognized by the server.</A></TD></TR>
+<TR>
+<TD>113</TD><TD><A HREF="./SV/SV_RFC1995_2_IXFR_client_TCP.html">An IXFR client tries to use TCP, if the reply does not fit in a single DNS packet.</A></TD></TR>
+<TR>
+<TD>114</TD><TD><A HREF="./SV/SV_RFC1995_2_IXFR_server_I_add.html">An IXFR server transmits an IXFR response with the incremental message (add).</A></TD></TR>
+<TR>
+<TD>115</TD><TD><A HREF="./SV/SV_RFC1995_2_IXFR_server_I_remove.html">An IXFR server transmits an IXFR response with the incremental message (remove).</A></TD></TR>
+<TR>
+<TD>116</TD><TD><A HREF="./SV/SV_RFC1995_2_IXFR_server_I_change.html">An IXFR server transmits an IXFR response with the incremental message (change).</A></TD></TR>
+<TR>
+<TD>117</TD><TD><A HREF="./SV/SV_RFC1995_2_IXFR_server_older.html">An IXFR server received an IXFR request with an older version number.</A></TD></TR>
+<TR>
+<TD>118</TD><TD><A HREF="./SV/SV_RFC1995_2_IXFR_server_same.html">An IXFR server received an IXFR request with a same version number.</A></TD></TR>
+<TR>
+<TD>119</TD><TD><A HREF="./SV/SV_RFC1995_2_IXFR_server_newer.html">An IXFR server received an IXFR request with a newer version number.</A></TD></TR>
+<TR>
+<TD>120</TD><TD><A HREF="./SV/SV_RFC1995_2_IXFR_server_TCP.html">An IXFR server sends a single SOA record of the server's current version, if the UDP reply does not fit in a single DNS packet.</A></TD></TR>
+<TR><TD><BR></TD><TD><B>4. Response Format</B></TD></TR>
+<TR><TD><BR></TD><TD><B>5. Purging Strategy</B></TD></TR>
+<TR><TD><BR></TD><TD><B>6. Optional Condensation of Multiple Versions</B></TD></TR>
+<TR>
+<TD>121</TD><TD><A HREF="./SV/SV_RFC1995_2_IXFR_client_I_condense.html">An IXFR client receive an IXFR response with the condensed incremental message</A></TD></TR>
+<TR><TD><BR></TD><TD><U><B><FONT SIZE="+1" COLOR="#FF0000">RFC 1996: DNS NOTIFY</FONT></B></U></TD></TR>
+<TR><TD><BR></TD><TD><B>1. Rationale and Scope</B></TD></TR>
+<TR><TD><BR></TD><TD><B>1.1</B></TD></TR>
+<TR><TD><BR></TD><TD><B>1.2 The DNS NOTIFY transaction allows master servers to inform salve servers when the zone has changed</B></TD></TR>
+<TR>
+<TD>122</TD><TD><A HREF="./SV/SV_RFC1996_1_2_IXFR_client_Notify.html">An IXFR client sends an IXFR message through NOTIFY mechanism</A></TD></TR>
+<TR><TD><BR></TD><TD><B>3. NOTIFY Message</B></TD></TR>
+<TR><TD><BR></TD><TD><B>3.1</B></TD></TR>
+<TR><TD><BR></TD><TD><B>3.2</B></TD></TR>
+<TR>
+<TD>123</TD><TD><A HREF="./SV/SV_RFC1996_3_2_master_NOTIFY_ignore_non_zero_field.html">A master ignores message if fields are not to be filled with binary zero (0).</A></TD></TR>
+<TR>
+<TD>124</TD><TD><A HREF="./SV/SV_RFC1996_3_2_slave_NOTIFY_ignore_non_zero_field.html">A slave ignores message if fields are not to be filled with binary zero (0).</A></TD></TR>
+<TR><TD><BR></TD><TD><B>3.3</B></TD></TR>
+<TR>
+<TD>125</TD><TD><A HREF="./SV/SV_RFC1996_3_3_slave_NOTIFY_response.html">Slave server sends a NOTIFY response back to the NOTIFY request's source.</A></TD></TR>
+<TR><TD><BR></TD><TD><B>3.4</B></TD></TR>
+<TR>
+<TD>126</TD><TD><A HREF="./SV/SV_RFC1996_3_4_master_send_Notify.html">Primary Master sends a NOTIFY query</A></TD></TR>
+<TR><TD><BR></TD><TD><B>3.5</B></TD></TR>
+<TR><TD><BR></TD><TD><B>TCP</B></TD></TR>
+<TR>
+<TD>127</TD><TD><A HREF="./SV/SV_RFC1996_3_9_master_NOTIFY_continue_service.html">A master continue to offer name service during the NOTIFY transaction.</A></TD></TR>
+<TR>
+<TD>128</TD><TD><A HREF="./SV/SV_RFC1996_3_5_master_NOTIFY_retransmission.html">A slave sends a once a NOTIFY request until timeout</A></TD></TR>
+<TR><TD><BR></TD><TD><B>3.6</B></TD></TR>
+<TR><TD><BR></TD><TD><B>UDP</B></TD></TR>
+<TR>
+<TD>129</TD><TD><A HREF="./SV/SV_RFC1996_3_6_master_NOTIFY_retransmission.html">A master periodically sends a NOTIFY request to a slave until timeout.</A></TD></TR>
+<TR>
+<TD>130</TD><TD><A HREF="./SV/SV_RFC1996_3_6_master_NOTIFY_retrans_recv_ICMP.html">A master periodically sends a NOTIFY request to a slave until ICMP message indicating.</A></TD></TR>
+<TR>
+<TD>131</TD><TD><A HREF="./SV/SV_RFC1996_3_6_master_NOTIFY_retrans_recv_response.html">A master periodically sends a NOTIFY request to a slave until a NOTIFY response is received.</A></TD></TR>
+<TR><TD><BR></TD><TD><B>3.7</B></TD></TR>
+<TR>
+<TD>132</TD><TD><A HREF="./SV/SV_RFC1996_3_7_slave_NOTIFY_no_SOA.html">ANCOUNT=0 and the answer section differs from the slave's local data</A></TD></TR>
+<TR>
+<TD>133</TD><TD><A HREF="./SV/SV_RFC1996_3_7_slave_NOTIFY_diff_SOA.html">ANCOUNT&gt;0 and the answer section differs from the slave's local data</A></TD></TR>
+<TR><TD><BR></TD><TD><B>3.8</B></TD></TR>
+<TR><TD><BR></TD><TD><B>3.9</B></TD></TR>
+<TR><TD><BR></TD><TD><B>3.10</B></TD></TR>
+<TR>
+<TD>134</TD><TD><A HREF="./SV/SV_RFC1996_3_10_slave_ignore_unknown.html">A slave ignores a NOTIFY request from a unknown master for the zone.</A></TD></TR>
+<TR><TD><BR></TD><TD><B>3.11</B></TD></TR>
+<TR><TD><BR></TD><TD><B>3.12</B></TD></TR>
+<TR>
+<TD>135</TD><TD><A HREF="./SV/SV_RFC1996_3_12_master_recv_NOTIMP.html">A master receives a NOTIMP (unimplemented feature error) message.</A></TD></TR>
+<TR><TD><BR></TD><TD><U><B><FONT SIZE="+1" COLOR="#FF0000">RFC 2181: Clarifications to the DNS Specification</FONT></B></U></TD></TR>
+<TR><TD><BR></TD><TD><B>4.1. UDP Source Address Selection</B></TD></TR>
+<TR>
+<TD>136</TD><TD><A HREF="./SV/SV_RFC2181_4_1_source_selection.html">UDP Source Address Selection</A></TD></TR>
+<TR><TD><BR></TD><TD><B>4.2. Port Number Selection</B></TD></TR>
+<TR>
+<TD>137</TD><TD><A HREF="./SV/SV_RFC2181_4_2_port_selection.html">Port number selection</A></TD></TR>
+<TR><TD><BR></TD><TD><B>5. Resource Record Sets</B></TD></TR>
+<TR><TD><BR></TD><TD><B>5.1 Sending RRs from an RRSet</B></TD></TR>
+<TR>
+<TD>138</TD><TD><A HREF="./SV/SV_RFC2181_5_1_Send_RRSet.html">Sending RRs from an RRSet</A></TD></TR>
+<TR><TD><BR></TD><TD><B>5.2. TTLs of RRs in an RRSet</B></TD></TR>
+<TR>
+<TD>139</TD><TD><A HREF="./SV/SV_RFC2181_5_2_TTL_RRSet.html">TTLs of all RRs in an RRSet must be the same</A></TD></TR>
+<TR>
+<TD>140</TD><TD><A HREF="./SV/SV_RFC2181_5_2_diff_nonauth_error.html">Treat Differing TTLs from non-authoritative source as error</A></TD></TR>
+<TR>
+<TD>141</TD><TD><A HREF="./SV/SV_RFC2181_5_2_diff_nonauth.html">Differing TTLs from non-authoritative source</A></TD></TR>
+<TR>
+<TD>142</TD><TD><A HREF="./SV/SV_RFC2181_5_2_diff_auth.html">Differing TTLs from authoritative source</A></TD></TR>
+<TR><TD><BR></TD><TD><B>5.3. DNSSEC Special Cases</B></TD></TR>
+<TR><TD><BR></TD><TD><B>5.4. Receiving RRSets</B></TD></TR>
+<TR>
+<TD>143</TD><TD><A HREF="./SV/SV_RFC2181_5_4_never_merge_RRs.html">Never merge RRs from response with RRs in cache</A></TD></TR>
+<TR>
+<TD>144</TD><TD><A HREF="./SV/SV_RFC2181_5_4_update_TTL.html">Update the TTL in cache with the TTL of the received answer</A></TD></TR>
+<TR><TD><BR></TD><TD><B>5.4.1. Ranking data</B></TD></TR>
+<TR>
+<TD>145</TD><TD><A HREF="./SV/SV_RFC2181_5_4_1_judgment_reliability_3_4.html">Server makes a judgment by the reliability of data (Data from the answer section of an authoritative answer v.s. Data from the authority section of an authoritative answer)</A></TD></TR>
+<TR>
+<TD>146</TD><TD><A HREF="./SV/SV_RFC2181_5_4_1_judgment_reliability_3_6.html">Server makes a judgment by the reliability of data (Data from the answer section of an authoritative answer v.s. Non-authoritative data from the answer section of an authoritative answer)</A></TD></TR>
+<TR>
+<TD>147</TD><TD><A HREF="./SV/SV_RFC2181_5_4_1_judgment_reliability_3_7.html">Server makes a judgment by the reliability of data (Data from the answer section of an authoritative answer v.s. Data from the additional section of an authoritative answer)</A></TD></TR>
+<TR>
+<TD>148</TD><TD><A HREF="./SV/SV_RFC2181_5_4_1_judgment_reliability_4_6.html">Server makes a judgment by the reliability of data (Data from the authority section of an authoritative answer v.s. Data from the answer section of a non-authoritative answer)</A></TD></TR>
+<TR>
+<TD>149</TD><TD><A HREF="./SV/SV_RFC2181_5_4_1_judgment_reliability_4_7.html">Server makes a judgment by the reliability of data (Data from the authority section of an authoritative answer v.s. Data from the authority section of a non-authoritative answer)</A></TD></TR>
+<TR>
+<TD>150</TD><TD><A HREF="./SV/SV_RFC2181_5_4_1_judgment_reliability_6_7.html">Server makes a judgment by the reliability of data (Data from the answer section of an non-authoritative answer v.s. Data from the additional section of a authoritative answer)</A></TD></TR>
+<TR>
+<TD>151</TD><TD><A HREF="./SV/SV_RFC2181_5_4_1_Lease_reliability_1.html">Least reliability data should not return as answer (Additional section from an authoritative answer)</A></TD></TR>
+<TR>
+<TD>152</TD><TD><A HREF="./SV/SV_RFC2181_5_4_1_Lease_reliability_2.html">Least reliability data should not return as answer (Authority section from a non-authoritative answer)</A></TD></TR>
+<TR>
+<TD>153</TD><TD><A HREF="./SV/SV_RFC2181_5_4_1_Lease_reliability_3.html">Least reliability data should not return as answer (Additional section from a non-authoritative answer)</A></TD></TR>
+<TR><TD><BR></TD><TD><B>5.5. Sending RRSets (reprise)</B></TD></TR>
+<TR>
+<TD>154</TD><TD><A HREF="./SV/SV_RFC2181_5_5_once_RRSet.html">A Resource Record Set should only be included once in any DNS reply</A></TD></TR>
+<TR><TD><BR></TD><TD><B>6. Zone Cuts</B></TD></TR>
+<TR><TD><BR></TD><TD><B>6.1. Zone Authority</B></TD></TR>
+<TR>
+<TD>155</TD><TD><A HREF="./SV/SV_RFC2181_6_1_not_set_AA.html">A server for a zone should not return authoritative answer for queries related to names in another name</A></TD></TR>
+<TR><TD><BR></TD><TD><B>6.2. DNSSEC issues</B></TD></TR>
+<TR><TD><BR></TD><TD><B>7. SOA RRs</B></TD></TR>
+<TR><TD><BR></TD><TD><B>7.1. Placement of SOA RRs in authoritative answers</B></TD></TR>
+<TR>
+<TD>156</TD><TD><A HREF="./SV/SV_RFC2181_7_1_Placement_SOA.html">SOA records are to be placed in the authority section</A></TD></TR>
+<TR><TD><BR></TD><TD><B>8. Time to Live (TTL)</B></TD></TR>
+<TR>
+<TD>157</TD><TD><A HREF="./SV/SV_RFC2181_8_time_to_live.html">Time to live</A></TD></TR>
+<TR>
+<TD>158</TD><TD><A HREF="./SV/SV_RFC2181_8_sign_bit.html">Received with the most significant bit is set</A></TD></TR>
+<TR><TD><BR></TD><TD><B>9. The TC (truncated) header bit</B></TD></TR>
+<TR>
+<TD>159</TD><TD><A HREF="./SV/SV_RFC2181_9_TC_not_set.html">Case of the TC header bit is not set</A></TD></TR>
+<TR><TD><BR></TD><TD><B>10. Naming issues</B></TD></TR>
+<TR><TD><BR></TD><TD><B>10.1. CNAME resource records</B></TD></TR>
+<TR><TD><BR></TD><TD><B>10.2. PTR records</B></TD></TR>
+<TR>
+<TD>160</TD><TD><A HREF="./SV/SV_RFC2181_10_2_RRSet_PTR.html">RRSet for PTR record</A></TD></TR>
+<TR><TD><BR></TD><TD><U><B><FONT SIZE="+1" COLOR="#FF0000">RFC 2308: DNS NCACHE</FONT></B></U></TD></TR>
+<TR><TD><BR></TD><TD><B>2. Negative Response</B></TD></TR>
+<TR><TD><BR></TD><TD><B>2.1. Name Error</B></TD></TR>
+<TR>
+<TD>161</TD><TD><A HREF="./SV/SV_RFC2308_2_1_Name_error.html">Name error (RCODE=NXDOMAIN)</A></TD></TR>
+<TR><TD><BR></TD><TD><B>2.1.1. Special Handling of Name Error</B></TD></TR>
+<TR><TD><BR></TD><TD><B>2.2. No Data</B></TD></TR>
+<TR>
+<TD>162</TD><TD><A HREF="./SV/SV_RFC2308_2_2_No_Data.html">No Data</A></TD></TR>
+<TR><TD><BR></TD><TD><B>3. Negative Answers from Authoritative Servers</B></TD></TR>
+<TR><TD><BR></TD><TD><B>(Related to DNSSEC)</B></TD></TR>
+<TR><TD><BR></TD><TD><B>4. SOA Minimum Field</B></TD></TR>
+<TR><TD><BR></TD><TD><B>5. Caching Negative Answers</B></TD></TR>
+<TR>
+<TD>163</TD><TD><A HREF="./SV/SV_RFC2308_5_expire_cache_NXDOMAIN.html">TTL expired negative cache MUST NOT be used (NXDOMAIN)</A></TD></TR>
+<TR>
+<TD>164</TD><TD><A HREF="./SV/SV_RFC2308_5_expire_cache_NODATA.html">TTL expired negative cache MUST NOT be used (NODATA)</A></TD></TR>
+<TR>
+<TD>165</TD><TD><A HREF="./SV/SV_RFC2308_5_cache_NXDOMAIN.html">Caching of name error (NXDOMAIN)</A></TD></TR>
+<TR>
+<TD>166</TD><TD><A HREF="./SV/SV_RFC2308_5_not_cache_NXDOMAIN.html">Caching of name error (NXDOMAIN) for query tuple</A></TD></TR>
+<TR>
+<TD>167</TD><TD><A HREF="./SV/SV_RFC2308_5_cache_NODATA.html">Caching of no data (NODATA)</A></TD></TR>
+<TR>
+<TD>168</TD><TD><A HREF="./SV/SV_RFC2308_5_not_cache_NODATA.html">Caching of no data (NODATA) for query tuple</A></TD></TR>
+<TR><TD><BR></TD><TD>NXT record is stored</TD></TR>
+<TR><TD><BR></TD><TD><B>(Related to DNSSEC)</B></TD></TR>
+<TR><TD><BR></TD><TD>NXT record has the same owner name</TD></TR>
+<TR><TD><BR></TD><TD><B>(Related to DNSSEC)</B></TD></TR>
+<TR>
+<TD>169</TD><TD><A HREF="./SV/SV_RFC2308_5_without_SOA.html">Negative responses without SOA records</A></TD></TR>
+<TR><TD><BR></TD><TD><B>6. Negative answers from the cache</B></TD></TR>
+<TR><TD><BR></TD><TD>NXT record is added to the authority section</TD></TR>
+<TR><TD><BR></TD><TD><B>(Related to DNSSEC)</B></TD></TR>
+<TR><TD><BR></TD><TD>SIG record is added to the authority section</TD></TR>
+<TR><TD><BR></TD><TD><B>(Related to DNSSEC)</B></TD></TR>
+<TR>
+<TD>170</TD><TD><A HREF="./SV/SV_RFC2308_6_referral_NXDOMAIN.html">Negative answer should have an implicit referral built into the answer (NXDOMAIN)</A></TD></TR>
+<TR>
+<TD>171</TD><TD><A HREF="./SV/SV_RFC2308_6_referral_NODATA.html">Negative answer should have an implicit referral built into the answer (NODATA)</A></TD></TR>
+<TR><TD><BR></TD><TD><B>7. Other Negative Responses</B></TD></TR>
+<TR><TD><BR></TD><TD><B>7.1. Server Failure (OPTIONAL)</B></TD></TR>
+<TR>
+<TD>172</TD><TD><A HREF="./SV/SV_RFC2308_7_1_cache_server_fail.html">Resolver cache a server failure response</A></TD></TR>
+<TR>
+<TD>173</TD><TD><A HREF="./SV/SV_RFC2308_7_1_not_cache_server_fail.html">Resolver cache a server failure response for query tuple</A></TD></TR>
+<TR>
+<TD>174</TD><TD><A HREF="./SV/SV_RFC2308_7_1_limit_server_fail.html">Limit of time (5 minutes) for caching (Server Failure)</A></TD></TR>
+<TR><TD><BR></TD><TD><B>7.2. Dead / Unreachable Server (OPTIONAL)</B></TD></TR>
+<TR>
+<TD>175</TD><TD><A HREF="./SV/SV_RFC2308_7_2_cache_dead_server.html">Caching of dead server indication</A></TD></TR>
+<TR>
+<TD>176</TD><TD><A HREF="./SV/SV_RFC2308_7_2_not_cache_dead_server.html">Caching of dead server indication for query tuple</A></TD></TR>
+<TR>
+<TD>177</TD><TD><A HREF="./SV/SV_RFC2308_7_2_limit_dead_server.html">Limit of time (5 minutes) for caching (Dead/Unreachable Server)</A></TD></TR>
+<TR><TD><BR></TD><TD><B>8. Changes from RFC1034</B></TD></TR>
+<TR><TD><BR></TD><TD>Resolver cache a server failure response</TD></TR>
+<TR><TD><BR></TD><TD><B>(Tested at 7.1. Server Failure)</B></TD></TR>
+<TR>
+<TD>178</TD><TD><A HREF="./SV/SV_RFC2308_8_cache_SOA.html">Caching of SOA record</A></TD></TR>
+<TR><TD><BR></TD><TD>Caching of name error (NXDOMAIN)</TD></TR>
+<TR><TD><BR></TD><TD><B>(Tested at 5. Caching Negative Answers)</B></TD></TR>
+<TR><TD><BR></TD><TD>Caching of no data (NODATA)</TD></TR>
+<TR><TD><BR></TD><TD><B>(Tested at 5. Caching Negative Answers)</B></TD></TR>
+<TR><TD><BR></TD><TD>Negative answers from the cache</TD></TR>
+<TR><TD><BR></TD><TD><B>(Tested at 6. Negative answers from the cache)</B></TD></TR>
+<TR><TD><BR></TD><TD>$TTL directive define default TTL</TD></TR>
+<TR><TD><BR></TD><TD><B>(Tested at 4. SOA Minimum Field)</B></TD></TR>
+<TR><TD><BR></TD><TD><U><B><FONT SIZE="+1" COLOR="#FF0000">RFC 2671: Extension Mechanisms for DNS (EDNS0)</FONT></B></U></TD></TR>
+<TR><TD><BR></TD><TD><B>4. OPT pseudo-RR</B></TD></TR>
+<TR>
+<TD>179</TD><TD><A HREF="./SV/SV_RFC2671_4_1_OPT_pseudo_RR.html">OPT pseudo-RR</A></TD></TR>
+<TR>
+<TD>180</TD><TD><A HREF="./SV/SV_RFC2671_4_1_OPT_pseudo_RR_recursive.html">OPT pseudo-RR (recursive)</A></TD></TR>
+<TR><TD><BR></TD><TD><B>5. Transport Consideration</B></TD></TR>
+<TR><TD><BR></TD><TD><B>5.1.</B></TD></TR>
+<TR>
+<TD>181</TD><TD><A HREF="./SV/SV_RFC2671_5_1_OPT_presence.html">The presence of an OPT pseuduo-RR</A></TD></TR>
+<TR><TD><BR></TD><TD><B>5.2.</B></TD></TR>
+<TR>
+<TD>182</TD><TD><A HREF="./SV/SV_RFC2671_5_2_OPT_lack.html">The lack of an OPT pseuduo-RR</A></TD></TR>
+<TR><TD><BR></TD><TD><B>5.3.</B></TD></TR>
+<TR>
+<TD>183</TD><TD><A HREF="./SV/SV_RFC2671_5_3_OPT_not_understand.html">Responders don't understand OPT RR</A></TD></TR>
+<TR><TD><BR></TD><TD><U><B><FONT SIZE="+1" COLOR="#FF0000">RFC 2782: DNS SRV RR</FONT></B></U></TD></TR>
+<TR>
+<TD>184</TD><TD><A HREF="./SV/SV_RFC2782_SRV_type.html">SRV type</A></TD></TR>
+<TR>
+<TD>185</TD><TD><A HREF="./SV/SV_RFC2782_SRV_rdata.html">SRV resource record</A></TD></TR>
+<TR><TD><BR></TD><TD><U><B><FONT SIZE="+1" COLOR="#FF0000">RFC 3401: DDDS - The Comprehensive DDDS<BR>RFC 3402: DDDS - The Algorithm<BR>RFC 3403: DDDS DNS Database<BR>RFC 3404: DDDS Based URI Resolution<BR>RFC 3405: URI.ARPA Assignment Procedures</FONT></B></U></TD></TR>
+<TR><TD><BR></TD><TD><B>RFC3401 Part One: The Comprehensive DDDS</B></TD></TR>
+<TR><TD><BR></TD><TD><B>RFC3402 Part Two: The Algorithm</B></TD></TR>
+<TR><TD><BR></TD><TD><B>RFC3403 Part Three: The Domain Name System (DNS) Database</B></TD></TR>
+<TR><TD><BR></TD><TD><B>4. NAPTR RR Format</B></TD></TR>
+<TR><TD><BR></TD><TD><B>4.1 Packet Format</B></TD></TR>
+<TR>
+<TD>186</TD><TD><A HREF="./SV/SV_RFC3403_4_NAPTR_type.html">NAPTR type</A></TD></TR>
+<TR>
+<TD>187</TD><TD><A HREF="./SV/SV_RFC3403_4_cache_NAPTR.html">Caching NAPTR resource record</A></TD></TR>
+<TR>
+<TD>188</TD><TD><A HREF="./SV/SV_RFC3403_4_1_NAPTR_rdata.html">NAPTR resource record</A></TD></TR>
+<TR>
+<TD>189</TD><TD><A HREF="./SV/SV_RFC3403_4_1_multi_NAPTR.html">Multiple NAPTR resource records with several ORDER and PREFERENCE</A></TD></TR>
+<TR>
+<TD>190</TD><TD><A HREF="./SV/SV_RFC3403_4_1_invalid_NAPTR_format.html">Invalid NAPTR resource record format</A></TD></TR>
+<TR><TD><BR></TD><TD><B>RFC3404 Part Four: The Uniform Resource Identifiers (URI) Resolution Application</B></TD></TR>
+<TR><TD><BR></TD><TD><B>4. The URI and URN Resolution Application Specifications</B></TD></TR>
+<TR><TD><BR></TD><TD><B>4.3 Flags</B></TD></TR>
+<TR>
+<TD>191</TD><TD><A HREF="./SV/SV_RFC3404_4_3_NAPTR_flag_empty.html">Flag in NAPTR resource record (empty)</A></TD></TR>
+<TR>
+<TD>192</TD><TD><A HREF="./SV/SV_RFC3404_4_3_NAPTR_flag_P.html">Flag in NAPTR resource record (P flag)</A></TD></TR>
+<TR>
+<TD>193</TD><TD><A HREF="./SV/SV_RFC3404_4_3_NAPTR_flag_A.html">Flag in NAPTR resource record (A flag)</A></TD></TR>
+<TR>
+<TD>194</TD><TD><A HREF="./SV/SV_RFC3404_4_3_NAPTR_flag_S.html">Flag in NAPTR resource record (S flag)</A></TD></TR>
+<TR>
+<TD>195</TD><TD><A HREF="./SV/SV_RFC3404_4_3_NAPTR_multi_flags.html">Multiple Flags in NAPTR resource record (X,Y flag)</A></TD></TR>
+<TR><TD><BR></TD><TD><B>4.5 Valid Databases</B></TD></TR>
+<TR>
+<TD>196</TD><TD><A HREF="./SV/SV_RFC3404_4_5_NAPTR_flag_A_additional.html">Additional Section Processing for NAPTR resource record (A flag)</A></TD></TR>
+<TR>
+<TD>197</TD><TD><A HREF="./SV/SV_RFC3404_4_5_NAPTR_flag_S_additional.html">Additional Section Processing for NAPTR resource record (S flag)</A></TD></TR>
+<TR><TD><BR></TD><TD><B>RFC3405 Part Five: URI.ARPA Assignment Procedures</B></TD></TR>
+<TR><TD><BR></TD><TD><U><B><FONT SIZE="+1" COLOR="#FF0000">RFC 3425: Obsoleting IQUERY</FONT></B></U></TD></TR>
+<TR><TD><BR></TD><TD><B>3 - Effect on RFC 1035</B></TD></TR>
+<TR>
+<TD>198</TD><TD><A HREF="./SV/SV_RFC3425_3_IQUERY.html">Returning Not Implemented error</A></TD></TR>
+<TR><TD><BR></TD><TD><U><B><FONT SIZE="+1" COLOR="#FF0000">RFC 3596: DNS Extensions to Support IPv6</FONT></B></U></TD></TR>
+<TR><TD><BR></TD><TD><B>2. New resource record definition and domain</B></TD></TR>
+<TR><TD><BR></TD><TD><B>2.1. AAAA record type</B></TD></TR>
+<TR><TD><BR></TD><TD><B>2.2. AAAA data format</B></TD></TR>
+<TR><TD><BR></TD><TD><B>2.3. AAAA query</B></TD></TR>
+<TR>
+<TD>199</TD><TD><A HREF="./SV/SV_RFC3596_2_1_AAAA_type.html">AAAA type</A></TD></TR>
+<TR>
+<TD>200</TD><TD><A HREF="./SV/SV_RFC3596_2_1_AAAA_rdata.html">AAAA resource record</A></TD></TR>
+<TR><TD><BR></TD><TD><B>2.4. Textual format of AAAA records</B></TD></TR>
+<TR><TD><BR></TD><TD><B>2.5. IP6.ARPA Domain</B></TD></TR>
+<TR>
+<TD>201</TD><TD><A HREF="./SV/SV_RFC3596_2_5_PTR_type.html">PTR type</A></TD></TR>
+<TR>
+<TD>202</TD><TD><A HREF="./SV/SV_RFC3596_2_5_PTR_rdata.html">PTR resource data</A></TD></TR>
+<TR><TD><BR></TD><TD><U><B><FONT SIZE="+2">Client Test</FONT></B></U></TD></TR>
+<TR><TD><BR></TD><TD><U><B><FONT SIZE="+1" COLOR="#FF0000">RFC 1034: Domain Concepts and Facilities</FONT></B></U></TD></TR>
+<TR><TD><BR></TD><TD><B>3. DOMAIN NAME SPACE AND RESOURCE RECORDS</B></TD></TR>
+<TR><TD><BR></TD><TD><B>Name syntax </B></TD></TR>
+<TR>
+<TD>203</TD><TD><A HREF="./CL/CL_RFC1034_3_1_LabelLength.html">Label length</A></TD></TR>
+<TR>
+<TD>204</TD><TD><A HREF="./CL/CL_RFC1034_3_1_DomainNameLength.html">Domain Name length</A></TD></TR>
+<TR>
+<TD>205</TD><TD><A HREF="./CL/CL_RFC1034_3_1_RuleForLabel.html">Rule for label</A></TD></TR>
+<TR><TD><BR></TD><TD><B>3.6. Resource Records</B></TD></TR>
+<TR><TD><BR></TD><TD><B>type </B></TD></TR>
+<TR>
+<TD>206</TD><TD><A HREF="./CL/CL_RFC1034_3_6_A_type.html">A record</A></TD></TR>
+<TR>
+<TD>207</TD><TD><A HREF="./CL/CL_RFC1034_3_6_CNAME_type.html">CNAME record</A></TD></TR>
+<TR>
+<TD>208</TD><TD><A HREF="./CL/CL_RFC1034_3_6_HINFO_type.html">HINFO record</A></TD></TR>
+<TR>
+<TD>209</TD><TD><A HREF="./CL/CL_RFC1034_3_6_MX_type.html">MX record</A></TD></TR>
+<TR>
+<TD>210</TD><TD><A HREF="./CL/CL_RFC1034_3_6_NS_type.html">NS record</A></TD></TR>
+<TR>
+<TD>211</TD><TD><A HREF="./CL/CL_RFC1034_3_6_PTR_type_A.html">PTR record (A)</A></TD></TR>
+<TR>
+<TD>212</TD><TD><A HREF="./CL/CL_RFC1034_3_6_PTR_type_AAAA.html">PTR record (AAAA)</A></TD></TR>
+<TR>
+<TD>213</TD><TD><A HREF="./CL/CL_RFC1034_3_6_SOA_type.html">SOA record</A></TD></TR>
+<TR><TD><BR></TD><TD><B>class </B></TD></TR>
+<TR>
+<TD>214</TD><TD><A HREF="./CL/CL_RFC1034_3_6_IN_class.html">IN class</A></TD></TR>
+<TR>
+<TD>215</TD><TD><A HREF="./CL/CL_RFC1034_3_6_CH_class.html">CH class</A></TD></TR>
+<TR><TD><BR></TD><TD><B>Caching </B></TD></TR>
+<TR>
+<TD>216</TD><TD><A HREF="./CL/CL_RFC1034_3_6_Zero_TTL.html">Zero TTL prohibits caching</A></TD></TR>
+<TR><TD><BR></TD><TD><B>3.7.Queries </B></TD></TR>
+<TR>
+<TD>217</TD><TD><A HREF="./CL/CL_RFC1034_3_7_TCP.html">Carried in TCP</A></TD></TR>
+<TR>
+<TD>218</TD><TD><A HREF="./CL/CL_RFC1034_3_7_Standard.html">Standard message format</A></TD></TR>
+<TR>
+<TD>219</TD><TD><A HREF="./CL/CL_RFC1034_3_7_Opcode_Standard.html">Opcode (standard query)</A></TD></TR>
+<TR>
+<TD>220</TD><TD><A HREF="./CL/CL_RFC1034_3_7_Opcode_Status.html">Opcode (status query)</A></TD></TR>
+<TR><TD><BR></TD><TD><B>3.7.1. Standard queries </B></TD></TR>
+<TR>
+<TD>221</TD><TD><A HREF="./CL/CL_RFC1034_3_7_1_Question.html">Question section format</A></TD></TR>
+<TR><TD><BR></TD><TD><B>QTYPE </B></TD></TR>
+<TR>
+<TD>222</TD><TD><A HREF="./CL/CL_RFC1034_3_7_1_AXFR_qtype.html">AXFR record</A></TD></TR>
+<TR>
+<TD>223</TD><TD><A HREF="./CL/CL_RFC1034_3_7_1_any_qtype.html">* record</A></TD></TR>
+<TR><TD><BR></TD><TD><B>QCLASS </B></TD></TR>
+<TR>
+<TD>224</TD><TD><A HREF="./CL/CL_RFC1034_3_7_1_any_qclass.html">* class</A></TD></TR>
+<TR><TD><BR></TD><TD><B>4.3.1. Queries and responses</B></TD></TR>
+<TR>
+<TD>225</TD><TD><A HREF="./CL/CL_RFC1034_4_3_1_RD.html">Recursion desired (RD)</A></TD></TR>
+<TR><TD><BR></TD><TD><B>4.3.3. Wildcards </B></TD></TR>
+<TR>
+<TD>226</TD><TD><A HREF="./CL/CL_RFC1034_4_3_3_caching_wildcard.html">Caching wildcards response</A></TD></TR>
+<TR><TD><BR></TD><TD><B>5. RESOLVERS</B></TD></TR>
+<TR><TD><BR></TD><TD><B>5.2. Client-resolver interface</B></TD></TR>
+<TR>
+<TD>227</TD><TD><A HREF="./CL/CL_RFC1034_5_2_return_answer.html">Returning of answer</A></TD></TR>
+<TR>
+<TD>228</TD><TD><A HREF="./CL/CL_RFC1034_5_2_return_NXDOMAIN.html">Returning of name error</A></TD></TR>
+<TR>
+<TD>229</TD><TD><A HREF="./CL/CL_RFC1034_5_2_return_no_data.html">Returning of data not found error</A></TD></TR>
+<TR><TD><BR></TD><TD><B>5.2.2. Aliases </B></TD></TR>
+<TR>
+<TD>230</TD><TD><A HREF="./CL/CL_RFC1034_5_2_2_Encounter_CNAME.html">Encounters a CNAME</A></TD></TR>
+<TR><TD><BR></TD><TD><B>5.2.3. Temporary failures </B></TD></TR>
+<TR><TD><BR></TD><TD><B>5.3. Resolver internals</B></TD></TR>
+<TR><TD><BR></TD><TD><B>5.3.2. Resources </B></TD></TR>
+<TR>
+<TD>231</TD><TD><A HREF="./CL/CL_RFC1034_5_3_2_Cache_vs_auth.html">Cache data vs authoritative data</A></TD></TR>
+<TR><TD><BR></TD><TD><B>5.3.3. Algorithm </B></TD></TR>
+<TR>
+<TD>232</TD><TD><A HREF="./CL/CL_RFC1034_5_3_3_local_info.html">Answer in local information</A></TD></TR>
+<TR>
+<TD>233</TD><TD><A HREF="./CL/CL_RFC1034_5_3_3_sending_query.html">Sending query to servers</A></TD></TR>
+<TR>
+<TD>234</TD><TD><A HREF="./CL/CL_RFC1034_5_3_3_delegation.html">Analyze the response (delegation)</A></TD></TR>
+<TR>
+<TD>235</TD><TD><A HREF="./CL/CL_RFC1034_5_3_3_cache_delegation.html">Analyze the response (caching delegation)</A></TD></TR>
+<TR>
+<TD>236</TD><TD><A HREF="./CL/CL_RFC1034_5_3_3_cache_CNAME.html">Analyze the response (caching CNAME)</A></TD></TR>
+<TR>
+<TD>237</TD><TD><A HREF="./CL/CL_RFC1034_5_3_3_answer_invalid.html">Analyze the response (answer is invalid for recursive)</A></TD></TR>
+<TR>
+<TD>238</TD><TD><A HREF="./CL/CL_RFC1034_5_3_3_cache_answer_invalid.html">Analyze the response (answer is invalid for caching)</A></TD></TR>
+<TR>
+<TD>239</TD><TD><A HREF="./CL/CL_RFC1034_5_3_3_delegation_invalid.html">Analyze the response (delegation is invalid)</A></TD></TR>
+<TR><TD><BR></TD><TD><U><B><FONT SIZE="+1" COLOR="#FF0000">RFC 1035: Domain Implementation and Specification</FONT></B></U></TD></TR>
+<TR><TD><BR></TD><TD><B>2.3.2 Data Transmission Order </B></TD></TR>
+<TR>
+<TD>240</TD><TD><A HREF="./CL/CL_RFC1035_2_3_2_order_octets.html">Order of transmission of octets and bits</A></TD></TR>
+<TR><TD><BR></TD><TD><B>3.1 Name space definitions </B></TD></TR>
+<TR>
+<TD>241</TD><TD><A HREF="./CL/CL_RFC1035_3_1_label_format.html">Label format</A></TD></TR>
+<TR>
+<TD>242</TD><TD><A HREF="./CL/CL_RFC1035_3_1_label_root.html">Label of root</A></TD></TR>
+<TR><TD><BR></TD><TD><B>3.2.1 Format </B></TD></TR>
+<TR><TD><BR></TD><TD><B>3.2.2 TYPE values </B></TD></TR>
+<TR>
+<TD>243</TD><TD><A HREF="./CL/CL_RFC1035_3_2_2_MB_type.html">MB record</A></TD></TR>
+<TR>
+<TD>244</TD><TD><A HREF="./CL/CL_RFC1035_3_2_2_MG_type.html">MG record</A></TD></TR>
+<TR>
+<TD>245</TD><TD><A HREF="./CL/CL_RFC1035_3_2_2_MR_type.html">MR record</A></TD></TR>
+<TR>
+<TD>246</TD><TD><A HREF="./CL/CL_RFC1035_3_2_2_NULL_type.html">NULL record</A></TD></TR>
+<TR>
+<TD>247</TD><TD><A HREF="./CL/CL_RFC1035_3_2_2_WKS_type.html">WKS record</A></TD></TR>
+<TR>
+<TD>248</TD><TD><A HREF="./CL/CL_RFC1035_3_2_2_MINFO_type.html">MINFO record</A></TD></TR>
+<TR>
+<TD>249</TD><TD><A HREF="./CL/CL_RFC1035_3_2_2_TXT_type.html">TXT record</A></TD></TR>
+<TR><TD><BR></TD><TD><B>3.2.3 QTYPE values </B></TD></TR>
+<TR>
+<TD>250</TD><TD><A HREF="./CL/CL_RFC1035_3_2_3_MAILB_qtype.html">MAILB record</A></TD></TR>
+<TR><TD><BR></TD><TD><B>3.2.4 CLASS values </B></TD></TR>
+<TR>
+<TD>251</TD><TD><A HREF="./CL/CL_RFC1035_3_2_4_HS_class.html">HS class</A></TD></TR>
+<TR><TD><BR></TD><TD><B>4.1 Format </B></TD></TR>
+<TR>
+<TD>252</TD><TD><A HREF="./CL/CL_RFC1035_4_1_Header.html">Header section format</A></TD></TR>
+<TR><TD><BR></TD><TD><B>4.1.4 Message compression </B></TD></TR>
+<TR>
+<TD>253</TD><TD><A HREF="./CL/CL_RFC1035_4_1_4_compression.html">Message compression</A></TD></TR>
+<TR><TD><BR></TD><TD><B>4.2.1 UDP usage </B></TD></TR>
+<TR>
+<TD>254</TD><TD><A HREF="./CL/CL_RFC1035_4_2_1_not_depend_order.html">Not depend on response in order</A></TD></TR>
+<TR><TD><BR></TD><TD><B>7.3 UDP Processing responses </B></TD></TR>
+<TR>
+<TD>255</TD><TD><A HREF="./CL/CL_RFC1035_7_3_invalid_response.html">Invalid response (Query is returned)</A></TD></TR>
+<TR>
+<TD>256</TD><TD><A HREF="./CL/CL_RFC1035_7_3_invalid_RR.html">Invalid response (RRs are incorrectly formatted)</A></TD></TR>
+<TR>
+<TD>257</TD><TD><A HREF="./CL/CL_RFC1035_7_3_invalid_TTL.html">Invalid response (Long TTL) (optional)</A></TD></TR>
+<TR>
+<TD>258</TD><TD><A HREF="./CL/CL_RFC1035_7_3_invalid_ID.html">Invalid response (ID does not match)</A></TD></TR>
+<TR>
+<TD>259</TD><TD><A HREF="./CL/CL_RFC1035_7_3_invalid_QS.html">Invalid response (Invalid question section)</A></TD></TR>
+<TR><TD><BR></TD><TD><B>7.4 Using the cache </B></TD></TR>
+<TR>
+<TD>260</TD><TD><A HREF="./CL/CL_RFC1035_7_4_cache_RRs.html">Caching several RRs of same type</A></TD></TR>
+<TR><TD><BR></TD><TD><U><B><FONT SIZE="+1" COLOR="#FF0000">RFC 1123: Requirements for Internet Hosts -- Application and Support</FONT></B></U></TD></TR>
+<TR><TD><BR></TD><TD><B>6. SUPPORT SERVICES </B></TD></TR>
+<TR><TD><BR></TD><TD><B>6.1 DOMAIN NAME TRANSLATION </B></TD></TR>
+<TR><TD><BR></TD><TD><B>6.1.2  PROTOCOL WALK-THROUGH </B></TD></TR>
+<TR><TD><BR></TD><TD><B>6.1.2.3  Unused Fields: RFC-1035 Section 4.1.1 </B></TD></TR>
+<TR>
+<TD>261</TD><TD><A HREF="./CL/CL_RFC1123_6_1_2_3_Unused.html">Unused fields in a query</A></TD></TR>
+<TR><TD><BR></TD><TD><B>6.1.3.1 Resolver Implementation </B></TD></TR>
+<TR>
+<TD>262</TD><TD><A HREF="./CL/CL_RFC1123_6_1_3_1_Multi_req.html">Multiplex concurrent requests</A></TD></TR>
+<TR><TD><BR></TD><TD><B>Full-Service Resolver</B></TD></TR>
+<TR>
+<TD>263</TD><TD><A HREF="./CL/CL_RFC1123_6_1_3_1_Timeout_cache.html">Time out of cache</A></TD></TR>
+<TR><TD><BR></TD><TD><B>6.1.3.2 Transport Protocols </B></TD></TR>
+<TR>
+<TD>264</TD><TD><A HREF="./CL/CL_RFC1123_6_1_3_2_truncated_resp.html">Caching truncated responses</A></TD></TR>
+<TR>
+<TD>265</TD><TD><A HREF="./CL/CL_RFC1123_6_1_3_2_Multicast.html">Multicast query</A></TD></TR>
+<TR><TD><BR></TD><TD><B>6.1.3.3 Efficient Resource Usage </B></TD></TR>
+<TR>
+<TD>266</TD><TD><A HREF="./CL/CL_RFC1123_6_1_3_3_Retrans_control.html">Retransmission control</A></TD></TR>
+<TR>
+<TD>267</TD><TD><A HREF="./CL/CL_RFC1123_6_1_3_3_Cache_tmp_fail.html">Caching of temporary failure</A></TD></TR>
+<TR><TD><BR></TD><TD><U><B><FONT SIZE="+1" COLOR="#FF0000">RFC 2181: Clarifications to the DNS Specification</FONT></B></U></TD></TR>
+<TR><TD><BR></TD><TD><B>5.2 TTLs of RRs in an RRSet </B></TD></TR>
+<TR>
+<TD>268</TD><TD><A HREF="./CL/CL_RFC2181_5_2_diff_nonauth.html">Differing TTLs from non-authoritative source</A></TD></TR>
+<TR>
+<TD>269</TD><TD><A HREF="./CL/CL_RFC2181_5_2_diff_auth.html">Differing TTLs from authoritative source</A></TD></TR>
+<TR><TD><BR></TD><TD><B>8. Time to Live (TTL) </B></TD></TR>
+<TR>
+<TD>270</TD><TD><A HREF="./CL/CL_RFC2181_8_sign_bit.html">Received with most significant bit is set</A></TD></TR>
+<TR><TD><BR></TD><TD><U><B><FONT SIZE="+1" COLOR="#FF0000">RFC 2308: DNS NCACHE</FONT></B></U></TD></TR>
+<TR><TD><BR></TD><TD><B>5. Caching Negative Answers </B></TD></TR>
+<TR>
+<TD>271</TD><TD><A HREF="./CL/CL_RFC2308_5_cache_NXDOMAIN.html">Caching of name error (NXDOMAIN)</A></TD></TR>
+<TR>
+<TD>272</TD><TD><A HREF="./CL/CL_RFC2308_5_expire_cache_NXDOMAIN.html">TTL expired negative cache MUST NOT be used (NXDOMAIN)</A></TD></TR>
+<TR>
+<TD>273</TD><TD><A HREF="./CL/CL_RFC2308_5_not_cache_NXDOMAIN.html">Caching of name error (NXDOMAIN) for query tuple</A></TD></TR>
+<TR>
+<TD>274</TD><TD><A HREF="./CL/CL_RFC2308_5_cache_NODATA.html">Caching of no data (NODATA)</A></TD></TR>
+<TR>
+<TD>275</TD><TD><A HREF="./CL/CL_RFC2308_5_expire_cache_NODATA.html">TTL expired negative cache MUST NOT be used (NODATA)</A></TD></TR>
+<TR>
+<TD>276</TD><TD><A HREF="./CL/CL_RFC2308_5_not_cache_NODATA.html">Caching of no data (NODATA) for query tuple</A></TD></TR>
+<TR>
+<TD>277</TD><TD><A HREF="./CL/CL_RFC2308_5_without_SOA.html">Negative responses without SOA records</A></TD></TR>
+<TR><TD><BR></TD><TD><B>7.1 Server Failure (OPTIONAL) </B></TD></TR>
+<TR>
+<TD>278</TD><TD><A HREF="./CL/CL_RFC2308_7_1_cache_server_fail.html">Resolver cache a server failure response</A></TD></TR>
+<TR>
+<TD>279</TD><TD><A HREF="./CL/CL_RFC2308_7_1_not_cache_server_fail.html">Resolver cache a server failure response for query tuple</A></TD></TR>
+<TR>
+<TD>280</TD><TD><A HREF="./CL/CL_RFC2308_7_1_limit_server_fail.html">Limit of time (5 minutes) for caching (Server Failure)</A></TD></TR>
+<TR><TD><BR></TD><TD><B>7.2 Dead / Unreachable Server (OPTIONAL) </B></TD></TR>
+<TR>
+<TD>281</TD><TD><A HREF="./CL/CL_RFC2308_7_2_cache_dead_server.html">Caching of dead server indication</A></TD></TR>
+<TR>
+<TD>282</TD><TD><A HREF="./CL/CL_RFC2308_7_2_not_cache_dead_server.html">Caching of dead server indication for query tuple</A></TD></TR>
+<TR>
+<TD>283</TD><TD><A HREF="./CL/CL_RFC2308_7_2_limit_dead_server.html">Limit of time (5 minutes) for caching (Dead/Unreachable Server)</A></TD></TR>
+<TR><TD><BR></TD><TD><B>8 Changes from RFC1034 </B></TD></TR>
+<TR>
+<TD>284</TD><TD><A HREF="./CL/CL_RFC2308_8_cache_SOA.html">Caching of SOA record</A></TD></TR>
+<TR><TD><BR></TD><TD><U><B><FONT SIZE="+1" COLOR="#FF0000">RFC 2671: Extension Mechanisms for DNS (EDNS0)</FONT></B></U></TD></TR>
+<TR><TD><BR></TD><TD><B>4 - OPT pseudo-RR </B></TD></TR>
+<TR>
+<TD>285</TD><TD><A HREF="./CL/CL_RFC2671_4_1_OPT_RR.html">OPT pseudo-RR</A></TD></TR>
+<TR>
+<TD>286</TD><TD><A HREF="./CL/CL_RFC2671_4_1_quantity_OPT.html">The quantity of OPT pseudo-RRs</A></TD></TR>
+<TR>
+<TD>287</TD><TD><A HREF="./CL/CL_RFC2671_4_3_OPT_format.html">Check OPT RR format</A></TD></TR>
+<TR>
+<TD>288</TD><TD><A HREF="./CL/CL_RFC2671_4_5_OPT_UDP_size.html">Check Sender's UDP payload size</A></TD></TR>
+<TR><TD><BR></TD><TD><B>5 - Transport Considerations </B></TD></TR>
+<TR>
+<TD>289</TD><TD><A HREF="./CL/CL_RFC2671_5_3_OPT_not_understand.html">Responders don't understand OPT RR</A></TD></TR>
+<TR><TD><BR></TD><TD><U><B><FONT SIZE="+1" COLOR="#FF0000">RFC 2782: DNS SRV RR</FONT></B></U></TD></TR>
+<TR>
+<TD>290</TD><TD><A HREF="./CL/CL_RFC2782_SRV_type.html">SRV record</A></TD></TR>
+<TR>
+<TD>291</TD><TD><A HREF="./CL/CL_RFC2782_SRV_return_answer.html">Returning of answer</A></TD></TR>
+<TR>
+<TD>292</TD><TD><A HREF="./CL/CL_RFC2782_SRV_return_answer_no_additional.html">Returning of answer (w/o Additional Data section)</A></TD></TR>
+<TR>
+<TD>293</TD><TD><A HREF="./CL/CL_RFC2782_SRV_priority.html">Priority comparison</A></TD></TR>
+<TR>
+<TD>294</TD><TD><A HREF="./CL/CL_RFC2782_SRV_priority_round_robin.html">Priority comparison (round-robin)</A></TD></TR>
+<TR>
+<TD>295</TD><TD><A HREF="./CL/CL_RFC2782_SRV_weight.html">Weight comparison</A></TD></TR>
+<TR>
+<TD>296</TD><TD><A HREF="./CL/CL_RFC2782_SRV_NXDOMAIN.html">NXDOMAIN</A></TD></TR>
+<TR><TD><BR></TD><TD><U><B><FONT SIZE="+1" COLOR="#FF0000">RFC 3401: DDDS - The Comprehensive DDDS<BR>RFC 3402: DDDS - The Algorithm<BR>RFC 3403: DDDS DNS Database<BR>RFC 3404: DDDS Based URI Resolution<BR>RFC 3405: DDDS URI.ARPA Assignment Procedures</FONT></B></U></TD></TR>
+<TR><TD><BR></TD><TD><BR>RFC3402 Part Two: The Domain Name System (DNS) Database</B></TD></TR>
+<TR><TD><BR></TD><TD><BR>RFC3403 Part Three: The Domain Name System (DNS) Database</B></TD></TR>
+<TR>
+<TD>297</TD><TD><A HREF="./CL/CL_RFC3403_4_NAPTR_type.html">NAPTR resource record query</A></TD></TR>
+<TR><TD><BR></TD><TD><B>4. NAPTR RR Format</B></TD></TR>
+<TR><TD><BR></TD><TD><B>4.1 Packet Format</B></TD></TR>
+<TR>
+<TD>298</TD><TD><A HREF="./CL/CL_RFC3403_4_NAPTR_order.html">Order comparison</A></TD></TR>
+<TR>
+<TD>299</TD><TD><A HREF="./CL/CL_RFC3403_4_NAPTR_preference.html">Preference comparison</A></TD></TR>
+<TR>
+<TD>300</TD><TD><A HREF="./CL/CL_RFC3403_4_NAPTR_flag.html">Flag "" to control rewriting and interpretation</A></TD></TR>
+<TR>
+<TD>301</TD><TD><A HREF="./CL/CL_RFC3403_4_NAPTR_flagA.html">Flag "A" to control rewriting and interpretation</A></TD></TR>
+<TR>
+<TD>302</TD><TD><A HREF="./CL/CL_RFC3403_4_NAPTR_flagS.html">Flag "S" to control rewriting and interpretation</A></TD></TR>
+<TR>
+<TD>303</TD><TD><A HREF="./CL/CL_RFC3403_4_NAPTR_services.html">Selection of services</A></TD></TR>
+<TR>
+<TD>304</TD><TD><A HREF="./CL/CL_RFC3403_4_NAPTR_unknown_flag.html">Encounter Unknown flag</A></TD></TR>
+<TR>
+<TD>305</TD><TD><A HREF="./CL/CL_RFC3403_4_NAPTR_reg_repl.html">Both REGEXP and REPLACEMENT fields exist.</A></TD></TR>
+<TR><TD><BR></TD><TD><B>6. Example</B></TD></TR>
+<TR>
+<TD>306</TD><TD><A HREF="./CL/CL_RFC3403_6_NAPTR_answer.html">E164 to Uniform Resource Identifiers (URI)</A></TD></TR>
+<TR><TD><BR></TD><TD><B>RFC3404 Part Four: The Uniform Resource Identifiers (URI) Resolution Application</B></TD></TR>
+<TR><TD><BR></TD><TD><B>5. Examples</B></TD></TR>
+<TR>
+<TD>307</TD><TD><A HREF="./CL/CL_RFC3404_5_NAPTR_urn.html">URN resolution</A></TD></TR>
+<TR><TD><BR></TD><TD><B>RFC3405 Part Five: URI.ARPA Assignment Procedures</B></TD></TR>
+<TR><TD><BR></TD><TD><U><B><FONT SIZE="+1" COLOR="#FF0000">RFC3425 Obsoleting IQUERY</FONT></B></U></TD></TR>
+<TR><TD><BR></TD><TD><B>3 - Effect on RFC 1035</B></TD></TR>
+<TR>
+<TD>308</TD><TD><A HREF="./CL/CL_RFC3425_3_IQUERY.html">Obsoleting IQUERY</A></TD></TR>
+<TR><TD><BR></TD><TD><U><B><FONT SIZE="+1" COLOR="#FF0000">RFC3596 DNS Extensions to Support IP Version 6</FONT></B></U></TD></TR>
+<TR><TD><BR></TD><TD><B>2 New resource record definition and domain </B></TD></TR>
+<TR><TD><BR></TD><TD><B>2.1 AAAA record type </B></TD></TR>
+<TR>
+<TD>309</TD><TD><A HREF="./CL/CL_RFC3596_2_1_AAAA_type.html">AAAA record</A></TD></TR>
+</TABLE>
+</CENTER>
+</BODY>
+</HTML>
+<!-- e5dc6d38905a68bdbc552742817ec23d -->

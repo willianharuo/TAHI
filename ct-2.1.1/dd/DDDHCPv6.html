@@ -1,0 +1,454 @@
+<HTML>
+<HEAD>
+<TITLE>DDDHCPv6.seq - Host requests DNS configuration using DHCPv6</TITLE>
+<LINK REV="made" HREF="mailto:hackers@FreeBSD.org">
+</HEAD>
+
+<BODY>
+
+<!-- INDEX BEGIN -->
+<!--
+
+<UL>
+
+	<LI><A HREF="#NAME">NAME</A>
+	<LI><A HREF="#TARGET">TARGET</A>
+	<LI><A HREF="#SYNOPSIS">SYNOPSIS</A>
+	<LI><A HREF="#TOPOLOGY">TOPOLOGY</A>
+	<LI><A HREF="#INITIALIZATION">INITIALIZATION</A>
+	<LI><A HREF="#TEST_PROCEDURE">TEST PROCEDURE</A>
+	<LI><A HREF="#JUDGEMENT">JUDGEMENT</A>
+	<LI><A HREF="#TERMINATION">TERMINATION</A>
+	<LI><A HREF="#REFERENCE">REFERENCE</A>
+	<LI><A HREF="#SEE_ALSO">SEE ALSO</A>
+</UL>
+-->
+<!-- INDEX END -->
+
+<P>
+<H1><A NAME="NAME">NAME</A></H1>
+<P>
+<PRE>  DDDHCPv6.seq - Host requests DNS configuration using DHCPv6
+</PRE>
+<P>
+<HR>
+<H1><A NAME="TARGET">TARGET</A></H1>
+<P>
+<PRE>  Host
+</PRE>
+<P>
+<HR>
+<H1><A NAME="SYNOPSIS">SYNOPSIS</A></H1>
+&nbsp;&nbsp;<A HREF="./DDDHCPv6.seq">DDDHCPv6.seq</A> [-tooloption ...] -pkt <A HREF="./DDDHCPv6.def">DDDHCPv6.def</A> -tooloption : v6eval tool option
+
+<P>
+<HR>
+<H1><A NAME="TOPOLOGY">TOPOLOGY</A></H1>
+<PRE>
+   Host1
+    |                     ISP site
+  --+----+--------------- Link1 3ffe:501:ffff:101::/64
+         |
+        TN      NUT
+         |       |        Customer site
+  -------+-------+------- Link0 3ffe:501:ffff:100::/64
+</PRE>
+<BLOCKQUOTE>
+<TABLE border=1>
+    <TBODY>
+    <tr>
+      <TD><TT>Host1</TT></TD>
+      <TD colspan="2"><TT>Global address</TT></TD>
+      <TD><TT>3ffe:501:ffff:101:200:ff:fe00:a1a1</TT></TD>
+    </tr>
+    <TR>
+      <TD rowspan=3><TT>TN<BR>DHCP and DNS Server</TT></TD>
+      <TD rowspan="3">Link0</TD>
+      <TD><TT>Link-local</TT></TD>
+      <TD><TT>fe80::200:ff:fe00:a0a0</TT></TD>
+    </TR>
+    <TR>
+      <TD><tt>Global address</tt></TD>
+      <TD><tt>3ffe:501:ffff:100:200:ff:fe00:a0a0</tt></TD>
+    </TR>
+    <TR>
+      <TD><TT>Ether</TT></TD>
+      <TD><TT>00:00:00:00:a0:a0</TT></TD>
+    </TR>
+    <TR>
+      <TD rowspan="2"><TT>NUT</TT></TD>
+      <TD colspan="2"><TT>Link-local</TT></TD>
+      <TD><TT>NUT link-local address</TT></TD>
+    </TR>
+    <TR>
+      <TD colspan="2"><tt>Global address</tt></TD>
+      <TD><tt>NUT 3ffe:501:ffff:100: + NUT's MAC Addr</tt></TD></TR></TBODY>
+  </TABLE>
+</BLOCKQUOTE>
+
+<P>
+<HR>
+<H1><A NAME="INITIALIZATION">INITIALIZATION</A></H1>
+<OL>
+  <LI>NUT sets up as DHCPv6 client Host 
+</OL>
+<PRE>
+Tester as Server        Target as Client
+    |                           |
+    |<--------------------------|
+    |   Router Solicitation     |
+    |                           |
+    |-------------------------->|
+    |   Router Advertisement    |
+    |                           |
+<BR>
+  1. Wait Router Solicitation
+  2. Send Router Advertisement
+</PRE>
+
+<P>
+<HR>
+<H1><A NAME="TEST_PROCEDURE">TEST PROCEDURE</A></H1>
+<PRE>
+Tester as Server        Target as Client
+    |                           |
+    |<--------------------------|
+    |   <A HREF="#JDG1">Judgment #1</A>             |
+    |  DHCP Information-request |
+    |                           |
+    |-------------------------->|
+    |   DHCP Reply message      |
+    |  w/ Domain list option    |
+    |                           |
+    |           <---------------|
+    |          ICMP Echo request|
+    |          to test.tahi.org |
+    |                           |
+    |<--------------------------|
+    |   <A HREF="#JDG2">Judgment #2</A>             |
+    |  NUT send standard query  |
+    | to distributed address by | 
+    |the DHCP for AAAA record of|
+    |  "test.tahi.org"          |
+    |                           |
+    |-------------------------->|
+    |   DNS response            |
+    |  for AAAA record of       |
+    |  "test.tahi.org           |
+    |                           |
+    |<--------------------------|
+    |   <A HREF="#JDG3">Judgment #3</A>             |
+    |   ICMP Echo request       |
+    |   to test.tahi.org        |
+    |                           |
+    |-------------------------->|
+    |   ICMP Echo reply         |
+    |   from test.tahi.org      |
+    |                           |
+    v                           v
+<BR>
+  1. Wait DHCP Information-request message
+  2. Send DHCP Reply message
+  3. Wait DNS query to distributed address by the DHCP server for AAAA record of "test.tahi.org"
+  4. Send DNS response for AAAA record of "test.tahi.org"
+  5. Wait Echo request to test.tahi.org
+  6. Send Echo reply from test.tahi.org
+<BR>
+</PRE>
+<BLOCKQUOTE>
+DHCP Information-Request message</p>
+<TABLE border=1>
+    <TR>
+      <TD colspan="2">msg-type</TD>
+      <TD>INFORMATION-REQUEST (11)</TD>
+    </TR>
+    <TR>
+      <TD colspan="3">option</TD>
+    </TR>
+    <TR>
+      <TD colspan="3">Client Identifier Option</TD>
+    </TR>
+    <tr>
+      <TD colspan="3">Elapsed Time Option (MUST)</TD>
+    </tr>
+    <tr>
+      <TD>&nbsp;</TD>
+      <TD>elapsed-time</TD>
+      <TD>ANY</TD>
+    </tr>
+    <TR>
+      <TD colspan="3">Option Request Option</TD>
+    </TR>
+    <TR>
+      <TD>&nbsp;</TD>
+      <TD>option-code</TD>
+      <TD>OPTION_DNS_SERVERS (tbd)</TD>
+    </TR>
+</TABLE>
+<BR>
+DHCP Reply message<BR>
+<TABLE border=1>
+    <TR>
+      <TD colspan="2">msg-type</TD>
+      <TD>REPLY(7)</TD>
+    </TR>
+    <TR>
+      <TD colspan="3">options</TD>
+    </TR>
+    <TR>
+      <TD colspan="3">Client Identifier Option</TD>
+    </TR>
+    <TR>
+      <TD colspan="3">Server Identifier Option</TD>
+    </TR>
+    <TR>
+      <TD colspan="3">Domain Name Server option</TD>
+    </TR>
+    <TR>
+      <TD>&nbsp;</TD>
+      <TD>Code</TD>
+      <TD>OPTION_DNS_SERVERS (tbd)</TD></TR>
+    <TR>
+      <TD>&nbsp;</TD>
+      <TD>DNS-server</TD>
+      <TD><tt>3ffe:501:ffff:100:200:ff:fe00:a0a0</tt></TD></TR>
+</TABLE>
+<BR>
+DNS query message<BR>
+Destination address is <B>3ffe:501:ffff:100:200:ff:fe00:a0a0</B> <BR>
+<TABLE border=1>
+    <TR>
+      <TD colspan="3">Header</TD>
+    </TR>
+    <tr>
+      <TD>&nbsp;</TD>
+      <TD>QR</TD>
+      <TD>0 (SQUERY)</TD>
+    </tr>
+    <tr>
+      <TD>&nbsp;</TD>
+      <TD>OPCODE</TD>
+      <TD>0 (SQUERY)</TD>
+    </tr>
+    <TR>
+      <TD colspan="3">Question section</TD>
+    </TR>
+    <TR>
+      <TD>&nbsp;</TD>
+      <TD>QNAME</TD>
+      <TD>test.tahi.org</TD>
+    </TR>
+    <TR>
+      <TD>&nbsp;</TD>
+      <TD>QTYPE</TD>
+      <TD>28 (IPv6 address)</TD></TR>
+    <TR>
+      <TD>&nbsp;</TD>
+      <TD>QCLASS</TD>
+      <TD>1 (Internet)</TD>
+    </TR>
+</TABLE>
+<BR>
+DNS standard query response message<BR>
+<TABLE border=1>
+    <TR>
+      <TD colspan="4">Header</TD>
+    </TR>
+    <tr>
+      <TD>&nbsp;</TD>
+      <TD colspan="2">QR</TD>
+      <TD>1 (RESPONSE)</TD>
+    </tr>
+    <tr>
+      <TD>&nbsp;</TD>
+      <TD colspan="2">OPCODE</TD>
+      <TD>0 (SQUERY)</TD>
+    </tr>
+    <tr>
+      <TD>&nbsp;</TD>
+      <TD colspan="2">AA</TD>
+      <TD>1 (Authoritative Answer)</TD>
+    </tr>
+    <TR>
+      <TD colspan="4">Question section</TD>
+    </TR>
+    <TR>
+      <TD>&nbsp;</TD>
+      <TD colspan="2">QNAME</TD>
+      <TD>test.tahi.org</TD>
+    </TR>
+    <TR>
+      <TD>&nbsp;</TD>
+      <TD colspan="2">QTYPE</TD>
+      <TD>28 (IPv6 address)</TD></TR>
+    <TR>
+      <TD>&nbsp;</TD>
+      <TD colspan="2">QCLASS</TD>
+      <TD>1 (Internet)</TD>
+    </TR>
+    <TR>
+      <TD colspan="4">Answer section</TD>
+    </TR>
+    <TR>
+      <TD>&nbsp;</TD>
+      <TD colspan="2">RRs</TD>
+      <TD>&nbsp;</TD>
+    </TR>
+    <TR>
+      <TD>&nbsp;</TD>
+      <TD>&nbsp;</TD>
+      <TD>NAME</TD>
+      <TD>test.tahi.org</TD>
+    </TR>
+    <TR>
+      <TD>&nbsp;</TD>
+      <TD>&nbsp;</TD>
+      <TD>TYPE</TD>
+      <TD>28 (IPv6 address)</TD>
+    </TR>
+    <TR>
+      <TD>&nbsp;</TD>
+      <TD>&nbsp;</TD>
+      <TD>CLASS</TD>
+      <TD>1 (Internet)</TD>
+    </TR>
+    <TR>
+      <TD>&nbsp;</TD>
+      <TD>&nbsp;</TD>
+      <TD>TTL</TD>
+      <TD>1800 (second)</TD>
+    </TR>
+    <TR>
+      <TD>&nbsp;</TD>
+      <TD>&nbsp;</TD>
+      <TD>RDLENGTH</TD>
+      <TD>16</TD>
+    </TR>
+    <TR>
+      <TD>&nbsp;</TD>
+      <TD>&nbsp;</TD>
+      <TD>RDATA</TD>
+      <TD>3ffe:501:ffff:101:200:ff:fe00:a2a2</TD>
+    </TR>
+</TABLE>
+</BLOCKQUOTE>
+
+<P>
+<HR>
+<H1><A NAME="JUDGEMENT">JUDGEMENT</A></H1>
+<PRE>
+<A NAME="JDG1"></A>
+  1. DHCP Information-request is recieved
+<A NAME="JDG2"></A>
+  2. DNS query message is recieved
+<A NAME="JDG3"></A>
+  3. ICMP Echo Request is recieved
+</PRE>
+
+<P>
+<HR>
+<H1><A NAME="TERMINATION">TERMINATION</A></H1>
+<P>
+<PRE>  N/A
+</PRE>
+<P>
+<HR>
+<H1><A NAME="REFERENCE">REFERENCE</A></H1>
+<PRE>
+draft-ietf-ipv6-dns-discovery-07.txt
+6.4 DNS forwarder with DHCPv6 interactions
+<BR>
+   In this variant scenario, DHCPv6 is be used between the PE and CPE to
+   do prefix delegation [DELEG] and recursive DNS server discovery.
+<BR>
+                                                     -------------
+                                                    /            |
+            --------           --------------      /             |
+            |ISP   |           |customer CPE|     /    Customer  |
+            |DHCPv6|===========|      DHCPv6|====<     site      |
+            |server|    <------|------client|     \              |
+            --------           --------------      \             |
+                                                    \            |
+                                                     -------------
+<BR>
+   This example will show how DHCPv6 and well known site local unicast
+   addresses cooperate to enable the internal nodes to access DNS.
+<BR>
+   The customer router CPE is configured on its internal interface with
+   one of the reserved site local addresses and listen for DNS queries.
+   It would act as a DNS forwarder, as in 5.2,  forwarding those queries
+   to the recursive DNS server pointed out by the ISP in the DHCPv6
+   exchange.
+<BR>
+                                                   -------------
+                                                  /            |
+        ----------           --------------      /             |
+        |ISP     |           |customer CPE|     /    Customer  |
+        |DNS     |===========|         DNS|====<     site      |
+        |resolver|    <------|---forwarder|-----\----          |
+        ----------           --------------      \             |
+                                                  \            |
+                                                   -------------
+<BR>
+<BR>
+   The same CPE router could also implement a local DHCPv6 server and
+   advertizes itself as DNS forwarder.
+<BR>
+                                                     -------------
+                                                    /            |
+            --------           --------------      /   Customer  |
+            |ISP PE|           |customer CPE|     /    site      |
+            |      |===========|DHCPv6      |====<               |
+            |      |           |server------|-----\--->          |
+            --------           --------------      \             |
+                                                    \            |
+                                                     -------------
+<BR>
+<BR>
+<BR>
+   Within the site:
+<BR>
+      a) DHCPv6 aware clients use DHCPv6 to obtain the address of the
+      DNS forwarder...
+<BR>
+                                                   -------------
+                                                  /            |
+        ----------           --------------      /   Customer  |
+        |ISP     |           |customer CPE|     /    site      |
+        |DNS     |===========|         DNS|====<               |
+        |resolver|    <------|---forwarder|-----\----DHCPv6    |
+        ----------           --------------      \   client    |
+                                                  \            |
+                                                   -------------
+          (The address of the DNS forwarder is acquired via DHCPv6.)
+<BR>
+<BR>
+      b) other nodes simply send their DNS request to the reserved site
+      local addresses.
+<BR>
+                                                   -------------
+                                                  /            |
+        ----------           --------------      /   customer  |
+        |ISP     |           |customer CPE|     /    site      |
+        |DNS     |===========|         DNS|====<               |
+        |resolver|    <------|---forwarder|-----\----non DHCPv6|
+        ----------           --------------      \   node      |
+                                                  \            |
+                                                   -------------
+          (Internal nodes use the reserved site local unicast address.)
+<BR>
+<BR>
+   A variant of this scenario is the CPE can decide to pass the global
+   address of the ISP recursive DNS server in the DHCPv6 exchange with
+   the internal nodes.
+</PRE>
+
+<P>
+<HR>
+<H1><A NAME="SEE_ALSO">SEE ALSO</A></H1>
+<P>
+<PRE>  perldoc V6evalTool
+</PRE>
+</BODY>
+
+</HTML>

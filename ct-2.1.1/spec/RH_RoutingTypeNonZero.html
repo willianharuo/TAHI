@@ -1,0 +1,212 @@
+<HTML>
+<HEAD>
+<TITLE>RH_RoutingTypeNonZero - check Routing Type is not Zero</TITLE>
+<LINK REV="made" HREF="mailto:hackers@FreeBSD.org">
+</HEAD>
+
+<BODY>
+
+<!-- INDEX BEGIN -->
+<!--
+
+<UL>
+
+	<LI><A HREF="#NAME">NAME</A>
+	<LI><A HREF="#TARGET">TARGET</A>
+	<LI><A HREF="#SYNOPSIS">SYNOPSIS</A>
+	<LI><A HREF="#INITIALIZATION">INITIALIZATION</A>
+	<LI><A HREF="#TEST_PROCEDURE">TEST PROCEDURE</A>
+	<LI><A HREF="#JUDGMENT">JUDGMENT</A>
+	<LI><A HREF="#REFERENCE">REFERENCE</A>
+	<LI><A HREF="#SEE_ALSO">SEE ALSO</A>
+</UL>
+-->
+<!-- INDEX END -->
+
+<P>
+<H1><A NAME="NAME">NAME</A></H1>
+<P>
+<PRE>  RH_RoutingTypeNonZero - check Routing Type is not Zero
+</PRE>
+<P>
+<HR>
+<H1><A NAME="TARGET">TARGET</A></H1>
+<P>
+<PRE>  Router
+</PRE>
+<P>
+<HR>
+<H1><A NAME="SYNOPSIS">SYNOPSIS</A></H1>
+<PRE>
+  <A HREF="./RH_RoutingTypeNonZero.seq">RH_RoutingTypeNonZero.seq</A> [-tooloption ...] -pkt <A HREF="./RH_RoutingTypeNonZero.def">RH_RoutingTypeNonZero.def</A>
+    -tooloption : v6eval tool option
+  See also <A HREF="./RH.def">RH.def</A>
+</PRE>
+
+<P>
+<HR>
+<H1><A NAME="INITIALIZATION">INITIALIZATION</A></H1>
+<P>
+<PRE>  None
+</PRE>
+<P>
+<HR>
+<H1><A NAME="TEST_PROCEDURE">TEST PROCEDURE</A></H1>
+<P>
+<PRE>  Tester                      Target                      Tester
+              (Link0)                     (Link1)
+    |                           |                           |
+    |--------------------------&gt;|                           |
+    |   Packet to Link0         |                           |
+    |                           |     (no forwarding)       |
+    |                           |                           |
+    |&lt;--------------------------|                           |
+    |   Neighbor Solicitation   |                           |
+    |                           |                           |
+    |--------------------------&gt;|                           |
+    |   Neighbor Advertisement  |                           |
+    |                           |                           |
+    |&lt;--------------------------|                           |
+    |   ICMP Error from Link0   |                           |
+    |                           |                           |
+    v                           v                           v
+</PRE>
+<P>
+<PRE>  1. Send Packet to Link0
+  2. Wait ICMP Error from Link0 or NS from Link0
+  3. If NS received then send NA to Link0, and wait ICMP Error form Link0 again
+  4. Receive ICMP Error from Link0
+</PRE>
+<P>
+<PRE>  Network topology
+</PRE>
+<P>
+<PRE>          (Link0)        (Link1)
+    Tester       Target         Tester
+    Host1 ------ Router1 ------ Router2 ------ Router3 ------ Host2
+         Global 0       Global 1       Global 3       Global 5
+</PRE>
+<P>
+<PRE>  Packet to Link0 is:
+</PRE>
+<P>
+<PRE>        IPv6 Header
+            Version            = 6
+            Traffic Class      = 0
+            FlowLabel          = 0
+            PayloadLength      = 56
+            NextHeader         = 43 (Routing Header)
+            SourceAddress      = Global 0 Address (Host1)
+            DestinationAddress = Global 0 Address (Router1)
+</PRE>
+<P>
+<PRE>        Routing Header
+            NextHeader      = 59 (No Next Header)
+            HeaderExtLength = 6 
+            RoutingType     = 1 
+            SegmentsLeft    = 3 
+            Address[1]      = Global 1 Address (Router2)
+            Address[2]      = Global 3 Address (Router3)
+            Address[3]      = Global 5 Address (Host2)
+</PRE>
+<P>
+<HR>
+<H1><A NAME="JUDGMENT">JUDGMENT</A></H1>
+<P>
+<PRE>  PASS: ICMP Error Received from Link0
+</PRE>
+<P>
+<PRE>        IPv6 Header
+            Version             = 6
+            Traffic Class       = 0
+            FlowLabel           = 0
+            PayloadLength       = 104
+            NextHeader          = 58 (ICMP)
+            SourceAddress      = Global 0 Address (Router1)
+            DestinationAddress = Global 0 Address (Host1)
+</PRE>
+<P>
+<PRE>        ICMP Error
+            Type           = 4 (Parameter Problem)
+            Code           = 0 (erroneous header field encountered)
+            Checksum       = (auto)
+            Pointer        = 42 (Offset to Routing Type)
+            PayloadData    = (Sent Packet)
+</PRE>
+<P>
+<HR>
+<H1><A NAME="REFERENCE">REFERENCE</A></H1>
+<P>
+RFC2460 4.4 Routing Header
+
+<PRE>
+   <B>The Routing header is used by an IPv6 source to list one or more
+   intermediate nodes to be "visited" on the way to a packet's
+   destination.  This function is very similar to IPv4's Loose Source
+   and Record Route option.  The Routing header is identified by a Next
+   Header value of 43 in the immediately preceding header, and has the
+   following format:</B>
+</PRE>
+
+<P>
+<PRE>    +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+    |  Next Header  |  Hdr Ext Len  |  Routing Type | Segments Left |
+    +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+    |                                                               |
+    .                                                               .
+    .                       type-specific data                      .
+    .                                                               .
+    |                                                               |
+    +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+</PRE>
+<P>
+<PRE>   Next Header          8-bit selector.  Identifies the type of header
+                        immediately following the Routing header.  Uses
+                        the same values as the IPv4 Protocol field
+                        [RFC-1700 et seq.].
+</PRE>
+<P>
+<PRE>   Hdr Ext Len          8-bit unsigned integer.  Length of the Routing
+                        header in 8-octet units, not including the first
+                        8 octets.
+</PRE>
+<P>
+<PRE>   Routing Type         8-bit identifier of a particular Routing header
+                        variant.
+</PRE>
+<P>
+<PRE>   Segments Left        8-bit unsigned integer.  Number of route
+                        segments remaining, i.e., number of explicitly
+                        listed intermediate nodes still to be visited
+                        before reaching the final destination.
+</PRE>
+<P>
+<PRE>   type-specific data   Variable-length field, of format determined by
+                        the Routing Type, and of length such that the
+                        complete Routing header is an integer multiple
+                        of 8 octets long.
+</PRE>
+<PRE>
+   <B>If, while processing a received packet, a node encounters a Routing
+   header with an unrecognized Routing Type value, the required behavior
+   of the node depends on the value of the Segments Left field, as
+   follows:</B>
+<BR>
+      If Segments Left is zero, the node must ignore the Routing header
+      and proceed to process the next header in the packet, whose type
+      is identified by the Next Header field in the Routing header.
+<BR>
+      <B>If Segments Left is non-zero, the node must discard the packet and
+      send an ICMP Parameter Problem, Code 0, message to the packet's
+      Source Address, pointing to the unrecognized Routing Type.</B>
+</PRE>
+
+<P>
+<HR>
+<H1><A NAME="SEE_ALSO">SEE ALSO</A></H1>
+<P>
+<PRE>  perldoc V6evalTool
+</PRE>
+</BODY>
+
+</HTML>

@@ -1,0 +1,1537 @@
+//
+// Copyright (C) 1999, 2000, 2001, 2002, 2003 Yokogawa Electric Corporation,
+// IPA (Information-technology Promotion Agency, Japan).
+// All rights reserved.
+// 
+// Redistribution and use of this software in source and binary forms, with 
+// or without modification, are permitted provided that the following 
+// conditions and disclaimer are agreed and accepted by the user:
+// 
+// 1. Redistributions of source code must retain the above copyright 
+// notice, this list of conditions and the following disclaimer.
+// 
+// 2. Redistributions in binary form must reproduce the above copyright 
+// notice, this list of conditions and the following disclaimer in the 
+// documentation and/or other materials provided with the distribution.
+// 
+// 3. Neither the names of the copyrighters, the name of the project which 
+// is related to this software (hereinafter referred to as "project") nor 
+// the names of the contributors may be used to endorse or promote products 
+// derived from this software without specific prior written permission.
+// 
+// 4. No merchantable use may be permitted without prior written 
+// notification to the copyrighters. However, using this software for the 
+// purpose of testing or evaluating any products including merchantable 
+// products may be permitted without any notification to the copyrighters.
+// 
+// 
+// 
+// THIS SOFTWARE IS PROVIDED BY THE COPYRIGHTERS, THE PROJECT AND 
+// CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING 
+// BUT NOT LIMITED THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS 
+// FOR A PARTICULAR PURPOSE, ARE DISCLAIMED.  IN NO EVENT SHALL THE 
+// COPYRIGHTERS, THE PROJECT OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, 
+// INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES 
+// (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR 
+// SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) 
+// HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN 
+// CONTRACT,STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) 
+// ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF 
+// THE POSSIBILITY OF SUCH DAMAGE.
+//
+// $TAHI: ct/natpt/natpt.def,v 1.4 2001/10/11 01:41:46 akisada Exp $
+//
+
+//
+// OFFLINK_GLOBAL_ADDRESS               Off-Link host's Global Address
+// TN_GLOBAL_ADDRESS                    TN's Global Address
+//
+
+// {{{ Prefix
+#define TN_LINK0_GLOBAL_UCAST_PRFX _GLOBAL0_UCAST_PRFX
+#define NUT_LINK0_GLOBAL_UCAST_PRFX _GLOBAL0_UCAST_PRFX
+#define TN_LINK1_GLOBAL_UCAST_PRFX _GLOBAL1_UCAST_PRFX
+#define NUT_LINK1_GLOBAL_UCAST_PRFX _GLOBAL1_UCAST_PRFX
+#define NATPT_UCAST_PRFX _GLOBAL2_UCAST_PRFX
+#define SIIT_UCAST_PRFX "0::ffff:0:0:0"
+//#define IPV4_MAPPED_PRFX "0::ffff:0:0"
+#define IPV4_MAPPED_PRFX "0::ffff:0:0:0"
+#define IPV4_TRANSL_PRFX "0::ffff:0:0:0"
+
+// Prefix Length
+#define GLOBAL_UCAST_PRFXLEN _GLOBAL0_UCAST_PRFXLEN
+#define NATPT_UCAST_PRFXLEN 96
+#define SIIT_UCAST_PRFXLEN 96
+// }}}
+// {{{ IPv4 Address
+
+#define TN_LINK1_V4_ADDRESS	v4(_IPV41A1N_UCAST_ADDR)
+#define NUT_LINK1_V4_ADDRESS v4(_IPV41A2N_UCAST_ADDR)
+#define TN_LINK0_V4_ADDRESS	v4(_IPV40A1N_UCAST_ADDR)
+#define NUT_LINK0_V4_ADDRESS v4(_IPV40A2N_UCAST_ADDR)
+#define IPV4_UCAST_PRFXLEN _IPV4_UCAST_NETMASK
+#define V4_UNSPECIFIED_ADDRESS v4("0.0.0.0")
+
+// }}}
+// {{{ IPv6 Address
+#define TN_LINK0_GLOBAL_ADDRESS v6merge(TN_LINK0_GLOBAL_UCAST_PRFX, \
+	GLOBAL_UCAST_PRFXLEN, \
+	v6("::1"))
+#define NUT_LINK0_GLOBAL_ADDRESS v6merge( NUT_LINK0_GLOBAL_UCAST_PRFX, \
+	GLOBAL_UCAST_PRFXLEN, \
+	nutv6())
+#define TN_LINK1_GLOBAL_ADDRESS v6merge(TN_LINK1_GLOBAL_UCAST_PRFX, \
+	GLOBAL_UCAST_PRFXLEN, \
+	v6("::1"))
+#define NUT_LINK1_GLOBAL_ADDRESS v6merge(NUT_LINK1_GLOBAL_UCAST_PRFX, \
+	GLOBAL_UCAST_PRFXLEN, \
+	nutv6("Link1"))
+
+#define TN_LINK0_NATPT_ADDRESS v6merge(NATPT_UCAST_PRFX, \
+	NATPT_UCAST_PRFXLEN, \
+	v6("::c0a8:1"))
+#define TN_LINK1_NATPT_ADDRESS v6merge(NATPT_UCAST_PRFX, \
+	NATPT_UCAST_PRFXLEN, \
+	v6("::c0a8:101"))
+
+#define TN_LINK0_SIIT_ADDRESS v6merge(IPV4_TRANSL_PRFX, \
+	SIIT_UCAST_PRFXLEN, \
+	v6("::c0a8:1"))
+#define TN_LINK1_SIIT_ADDRESS v6merge(IPV4_MAPPED_PRFX, \
+	SIIT_UCAST_PRFXLEN, \
+	v6("::c0a8:101"))
+
+#define NUT_LINK1_GLOBAL_UNKNOWN_ADDRESS v6merge( NUT_LINK1_GLOBAL_UCAST_PRFX,\
+	GLOBAL_UCAST_PRFXLEN, \
+	v6("::1"))
+#define TN_LINK0_ONEOF_ADDRESSES oneof(TN_LINK0_GLOBAL_ADDRESS,tnv6())
+#define NUT_LINK0_ONEOF_ADDRESSES oneof(NUT_LINK0_GLOBAL_ADDRESS,nutv6())
+#define TN_LINK1_ONEOF_ADDRESSES oneof(TN_LINK1_GLOBAL_ADDRESS,tnv6("Link1"))
+#define NUT_LINK1_ONEOF_ADDRESSES oneof(NUT_LINK1_GLOBAL_ADDRESS,nutv6("Link1"))
+// }}}
+// {{{ Ethernet Address
+
+#define UNSPEC_MAC_ADDR ether("00:00:00:00:00:00")
+
+// }}}
+
+//
+// define Packets
+//
+
+// {{{ Echo Request
+
+// {{{ TN (natpt address) --> NUT (natpt address)
+//
+// Echo Request
+// TN (natpt address) --> NUT (natpt address)
+#define echo_request_tn2nut_NATPT_ONLINK( \
+        pNAME, \
+        EchoRequest_data \
+) \
+FEM_icmp6_echo_request( \
+         pNAME, \
+         _HETHER_tn2nut, \
+                { \
+		_SRC(TN_LINK0_NATPT_ADDRESS); \
+		_DST(TN_LINK1_NATPT_ADDRESS); \
+         }, \
+                 { \
+                 payload=EchoRequest_data; \
+         } \
+)  
+
+// }}}
+// {{{ TN (natpt address) <-- NUT (natpt address)
+//
+// Echo Request
+// TN (natpt address) <-- NUT (natpt address)
+#define echo_request_nut2tn_NATPT_ONLINK( \
+        pNAME, \
+        EchoRequest_data \
+) \
+FEM_icmp6_echo_request( \
+         pNAME, \
+         _HETHER_nut2tn, \
+                { \
+                FlowLabel=0; \
+		_SRC(TN_LINK1_NATPT_ADDRESS); \
+		_DST(TN_LINK0_NATPT_ADDRESS); \
+         }, \
+                 { \
+                 payload=EchoRequest_data; \
+         } \
+)  
+
+// }}}
+// {{{ TN (siit address) --> NUT (siit address)
+//
+// Echo Request
+// TN (siit address) --> NUT (siit address)
+#define echo_request_tn2nut_SIIT_ONLINK( \
+        pNAME, \
+        EchoRequest_data \
+) \
+FEM_icmp6_echo_request( \
+         pNAME, \
+         _HETHER_tn2nut, \
+                { \
+		_SRC(TN_LINK0_SIIT_ADDRESS); \
+		_DST(TN_LINK1_SIIT_ADDRESS); \
+         }, \
+                 { \
+                 payload=EchoRequest_data; \
+         } \
+)  
+
+// }}}
+// {{{ TN (siit address) <-- NUT (siit address)
+//
+// Echo Request
+// TN (siit address) <-- NUT (siit address)
+#define echo_request_nut2tn_SIIT_ONLINK( \
+        pNAME, \
+        EchoRequest_data \
+) \
+FEM_icmp6_echo_request( \
+         pNAME, \
+         _HETHER_nut2tn, \
+                { \
+                FlowLabel=0; \
+		_SRC(TN_LINK1_SIIT_ADDRESS); \
+		_DST(TN_LINK0_SIIT_ADDRESS); \
+         }, \
+                 { \
+                 payload=EchoRequest_data; \
+         } \
+)  
+
+// }}}
+
+// }}}
+// {{{ Echo Reply
+
+// {{{ TN (natpt address) <-- NUT (natpt address)
+//
+// Echo Reply 
+// TN (natpt address) <-- NUT (natpt address)
+#define echo_reply_nut2tn_NATPT_ONLINK( \
+        pNAME,\
+        EchoReply_data \
+) \
+FEM_icmp6_echo_reply( \
+        pNAME, \
+        _HETHER_nut2tn, \
+                { \
+                FlowLabel=0; \
+                _SRC(TN_LINK1_NATPT_ADDRESS); \
+                _DST(TN_LINK0_NATPT_ADDRESS); \
+        }, \
+                { \
+                payload=EchoReply_data; \
+        } \
+)
+
+// }}}
+// {{{ TN (natpt address) --> NUT (natpt address)
+//
+// Echo Reply 
+// TN (natpt address) --> NUT (natpt address)
+#define echo_reply_tn2nut_NATPT_ONLINK( \
+        pNAME,\
+        EchoReply_data \
+) \
+FEM_icmp6_echo_reply( \
+        pNAME, \
+        _HETHER_tn2nut, \
+                { \
+                _SRC(TN_LINK0_NATPT_ADDRESS); \
+                _DST(TN_LINK1_NATPT_ADDRESS); \
+        }, \
+                { \
+                payload=EchoReply_data; \
+        } \
+)
+
+// }}}
+// {{{ TN (siit address) <-- NUT (siit address)
+//
+// Echo Reply 
+// TN (siit address) <-- NUT (siit address)
+#define echo_reply_nut2tn_SIIT_ONLINK( \
+        pNAME,\
+        EchoReply_data \
+) \
+FEM_icmp6_echo_reply( \
+        pNAME, \
+        _HETHER_nut2tn, \
+                { \
+                FlowLabel=0; \
+                _SRC(TN_LINK1_SIIT_ADDRESS); \
+                _DST(TN_LINK0_SIIT_ADDRESS); \
+        }, \
+                { \
+                payload=EchoReply_data; \
+        } \
+)
+
+// }}}
+// {{{ TN (siit address) --> NUT (siit address)
+//
+// Echo Reply 
+// TN (siit address) --> NUT (siit address)
+#define echo_reply_tn2nut_SIIT_ONLINK( \
+        pNAME,\
+        EchoReply_data \
+) \
+FEM_icmp6_echo_reply( \
+        pNAME, \
+        _HETHER_tn2nut, \
+                { \
+                _SRC(TN_LINK0_SIIT_ADDRESS); \
+                _DST(TN_LINK1_SIIT_ADDRESS); \
+        }, \
+                { \
+                payload=EchoReply_data; \
+        } \
+)
+
+// }}}
+
+// }}}
+// {{{ UDP
+// 
+// UDP
+//
+
+#define UDP_NAME(_pNAME) UDP_##_pNAME
+#define HDR_UDP_NAME(_pNAME) HDR_UDP_##_pNAME
+
+#define FEM_udp_exth(_pNAME,_pETHER,_oHDR_IPV6,_oPACKET_IPV6,oHDR_UDP,PAYLOAD_NAME) \
+FEM_hdr_ipv6_exth(_pNAME,_pETHER,_oHDR_IPV6,_oPACKET_IPV6) \
+Upp_UDP UDP_NAME(_pNAME) { \
+        header=HDR_UDP_NAME(_pNAME); \
+		payload=PAYLOAD_NAME; \
+		} \
+Hdr_UDP HDR_UDP_NAME(_pNAME) \
+		oHDR_UDP
+
+#define FEM_udp(_pNAME,_pETHER,_oHDR_IPV6,oHDR_UDP,PAYLOAD_NAME) \
+FEM_udp_exth(_pNAME,_pETHER,_oHDR_IPV6, \
+                { header=_HDR_IPV6_NAME(_pNAME); \
+                  upper=UDP_NAME(_pNAME); }, \
+                oHDR_UDP,PAYLOAD_NAME)
+
+#define FEM_udp_ipv4_exth(_pNAME,_pETHER,_oHDR_IPV4,_oPACKET_IPV4,oHDR_UDP,PAYLOAD_NAME) \
+FEM_hdr_ipv4_exth(_pNAME,_pETHER,_oHDR_IPV4,_oPACKET_IPV4) \
+Upp_UDP UDP_NAME(_pNAME) { \
+        header=HDR_UDP_NAME(_pNAME); \
+		payload=PAYLOAD_NAME; \
+		} \
+Hdr_UDP HDR_UDP_NAME(_pNAME) \
+		oHDR_UDP
+
+#define FEM_udp_ipv4(_pNAME,_pETHER,_oHDR_IPV4,oHDR_UDP,PAYLOAD_NAME) \
+FEM_udp_ipv4_exth(_pNAME,_pETHER,_oHDR_IPV4, \
+                { header=_HDR_IPV4_NAME(_pNAME); \
+                  upper=UDP_NAME(_pNAME); }, \
+                oHDR_UDP,PAYLOAD_NAME)
+
+// }}}
+// {{{ TCP
+// 
+// TCP
+//
+
+#define TCP_NAME(_pNAME) TCP_##_pNAME
+#define HDR_TCP_NAME(_pNAME) HDR_TCP_##_pNAME
+
+#define FEM_tcp_exth(_pNAME,_pETHER,_oHDR_IPV6,_oPACKET_IPV6,oHDR_TCP,PAYLOAD_NAME) \
+FEM_hdr_ipv6_exth(_pNAME,_pETHER,_oHDR_IPV6,_oPACKET_IPV6) \
+Upp_TCP TCP_NAME(_pNAME) { \
+        header=HDR_TCP_NAME(_pNAME); \
+		payload=PAYLOAD_NAME; \
+		} \
+Hdr_TCP HDR_TCP_NAME(_pNAME) \
+		oHDR_TCP
+
+#define FEM_tcp(_pNAME,_pETHER,_oHDR_IPV6,oHDR_TCP,PAYLOAD_NAME) \
+FEM_tcp_exth(_pNAME,_pETHER,_oHDR_IPV6, \
+                { header=_HDR_IPV6_NAME(_pNAME); \
+                  upper=TCP_NAME(_pNAME); }, \
+                oHDR_TCP,PAYLOAD_NAME)
+
+#define FEM_tcp_ipv4_exth(_pNAME,_pETHER,_oHDR_IPV4,_oPACKET_IPV4,oHDR_TCP,PAYLOAD_NAME) \
+FEM_hdr_ipv4_exth(_pNAME,_pETHER,_oHDR_IPV4,_oPACKET_IPV4) \
+Upp_TCP TCP_NAME(_pNAME) { \
+        header=HDR_TCP_NAME(_pNAME); \
+		payload=PAYLOAD_NAME; \
+		} \
+Hdr_TCP HDR_TCP_NAME(_pNAME) \
+		oHDR_TCP
+
+#define FEM_tcp_ipv4(_pNAME,_pETHER,_oHDR_IPV4,oHDR_TCP,PAYLOAD_NAME) \
+FEM_tcp_ipv4_exth(_pNAME,_pETHER,_oHDR_IPV4, \
+                { header=_HDR_IPV4_NAME(_pNAME); \
+                  upper=TCP_NAME(_pNAME); }, \
+                oHDR_TCP,PAYLOAD_NAME)
+
+// }}}
+// {{{ Fragmented Echo Request Packet
+//
+// Fragmented Echo Request Packet
+//
+
+#define _HDR_FRAGMENT_NAME(_pNAME) _FRAGMENT_##_pNAME 
+#define _PAYLOAD_NAME(_pNAME) _PAYLOAD_##_pNAME 
+#define FEM_fragment(_pNAME,_pETHER,_oHDR_IPV6, \
+                                         _oHDR_FRAGMENT,_oPAYLOAD) \
+FEM_hdr_ipv6_exth(_pNAME,_pETHER,_oHDR_IPV6, \
+                { \
+                header=_HDR_IPV6_NAME(_pNAME); \
+                exthdr=_HDR_FRAGMENT_NAME(_pNAME); \
+                upper=_PAYLOAD_NAME(_pNAME); \
+        } \
+) \
+Hdr_Fragment _HDR_FRAGMENT_NAME(_pNAME) \
+        _oHDR_FRAGMENT \
+Payload _PAYLOAD_NAME(_pNAME) \
+        _oPAYLOAD
+
+#define FEM_add_fragment_hdr(_pNAME, _pETHER, _pPACKET, _oHDR_FRAGMENT) \
+Frame_Ether _pNAME { \
+        header=_pETHER; \
+        packet=_PACKET_IPV6_NAME(_pNAME); \
+} \
+Packet_IPv6 _PACKET_IPV6_NAME(_pNAME) \
+	{ \
+                header=_HDR_IPV6_NAME(_pPACKET); \
+                exthdr=_HDR_FRAGMENT_NAME(_pNAME); \
+                upper=_PAYLOAD_NAME(_pNAME); \
+        } \
+Hdr_Fragment _HDR_FRAGMENT_NAME(_pNAME)  \
+	_oHDR_FRAGMENT \
+Payload _PAYLOAD_NAME(_pNAME) \
+	{ \
+        	data = right(_PACKET_IPV6_NAME(_pPACKET), 40); \
+	}
+
+#define FEM_v4_fragment(_pNAME,_pETHER,_oHDR_IPV4, _oPAYLOAD) \
+FEM_hdr_ipv4_exth(_pNAME,_pETHER,_oHDR_IPV4, \
+                { \
+                header=_HDR_IPV4_NAME(_pNAME); \
+                upper=_PAYLOAD_NAME(_pNAME); \
+        } \
+) \
+Payload _PAYLOAD_NAME(_pNAME) \
+        _oPAYLOAD
+
+
+// }}}
+// {{{ ICMP error
+#define FEM_icmp4_parameter_problem(_pNAME,_pETHER,_oHDR_IPV4,_oICMPV4_ParameterProblem) \
+_FEM_icmp4(ParameterProblem,_pNAME,_pETHER,_oHDR_IPV4,_oICMPV4_ParameterProblem)
+
+#define FEM_send_icmp4_error(_pNAME, _pTYPE, _pCODE, _pPAYLOAD, _pUNUSED) \
+FEM_icmp4_destination_unreachable( \
+	_pNAME, \
+	_HETHER_tn2nut, \
+	{ \
+		_SRC(TN_LINK1_V4_ADDRESS); \
+		_DST(TN_LINK0_V4_ADDRESS); \
+		DF=1; \
+	}, \
+	{ \
+		Type = _pTYPE; \
+		Code = _pCODE; \
+		Unused = _pUNUSED; \
+		payload = _pPAYLOAD; \
+	} \
+)
+#define FEM_recv_icmp4_error(_pNAME, _pTYPE, _pCODE, _pPAYLOAD, _pUNUSED) \
+FEM_icmp4_error_type ## _pTYPE(_pNAME, _HETHER_nut2tn, \
+        { _SRC(TN_LINK0_V4_ADDRESS); _DST(TN_LINK1_V4_ADDRESS); DF=1; }, \
+        _pCODE, _pPAYLOAD, _pUNUSED)
+
+#define FEM_icmp4_error_type3(_pNAME,_pETHER,_oHDR_IPV4,_pCODE,_pPAYLOAD,_pUNUSED) \
+FEM_icmp4_destination_unreachable( \
+	_pNAME, \
+	_pETHER, \
+	_oHDR_IPV4, \
+	{ \
+		Code = _pCODE; \
+		Unused = _pUNUSED; \
+		payload = _pPAYLOAD; \
+	} \
+)
+#define FEM_icmp4_error_type11(_pNAME,_pETHER,_oHDR_IPV4,_pCODE,_pPAYLOAD,_pUNUSED) \
+FEM_icmp4_time_exceeded( \
+	_pNAME, \
+	_pETHER, \
+	_oHDR_IPV4, \
+	{ \
+		Code = _pCODE; \
+		Unused = _pUNUSED; \
+		payload = _pPAYLOAD; \
+	} \
+)
+#define FEM_icmp4_error_type12(_pNAME,_pETHER,_oHDR_IPV4,_pCODE,_pPAYLOAD,_pPOINTER) \
+FEM_icmp4_parameter_problem( \
+	_pNAME, \
+	_pETHER, \
+	_oHDR_IPV4, \
+	{ \
+		Code = _pCODE; \
+		Pointer = _pPOINTER; \
+		payload = _pPAYLOAD; \
+	} \
+)
+#define FEM_icmp4_error_type5(_pNAME,_pETHER,_oHDR_IPV4,_pCODE,_pPAYLOAD,_pUNUSED) \
+FEM_icmp4_redirect( \
+	_pNAME, \
+	_pETHER, \
+	_oHDR_IPV4, \
+	{ \
+		Code = _pCODE; \
+		GatewayInternetAddress = _pUNUSED; \
+		payload = _pPAYLOAD; \
+	} \
+)
+#define FEM_send_icmp6_error(_pNAME, _pTYPE, _pCODE, _pPAYLOAD, _pUNUSED) \
+FEM_icmp6_error_type ## _pTYPE(_pNAME, _HETHER_tn2nut, \
+        { _SRC(TN_LINK0_SIIT_ADDRESS); _DST(TN_LINK1_SIIT_ADDRESS); }, \
+        _pCODE, _pPAYLOAD, _pUNUSED)
+
+#define FEM_recv_icmp6_error(_pNAME, _pTYPE, _pCODE, _pPAYLOAD, _pUNUSED) \
+FEM_icmp6_error_type ## _pTYPE(_pNAME, _HETHER_nut2tn, \
+        { _SRC(TN_LINK1_SIIT_ADDRESS); _DST(TN_LINK0_SIIT_ADDRESS); }, \
+        _pCODE, _pPAYLOAD, _pUNUSED)
+
+//=================================================================
+#define FEM_icmp6_error_type1(_pNAME,_pETHER,_oHDR_IPV6,_pCODE,_pPAYLOAD,_pUNUSED) \
+FEM_icmp6_destination_unreachable( \
+	_pNAME, \
+	_pETHER, \
+	_oHDR_IPV6, \
+	{ \
+		Code = _pCODE; \
+		Unused = _pUNUSED; \
+		payload = _pPAYLOAD; \
+	} \
+)
+#define FEM_icmp6_error_type2(_pNAME,_pETHER,_oHDR_IPV6,_pCODE,_pPAYLOAD,_pUNUSED) \
+FEM_icmp6_packet_too_big( \
+	_pNAME, \
+	_pETHER, \
+	_oHDR_IPV6, \
+	{ \
+		Code = _pCODE; \
+		MTU = _pUNUSED; \
+		payload = _pPAYLOAD; \
+	} \
+)
+#define FEM_icmp6_error_type3(_pNAME,_pETHER,_oHDR_IPV6,_pCODE,_pPAYLOAD,_pUNUSED) \
+FEM_icmp6_time_exceeded( \
+	_pNAME, \
+	_pETHER, \
+	_oHDR_IPV6, \
+	{ \
+		Code = _pCODE; \
+		Unused = _pUNUSED; \
+		payload = _pPAYLOAD; \
+	} \
+)
+#define FEM_icmp6_error_type4(_pNAME,_pETHER,_oHDR_IPV6,_pCODE,_pPAYLOAD,_pUNUSED) \
+FEM_icmp6_parameter_problem( \
+	_pNAME, \
+	_pETHER, \
+	_oHDR_IPV6, \
+	{ \
+		Code = _pCODE; \
+		Pointer = _pUNUSED; \
+		payload = _pPAYLOAD; \
+	} \
+)
+
+// }}}
+
+
+//
+// instantiate Packets
+//
+
+_HETHER_define(HETHER_nut2tn_oneof,  nutether(), oneof(tnether(),_ETHER_SOLNODE_MCAST(TN_LINK0_GLOBAL_ADDRESS),_ETHER_SOLNODE_MCAST(tnv6()),_ETHER_SOLNODE_MCAST(TN_LINK0_NATPT_ADDRESS),_ETHER_SOLNODE_MCAST(TN_LINK1_NATPT_ADDRESS),_ETHER_SOLNODE_MCAST(TN_LINK0_SIIT_ADDRESS),_ETHER_SOLNODE_MCAST(TN_LINK1_SIIT_ADDRESS)))
+
+// {{{ IPv6 Echo Request/Reply
+//
+// IPv6 Echo Request
+//
+
+// NATPT
+echo_request_tn2nut_NATPT_ONLINK(echo_request_tn2nut_natpt, // {{{ 
+				      ping_data) // }}}
+echo_request_nut2tn_NATPT_ONLINK(echo_request_nut2tn_natpt, // {{{ 
+				      ping_data) // }}}
+FEM_fragment(echo_request_nut2tn_natpt_frag, // {{{ 
+	_HETHER_nut2tn,
+        {
+		_SRC(TN_LINK1_NATPT_ADDRESS);
+		_DST(TN_LINK0_NATPT_ADDRESS);
+	        HopLimit=254;
+        },
+	{
+        	NextHeader = 58;
+        	FragmentOffset = 0;
+        	MFlag = 0;
+        	Identification = 0;
+	},
+	{
+        	data = right(_PACKET_IPV6_NAME(echo_request_nut2tn_natpt), 40);
+	}
+) // }}}
+FEM_fragment(echo_request_tn2nut_natpt_frag, // {{{ 
+	_HETHER_tn2nut,
+        {
+		_SRC(TN_LINK0_NATPT_ADDRESS);
+		_DST(TN_LINK1_NATPT_ADDRESS);
+	        HopLimit=254;
+        },
+	{
+        	NextHeader = 58;
+        	FragmentOffset = 0;
+        	MFlag = 0;
+        	Identification = 0;
+	},
+	{
+        	data = right(_PACKET_IPV6_NAME(echo_request_tn2nut_natpt), 40);
+	}
+) // }}}
+
+// SIIT
+echo_request_tn2nut_SIIT_ONLINK(echo_request_tn2nut_siit, // {{{ 
+				      ping_data) // }}}
+echo_request_nut2tn_SIIT_ONLINK(echo_request_nut2tn_siit, // {{{ 
+				      ping_data) // }}}
+FEM_fragment(echo_request_nut2tn_siit_frag, // {{{ 
+	_HETHER_nut2tn,
+        {
+		_SRC(TN_LINK1_SIIT_ADDRESS);
+		_DST(TN_LINK0_SIIT_ADDRESS);
+	        HopLimit=254;
+        },
+	{
+        	NextHeader = 58;
+        	FragmentOffset = 0;
+        	MFlag = 0;
+        	Identification = 0;
+	},
+	{
+        	data = right(_PACKET_IPV6_NAME(echo_request_nut2tn_siit), 40);
+	}
+) // }}}
+FEM_fragment(echo_request_tn2nut_siit_frag, // {{{ 
+	_HETHER_tn2nut,
+        {
+		_SRC(TN_LINK0_SIIT_ADDRESS);
+		_DST(TN_LINK1_SIIT_ADDRESS);
+	        HopLimit=254;
+        },
+	{
+        	NextHeader = 58;
+        	FragmentOffset = 0;
+        	MFlag = 0;
+        	Identification = 0;
+	},
+	{
+        	data = right(_PACKET_IPV6_NAME(echo_request_tn2nut_siit), 40);
+	}
+) // }}}
+
+//
+// IPv6 Echo Reply
+//
+
+// NATPT
+echo_reply_nut2tn_NATPT_ONLINK(echo_reply_nut2tn_natpt, // {{{ 
+				    ping_data)// }}}
+echo_reply_tn2nut_NATPT_ONLINK(echo_reply_tn2nut_natpt, // {{{ 
+				    ping_data)// }}}
+FEM_fragment(echo_reply_nut2tn_natpt_frag, // {{{ 
+	_HETHER_nut2tn,
+        {
+		_SRC(TN_LINK1_NATPT_ADDRESS);
+		_DST(TN_LINK0_NATPT_ADDRESS);
+	        HopLimit=254;
+        },
+	{
+        	NextHeader = 58;
+        	FragmentOffset = 0;
+        	MFlag = 0;
+        	Identification = 0;
+	},
+	{
+        	data = right(_PACKET_IPV6_NAME(echo_reply_nut2tn_natpt), 40);
+	}
+) // }}}
+FEM_fragment(echo_reply_tn2nut_natpt_frag, // {{{ 
+	_HETHER_tn2nut,
+        {
+		_SRC(TN_LINK0_NATPT_ADDRESS);
+		_DST(TN_LINK1_NATPT_ADDRESS);
+	        HopLimit=254;
+        },
+	{
+        	NextHeader = 58;
+        	FragmentOffset = 0;
+        	MFlag = 0;
+        	Identification = 0;
+	},
+	{
+        	data = right(_PACKET_IPV6_NAME(echo_reply_tn2nut_natpt), 40);
+	}
+) // }}}
+
+// SIIT
+echo_reply_nut2tn_SIIT_ONLINK(echo_reply_nut2tn_siit, // {{{ 
+				    ping_data)// }}}
+echo_reply_tn2nut_SIIT_ONLINK(echo_reply_tn2nut_siit, // {{{ 
+				    ping_data)// }}}
+FEM_fragment(echo_reply_nut2tn_siit_frag, // {{{ 
+	_HETHER_nut2tn,
+        {
+		_SRC(TN_LINK1_SIIT_ADDRESS);
+		_DST(TN_LINK0_SIIT_ADDRESS);
+	        HopLimit=254;
+        },
+	{
+        	NextHeader = 58;
+        	FragmentOffset = 0;
+        	MFlag = 0;
+        	Identification = 0;
+	},
+	{
+        	data = right(_PACKET_IPV6_NAME(echo_reply_nut2tn_siit), 40);
+	}
+) // }}}
+FEM_fragment(echo_reply_tn2nut_siit_frag, // {{{ 
+	_HETHER_tn2nut,
+        {
+		_SRC(TN_LINK0_SIIT_ADDRESS);
+		_DST(TN_LINK1_SIIT_ADDRESS);
+	        HopLimit=254;
+        },
+	{
+        	NextHeader = 58;
+        	FragmentOffset = 0;
+        	MFlag = 0;
+        	Identification = 0;
+	},
+	{
+        	data = right(_PACKET_IPV6_NAME(echo_reply_tn2nut_siit), 40);
+	}
+) // }}}
+
+// }}}
+
+// {{{ payload  data
+//
+// payload  data
+//
+Payload ping_data
+        {
+        data=repeat(0xff,6);
+    }
+
+Payload data_size_1422
+        {
+        data=repeat(0xff,1422);
+	}
+
+Payload data_size_1226
+        {
+        data=repeat(0xff,1226);
+	}
+
+Payload data_size_1224
+        {
+        data=repeat(0xff,1224);
+	}
+
+Payload data_size_128
+        {
+        data=repeat(0xff,128);
+	}
+
+Payload data_size_64
+        {
+        data=repeat(0xff,64);
+	}
+
+Payload data_size_0 {
+	data = {};
+}
+
+// }}}
+
+// {{{ Neighboor Solicitasion Messages
+//
+// Neighber Solicitasion Messages
+//
+
+// {{{ TN  <-- NUT (natpt link0 address)
+//
+// Neighber Solicitasion
+// TN  <-- NUT (natpt link0 address)
+// TargetAddress: TN's link local address
+// Option : Source link layer address
+
+FEM_icmp6_ns (ns_nut2tn_natpt0, 
+        HETHER_nut2tn_oneof,
+                {
+                _SRC(oneof(nutv6(), NUT_LINK0_GLOBAL_ADDRESS));
+                _DST(oneof(_IPV6_SOLNODE_MCAST(tnv6()),
+			   _IPV6_SOLNODE_MCAST(TN_LINK0_NATPT_ADDRESS),
+			   tnv6(),
+			   TN_LINK0_NATPT_ADDRESS)
+		     );
+                HopLimit=255;
+        },
+                {
+                TargetAddress=TN_LINK0_NATPT_ADDRESS;
+                option=_SLLOPT_nut;
+        }
+)// }}}
+// {{{ TN  <-- NUT (siit link0 address)
+//
+// Neighber Solicitasion
+// TN  <-- NUT (siit link0 address)
+// TargetAddress: TN's link local address
+// Option : Source link layer address
+
+FEM_icmp6_ns (ns_nut2tn_siit0, 
+        HETHER_nut2tn_oneof,
+                {
+                _SRC(oneof(nutv6(), NUT_LINK0_GLOBAL_ADDRESS));
+                _DST(oneof(_IPV6_SOLNODE_MCAST(tnv6()),
+			   _IPV6_SOLNODE_MCAST(TN_LINK0_SIIT_ADDRESS),
+			   tnv6(),
+			   TN_LINK0_SIIT_ADDRESS)
+		     );
+                HopLimit=255;
+        },
+                {
+                TargetAddress=TN_LINK0_SIIT_ADDRESS;
+                option=_SLLOPT_nut;
+        }
+)// }}}
+// {{{ TN  <-- NUT (natpt link1 address)
+//
+// Neighber Solicitasion
+// TN  <-- NUT (natpt link1 address)
+// TargetAddress: TN's link local address
+// Option : Source link layer address
+
+FEM_icmp6_ns (ns_nut2tn_natpt1, 
+        HETHER_nut2tn_oneof,
+                {
+                _SRC(oneof(nutv6(), NUT_LINK1_GLOBAL_ADDRESS));
+                _DST(oneof(_IPV6_SOLNODE_MCAST(tnv6()),
+			   _IPV6_SOLNODE_MCAST(TN_LINK1_NATPT_ADDRESS),
+			   tnv6(),
+			   TN_LINK1_NATPT_ADDRESS)
+		     );
+                HopLimit=255;
+        },
+                {
+                TargetAddress=TN_LINK1_NATPT_ADDRESS;
+                option=_SLLOPT_nut;
+        }
+)// }}}
+
+// }}}
+// {{{ Neighboor Advertisement Messages
+//
+// Neighbor Advertisement Messages
+//
+
+// {{{ TN  (global address)--> NUT (global address) T:natpt link0
+//
+// Neighber Advertisement 
+// TN  (global address)--> NUT (global address)
+// TargetAddress: TN's global link0 address
+
+FEM_icmp6_na (
+        na_tn2nut_natpt0,
+        _HETHER_tn2nut,
+                {
+                _SRC(TN_LINK0_GLOBAL_ADDRESS);
+                _DST(NUT_LINK0_GLOBAL_ADDRESS);
+                HopLimit=255;
+        },
+                {
+				RFlag=1;
+                SFlag=1;
+                OFlag=1;
+                TargetAddress=TN_LINK0_NATPT_ADDRESS;
+                option=_TLLOPT_tn;
+        }
+)
+ // }}}
+// {{{ TN  (global address)--> NUT (global address) T:siitt link0
+//
+// Neighber Advertisement 
+// TN  (global address)--> NUT (global address)
+// TargetAddress: TN's global link0 address
+
+FEM_icmp6_na (
+        na_tn2nut_siit0,
+        _HETHER_tn2nut,
+                {
+                _SRC(TN_LINK0_GLOBAL_ADDRESS);
+                _DST(NUT_LINK0_GLOBAL_ADDRESS);
+                HopLimit=255;
+        },
+                {
+				RFlag=1;
+                SFlag=1;
+                OFlag=1;
+                TargetAddress=TN_LINK0_SIIT_ADDRESS;
+                option=_TLLOPT_tn;
+        }
+)
+ // }}}
+// {{{ TN  (global address)--> NUT (global address) T:natpt link1
+//
+// Neighber Advertisement 
+// TN  (global address)--> NUT (global address)
+// TargetAddress: TN's global link1 address
+
+FEM_icmp6_na (
+        na_tn2nut_natpt1,
+        _HETHER_tn2nut,
+                {
+                _SRC(TN_LINK0_GLOBAL_ADDRESS);
+                _DST(NUT_LINK0_GLOBAL_ADDRESS);
+                HopLimit=255;
+        },
+                {
+				RFlag=1;
+                SFlag=1;
+                OFlag=1;
+                TargetAddress=TN_LINK1_NATPT_ADDRESS;
+                option=_TLLOPT_tn;
+        }
+)
+ // }}}
+
+// }}}
+// {{{ ARP
+//
+// ARP
+//
+
+// {{{ ARP Request: TN --> NUT
+//
+// ARP Request Packet
+// TN --> NUT
+FEM_hdr_arp(
+    arp_tn2nut_request,
+    _HETHER_tn2broadcast,
+        {
+        Operation=1;
+        SenderHAddr=tnether();
+        SenderPAddr=TN_LINK1_V4_ADDRESS;
+        TargetHAddr=any;
+        TargetPAddr=NUT_LINK1_V4_ADDRESS;
+    }
+)// }}}
+// {{{ ARP Request: TN <-- NUT
+//
+// ARP Request Packet
+// TN <-- NUT
+FEM_hdr_arp(
+    arp_nut2tn_request,
+    _HETHER_nut2broadcast,
+        {
+        Operation=1;
+        SenderHAddr=nutether();
+        SenderPAddr=NUT_LINK1_V4_ADDRESS;
+        TargetHAddr=any;
+        TargetPAddr=TN_LINK1_V4_ADDRESS;
+    }
+)// }}}
+// {{{ ARP Reply: TN --> NUT
+//
+// ARP Reply Packet
+// TN --> NUT
+FEM_hdr_arp(
+    arp_tn2nut_reply,
+    _HETHER_tn2nut,
+        {
+        Operation=2;
+        SenderHAddr=tnether();
+        SenderPAddr=TN_LINK1_V4_ADDRESS;
+        TargetHAddr=nutether();
+        TargetPAddr=NUT_LINK1_V4_ADDRESS;
+    }
+)// }}}
+// {{{ ARP Reply: TN <-- NUT
+//
+// ARP Reply Packet
+// TN <-- NUT
+FEM_hdr_arp(
+    arp_nut2tn_reply,
+    _HETHER_nut2tn,
+        {
+        Operation=2;
+        SenderHAddr=nutether();
+        SenderPAddr=NUT_LINK1_V4_ADDRESS;
+        TargetHAddr=tnether();
+        TargetPAddr=TN_LINK1_V4_ADDRESS;
+    }
+)// }}}
+// }}}
+// {{{ DNS
+
+// {{{ #define's (Name, Type, Class, Time, Data, Addr)
+Payload Payload_0_168_192_in_addr_arpa {
+	data = 0x01; data = 0x30;
+	data = 0x03; data = 0x31; data = 0x36; data = 0x38;
+	data = 0x03; data = 0x31; data = 0x39; data = 0x32;
+	data = 0x07; data = 0x69; data = 0x6e; data = 0x2d;
+	data = 0x61; data = 0x64; data = 0x64; data = 0x72;
+	data = 0x04; data = 0x61; data = 0x72; data = 0x70;
+	data = 0x61; data = 0x00;
+}
+#define Name_0_168_192_in_addr_arpa \
+        data = right(Payload_0_168_192_in_addr_arpa, 0)
+
+Payload Payload_ericsson_se {
+  data = 0x08; data = 0x65; data = 0x72;
+  data = 0x69; data = 0x63; data = 0x73;
+  data = 0x73; data = 0x6f; data = 0x6e;
+  data = 0x02; data = 0x73; data = 0x65; data = 0x00;
+}
+#define Name_ericsson_se data = right(Payload_ericsson_se, 0)
+#define Name_1_0_168_192_in_addr_arpa \
+	data = 0x01; data = 0x31; Name_0_168_192_in_addr_arpa
+#define Name_ric_ericsson_se \
+	data = 0x03; data = 0x72; data = 0x69; data = 0x63; Name_ericsson_se
+#define Name_ns1 data = 0x03; data = 0x6e; data = 0x73; data = 0x31
+#define Name_ns1_ericsson_se Name_ns1; Name_ericsson_se
+#define Name_ns2 data = 0x03; data = 0x6e; data = 0x73; data = 0x32
+#define Name_ns2_ericsson_se Name_ns2; Name_ericsson_se
+
+#define Length_ns1_ericsson_se Data_length(17)
+#define Length_ns2_ericsson_se Data_length(17)
+
+#define Data_ns1_ericsson_se Length_ns1_ericsson_se; Name_ns1_ericsson_se
+#define Data_ns2_ericsson_se Length_ns2_ericsson_se; Name_ns2_ericsson_se
+#define Data_192_168_0_1 Data_length(4); Addr_192_168_0_1
+#define Data_192_168_0_2 Data_length(4); Addr_192_168_0_2
+#define Data_192_168_0_3 Data_length(4); Addr_192_168_0_3
+
+Payload Payload__102_ffff_501_3ffe__ip6_int {
+	data = 0x01; data = 0x30; data = 0x01; data = 0x30;
+	data = 0x01; data = 0x30; data = 0x01; data = 0x30;
+	data = 0x01; data = 0x30; data = 0x01; data = 0x30;
+	data = 0x01; data = 0x30; data = 0x01; data = 0x30;
+	data = 0x01; data = 0x32; data = 0x01; data = 0x30;
+	data = 0x01; data = 0x31; data = 0x01; data = 0x30;
+	data = 0x01; data = 0x66; data = 0x01; data = 0x66;
+	data = 0x01; data = 0x66; data = 0x01; data = 0x66;
+	data = 0x01; data = 0x31; data = 0x01; data = 0x30;
+	data = 0x01; data = 0x35; data = 0x01; data = 0x30;
+	data = 0x01; data = 0x65; data = 0x01; data = 0x66;
+	data = 0x01; data = 0x66; data = 0x01; data = 0x33;
+	data = 0x03; data = 0x69; data = 0x70; data = 0x36;
+	data = 0x03; data = 0x69; data = 0x6e; data = 0x74; data = 0x00;
+}
+#define Name__102_ffff_501_3ffe__ip6_int \
+        data = right(Payload__102_ffff_501_3ffe__ip6_int, 0)
+Payload Payload_0_168_192__102_ffff_501_3ffe__ip6_int {
+	data = 0x01; data = 0x30; data = 0x01; data = 0x30;
+	data = 0x01; data = 0x38; data = 0x01; data = 0x61;
+	data = 0x01; data = 0x30; data = 0x01; data = 0x63;
+	Name__102_ffff_501_3ffe__ip6_int;
+}
+#define Name_0_168_192__102_ffff_501_3ffe__ip6_int \
+        data = right(Payload_0_168_192__102_ffff_501_3ffe__ip6_int, 0)
+#define Name_1_0_168_192__102_ffff_501_3ffe__ip6_int \
+	data = 0x01; data = 0x31; data = 0x01; data = 0x30; \
+	Name_0_168_192__102_ffff_501_3ffe__ip6_int
+#define Name_2_0_168_192__102_ffff_501_3ffe__ip6_int \
+	data = 0x01; data = 0x32; data = 0x01; data = 0x30; \
+	Name_0_168_192__102_ffff_501_3ffe__ip6_int
+#define Name_3_0_168_192__102_ffff_501_3ffe__ip6_int \
+	data = 0x01; data = 0x33; data = 0x01; data = 0x30; \
+	Name_0_168_192__102_ffff_501_3ffe__ip6_int
+
+#define Type_PTR data = 0x00; data = 0x0c
+#define Type_NS data = 0x00; data = 0x02
+#define Type_ipv4 data = 0x00; data = 0x01
+#define Type_ipv6 data = 0x00; data = 0x1c
+#define Class_inet data = 0x00; data = 0x01
+#define Time_to_Live_1_day data = 0x00; data = 0x01; data = 0x51; data = 0x80
+#define TTL_1_day Time_to_Live_1_day
+#define Time_to_Live_0 data = 0x00; data = 0x00; data = 0x00; data = 0x00
+#define TTL_0 Time_to_Live_0
+#define Data_length(LENGTH) data = 0x00; data = LENGTH
+#define Addr_192_168_0_1 data = 0xc0; data = 0xa8; data = 0x00; data = 0x01
+#define Addr_192_168_0_2 data = 0xc0; data = 0xa8; data = 0x00; data = 0x02
+#define Addr_192_168_0_3 data = 0xc0; data = 0xa8; data = 0x00; data = 0x03
+#define Addr_3ffe_501_ffff_102 \
+	data = 0x3f; data = 0xfe; data = 0x05; data = 0x01; \
+	data = 0xff; data = 0xff; data = 0x01; data = 0x02; \
+	data = 0x00; data = 0x00; data = 0x00; data = 0x00
+#define Addr_3ffe_501_ffff_102__192_168_0_1 \
+	Addr_3ffe_501_ffff_102; Addr_192_168_0_1
+#define Addr_3ffe_501_ffff_102__192_168_0_2 \
+	Addr_3ffe_501_ffff_102; Addr_192_168_0_2
+#define Addr_3ffe_501_ffff_102__192_168_0_3 \
+	Addr_3ffe_501_ffff_102; Addr_192_168_0_3
+
+#define Data_3ffe_501_ffff_102__192_168_0_1 \
+        Data_length(16); Addr_3ffe_501_ffff_102__192_168_0_1
+#define Data_3ffe_501_ffff_102__192_168_0_2 \
+        Data_length(16); Addr_3ffe_501_ffff_102__192_168_0_2
+#define Data_3ffe_501_ffff_102__192_168_0_3 \
+        Data_length(16); Addr_3ffe_501_ffff_102__192_168_0_3
+
+#define Offset(OFFSET) data = 0xc0; data = OFFSET
+#define DNS_header_query \
+        data = 0xAB; data = 0xCD; data = 0x01; data = 0x00; \
+	data = 0x00; data = 0x01; data = 0x00; data = 0x00; \
+	data = 0x00; data = 0x00; data = 0x00; data = 0x00
+#define DNS_header_response \
+	data = 0xAB; data = 0xCD; data = 0x85; data = 0x80; \
+	data = 0x00; data = 0x01; data = 0x00; data = 0x01; \
+	data = 0x00; data = 0x02; data = 0x00; data = 0x02
+
+// }}}
+// {{{ #define FEM_dns(_pNAME, ...
+#define FEM_dns(_pNAME, _pTTL, _pQNAME, _pQTYPE, _pQREPLY, \
+	_pNSDOMAIN, _pNSTYPE, _pLEN1, _pNSNAME1, _pLEN2, _pNSNAME2, \
+	_pNSADDRTYPE, _pNSADDR1, _pNSADDR2) \
+Payload _pNAME { DNS_header_query; _pQNAME; _pQTYPE; Class_inet; } \
+Payload _pNAME ## _response { DNS_header_response; \
+        _pQNAME; _pQTYPE; Class_inet; \
+        _pQNAME; _pQTYPE; Class_inet; _pTTL; _pQREPLY; \
+        _pNSDOMAIN; _pNSTYPE; Class_inet; _pTTL; _pLEN1; _pNSNAME1; \
+        _pNSDOMAIN; _pNSTYPE; Class_inet; _pTTL; _pLEN2; _pNSNAME2; \
+        _pNSNAME1; _pNSADDRTYPE; Class_inet; _pTTL; _pNSADDR1; \
+        _pNSNAME2; _pNSADDRTYPE; Class_inet; _pTTL; _pNSADDR2; \
+}
+// }}}
+
+  ///////////////////////////
+ // Uncompressed IPv4 DNS //
+///////////////////////////
+
+
+FEM_dns(dns_query_ptr, TTL_1_day, // {{{ 
+	// 1.0.168.192.in-addr.arpa: type PTR, class inet, ptr ns1.ericsson.se
+	Name_1_0_168_192_in_addr_arpa, Type_PTR, Data_ns1_ericsson_se,
+
+	// 0.168.192.in-addr.arpa: type NS, class inet, ns ns1.ericsson.se
+	// 0.168.192.in-addr.arpa: type NS, class inet, ns ns1.ericsson.se
+	Name_0_168_192_in_addr_arpa, Type_NS, 
+	Length_ns1_ericsson_se, Name_ns1_ericsson_se, 
+	Length_ns2_ericsson_se, Name_ns2_ericsson_se, 
+
+	// ns1.ericsson.se: type A, class inet, addr 192.168.0.1
+	// ns2.ericsson.se: type A, class inet, addr 192.168.0.2
+	Type_ipv4, Data_192_168_0_1, Data_192_168_0_2
+	) // }}}
+FEM_dns(dns_query_a, TTL_1_day, // {{{ 
+	// ric.ericsson.se: type A, class inet, addr 192.168.0.3
+	Name_ric_ericsson_se, Type_ipv4, Data_192_168_0_3, 
+
+	// ericsson.se: type NS, class inet, ns ns1.ericsson.se
+	// ericsson.se: type NS, class inet, ns ns1.ericsson.se
+	Name_ericsson_se, Type_NS, 
+	Length_ns1_ericsson_se, Name_ns1_ericsson_se, 
+	Length_ns2_ericsson_se, Name_ns2_ericsson_se, 
+
+	// ns1.ericsson.se: type A, class inet, addr 192.168.0.1
+	// ns2.ericsson.se: type A, class inet, addr 192.168.0.2
+	Type_ipv4, Data_192_168_0_1, Data_192_168_0_2
+	)// }}}
+
+  /////////////////////////
+ // Compressed IPv4 DNS //
+/////////////////////////
+Payload dns_query_ptr_response_comp {// {{{ 
+	data = 0xAB; data = 0xCD; // Transaction ID = 0xABCD
+	data = 0x85; data = 0x80; // Flags = 0x8580
+	data = 0x00; data = 0x01; // Questions = 1
+	data = 0x00; data = 0x01; // Answer RRs: 1
+	data = 0x00; data = 0x02; // Authority RRs: 2
+	data = 0x00; data = 0x02; // Additional RRs: 2
+	data = right(query_ptr_comp, 0); 
+	data = right(query_ptr_answer_comp, 0);
+	data = right(authoritative_ns_ptr_comp, 0);
+	data = right(additional_records_ptr_comp, 0);
+}
+// }}}
+Payload query_ptr_comp {// {{{ 
+// 1.0.168.192.in-addr.arpa: type PTR, class inet
+  Name_1_0_168_192_in_addr_arpa; // Offset = 12
+  Type_PTR;
+  Class_inet;
+}
+// }}}
+Payload query_ptr_answer_comp {// {{{ 
+// 1.0.168.192.in-addr.arpa: type PTR, class inet, ptr ns1.ericsson.se
+  Offset(12); // Name_1_0_168_192_in_addr_arpa;
+  Type_PTR;
+  Class_inet;
+  Time_to_Live_1_day;
+  Data_length(17);
+  Name_ns1_ericsson_se; // Offset = 54
+}
+// }}}
+Payload authoritative_ns_ptr_comp {// {{{ 
+	data = right(authoritative_ns1_ptr_comp, 0);
+	data = right(authoritative_ns2_ptr_comp, 0);
+}
+Payload authoritative_ns1_ptr_comp {
+// 0.168.192.in-addr.arpa: type NS, class inet, ns ns1.ericsson.se
+  Offset(14); // Name_0_168_192_in_addr_arpa;
+  Type_NS;
+  Class_inet;
+  Time_to_Live_1_day;
+  Data_length(2);
+  Offset(54); // Name_ns1_ericsson_se;
+}
+Payload authoritative_ns2_ptr_comp {
+// 0.168.192.in-addr.arpa: type NS, class inet, ns ns1.ericsson.se
+  Offset(14); // Name_0_168_192_in_addr_arpa;
+  Type_NS;
+  Class_inet;
+  Time_to_Live_1_day;
+  Data_length(6);
+  Name_ns2; // Offset = 97
+  Offset(58); // Name_ericsson_se;
+}
+// }}}
+Payload additional_records_ptr_comp {// {{{ 
+	data = right(additional_records1_comp, 0);
+	data = right(additional_records2_comp, 0);
+}
+Payload additional_records1_comp {
+// ns1.ericsson.se: type A, class inet, addr 192.168.0.1
+  Offset(54); // Name_ns1_ericsson_se;
+  Type_ipv4;
+  Class_inet;
+  Time_to_Live_1_day;
+  Data_length(4);
+  Addr_192_168_0_1;
+}
+Payload additional_records2_comp {
+// ns2.ericsson.se: type A, class inet, addr 192.168.0.2
+  Offset(97); // Name_ns2_ericsson_se;
+  Type_ipv4;
+  Class_inet;
+  Time_to_Live_1_day;
+  Data_length(4);
+  Addr_192_168_0_2;
+}
+// }}}
+
+Payload dns_query_a_response_comp {// {{{ 
+	data = 0xAB; data = 0xCD; // Transaction ID = 0xABCD
+	data = 0x85; data = 0x80; // Flags = 0x8580
+	data = 0x00; data = 0x01; // Questions = 1
+	data = 0x00; data = 0x01; // Answer RRs: 1
+	data = 0x00; data = 0x02; // Authority RRs: 2
+	data = 0x00; data = 0x02; // Additional RRs: 2
+	data = right(query_a_comp, 0);
+	data = right(query_a_answer_comp, 0);
+	data = right(authoritative_ns_a_comp, 0);
+	data = right(additional_records_a_comp, 0);
+}
+// }}}
+Payload query_a_comp {// {{{ 
+// ric.ericsson.se: type A, class inet
+  Name_ric_ericsson_se;
+  Type_ipv4;
+  Class_inet;
+}// }}}
+Payload query_a_answer_comp {// {{{ 
+// ric.ericsson.se: type A, class inet, addr 192.168.0.3
+  Offset(12); // Name_ric_ericsson_se;
+  Type_ipv4;
+  Class_inet;
+  Time_to_Live_1_day;
+  Data_length(4);  
+  Addr_192_168_0_3;
+}
+// }}}
+Payload authoritative_ns_a_comp {// {{{ 
+	data = right(authoritative_ns1_a_comp, 0);
+	data = right(authoritative_ns2_a_comp, 0);
+}
+Payload authoritative_ns1_a_comp {
+// 0.168.192.in-addr.arpa: type NS, class inet, ns ns1.ericsson.se
+  Offset(16); // Name_ericsson_se;
+  Type_NS;
+  Class_inet;
+  Time_to_Live_1_day;
+  Data_length(6);
+  Name_ns1;
+  Offset(16); // Name_ns1_ericsson_se;
+}
+Payload authoritative_ns2_a_comp {
+// 0.168.192.in-addr.arpa: type NS, class inet, ns ns1.ericsson.se
+  Offset(16); // Name_ericsson_se;
+  Type_NS;
+  Class_inet;
+  Time_to_Live_1_day;
+  Data_length(6);
+  Name_ns2;
+  Offset(16); // Name_ns2_ericsson_se;
+}
+// }}}
+Payload additional_records_a_comp {// {{{ 
+	data = right(additional_records1_a_comp, 0);
+	data = right(additional_records2_a_comp, 0);
+}
+Payload additional_records1_a_comp {
+// ns1.ericsson.se: type A, class inet, addr 192.168.0.1
+  Offset(61); // Name_ns1_ericsson_se;
+  Type_ipv4;
+  Class_inet;
+  Time_to_Live_1_day;
+  Data_length(4);
+  Addr_192_168_0_1;
+}
+Payload additional_records2_a_comp {
+// ns2.ericsson.se: type A, class inet, addr 192.168.0.2
+  Offset(79); // Name_ns2_ericsson_se;
+  Type_ipv4;
+  Class_inet;
+  Time_to_Live_1_day;
+  Data_length(4);
+  Addr_192_168_0_2;
+}
+// }}}
+
+  ///////////////////////////
+ // Uncompressed IPv6 DNS //
+///////////////////////////
+FEM_dns(dns_query_ptr6, TTL_1_day, // {{{ 
+	// 1.0.168.192::102:ffff:501:3ffe.ip6.int: 
+	//      type PTR, class inet, ptr ns1.ericsson.se
+	Name_1_0_168_192__102_ffff_501_3ffe__ip6_int, 
+	Type_PTR, Data_ns1_ericsson_se,
+
+	// 0.168.192::102:ffff:501:3ffe.ip6.int: 
+	//      type NS, class inet, ns ns1.ericsson.se
+	// 0.168.192::102:ffff:501:3ffe.ip6.int:
+	//      type NS, class inet, ns ns2.ericsson.se
+        Name_0_168_192__102_ffff_501_3ffe__ip6_int, Type_NS, 
+	Length_ns1_ericsson_se, Name_ns1_ericsson_se, 
+	Length_ns2_ericsson_se, Name_ns2_ericsson_se, 
+
+	// ns1.ericsson.se: type AAAA, class inet, 
+	//                  addr 3ffe:501:ffff:102::192.168.0.1
+	// ns2.ericsson.se: type AAAA, class inet, 
+	//                  addr 3ffe:501:ffff:102::192.168.0.2
+	Type_ipv6, 
+	Data_3ffe_501_ffff_102__192_168_0_1, 
+	Data_3ffe_501_ffff_102__192_168_0_2
+	) // }}}
+FEM_dns(dns_query_aaaa, TTL_1_day, // {{{ 
+	// ric.ericsson.se: type AAAA, class inet, 
+	//      addr 3ffe:501:ffff:102::192.168.0.3
+       	Name_ric_ericsson_se, Type_ipv6, Data_3ffe_501_ffff_102__192_168_0_3,
+
+	// ericsson.se: type NS, class inet, ns ns1.ericsson.se
+	// ericsson.se: type NS, class inet, ns ns1.ericsson.se
+	Name_ericsson_se, Type_NS, 
+	Length_ns1_ericsson_se, Name_ns1_ericsson_se, 
+	Length_ns2_ericsson_se, Name_ns2_ericsson_se, 
+
+	// ns1.ericsson.se: type AAAA, class inet, 
+        //                  addr 3ffe:501:ffff:102::192.168.0.1
+	// ns2.ericsson.se: type AAAA, class inet, 
+        //                  addr 3ffe:501:ffff:102::192.168.0.2
+	Type_ipv6, 
+	Data_3ffe_501_ffff_102__192_168_0_1, 
+	Data_3ffe_501_ffff_102__192_168_0_2
+	)// }}}
+
+  ///////////////////////////////////////
+ // IPv6 (NAT-PT translated IPv4) DNS //
+///////////////////////////////////////
+FEM_dns(dns_query_ptr_trans, TTL_0, // {{{ 
+	// 1.0.168.192::102:ffff:501:3ffe.ip6.int: 
+	// type PTR, class inet, ptr ns1.ericsson.se
+	Name_1_0_168_192__102_ffff_501_3ffe__ip6_int, 
+	Type_PTR, 
+	Data_ns1_ericsson_se,
+
+	// 0.168.192.in-addr.arpa: type NS, class inet, ns ns1.ericsson.se
+	// 0.168.192.in-addr.arpa: type NS, class inet, ns ns1.ericsson.se
+	Name_0_168_192_in_addr_arpa, 
+	Type_NS, 
+	Length_ns1_ericsson_se, Name_ns1_ericsson_se, 
+	Length_ns2_ericsson_se, Name_ns2_ericsson_se, 
+
+	// ns1.ericsson.se: type A, class inet, addr 192.168.0.1
+	// ns2.ericsson.se: type A, class inet, addr 192.168.0.2
+	Type_ipv4, 
+	Data_192_168_0_1, 
+	Data_192_168_0_2
+	) // }}}
+FEM_dns(dns_query_a_trans, TTL_0, // {{{ 
+	// ric.ericsson.se: type A, class inet, addr 192.168.0.3
+       	Name_ric_ericsson_se, Type_ipv6, Data_3ffe_501_ffff_102__192_168_0_3,
+
+	// 0.168.192.in-addr.arpa: type NS, class inet, ns ns1.ericsson.se
+	// 0.168.192.in-addr.arpa: type NS, class inet, ns ns1.ericsson.se
+	Name_ericsson_se, Type_NS, 
+	Length_ns1_ericsson_se, Name_ns1_ericsson_se, 
+	Length_ns2_ericsson_se, Name_ns2_ericsson_se, 
+
+	// ns1.ericsson.se: type A, class inet, addr 192.168.0.1
+	// ns2.ericsson.se: type A, class inet, addr 192.168.0.2
+	Type_ipv4, Data_192_168_0_1, Data_192_168_0_2
+	)// }}}
+
+// }}}
+
+// {{{ IPv4 Echo Request/Reply
+
+// {{{ IPv4 Echo Request: TN --> NUT 
+//
+// IPv4 Echo Request
+// TN --> NUT
+FEM_icmp4_echo_request(
+	echo_request_v4_tn2nut,
+	_HETHER_tn2nut,
+		{
+		DF=0;
+		SourceAddress=TN_LINK1_V4_ADDRESS;
+		DestinationAddress=TN_LINK0_V4_ADDRESS;	
+	},
+		{
+		payload=ping_data;
+	}
+)// }}}
+// {{{ IPv4 Echo Request: TN <-- NUT 
+//
+// IPv4 Echo Request
+// TN <-- NUT
+FEM_icmp4_echo_request(
+	echo_request_v4_nut2tn,
+	_HETHER_nut2tn,
+		{
+		DF=0;
+		SourceAddress=TN_LINK0_V4_ADDRESS;
+		DestinationAddress=TN_LINK1_V4_ADDRESS;
+	},
+		{
+		payload=ping_data;
+	}
+)// }}}
+// {{{ IPv4 Echo Reply: TN --> NUT
+//
+// IPv4 Echo Reply
+// TN --> NUT
+FEM_icmp4_echo_reply (
+	echo_reply_v4_tn2nut,
+	_HETHER_tn2nut,
+		{
+		DF=0;
+		SourceAddress=TN_LINK1_V4_ADDRESS;
+		DestinationAddress=TN_LINK0_V4_ADDRESS;
+	},
+		{
+		payload=ping_data;
+	}
+)// }}}
+// {{{ IPv4 Echo Reply: TN <-- NUT
+//
+// IPv4 Echo Reply
+// TN <-- NUT
+FEM_icmp4_echo_reply (
+	echo_reply_v4_nut2tn,
+	_HETHER_nut2tn,
+		{
+		DF=0;
+		SourceAddress=TN_LINK1_V4_ADDRESS;
+		DestinationAddress=TN_LINK0_V4_ADDRESS;
+	},
+		{
+		payload=ping_data;
+	}
+)// }}}
+
+// {{{ IPv4 Echo Request: TN --> NUT 
+//
+// IPv4 Echo Request
+// TN --> NUT
+FEM_icmp4_echo_request(
+	echo_request_v4_tn2nut_df,
+	_HETHER_tn2nut,
+		{
+		DF=1;
+		SourceAddress=TN_LINK1_V4_ADDRESS;
+		DestinationAddress=TN_LINK0_V4_ADDRESS;	
+	},
+		{
+		payload=ping_data;
+	}
+)// }}}
+// {{{ IPv4 Echo Request: TN <-- NUT 
+//
+// IPv4 Echo Request
+// TN <-- NUT
+FEM_icmp4_echo_request(
+	echo_request_v4_nut2tn_df,
+	_HETHER_nut2tn,
+		{
+		DF=1;
+		SourceAddress=TN_LINK0_V4_ADDRESS;
+		DestinationAddress=TN_LINK1_V4_ADDRESS;
+	},
+		{
+		payload=ping_data;
+	}
+)// }}}
+// {{{ IPv4 Echo Reply: TN --> NUT
+//
+// IPv4 Echo Reply
+// TN --> NUT
+FEM_icmp4_echo_reply (
+	echo_reply_v4_tn2nut_df,
+	_HETHER_tn2nut,
+		{
+		DF=1;
+		SourceAddress=TN_LINK1_V4_ADDRESS;
+		DestinationAddress=TN_LINK0_V4_ADDRESS;
+	},
+		{
+		payload=ping_data;
+	}
+)// }}}
+// {{{ IPv4 Echo Reply: TN <-- NUT
+//
+// IPv4 Echo Reply
+// TN <-- NUT
+FEM_icmp4_echo_reply (
+	echo_reply_v4_nut2tn_df,
+	_HETHER_nut2tn,
+		{
+		DF=1;
+		SourceAddress=TN_LINK0_V4_ADDRESS;
+		DestinationAddress=TN_LINK1_V4_ADDRESS;
+	},
+		{
+		payload=ping_data;
+	}
+)// }}}
+
+// }}}

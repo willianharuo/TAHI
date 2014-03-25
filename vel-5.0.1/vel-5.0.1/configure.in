@@ -1,0 +1,89 @@
+#                                               -*- Autoconf -*-
+# Process this file with autoconf to produce a configure script.
+
+#AC_PREREQ(2.59)
+AC_INIT(vel, 5.0.0, Hiroki.Endou@jp.yokogawa.com)
+AM_CONFIG_HEADER(config/config.h)
+AM_INIT_AUTOMAKE(vel, 5.0.0, no-define)
+
+AC_SUBST(ac_default_prefix, /usr/local/vel)
+AC_SUBST(datadir, /usr/local/vel/doc)
+AC_SUBST(sharedstatedir, /usr/local/vel/example/interop_ph2_core)
+
+# Checks for programs.
+AC_PROG_CC
+AC_PROG_CPP
+AC_PROG_CXX
+AC_PROG_YACC
+AC_PROG_MAKE_SET
+AC_PROG_INSTALL
+AC_PROG_RANLIB
+
+# Checks for libraries.
+
+# Checks for header files.
+AC_HEADER_STDC
+AC_CHECK_HEADERS(fcntl.h stdlib.h strings.h errno.h sys/ioctl.h sys/param.h sys/time.h unistd.h alloca.h)
+AC_CHECK_HEADER([stdint.h], [AC_DEFINE(HAVE_STDINT_H)])
+AC_CHECK_HEADER([inttypes.h], [AC_DEFINE(HAVE_INTTYPES_H)])
+#AC_CHECK_HEADER([alloca.h], [AC_DEFINE(HAVE_ALLOCA_H)])
+
+# Checks for typedefs, structures, and compiler characteristics.
+AC_HEADER_STDBOOL
+AC_C_CONST
+AC_C_INLINE
+AC_TYPE_PID_T
+AC_TYPE_SIZE_T
+
+## Checks for socklen_t
+AC_MSG_CHECKING(for socklen_t)
+AC_TRY_COMPILE([
+#include <sys/types.h>
+#include <sys/socket.h>
+],[
+socklen_t foo;
+], [
+AC_DEFINE(HAVE_SOCKLEN_T, 1, "have socklen_t")
+AC_MSG_RESULT(yes)
+], [
+AC_MSG_RESULT(no)
+])
+
+## Checks for struct sockaddr_in6
+AC_MSG_CHECKING(for struct sockaddr.sa_len)
+AC_TRY_COMPILE([
+#include <sys/types.h>
+#include <sys/socket.h>
+],[
+struct sockaddr addr;
+unsigned char len = addr.sa_len;
+], [
+AC_DEFINE(HAVE_STRUCT_SOCKADDR_SA_LEN, 1, "if sockaddr struct has sa_len member")
+AC_MSG_RESULT(yes)
+], [
+AC_MSG_RESULT(no)
+])
+
+# Checks for library functions.
+AC_FUNC_ERROR_AT_LINE
+AC_FUNC_MALLOC
+AC_FUNC_MEMCMP
+AC_FUNC_FORK
+AC_FUNC_VPRINTF
+AC_CHECK_FUNCS([atexit select socket strerror])
+AC_TYPE_SIGNAL
+
+AC_EXEEXT
+AC_LANG_CPLUSPLUS
+
+AC_CONFIG_FILES([Makefile
+                 bin/Makefile
+                 bin/velm/Makefile
+                 bin/vela/Makefile
+                 bin/velo/Makefile
+                 lib/Makefile
+                 lib/Tg/Makefile
+                 lib/Cm/Makefile
+                 config/Makefile
+                 ])
+AC_OUTPUT

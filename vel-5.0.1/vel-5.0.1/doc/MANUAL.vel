@@ -1,0 +1,613 @@
+                   Virtual Evaluation Laboratory
+
+                           TAHI Project
+
+                   $Date: 2005/07/22 05:10:35 $
+
+1. Outline
+
+    This tool provides you with the environment of a traffic generating 
+    function.
+    Under the network environment containing a verified machine, this tool
+    generates traffic between reference machines, and aims at securing the
+    automation and the reproducibility of an interoperability test to verified
+    machine.
+    Since this tool can generate traffic of various patterns, it is effective
+    also in performance evaluation.
+
+2. System composition
+
+    The relation of a manager, agents, and a verification network consists of
+    following networks.
+
+                                manager machine
+                                    |
+    --------------------+-----------+----------------+-------------------
+                        |                            |
+                    agent machine                    agent machine
+                        |                            |
+    --------------------+-----------+----------------+-------------------
+                                    |
+                                target machine
+
+                    figure 1.  Network composition
+
+3. programs
+
+    There are three programs of velm, vela and velo.
+
+    Velm is a manager program which operates by the manager machine. It
+    generates packets among two or more agent machines. It controlls the
+    agent program 'vela' for sending packets.
+
+    Vela is a agent program which operates by the agent machine.
+    It is a resided-permanently type program which works on agent machine.
+    It is controlled by the manager program and generates packets.
+
+    Velo is a agent program which operates by the agent machine.
+    It is a resided-permanently type program which works on agent machine.
+    Velo is a process for command execution.
+    Before starting vela, velo is started by the same agnet machine.
+
+3.1 Install
+
+    Traffic generation tool is installed as /usr/local/v6eval/bin/{velm, vela}.
+    It is possible to set /usr/local/v6eval/bin as starting search path of a
+    command, or to start by the direct full path name in starting of this
+    command.
+
+4. Configuration
+
+    The manager program 'velm' reads an environmental definition file and a
+    scenario definition file, and operates according to the command from a
+    standard input.
+
+    You must write two configuration files 'environment file' and
+    'scenario file' in any places. There are sample files env.def.sample and
+    scenario.def.sample in /usr/local/v6eval/etc/.
+
+4.1 Describing envrionment file
+
+    'Envrionment file' describes the setup about the environment for traffic
+    generation. The same scenario can be reused in the different environment
+    which only by changing description of this file.
+
+    (1) Item order
+
+    The order of description of an item is free.
+
+    (2) Comment
+
+    At each line the character '#' and subsequent characters are
+    treated as comments.
+
+    (3) Format
+
+        keyword parameter {
+            definition
+            definition
+                :
+        }
+
+    (4) Item details
+
+    host : host definition.
+
+        Two or more definitions are possible for host definition in
+        envrionment file.
+        Host definition has NIC definition and agent definition.
+        Hostname of the agent machine is written.
+        Hostname presupposes that it is unique in envrionment file.
+        Two or more definitions with each host definition are possible for
+        NIC definition.
+        Agent definition is specified only at once for each host definition.
+
+        format :
+            host hostname {
+                NIC definition
+                NIC definition
+                    :
+                agent definition
+            }
+
+    interface : NIC definition
+
+        NIC definition is contained in the host definition.
+        It has MAC address definition and IP address definition.
+        Nicname of the agent machine is written.
+        Nicname presupposes that it is unique in envrionment file.
+        MAC address definition is specified only at once for each NIC definition.
+        Two or more definitions with each NIC definition are possible for
+        IP address definition.
+
+        format :
+            interface nicname {
+                MAC address definition
+                IP address definition
+                IP address definition
+            }
+
+    mac : MAC address definition
+
+        MAC address definition is contained in the NIC definition.
+        MAC address of the agent machine is written.
+
+        format :
+            mac     "MAC address"
+
+    IPv6 : IP address definition
+
+        IP address definition is contained in the NIC definition.
+        Ipname presupposes that it is unique for every host definition.
+        IP address of the agent machine is written.
+        If you want to use both site-local address and global address, then
+        you describe each of them.
+
+        format :
+            IPv6 ipname "IP address";
+
+    tgagent : agent definition
+
+        Agent definition is contained in the host definition.
+        It is used for agent controlling by manager program.
+        The port which this host's agent uses is defined.
+        It specifies only once for each host definition.
+        Ipname and port number of the agent machine is written.
+        Ipname defined in IP definition is described.
+        A default port is used when port is omitted.
+
+        format :
+            tgagent ipname [port];
+
+    (5) Examples
+
+    host agent2 {
+            interface fxp0 {
+                mac             "00:90:27:14:ce:e3";
+                ipv6 v6linkfxp0 "fe80:1::290:27ff:fe14:cee3";
+                ipv6 v6sitefxp0 "fec0::290:27ff:fe14:cee3";
+            }
+
+            interface de0 {
+                mac             "00:90:27:19:08:60";
+                ipv6 v6linkde0  "fe80:2::200:92ff:fea7:6df5";
+                ipv6 v6sitede0  "fec0::1:200:92ff:fea7:6df5";
+            }
+
+            interface de1 {
+                mac             "00:00:92:a7:6d:f6";
+                ipv6 v6linkde1  "fe80:3::200:92ff:fea7:6df6";
+            }
+
+            tgagent v6sitefxp0 17670;
+    }
+
+    host agent1 {
+            interface lo0 {
+                ipv6 v6loop     "::1";
+                ipv6 v6linkloop "fe80:d::1";
+            }
+
+            interface fxp0 {
+                mac             "00:90:27:19:08:60";
+                ipv6 v6linkfxp0 "fe80:2::290:27ff:fe19:0860";
+                ipv6 v6sitefxp0 "fec0::290:27ff:fe19:0860";
+           }
+
+            interface de0 {
+                mac             "00:00:92:a7:76:6c";
+                ipv6 v6sitede0  "fec0::1:200:92ff:fea7:766c";
+            }
+
+            tgagent v6sitefxp0;
+    }
+
+4.2 Describing scenario file
+
+    'Scenario file' describes the setup about the scenario for traffic
+    generation. The same load is reproducible, whether environment differs or
+    the time differs.
+
+    (1) Item order
+
+    The order of description of an item is free.
+
+    (2) Comment
+
+    At each line the character '#' and subsequent characters are
+    treated as comments.
+
+    (3) Format
+
+        keyword parameter {
+            definition
+            definition
+                :
+        }
+
+    (4) Item details
+
+    conn : connection definition
+
+        Two or more definitions are possible for connection definition
+        in scenario file.
+        Ppname presupposes that it is unique for every conn definition.
+        Hostname defined in host definition is described.
+        Ipname defined in IP address definition is described.
+        The default of TCP/UDP specification is TCP.
+
+        format :
+            conn ppname {src_hostname, src_ipname, srcport}
+                        {dst_hostname dst_ipname, dstport} [tcp/udp] ;
+
+    syncevent : synchronized event definition
+
+        Two or more definitions are possible for event definition in
+        scenario file.
+        Syncname presupposes that it is unique for every event definition.
+        Trafficname defined in traffic definition is described.
+        Session which wants to synchronize is defined.
+        Session which performs synchronous processing is specified as a list
+        of trafficnames.
+        It is set to Active when waiting from all defined sessions.
+
+        format :
+            syncevent syncname trafficname1, trafficname2, ....;
+
+    waitevent : wait event definition
+
+        Two or more definitions are possible for event definition in
+        scenario file.
+        Syncname presupposes that it is unique for every event definition.
+        Trafficname defined in traffic definition is described.
+        Session which wants to wait is defined.
+        Session which performs synchronous processing is specified as a list
+        of trafficnames.
+        It is set to Active when waiting from all defined sessions.
+
+        format :
+            waitevent waitname trafficname1, trafficname2, ....;
+
+    traffic : traffic definition
+
+        Traffic sequence is defined.
+        Two or more definitions are possible for traffic definition in
+        scenario file.
+        Traffic definition has connect definition, delay definition,
+        oneway definition, turnaround definition and sync definition.
+        Trafficname presupposes that it is unique for every traffic definition.
+
+        format :
+            traffic trafficname ppname {
+                internal definition;
+                ....
+            }
+
+    connect : connect definition
+
+        Connect definition is contained in the traffic definition.
+        Connection of a communication way is specified.
+
+        format :
+            connect;
+
+    delay : delay definition
+
+        Delay definition is contained in the traffic definition.
+        Delay of the specified time is inserted.
+        Two or more definitions are possible for delay definition in
+        scenario file.
+        The Unit of delay is second.
+
+        format :
+            delay interval;
+
+    oneway : oneway definition
+
+        Oneway definition is contained in the traffic definition.
+        It specifies only once for each traffic definition.
+        Data transmission and reception of one direction are directed.
+        The unit of sendlen is byte.
+        1 <= sendlen <= 65535
+        The unit of interval is micro second.
+
+        format :
+            oneway {sendlen, count [,interval]};
+
+    turnaround : turnaround definition
+
+        Turnaround definition is contained in the traffic definition.
+        It specifies only once for each traffic definition.
+        Data transmission and reception of both directions are directed.
+        The unit of sendlen is byte.
+        1 <= sendlen <= 65535
+        The unit of interval is micro second.
+
+        format :
+            turnaround {sendlen, count [,interval]};
+
+    sync : sync definition
+
+        Sync definition is contained in the traffic definition.
+        Syncname defined in event definition is described.
+        It waits that specified session is set to Active.
+
+        format :
+            sync syncname;
+
+    wait : wait definition
+
+        Wait definition is contained in the traffic definition.
+        Waitname defined in event definition is described.
+        It waits that specified session is set to Active and press Enter key.
+
+        format :
+            wait waitname;
+
+    scenario : scenario definition
+
+        Two or more definitions are possible for scenario definition in
+        scenario file.
+        Scname presupposes that it is unique for every scenario definition.
+        Trafficname defined in traffic definition is described.
+
+        format :
+            scenario scname {
+                trafficname ;
+                trafficname ;
+                ....
+        }
+
+    print : velm printing definition
+
+        Print definition is used to print strings on velm display.
+
+        format :
+            print "strings to print to display";
+
+    (5) Examples
+
+        conn pp01 {agent1, v6linkde0, 17671} {agent2, v6linkde0, 17671} tcp;
+        conn pp02 {agent1, v6linkde0, 17677} {agent2, v6linkde0, 17672} udp;
+        conn pp03 {agent1, v6linkde0, 17678} {agent2, v6linkde1, 17671} udp;
+        conn pp04 {agent1, v6sitede3, 17679} {agent2, v6sitede2, 17673};
+
+        # event definition
+        event ev0102 act01, act02;
+
+        # traffic definition
+        traffic act01 pp01 {
+                delay 5;
+                connect;
+                sync ev0102;
+                oneway { 256, 1024, 0 };
+        }
+
+        traffic act02 pp02 {
+                delay 5;
+                connect;
+                sync ev0102;
+                oneway { 1, 65535, 0 };
+        }
+
+        # scenario definition
+        scenario sc001 {    # act01 and act02 are performed in parallel.
+                act01;
+                act02;
+        }
+
+4.3 Variable environment
+
+    TRAFFIC_GENERATOR:
+
+        The port number for which an agent receives connection from a
+        manager.
+        20001 is used when omitting.
+
+    TGD_LOG_DIR:
+
+        The directory where a transmission-and-reception log file is
+        created.
+
+5 Command description
+
+5.1 Manager program 'velm'
+
+    This chapter describes the starting method of an manager program 'velm' at
+    manager machine. It performs on the command line of manager machine.
+
+    velm -e <environment_file> -s <scenario_file> <scenario_name>
+
+    The options are as follows;
+
+    -e envrionment_file
+        Specify a environment file for definition of environment at traffic
+        generation.
+
+    -s scenario_file
+        Specify a scenario file for definition of scenario traffic
+        generation.
+
+    scenario_name
+        The scenario name defined by the scenario file
+
+5.2 Agnet program 'vela'
+
+    This chapter describes the starting method of an agent program 'vela' at
+    manager machine. It performs on the command line of agent machine.
+
+    vela [-r]
+
+    The options are as follows;
+
+    -r
+        The unit of interval defined by the scenario is changed into the
+        number of times of the empty loop of program.
+
+5.3 Agnet program 'velo'
+
+    It performs on the command line of manager machine.
+
+    velo
+
+6. Simple usage
+
+    First, you prepare an agent machine.
+    Velo and tge are started by another console on agent machine.
+    It needs to start by all the agent machines to use.
+
+    # velo
+
+    You change a console.
+
+    # vela
+
+    Next, you start velm by the manager machine.
+
+    # velm -e environment.txt -s scenario.txt scenario_name
+
+7. Output
+
+    (1) Output of velm
+
+    Velm displays the selected packets to STDOUT in proprietary format.
+
+    act1@mgr      :      0.597994 : connect A->B
+    act1@A        :      3.606487 : oneway-SEND
+        send: 4.6520e+06 bytes/sec(payload) sc=16384 rc=0 4.5429e+03 pkt/sec
+        sec 4.8700e+06 bytes/sec(udp)
+    act1@B        :      3.606169 : oneway-RECV
+        recv: 4.4618e+06 bytes/sec(payload) sc=0 rc=15713 4.3573e+03 pkt/sec
+        sec 4.6710e+06 bytes/sec(udp)
+    act1@mgr      :      4.201838 : oneway A->B {1024,16384,0}
+
+    act4@mgr      :      0.599279 : connect A->B
+    act4@A        :      4.863649 : turnaround-SENDRECV
+        send: 5.1680e+06 bytes/sec(payload) sc=16384 rc=8162 5.0468e+03
+        pkt/sec sec 5.4102e+06 bytes/sec(udp)
+    act4@B        :      4.869190 : turnaround-RECV
+        recv: 5.2954e+06 bytes/sec(payload) sc=12590 rc=12590 5.1713e+03
+        pkt/sec sec 5.5436e+06 bytes/sec(udp)
+    act4@mgr      :      5.399805 : turnaround A<->B {1024,16384,0}
+
+    (2) Output of vela
+
+    Vela outputs a binary file as a log of transmission.
+    A log output is carried out only for UDP.
+
+    The contents of an output are as follows.
+
+    (Header)
+        struct timeval  time
+        int16_t         number
+        int16_t         send or receive
+        int16_t         length
+        int16_t         body length (#define LOG_BODY_LEN 4)
+    (Body)
+        char            body
+
+8. Error output
+
+    There are two types of error outputs, the error resulting from the
+    starting parameter specified, and the syntax error of each input file.
+
+    (1) Error of starting parameter
+
+    message : cannot open <filename>
+
+        contents :
+            The specified file cannot be opened.
+
+    message : Scneario "xxx is not found in Scenario file.
+
+        contents :
+            The specified scenario does not exist in a scenario file.
+
+    (2) Syntax error of input file
+
+    message : "<filename>", line n: error: Host"xxx" is already defined.
+
+        contents :
+            Host name definition overlaps in an environment file.
+
+    message : "<filename>", line n: error: NIC"xxx" is already defined.
+
+        contents :
+            NIC name definition overlaps in an environment file.
+
+    message : "<filename>", line n: error: MacAddress is multiply defined.
+
+        contents :
+            MAC address definition overlaps in an environment file.
+
+    message : "<filename>", line n: error: IP "xxx" is already defined.
+
+        contents :
+            Ipname definition overlaps in an environment file.
+
+    message : "<filename>", line n: error: TgAgent is multiply defined.
+
+        contents :
+            Tgagent definition overlaps in an environment file.
+
+    message : "<filename>", line n: error: "fec0:3:...:xx" : illegal format of
+              IP address.
+
+        contents :
+            The format of IPv6 address is inaccurate.
+
+    message : "<filename>", line n: error: Tga IP"xxx" is not defined for host X
+
+        contents :
+            Ipname specified by tgagent does not exist in host X.
+
+    message : "<filename>", line n: error: conn"xxx" is already defined.
+
+        contents :
+            Connection definition overlaps in a scenario file.
+
+
+    message : "<filename>", line n: error: event"xxx" is already defined.
+
+        contents :
+            Event definition overlaps in a scenario file.
+
+    message : "<filename>", line n: error: Event xxx: action yyy is not defined.
+
+        contents :
+            The specified action in event definition does not exist.
+
+    message : "<filename>", line n: error: Connection "xxx" for Traffic "yyy"
+              is not defined.
+
+        contents :
+            The specified ppname in traffic definition does not exist at
+            connection definition.
+
+    message : "<filename>", line n: error: data size too long (max:65535)
+
+        contents :
+            The size of sendlen in onway definition or turnaround definition
+            is too long.
+
+    message : "<filename>", line n: error: event xxx is not defined in event
+              list.
+
+        contents :
+            The specified ppname in event definition does not exist at sync
+            definition.
+
+
+    message : "<filename>", line n: error: Host "X" for connection "xxx" is
+              not defined.
+
+        contents :
+            The specified hostname in connection definition does not exist at
+            host definition.
+
+    message : "<filename>", line n: error: IP "xxx" for connection "yyy" is
+              not defined.
+
+        contents :
+            The specified ipname in connection definition does not exist at
+            host definition.

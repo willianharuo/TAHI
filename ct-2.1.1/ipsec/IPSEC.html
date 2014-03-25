@@ -1,0 +1,196 @@
+<HTML>
+<HEAD>
+<TITLE>IPSEC.pm - utility functions for IPsec test</TITLE>
+<LINK REV="made" HREF="mailto:hackers@FreeBSD.org">
+</HEAD>
+
+<BODY>
+
+<!-- INDEX BEGIN -->
+<!--
+
+<UL>
+
+	<LI><A HREF="#NAME">NAME</A>
+	<LI><A HREF="#SYNOPSIS">SYNOPSIS</A>
+	<LI><A HREF="#DESCRIPTION">DESCRIPTION</A>
+	<UL>
+
+		<LI><A HREF="#Functions">Functions</A>
+	</UL>
+
+	<LI><A HREF="#SEE_ALSO">SEE ALSO</A>
+</UL>
+-->
+<!-- INDEX END -->
+
+<P>
+<H1><A NAME="NAME">NAME</A></H1>
+<P>
+IPSEC.pm - utility functions for IPsec test
+
+<P>
+<HR>
+<H1><A NAME="SYNOPSIS">SYNOPSIS</A></H1>
+<PRE>
+use <A HREF="./IPSEC.pm">IPSEC</A>;
+</PRE>
+
+<P>
+<HR>
+<H1><A NAME="DESCRIPTION">DESCRIPTION</A></H1>
+<P>
+This module contains methods to test IPsec.
+
+<P>
+<HR>
+<H2><A NAME="Functions">Functions</A></H2>
+<DL>
+<DT><STRONG><A NAME="item_ipsecExitPass">ipsecExitPass()</A></STRONG><DD>
+<P>
+Output 'OK' to log and exit (exit code is Pass).
+
+<DT><STRONG><A NAME="item_ipsecExitIgnore">ipsecExitIgnore()</A></STRONG><DD>
+<P>
+Output no message and Exit (exit code is Ignore).
+
+<DT><STRONG><A NAME="item_ipsecExitNS">ipsecExitNS()</A></STRONG><DD>
+<P>
+Output 'This test is not supported now' to log and Exit (exit code is NS).
+
+<DT><STRONG><A NAME="item_ipsecExitWarn">ipsecExitWarn()</A></STRONG><DD>
+<P>
+Output 'Warn' (color is green) to log and Exit (exit code is Warn).
+
+<DT><STRONG><A NAME="item_ipsecExitHostOnly">ipsecExitHostOnly()</A></STRONG><DD>
+<P>
+Output 'This test is for the host only' to log and Exit (exit code is
+HostOnly).
+
+<DT><STRONG><A NAME="item_ipsecExitRouterOnly">ipsecExitRouterOnly()</A></STRONG><DD>
+<P>
+Output 'This test is for the router only' to log and Exit (exit code is
+HostOnly).
+
+<DT><STRONG><A NAME="item_ipsecExitFail">ipsecExitFail()</A></STRONG><DD>
+<P>
+Output 'NG' (color is red) to log and Exit (exit code is Fail).
+
+<DT><STRONG><A NAME="item_ipsecExitFatal">ipsecExitFatal()</A></STRONG><DD>
+<P>
+Output 'Fatal' (color is red) to log and Exit (exit code is Fatal).
+
+<DT><STRONG><A NAME="item_ipsecReboot">ipsecReboot()</A></STRONG><DD>
+<P>
+Reboot the target.
+
+<P>
+This function calls 'reboot.rmt' simply.
+
+<DT><STRONG><A NAME="item_ipsecCheckNUT">ipsecCheckNUT($require)</A></STRONG><DD>
+<P>
+Check NUT type in 'nut.def'. Parameter <CODE>$require</CODE> is one of
+'host' or 'router'.
+
+<P>
+If 'Type' in nut.def does not match to $require, output message and exit
+(HostOnly, RouterOnly or Fatal).
+
+<DT><STRONG><A NAME="item_ipsecSetSAD">ipsecSetSAD(@params)</A></STRONG><DD>
+<P>
+Set SAD (Security Association Database) entry.
+
+<P>
+This function calls 'ipsecSetSAD.rmt' with <CODE>@params</CODE> simply. If
+remote command fails, output message and exit (Fail).
+
+<DT><STRONG><A NAME="item_ipsecSetSADAsync">ipsecSetSADAsync(@params)</A></STRONG><DD>
+<P>
+Same function as the above. But set SAD (Security Association Database)
+entry asynchronously.
+
+<DT><STRONG><A NAME="item_ipsecSetSPD">ipsecSetSPD(@params)</A></STRONG><DD>
+<P>
+Set SPD (Security Policy Database) entry.
+
+<P>
+This function calls 'ipsecSetSPD.rmt' with <CODE>@params</CODE> simply. If
+remote command fails, output message and exit (Fail).
+
+<DT><STRONG><A NAME="item_ipsecSetSPDAsync">ipsecSetSPDAsync(@params)</A></STRONG><DD>
+<P>
+Same function as the above. But set SPD (Security Policy Database) entry
+asynchronously.
+
+<DT><STRONG><A NAME="item_ipsecClearAll">ipsecClearAll()</A></STRONG><DD>
+<P>
+Clear all SAD and SPD entries.
+
+<P>
+This function calls 'ipsecClearAll.rmt' simply. If remote command fails,
+output message and exit (Fail).
+
+<DT><STRONG><A NAME="item_ipsecEnable">ipsecEnable()</A></STRONG><DD>
+<P>
+Enable and start IPsec function.
+
+<P>
+This function calls 'ipsecEnable.rmt' simply. If remote command fails,
+output message and exit (Fail).
+
+<DT><STRONG><A NAME="item_ipsecPing2NUT">ipsecPing2NUT($IF, $req, $rep [,$ns, $na])</A></STRONG><DD>
+<P>
+Emulate Ping to NUT.
+
+<P>
+Send <CODE>$req</CODE> to NUT and wait <CODE>$rep</CODE> from NUT.
+
+<P>
+If NS is received from NUT, send NA to NUT and wait <CODE>$rep</CODE>
+again.
+
+<DT><STRONG><A NAME="item_ipsecPingFrag2NUT">ipsecPingFrag2NUT($IF, $req1st, $req2nd, $rep1st, $rep2nd)</A></STRONG><DD>
+<P>
+Emulate Fragmented Ping to NUT.
+
+<P>
+Send <CODE>$req1st</CODE> and <CODE>$req2nd</CODE> to NUT and wait
+<CODE>$rep1st</CODE> and <CODE>$rep2nd</CODE> from NUT.
+
+<DT><STRONG><A NAME="item_ipsecForwardEncap">ipsecForwardEncap($IFs, $IFr, $p1, $p2 [, $ns, $na])</A></STRONG><DD>
+<P>
+Check packet forwarding with encapsulation.
+
+<P>
+Send <CODE>$p1</CODE> to NUT's <CODE>$IFs</CODE> and wait <CODE>$p2</CODE>
+from NUT's $IFr.
+
+<P>
+If NS is received from NUT, send NA to NUT and wait <CODE>$p2</CODE> again.
+
+<DT><STRONG><A NAME="item_ipsecForwardDecap">ipsecForwardDecap($IFs, $IFr, $p1, $p2 [, $ns, $na])</A></STRONG><DD>
+<P>
+Check packet forwarding with decapsulation.
+
+<P>
+Send <CODE>$p1</CODE> to NUT's <CODE>$IFs</CODE> and wait <CODE>$p2</CODE>
+from NUT's $IFr.
+
+<P>
+If NS is received from NUT, send NA to NUT and wait <CODE>$p2</CODE> again.
+
+</DL>
+<P>
+<HR>
+<H1><A NAME="SEE_ALSO">SEE ALSO</A></H1>
+<P>
+<PRE>  perldoc V6EvalTool
+  perldoc V6Remote
+  perldoc /usr/local/v6eval/bin/manual/ipsecSetSAD.rmt
+  perldoc /usr/local/v6eval/bin/manual/ipsecSetSPD.rmt
+  perldoc /usr/local/v6eval/bin/manual/ipsecClearAll.rmt
+  perldoc /usr/local/v6eval/bin/manual/ipsecEnable.rmt
+</PRE>
+</BODY>
+
+</HTML>

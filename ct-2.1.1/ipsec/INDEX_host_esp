@@ -1,0 +1,155 @@
+##
+## $Name: REL_2_1_1 $
+##
+## $TAHI: ct/ipsec/INDEX_host_esp,v 1.33 2003/05/05 19:37:40 ozoe Exp $
+##
+##<seq>:<def>:[<opt>]:[<log>]:<desc>
+##
+
+#======================================================================
+&print:<B>Host Transport ESP Outbound</B>
+
+&print:ESP Outbound without authentication
+
+./HTR_E_Out_descbc.seq:./HTR_E_descbc.def:::Outbound ESP packet (DES-CBC)
+./HTR_E_Out_3descbc.seq:./HTR_E_3descbc.def:::Outbound ESP packet (3DES-CBC)
+./HTR_E_Out_rijndaelcbc.seq:./HTR_E_rijndaelcbc.def:::Outbound ESP packet (RIJNDAEL-CBC)
+
+&print:ESP Outbound with authentication
+
+./HTR_E_Out_null_hmacmd5.seq:./HTR_E_null_hmacmd5.def:::Outbound ESP packet (NULL, HMAC-MD5)
+./HTR_E_Out_null_hmacsha1.seq:./HTR_E_null_hmacsha1.def:::Outbound ESP packet (NULL, HMAC-SHA1)
+./HTR_E_Out_null_hmacsha2_256.seq:./HTR_E_null_hmacsha2_256.def:::Outbound ESP packet (NULL, HMAC-SHA2-256)
+./HTR_E_Out_descbc_hmacmd5.seq:./HTR_E_descbc_hmacmd5.def:::Outbound ESP packet (DES-CBC, HMAC-MD5)
+./HTR_E_Out_descbc_hmacsha1.seq:./HTR_E_descbc_hmacsha1.def:::Outbound ESP packet (DES-CBC, HMAC-SHA1)
+./HTR_E_Out_descbc_hmacsha2_256.seq:./HTR_E_descbc_hmacsha2_256.def:::Outbound ESP packet (DES-CBC, HMAC-SHA2-256)
+./HTR_E_Out_3descbc_hmacmd5.seq:./HTR_E_3descbc_hmacmd5.def:::Outbound ESP packet (3DES-CBC, HMAC-MD5)
+./HTR_E_Out_3descbc_hmacsha1.seq:./HTR_E_3descbc_hmacsha1.def:::Outbound ESP packet (3DES-CBC, HMAC-SHA1)
+./HTR_E_Out_3descbc_hmacsha2_256.seq:./HTR_E_3descbc_hmacsha2_256.def:::Outbound ESP packet (3DES-CBC, HMAC-SHA2-256)
+./HTR_E_Out_rijndaelcbc_hmacmd5.seq:./HTR_E_rijndaelcbc_hmacmd5.def:::Outbound ESP packet (RIJNDAEL-CBC, HMAC-MD5)
+./HTR_E_Out_rijndaelcbc_hmacsha1.seq:./HTR_E_rijndaelcbc_hmacsha1.def:::Outbound ESP packet (RIJNDAEL-CBC, HMAC-SHA1)
+./HTR_E_Out_rijndaelcbc_hmacsha2_256.seq:./HTR_E_rijndaelcbc_hmacsha2_256.def:::Outbound ESP packet (RIJNDAEL-CBC, HMAC-SHA2-256)
+
+&print:ESP Outbound Padding
+
+./HTR_E_Out_Padding_null_hmacmd5.seq:./HTR_E_Padding_null_hmacmd5.def:::Outbound Padding (NULL, HMAC-MD5)
+./HTR_E_Out_Padding_null_hmacsha1.seq:./HTR_E_Padding_null_hmacsha1.def:::Outbound Padding (NULL, HMAC-SHA1)
+./HTR_E_Out_Padding_null_hmacsha2_256.seq:./HTR_E_Padding_null_hmacsha2_256.def:::Outbound Padding (NULL, HMAC-SHA2-256)
+./HTR_E_Out_Padding_descbc.seq:./HTR_E_Padding_descbc.def:::Outbound Padding (DES-CBC, HMAC-MD5)
+./HTR_E_Out_Padding_descbc_hmacsha1.seq:./HTR_E_Padding_descbc_hmacsha1.def:::Outbound Padding (DES-CBC, HMAC-SHA1)
+./HTR_E_Out_Padding_descbc_hmacsha2_256.seq:./HTR_E_Padding_descbc_hmacsha2_256.def:::Outbound Padding (DES-CBC, HMAC-SHA2-256)
+./HTR_E_Out_Padding_3descbc.seq:./HTR_E_Padding_3descbc.def:::Outbound Padding (3DES-CBC, HMAC-MD5)
+./HTR_E_Out_Padding_3descbc_hmacsha1.seq:./HTR_E_Padding_3descbc_hmacsha1.def:::Outbound Padding (3DES-CBC, HMAC-SHA1)
+./HTR_E_Out_Padding_3descbc_hmacsha2_256.seq:./HTR_E_Padding_3descbc_hmacsha2_256.def:::Outbound Padding (3DES-CBC, HMAC-SHA2-256)
+./HTR_E_Out_Padding_rijndaelcbc.seq:./HTR_E_Padding_rijndaelcbc.def:::Outbound Padding (RIJNDAEL-CBC, HMAC-MD5)
+./HTR_E_Out_Padding_rijndaelcbc_hmacsha1.seq:./HTR_E_Padding_rijndaelcbc_hmacsha1.def:::Outbound Padding (RIJNDAEL-CBC, HMAC-SHA1)
+./HTR_E_Out_Padding_rijndaelcbc_hmacsha2_256.seq:./HTR_E_Padding_rijndaelcbc_hmacsha2_256.def:::Outbound Padding (RIJNDAEL-CBC, HMAC-SHA2-256)
+
+&print:ESP Outboud Sequence Counter Overflow
+
+&#./HTR_E_Out_SeqCountOverFlow.seq  :./HTR_E_SeqCountOverFlow.def:::Sequence Counter Overflow check
+
+&print:ESP Outbound Lifetime of SA
+
+./HTR_E_Out_LifetimeSATime.seq  :./HTR_E_LifetimeSA.def:::Lifetime of SA using time, ESP (NULL),ESP Authentication HMAC-MD5
+./HTR_E_Out_LifetimeSAByte.seq  :./HTR_E_LifetimeSA.def:::Lifetime of SA using byte, ESP (NULL),ESP Authentication HMAC-MD5
+
+&print:ESP Outbound Header Order
+
+./HTR_E_Out_Fragment_hmacmd5.seq:./HTR_E_Fragment_hmacmd5.def:::Header Order (Fragment Header vs ESP (NULL, HMAC-MD5) )
+./HTR_E_Out_Fragment_hmacsha1.seq:./HTR_E_Fragment_hmacsha1.def:::Header Order (Fragment Header vs ESP (NULL, HMAC-SHA1) )
+./HTR_E_Out_Fragment_hmacsha2_256.seq:./HTR_E_Fragment_hmacsha2_256.def:::Header Order (Fragment Header vs ESP (NULL, HMAC-SHA2-256) )
+
+&print:ESP Outbound Connect SA bundles
+
+./HTR_E_Out_2SA_DspiDipdst_descbc.seq :./HTR_E_2SA_DspiDip_descbc.def:::Connect two SA bundles with different spi, different IPdst, ESP (DES-CBC)
+./HTR_E_Out_2SA_DspiDipdst_3descbc.seq :./HTR_E_2SA_DspiDip_3descbc.def:::Connect two SA bundles with different spi, different IPdst, ESP (3DES-CBC)
+./HTR_E_Out_2SA_DspiDipdst_rijndaelcbc.seq :./HTR_E_2SA_DspiDip_rijndaelcbc.def:::Connect two SA bundles with different spi, different IPdst, ESP (RIJNDAEL-CBC)
+
+./HTR_E_Out_2SA_SspiDipdst_descbc.seq:./HTR_E_2SA_SspiDip_descbc.def:::Connect two SA bundles with same spi, different IPdst, ESP (DES-CBC)
+./HTR_E_Out_2SA_SspiDipdst_3descbc.seq:./HTR_E_2SA_SspiDip_3descbc.def:::Connect two SA bundles with same spi, different IPdst, ESP (3DES-CBC)
+./HTR_E_Out_2SA_SspiDipdst_rijndaelcbc.seq:./HTR_E_2SA_SspiDip_rijndaelcbc.def:::Connect two SA bundles with same spi, different IPdst, ESP (RIJNDAEL-CBC)
+
+#======================================================================
+
+&print:<B>Host Transport ESP Inbound</B>
+
+&print:ESP Inbound without authentication
+
+./HTR_E_In_descbc.seq:./HTR_E_descbc.def:::Inbound ESP (DES-CBC) packet
+./HTR_E_In_3descbc.seq:./HTR_E_3descbc.def:::Inbound ESP (3DES-CBC) packet
+./HTR_E_In_rijndaelcbc.seq:./HTR_E_rijndaelcbc.def:::Inbound ESP (RIJNDAEL-CBC) packet
+./HTR_E_In_EncryptKey_descbc.seq:./HTR_E_EncryptKey_descbc.def:::Inbound ESP (DES-CBC) packet (Invalid Encryption Key)
+./HTR_E_In_EncryptKey_3descbc.seq:./HTR_E_EncryptKey_3descbc.def:::Inbound ESP (3DES-CBC) packet (Invalid Encryption Key)
+./HTR_E_In_EncryptKey_rijndaelcbc.seq:./HTR_E_EncryptKey_rijndaelcbc.def:::Inbound ESP (RIJNDAEL-CBC) packet (Invalid Encryption Key)
+
+&print:ESP Inbound with authentication
+
+./HTR_E_In_null_hmacmd5.seq:./HTR_E_null_hmacmd5.def:::Inbound ESP packet (NULL, HMAC-MD5)
+./HTR_E_In_null_hmacsha1.seq:./HTR_E_null_hmacsha1.def:::Inbound ESP packet (NULL, HMAC-SHA1)
+./HTR_E_In_null_hmacsha2_256.seq:./HTR_E_null_hmacsha2_256.def:::Inbound ESP packet (NULL, HMAC-SHA2-256)
+./HTR_E_In_descbc_hmacmd5.seq:./HTR_E_descbc_hmacmd5.def:::Inbound ESP packet (DES-CBC, HMAC-MD5)
+./HTR_E_In_descbc_hmacsha1.seq:./HTR_E_descbc_hmacsha1.def:::Inbound ESP packet (DES-CBC, HMAC-SHA1)
+./HTR_E_In_descbc_hmacsha2_256.seq:./HTR_E_descbc_hmacsha2_256.def:::Inbound ESP packet (DES-CBC, HMAC-SHA2-256)
+./HTR_E_In_3descbc_hmacmd5.seq:./HTR_E_3descbc_hmacmd5.def:::Inbound ESP packet (3DES-CBC, HMAC-MD5)
+./HTR_E_In_3descbc_hmacsha1.seq:./HTR_E_3descbc_hmacsha1.def:::Inbound ESP packet (3DES-CBC, HMAC-SHA1)
+./HTR_E_In_3descbc_hmacsha2_256.seq:./HTR_E_3descbc_hmacsha2_256.def:::Inbound ESP packet (3DES-CBC, HMAC-SHA2-256)
+./HTR_E_In_rijndaelcbc_hmacmd5.seq:./HTR_E_rijndaelcbc_hmacmd5.def:::Inbound ESP packet (RIJNDAEL-CBC, HMAC-MD5)
+./HTR_E_In_rijndaelcbc_hmacsha1.seq:./HTR_E_rijndaelcbc_hmacsha1.def:::Inbound ESP packet (RIJNDAEL-CBC, HMAC-SHA1)
+./HTR_E_In_rijndaelcbc_hmacsha2_256.seq:./HTR_E_rijndaelcbc_hmacsha2_256.def:::Inbound ESP packet (RIJNDAEL-CBC, HMAC-SHA2-256)
+
+./HTR_E_In_AuthKey_hmacmd5.seq:./HTR_E_AuthKey_hmacmd5.def:::Inbound ESP (DES-CBC, HMAC-MD5) packet (Invalid Authentication Key)
+./HTR_E_In_AuthKey_hmacsha1.seq:./HTR_E_AuthKey_hmacsha1.def:::Inbound ESP (DES-CBC, HMAC-SHA1) packet (Invalid Authentication Key)
+./HTR_E_In_AuthKey_hmacsha2_256.seq:./HTR_E_AuthKey_hmacsha2_256.def:::Inbound ESP (DES-CBC, HMAC-SHA2-256) packet (Invalid Authentication Key)
+
+&print:ESP Inbound Padding
+
+./HTR_E_In_Padding_null_hmacmd5.seq:./HTR_E_Padding_null_hmacmd5.def:::Inbound Padding (NULL, HMAC-MD5)
+./HTR_E_In_Padding_null_hmacsha1.seq:./HTR_E_Padding_null_hmacsha1.def:::Inbound Padding (NULL, HMAC-SHA1)
+./HTR_E_In_Padding_null_hmacsha2_256.seq:./HTR_E_Padding_null_hmacsha2_256.def:::Inbound Padding (NULL, HMAC-SHA2-256)
+./HTR_E_In_Padding_descbc.seq:./HTR_E_Padding_descbc.def:::Inbound Padding (DES-CBC, HMAC-MD5)
+./HTR_E_In_Padding_descbc_hmacsha1.seq:./HTR_E_Padding_descbc_hmacsha1.def:::Inbound Padding (DES-CBC, HMAC-SHA1)
+./HTR_E_In_Padding_descbc_hmacsha2_256.seq:./HTR_E_Padding_descbc_hmacsha2_256.def:::Inbound Padding (DES-CBC, HMAC-SHA2-256)
+./HTR_E_In_Padding_3descbc.seq:./HTR_E_Padding_3descbc.def:::Inbound Padding (3DES-CBC, HMAC-MD5)
+./HTR_E_In_Padding_3descbc_hmacsha1.seq:./HTR_E_Padding_3descbc_hmacsha1.def:::Inbound Padding (3DES-CBC, HMAC-SHA1)
+./HTR_E_In_Padding_3descbc_hmacsha2_256.seq:./HTR_E_Padding_3descbc_hmacsha2_256.def:::Inbound Padding (3DES-CBC, HMAC-SHA2-256)
+./HTR_E_In_Padding_rijndaelcbc.seq:./HTR_E_Padding_rijndaelcbc.def:::Inbound Padding (RIJNDAEL-CBC, HMAC-MD5)
+./HTR_E_In_Padding_rijndaelcbc_hmacsha1.seq:./HTR_E_Padding_rijndaelcbc_hmacsha1.def:::Inbound Padding (RIJNDAEL-CBC, HMAC-SHA1)
+./HTR_E_In_Padding_rijndaelcbc_hmacsha2_256.seq:./HTR_E_Padding_rijndaelcbc_hmacsha2_256.def:::Inbound Padding (RIJNDAEL-CBC, HMAC-SHA2-256)
+
+./HTR_E_In_PadLen255_descbc.seq:./HTR_E_PadLen255_descbc.def:::Padding Length is 255 (max), ESP (DES-CBC)
+./HTR_E_In_PadLen255_3descbc.seq:./HTR_E_PadLen255_3descbc.def:::Padding Length is 255 (max), ESP (3DES-CBC)
+./HTR_E_In_PadLen255_rijndaelcbc.seq:./HTR_E_PadLen255_rijndaelcbc.def:::Padding Length is 255 (max), ESP (RIJNDAEL-CBC)
+
+./HTR_E_In_InvalidPadding_descbc.seq:./HTR_E_InvalidPadding_descbc.def:::Invalid Padding, ESP(DES-CBC)
+./HTR_E_In_InvalidPadding_3descbc.seq:./HTR_E_InvalidPadding_3descbc.def:::Invalid Padding, ESP(3DES-CBC)
+./HTR_E_In_InvalidPadding_rijndaelcbc.seq:./HTR_E_InvalidPadding_rijndaelcbc.def:::Invalid Padding, ESP(RIJNDAEL-CBC)
+
+&print:ESP Inbound Anti-Replay Window
+./HTR_E_In_DuplicateSequence.seq  :./HTR_E_DuplicateSequence.def:::Duplicate Sequence Number check
+./HTR_E_In_SlideReceiveWindow.seq  :./HTR_E_SlideReceiveWindow.def:::Sliding receive window check
+./HTR_E_In_ReceiveWindow.seq  :./HTR_E_ReceiveWindow.def:::Expand or shift Receive Window 
+
+&print:ESP Inbound Lifetime of SA
+
+./HTR_E_In_LifetimeSATime.seq  :./HTR_E_LifetimeSA.def:::Lifetime of SA using time, ESP (NULL),ESP Authentication HMAC-MD5
+./HTR_E_In_LifetimeSAByte.seq  :./HTR_E_LifetimeSA.def:::Lifetime of SA using byte, ESP (NULL),ESP Authentication HMAC-MD5
+
+&print:ESP Inbound Header Order
+
+./HTR_E_In_Fragment_hmacmd5.seq:./HTR_E_Fragment_hmacmd5.def:::Header Order (Fragment Header vs ESP (NULL, HMAC-MD5))
+./HTR_E_In_Fragment_hmacsha1.seq:./HTR_E_Fragment_hmacsha1.def:::Header Order (Fragment Header vs ESP (NULL, HMAC-SHA1))
+./HTR_E_In_Fragment_hmacsha2_256.seq:./HTR_E_Fragment_hmacsha2_256.def:::Header Order (Fragment Header vs ESP (NULL, HMAC-SHA2-256))
+
+&print:ESP Inbound Connect SA bundles
+
+./HTR_E_In_2SA_DspiDipsrc_descbc.seq :./HTR_E_2SA_DspiDip_descbc.def:::Connect two SA bundles with different spi, different IPsrc, ESP (DES-CBC)
+./HTR_E_In_2SA_DspiDipsrc_3descbc.seq :./HTR_E_2SA_DspiDip_3descbc.def:::Connect two SA bundles with different spi, different IPsrc, ESP (3DES-CBC)
+./HTR_E_In_2SA_DspiDipsrc_rijndaelcbc.seq :./HTR_E_2SA_DspiDip_rijndaelcbc.def:::Connect two SA bundles with different spi, different IPsrc, ESP (RIJNDAEL-CBC)
+
+./HTR_E_In_2SA_DspiSipsrc_descbc.seq:./HTR_E_2SA_DspiSip_descbc.def:::Connect two SA bundles with different spi, same IPsrc, ESP (DES-CBC)
+./HTR_E_In_2SA_DspiSipsrc_3descbc.seq:./HTR_E_2SA_DspiSip_3descbc.def:::Connect two SA bundles with different spi, same IPsrc, ESP (3DES-CBC)
+./HTR_E_In_2SA_DspiSipsrc_rijndaelcbc.seq:./HTR_E_2SA_DspiSip_rijndaelcbc.def:::Connect two SA bundles with different spi, same IPsrc, ESP (RIJNDAEL-CBC)
+
+#
+#########################################################################

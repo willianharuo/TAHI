@@ -1,0 +1,123 @@
+<HTML>
+<HEAD>
+<TITLE>routerSendUnsolRaDefault2 - verify a host sending valid RSs</TITLE>
+<LINK REV="made" HREF="mailto:hackers@FreeBSD.org">
+</HEAD>
+
+<BODY>
+
+<!-- INDEX BEGIN -->
+<!--
+
+<UL>
+
+	<LI><A HREF="#NAME">NAME</A>
+	<LI><A HREF="#TARGET">TARGET</A>
+	<LI><A HREF="#SYNOPSIS">SYNOPSIS</A>
+	<LI><A HREF="#INITIALIZATION">INITIALIZATION</A>
+	<LI><A HREF="#TEST_PROCEDURE">TEST PROCEDURE</A>
+	<LI><A HREF="#JUDGMENT">JUDGMENT</A>
+	<LI><A HREF="#TERMINATION">TERMINATION</A>
+	<LI><A HREF="#NOTE">NOTE</A>
+	<LI><A HREF="#REFERENCE">REFERENCE</A>
+	<LI><A HREF="#SEE_ALSO">SEE ALSO</A>
+</UL>
+-->
+<!-- INDEX END -->
+
+<P>
+<H1><A NAME="NAME">NAME</A></H1>
+<P>
+routerSendUnsolRaDefault2 - verify a host sending valid RSs
+
+<P>
+<HR>
+<H1><A NAME="TARGET">TARGET</A></H1>
+<P>
+<PRE>  Router Only
+</PRE>
+<P>
+<HR>
+<H1><A NAME="SYNOPSIS">SYNOPSIS</A></H1>
+<P>
+<PRE>  routerSendUnsolRaDefault2.seq [-tooloption ...] -p routerSendUnsolRaDefault2.def
+</PRE>
+<P>
+<HR>
+<H1><A NAME="INITIALIZATION">INITIALIZATION</A></H1>
+Start NUT advertising RAs whose parameters are as same as 
+<A HREF="startDefaultRA.html#INITIALIZATION">those</A>
+except the followings:
+<UL>
+  <LI>MaxRtrAdvInterval:7
+  <LI>MinRtrAdvInterval:10
+</UL>
+
+<P>
+<HR>
+<H1><A NAME="TEST_PROCEDURE">TEST PROCEDURE</A></H1>
+<P>
+<STRONG>routerSendUnsolRaDefault2</STRONG> verifies that a NUT send valid RAs by the rules. The interval of RAs is
+between 7 sec. and 10 sec.
+
+<P>
+<HR>
+<H1><A NAME="JUDGMENT">JUDGMENT</A></H1>
+<PRE>
+  1. NUT throw valid RAs:
+     - whose parameter are as same as <A HREF="startDefaultRA.html#INITIALIZATION">those</A>.
+     - that may contain a source link-layer option.
+     - that may contain a MTU option.
+     - that may contain a Prefix option.
+<BR>
+  2. The interval of RAs is between 7 sec. and 10 sec.
+</PRE>
+
+<P>
+<HR>
+<H1><A NAME="TERMINATION">TERMINATION</A></H1>
+<P>
+<PRE>  N/A
+</PRE>
+<P>
+<HR>
+<H1><A NAME="NOTE">NOTE</A></H1>
+<P>
+<PRE>  TBD
+</PRE>
+<P>
+<HR>
+<H1><A NAME="REFERENCE">REFERENCE</A></H1>
+<PRE>
+6.2.4.  Sending Unsolicited Router Advertisements
+<BR>
+   Unsolicited Router Advertisements are not strictly periodic: the
+   interval between subsequent transmissions is randomized to reduce the
+   probability of synchronization with the advertisements from other
+   routers on the same link [SYNC].  Each advertising interface has its
+   own timer.  <B>Whenever a multicast advertisement is sent from an
+   interface, the timer is reset to a uniformly-distributed random value
+   between the interface's configured MinRtrAdvInterval and
+   MaxRtrAdvInterval; expiration of the timer causes the next
+   advertisement to be sent and a new random value to be chosen.</B>
+<BR>
+   <B>For the first few advertisements (up to
+   MAX_INITIAL_RTR_ADVERTISEMENTS) sent from an interface when it
+   becomes an advertising interface, if the randomly chosen interval is
+   greater than MAX_INITIAL_RTR_ADVERT_INTERVAL, the timer SHOULD be set
+   to MAX_INITIAL_RTR_ADVERT_INTERVAL instead.</B>  Using a smaller interval
+   for the initial advertisements increases the likelihood of a router
+   being discovered quickly when it first becomes available, in the
+   presence of possible packet loss.
+</PRE>
+
+<P>
+<HR>
+<H1><A NAME="SEE_ALSO">SEE ALSO</A></H1>
+<P>
+<PRE>  perldoc V6evalTool
+  perldoc V6evalRemote
+</PRE>
+</BODY>
+
+</HTML>

@@ -1,0 +1,238 @@
+<HTML>
+<HEAD>
+<TITLE>SendingPacketAtForeignLink1 - Sending Packets at foreign link</TITLE>
+<LINK REV="made" HREF="mailto:hackers@FreeBSD.org">
+</HEAD>
+
+<BODY>
+
+<!-- INDEX BEGIN -->
+<!--
+
+<UL>
+
+	<LI><A HREF="#NAME">NAME</A>
+	<LI><A HREF="#TARGET">TARGET</A>
+	<LI><A HREF="#SYNOPSIS">SYNOPSIS</A>
+	<LI><A HREF="#TOPOLOGY">TOPOLOGY</A>
+	<LI><A HREF="#TEST_PROCEDURE">TEST PROCEDURE</A>
+	<LI><A HREF="#JUDGEMENT">JUDGEMENT</A>
+	<LI><A HREF="#REFERENCE">REFERENCE</A>
+</UL>
+-->
+<!-- INDEX END -->
+
+<P>
+<H1><A NAME="NAME">NAME</A></H1>
+<P>
+SendingPacketAtForeignLink1 - Sending Packets at foreign link (1)
+
+<P>
+<HR>
+<H1><A NAME="TARGET">TARGET</A></H1>
+<PRE>
+Host
+</PRE>
+
+<P>
+<HR>
+<H1><A NAME="SYNOPSIS">SYNOPSIS</A></H1>
+<PRE>
+<A HREF="./SendingPacketAtForeignLink1.seq">SendingPacketAtForeignLink1.seq</A> [-tooloption ...] -pkt <A HREF="./MN_Common.def">MN_Common.def</A>
+</PRE>
+<BLOCKQUOTE>
+<PRE>
+-tooloption: v6eval tool option
+</PRE>
+</BLOCKQUOTE>
+
+<P>
+<HR>
+<H1><A NAME="TOPOLOGY">TOPOLOGY</A></H1>
+<PRE>
+                                      |
+                                      R       TN
+                                      |       |
+                              --------+-------+--------------- LinkZ
+</PRE>
+<BR><BR><BR>
+<PRE>
+                                      |
+                                      R2             NUT2
+                                      |               |
+                              --------+---------------+------- LinkY
+</PRE>
+<BR><BR><BR>
+<PRE>
+                                      |       |
+                                      HA2     R1     NUT1
+                                      |       |       |
+                              --------+-------+-------+------- LinkX
+</PRE>
+<BR><BR><BR>
+<PRE>
+                          |           |
+             NUT0        HA1          HA0
+              |           |           |
+Link0 --------+-----------+-----------+-----------------------
+</PRE>
+<BLOCKQUOTE>
+<TABLE BORDER>
+<TR>
+<TD><TT>Link0</TT></TD>
+<TD><TT>3ffe:501:ffff:100::/64</TT></TD>
+<TD><TT>home link</TT></TD>
+</TR>
+<TR>
+<TD><TT>LinkX</TT></TD>
+<TD><TT>3ffe:501:ffff:102::/64</TT></TD>
+<TD><TT>&nbsp;</TT></TD>
+</TR>
+<TR>
+<TD><TT>LinkY</TT></TD>
+<TD><TT>3ffe:501:ffff:103::/64</TT></TD>
+<TD><TT>&nbsp;</TT></TD>
+</TR>
+<TR>
+<TD><TT>LinkZ</TT></TD>
+<TD><TT>3ffe:501:ffff:104::/64</TT></TD>
+<TD><TT>&nbsp;</TT></TD>
+</TR>
+<TR>
+<TD><TT>HA0(Link0)</TT></TD>
+<TD><TT>3ffe:501:ffff:100:200:ff:fe00:a1a1/64</TT></TD>
+<TD><TT>&nbsp;</TT></TD>
+</TR>
+<TR>
+<TD><TT>HA1(Link0)</TT></TD>
+<TD><TT>3ffe:501:ffff:100:200:ff:fe00:a2a2/64</TT></TD>
+<TD><TT>&nbsp;</TT></TD>
+</TR>
+<TR>
+<TD><TT>HA2(LinkX)</TT></TD>
+<TD><TT>3ffe:501:ffff:102:200:ff:fe00:a3a3</TT></TD>
+<TD><TT>&nbsp;</TT></TD>
+</TR>
+<TR>
+<TD><TT>R1(LinkX)</TT></TD>
+<TD><TT>3ffe:501:ffff:102:200:ff:fe00:a4a4</TT></TD>
+<TD><TT>&nbsp;</TT></TD>
+</TR>
+<TR>
+<TD><TT>R2(LinkY)</TT></TD>
+<TD><TT>3ffe:501:ffff:103:200:ff:fe00:a5a5</TT></TD>
+<TD><TT>&nbsp;</TT></TD>
+</TR>
+<TR>
+<TD><TT>TN(LinkZ)</TT></TD>
+<TD><TT>3ffe:501:ffff:104:200:ff:fe00:a6a6</TT></TD>
+<TD><TT>&nbsp;</TT></TD>
+</TR>
+</TABLE>
+</BLOCKQUOTE>
+
+<P>
+<HR>
+<H1><A NAME="TEST_PROCEDURE">TEST PROCEDURE</A></H1>
+<PRE>
+<B>11.2.1.2. Sending Packets at foreign link</B>
+</PRE>
+<P>
+<PRE>
+        HA0    NUT1     R1      TN
+        |       |       |       |
+        |       | <---- |       | RA
+        |       | <---- |       | NA
+        |       |       |       |
+        | <---- |       |       | Binding Update (*1)
+        | ----> |       |       | Binding Acknowledgement
+        |       |       |       |
+        |       | <------------ | Echo Request (out: HA0->NUT1, in: TN->NUT0)
+        |       | ------------> | Echo Reply (Home Address Option) (*2)
+        |       | ----> | ----> | Home Test Init(HoTI)
+        |       | ------------> | Care-of Test (CoTI)
+        |       | <---- | <---- | Home Test (HoT)
+        |       | <------------ | Care-of Test (CoTI)
+        |       | ------------> | Binding Update(*3)
+        |       |       |       |
+        |       | <------------ | Echo Request (RH: Home Address)
+        |       | ------------> | Echo Reply (Home Address Option) (*4)
+        |       |       |       |
+</PRE>
+<P>
+
+<P>
+<HR>
+<H1><A NAME="JUDGEMENT">JUDGEMENT</A></H1>
+<PRE>
+(*1) PASS: HA0 receives Binding Update
+</PRE>
+<PRE>
+(*2) PASS: TN receives Echo Reply
+</PRE>
+<PRE>
+(*3) PASS: TN receives Binding Update
+</PRE>
+<PRE>
+(*4) PASS: TN receives Echo Reply(w/ HAO)
+</PRE>
+
+<P>
+<HR>
+<H1><A NAME="REFERENCE">REFERENCE</A></H1>
+<PRE>
+<A HREF="./draft-ietf-mobileip-ipv6-20.txt">draft-ietf-mobileip-ipv6-20.txt</A>
+</PRE>
+<PRE>
+11.3 Packet Processing
+</PRE>
+<PRE>
+11.3.1 Sending Packets While Away from Home
+</PRE>
+<PRE>
+   Direct Delivery
+</PRE>
+<PRE>
+      This manner of delivering packets does not require going through
+      the home network, and typically will enable faster and more
+      reliable transmission.  A mobile node SHOULD arrange to supply the
+      home address in a Home Address option, and allowing the IPv6
+      header's Source Address field to be set to one of the mobile
+      node's care-of addresses; the correspondent node will then use the
+      address supplied in the Home Address option to serve the function
+      traditionally done by the Source IP address in the IPv6 header.
+      The mobile node's home address is then supplied to higher protocol
+      layers and applications.
+</PRE>
+<PRE>
+      Specifically:
+</PRE>
+<PRE>
+      *  Construct the packet using the mobile node's home address as
+         the packet's Source Address, in the same way as if the mobile
+         node were at home.  This includes the calculation of upper
+         layer checksums using the home address as the value of the
+         source.
+</PRE>
+<PRE>
+      *  Insert a Home Address option into the packet, with the Home
+         Address field copied from the original value of the Source
+         Address field in the packet.
+</PRE>
+<PRE>
+      *  Change the Source Address field in the packet's IPv6 header to
+         one of the mobile node's care-of addresses.  This will
+         typically be the mobile node's current primary care-of address,
+         but MUST be an address assigned to the interface on the link
+         being used.
+</PRE>
+<PRE>
+      By using the care-of address as the Source Address in the IPv6
+      header, with the mobile node's home address instead in the Home
+      Address option, the packet will be able to safely pass through any
+      router implementing ingress filtering [27].
+</PRE>
+
+</BODY>
+
+</HTML>

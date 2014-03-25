@@ -1,0 +1,338 @@
+<HTML>
+<HEAD>
+<TITLE>rfc2766_4.1_dns_v4tov6.seq - Verify IPv6 <-> IPv4 header 
+        translation in accordance with RFC2766 [NATPT]</TITLE>
+<LINK REV="made" HREF="mailto:hackers@FreeBSD.org">
+</HEAD>
+
+<BODY>
+
+<!-- INDEX BEGIN -->
+<!--
+
+<UL>
+
+	<LI><A HREF="#NAME">NAME</A>
+	<LI><A HREF="#TARGET">TARGET</A>
+	<LI><A HREF="#SYNOPSIS">SYNOPSIS</A>
+	<LI><A HREF="#INITIALIZATION">INITIALIZATION</A>
+	<LI><A HREF="#TEST_PROCEDURE">TEST PROCEDURE</A>
+	<LI><A HREF="#JUDGMENT">JUDGMENT</A>
+	<LI><A HREF="#NOTE">NOTE</A>
+	<LI><A HREF="#REFERENCE">REFERENCE</A>
+	<LI><A HREF="#SEE_ALSO">SEE ALSO</A>
+</UL>
+-->
+<!-- INDEX END -->
+
+<P>
+<H1><A NAME="NAME">NAME</A></H1>
+<P>
+<PRE>        rfc2766_4.1_dns_v4tov6.seq - Verify IPv6 &lt;-&gt; IPv4 header 
+        translation in accordance with RFC2766 [NATPT]
+</PRE>
+<P>
+<HR>
+<H1><A NAME="TARGET">TARGET</A></H1>
+<P>
+<PRE>        Router
+</PRE>
+<P>
+<HR>
+<H1><A NAME="SYNOPSIS">SYNOPSIS</A></H1>
+<P>
+<PRE>        rfc2766_4.1_dns_v4tov6.seq [-tooloption ...] 
+        -p rfc2766_4.1_dns_v4tov6.def
+</PRE>
+<P>
+<HR>
+<H1><A NAME="INITIALIZATION">INITIALIZATION</A></H1>
+<PRE>
+	Before this test starts, run <A HREF="./initialize_natpt.html">initialize_natpt.seq</A>.
+</PRE>
+
+<P>
+<HR>
+<H1><A NAME="TEST_PROCEDURE">TEST PROCEDURE</A></H1>
+<P>
+<PRE>        This test verifies that NUT adjusts header checksum for TCP/UDP 
+        packets.
+        
+        Network Topology
+</PRE>
+<P>
+<PRE>        Link0
+        --------------------------
+            |               |
+           TN              NUT
+            |               |
+        --------------------------
+        Link1
+</PRE>
+<P>
+<PRE>        TN -- (Link0) -- NUT        NUT -- (Link1) -- TN
+        
+        ---------------------      ------------------------
+</PRE>
+<HR WIDTH=80%>
+
+<P>
+<PRE>        1.1.
+                                   &lt;===================
+        IPv4 UDP packet
+                IPv4 Header
+                        src address : TN LINK1 IPv4 address
+                        dst address : TN LINK0 IPv4 address
+                        DF = 1
+                UDP packet
+                        SourcePort = 1234;
+                        DestinationPort = 53
+                DNS query
+                        Transaction ID = 0xABCD
+                        Flags = 0x0100 (Standard query)
+                        Questions: 1
+                        Answer RRs: 0
+                        Authority RRs: 0
+                        Additional RRs: 0
+                Queries
+                        1.0.168.192.in-addr.arpa: type PTR, class inet
+                                Name: 1.1.168.192.in-addr.arpa
+                                Type: domain name pointer
+                                Class: inet
+        1.2.
+        &lt;&lt;JUDGMENT&gt;&gt;
+        &lt;===================
+        IPv6 UDP packet
+                IPv6 Header
+                        src address : TN LINK1 IPv4 embedded IPv6 address
+                        dst address : TN LINK0 IPv4 embedded IPv6 address
+                UDP packet
+                        SourcePort = 1234;
+                        DestinationPort = 53
+                DNS query
+                        Transaction ID = 0xAAAA
+                        Flags = 0x0100 (Standard query)
+                        Questions: 1
+                        Answer RRs: 0
+                        Authority RRs: 0
+                        Additional RRs: 0
+                Queries
+                        1.0.168.192.in-addr.arpa: type PTR, class inet
+                                Name: 1.1.168.192.in-addr.arpa
+                                Type: domain name pointer
+                                Class: inet
+</PRE>
+<HR WIDTH=80%>
+
+<P>
+<PRE>        2.1.
+                                   &lt;===================
+        IPv4 UDP packet
+                IPv4 Header
+                        src address : TN LINK1 IPv4 address
+                        dst address : TN LINK0 IPv4 address
+                        DF = 1
+                UDP packet
+                        SourcePort = 1234;
+                        DestinationPort = 53
+                DNS query
+                        Transaction ID = 0xABCD
+                        Flags = 0x8580 (Standard query response, No error)
+                        Questions: 1
+                        Answer RRs: 1
+                        Authority RRs: 2
+                        Additional RRs: 2
+                Queries
+                        1.0.168.192.in-addr.arpa: type PTR, class inet
+                Answers
+                        1.0.168.192.in-addr.arpa: type PTR, class inet, ptr ns1.ericsson.se
+                Authoritative nameservers
+                        0.168.192.in-addr.arpa: type NS, class inet, ns ns1.ericsson.se
+                        0.168.192.in-addr.arpa: type NS, class inet, ns ns2.ericsson.se
+                Additional records
+                        ns1.ericsson.se: type A, class inet, addr 192.168.0.1
+                        ns2.ericsson.se: type A, class inet, addr 192.168.0.2
+        2.2.
+        &lt;&lt;JUDGMENT&gt;&gt;
+        &lt;===================
+        IPv6 UDP packet
+                IPv6 Header
+                        src address : TN LINK1 IPv4 embedded IPv6 address
+                        dst address : TN LINK0 IPv4 embedded IPv6 address
+                UDP packet
+                        SourcePort = 1234;
+                        DestinationPort = 53
+                DNS query
+                        Transaction ID = 0xAAAA
+                        Flags = 0x0100 (Standard query)
+                        Questions = 1
+                        Answer RRs: 1
+                        Authority RRs: 2
+                        Additional RRs: 2
+                Queries
+                        1.1.168.192.in-addr.arpa: type PTR, class inet
+                                Name: 1.1.168.192.in-addr.arpa
+                                Type: domain name pointer
+                                Class: inet
+</PRE>
+<HR WIDTH=80%>
+
+<P>
+<PRE>        3.1.
+                                   &lt;===================
+        IPv4 UDP packet
+                IPv4 Header
+                        src address : TN LINK1 IPv4 address
+                        dst address : TN LINK0 IPv4 address
+                        DF = 1
+                UDP packet
+                        SourcePort = 1234;
+                        DestinationPort = 53
+                DNS query
+                        Transaction ID = 0xABCD
+                        Flags = 0x0100 (Standard query)
+                        Questions: 1
+                        Answer RRs: 0
+                        Authority RRs: 0
+                        Additional RRs: 0
+                Queries
+                        ric.ericsson.se: type A, class inet
+                                Name: ric.ericsson.se
+                                Type: Host address
+                                Class: inet
+        3.2.
+        &lt;&lt;JUDGMENT&gt;&gt;
+        &lt;===================
+        IPv6 UDP packet
+                IPv6 Header
+                        src address : TN LINK1 IPv4 embedded IPv6 address
+                        dst address : TN LINK0 IPv4 embedded IPv6 address
+                UDP packet
+                        SourcePort = 1234;
+                        DestinationPort = 53
+                DNS query
+                        Transaction ID = 0xAAAA
+                        Flags = 0x0100 (Standard query)
+                        Questions: 1
+                        Answer RRs: 0
+                        Authority RRs: 0
+                        Additional RRs: 0
+                Queries
+                        1.0.168.192.in-addr.arpa: type PTR, class inet
+                                Name: 1.1.168.192.in-addr.arpa
+                                Type: domain name pointer
+                                Class: inet
+</PRE>
+<HR WIDTH=80%>
+
+<P>
+<PRE>        4.1.
+                                   &lt;===================
+        IPv4 UDP packet
+                IPv4 Header
+                        src address : TN LINK1 IPv4 address
+                        dst address : TN LINK0 IPv4 address
+                        DF = 1
+                UDP packet
+                        SourcePort = 1234;
+                        DestinationPort = 53
+                DNS query
+                        Transaction ID = 0xABCD
+                        Flags = 0x8580 (Standard query response, No error)
+                        Questions: 1
+                        Answer RRs: 1
+                        Authority RRs: 2
+                        Additional RRs: 2
+                Queries
+                        ric.ericsson.se: type A, class inet
+                Answers
+                        ric.ericsson.se: type A, class inet, addr 192.168.0.3
+                Authoritative nameservers
+                        ericsson.se: type NS, class inet, ns ns1.ericsson.se
+                        ericsson.se: type NS, class inet, ns ns2.ericsson.se
+                Additional records
+                        ns1.ericsson.se: type A, class inet, addr 192.168.0.1
+                        ns2.ericsson.se: type A, class inet, addr 192.168.0.2
+        4.2.
+        &lt;&lt;JUDGMENT&gt;&gt;
+        &lt;===================
+        IPv6 UDP packet
+                IPv6 Header
+                        src address : TN LINK1 IPv4 embedded IPv6 address
+                        dst address : TN LINK0 IPv4 embedded IPv6 address
+                UDP packet
+                        SourcePort = 1234;
+                        DestinationPort = 53
+                DNS query
+                        Transaction ID = 0xAAAA
+                        Flags = 0x0100 (Standard query)
+                        Questions = 1
+                        Answer RRs: 1
+                        Authority RRs: 2
+                        Additional RRs: 2
+                Queries
+                        1.1.168.192.in-addr.arpa: type PTR, class inet
+                                Name: 1.1.168.192.in-addr.arpa
+                                Type: domain name pointer
+                                Class: inet
+</PRE>
+<P>
+<HR>
+<H1><A NAME="JUDGMENT">JUDGMENT</A></H1>
+<P>
+<PRE>        &lt;&lt; PASS &gt;&gt;
+                NUT translated (compressed or uncompressed) IPv4 DNS packages 
+                to (compressed or uncompressed) IPv6 DNS packages.
+                IPv4 &quot;A&quot; records are changed to IPv6 &quot;AAAA&quot; records, and 
+                IPv4 &quot;IN-ADDR.ARPA&quot; to &quot;IP6.INT&quot;.
+</PRE>
+<P>
+<PRE>        &lt;&lt; FAIL &gt;&gt;      
+                NUT does not translate DNS packages properly.
+</PRE>
+<P>
+<HR>
+<H1><A NAME="NOTE">NOTE</A></H1>
+<P>
+<HR>
+<H1><A NAME="REFERENCE">REFERENCE</A></H1>
+<P>
+<STRONG>RFC2766</STRONG>
+
+
+
+<P>
+4.1 Use of DNS-ALG
+
+<P>
+<PRE>   The DNS-ALG on the NAT-PT device
+   would modify DNS Queries for A records going into the V6 domain as
+   follows: (Note that a TCP/UDP DNS packet is recognised by the fact
+   that its source or destination port number is 53)
+</PRE>
+<P>
+<PRE>      a) For Node Name to Node Address Query requests:  Change the Query
+         type from &quot;A&quot; to &quot;AAAA&quot; or &quot;A6&quot;.
+      b) For Node address to Node name query requests:  Replace the
+         string &quot;IN-ADDR.ARPA&quot; with the string &quot;IP6.INT&quot;.  Replace the
+         V4 address octets (in reverse order) preceding the string &quot;IN-
+         ADDR.ARPA&quot; with the corresponding V6 address (if there exists a
+         map) octets in reverse order.
+</PRE>
+<P>
+<PRE>   The TTL values on all DNS resource records (RRs) passing through
+   NAT-PT SHOULD be set to 0 so that DNS servers/clients do not cache
+   temporarily assigned RRs. Note, however, that due to some buggy DNS
+   client implementations a value of 1 might in some cases work better.
+   The TTL values should be left unchanged for statically mapped
+   addresses.
+</PRE>
+<P>
+<HR>
+<H1><A NAME="SEE_ALSO">SEE ALSO</A></H1>
+<P>
+<PRE>        perldoc V6evalTool
+</PRE>
+</BODY>
+
+</HTML>

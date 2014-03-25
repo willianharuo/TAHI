@@ -1,0 +1,289 @@
+# ping
+# used in 1.6
+CMD_PING1_1_6		/bin/sh -c ping6 -mm -c 1 -s 1452
+CMD_PING3_1_6		/bin/sh -c ping6 -mm -c 3 -s 1452
+
+# ifconfig
+CMD_IFCONFIG_IF1_UP		ifconfig MY_IF1 up
+CMD_IFCONFIG_IF2_UP		ifconfig MY_IF2 up
+CMD_IFCONFIG_IF3_UP		ifconfig MY_IF3 up
+
+CMD_IFCONFIG_IF1_DOWN		ifconfig MY_IF1 down
+CMD_IFCONFIG_IF2_DOWN		ifconfig MY_IF2 down
+CMD_IFCONFIG_IF3_DOWN		ifconfig MY_IF3 down
+
+CMD_IFCONFIG_IF1_LLA_DELETE		ifconfig MY_IF1 inet6 MY_IF1_LLA delete
+CMD_IFCONFIG_IF2_LLA_DELETE		ifconfig MY_IF2 inet6 MY_IF2_LLA delete
+CMD_IFCONFIG_IF3_LLA_DELETE		ifconfig MY_IF3 inet6 MY_IF3_LLA delete
+
+CMD_IFCONFIG_IF1_ADD_LOGO_LLA		ifconfig MY_IF1 inet6 LOGO_IF1_LLA
+CMD_IFCONFIG_IF1_DELETE_LOGO_LLA	ifconfig MY_IF1 inet6 LOGO_IF1_LLA delete
+CMD_IFCONFIG_IF1_ADD_DUP_ADDR		ifconfig MY_IF1 inet6 DUP_ADDR
+CMD_IFCONFIG_IF1_DELETE_DUP_ADDR	ifconfig MY_IF1 inet6 DUP_ADDR delete
+ 
+#
+CMD_IFCONFIG_IF1_PREFIX1_GA_ADD		ifconfig MY_IF1 inet6 MY_IF1_PREFIX1_GA prefixlen 64
+CMD_IFCONFIG_IF2_PREFIX2_GA_ADD		ifconfig MY_IF2 inet6 MY_IF2_PREFIX2_GA prefixlen 64
+CMD_IFCONFIG_IF3_PREFIX3_GA_ADD		ifconfig MY_IF3 inet6 MY_IF3_PREFIX3_GA prefixlen 64
+CMD_IFCONFIG_IF1_PREFIX1_ANY_ADD	ifconfig MY_IF1 inet6 PREFIX1:: prefixlen 64 alias anycast
+CMD_IFCONFIG_IF2_PREFIX2_ANY_ADD	ifconfig MY_IF2 inet6 PREFIX2:: prefixlen 64 alias anycast
+CMD_IFCONFIG_IF3_PREFIX3_ANY_ADD	ifconfig MY_IF3 inet6 PREFIX3:: prefixlen 64 alias anycast
+
+CMD_IFCONFIG_IF1_PREFIX1_GA_DELETE	ifconfig MY_IF1 inet6 MY_IF1_PREFIX1_GA delete
+CMD_IFCONFIG_IF2_PREFIX2_GA_DELETE	ifconfig MY_IF2 inet6 MY_IF2_PREFIX2_GA delete
+CMD_IFCONFIG_IF3_PREFIX3_GA_DELETE	ifconfig MY_IF3 inet6 MY_IF3_PREFIX3_GA delete
+CMD_IFCONFIG_IF1_PREFIX1_ANY_DELETE	ifconfig MY_IF1 inet6 PREFIX1:: prefixlen 64 delete
+CMD_IFCONFIG_IF2_PREFIX2_ANY_DELETE	ifconfig MY_IF2 inet6 PREFIX2:: prefixlen 64 delete
+CMD_IFCONFIG_IF3_PREFIX3_ANY_DELETE	ifconfig MY_IF3 inet6 PREFIX3:: prefixlen 64 delete
+
+#
+CMD_IFCONFIG_IF1_PREFIX2_GA_ADD		ifconfig MY_IF1 inet6 MY_IF1_PREFIX2_GA
+CMD_IFCONFIG_IF1_PREFIX2_ANY_ADD	ifconfig MY_IF1 inet6 PREFIX2:: prefixlen 64 alias anycast
+CMD_IFCONFIG_IF1_PREFIX2_GA_DELETE	ifconfig MY_IF1 inet6 MY_IF1_PREFIX2_GA delete
+CMD_IFCONFIG_IF1_PREFIX2_ANY_DELETE	ifconfig MY_IF1 inet6 PREFIX2:: prefixlen 64 delete
+
+CMD_IFCONFIG_IF2_PREFIX3_GA_ADD		ifconfig MY_IF2 inet6 MY_IF2_PREFIX3_GA
+CMD_IFCONFIG_IF2_PREFIX3_ANY_ADD	ifconfig MY_IF2 inet6 PREFIX3:: prefixlen 64 alias anycast
+CMD_IFCONFIG_IF2_PREFIX3_GA_DELETE	ifconfig MY_IF2 inet6 MY_IF2_PREFIX3_GA delete
+CMD_IFCONFIG_IF2_PREFIX3_ANY_DELETE	ifconfig MY_IF2 inet6 PREFIX3:: prefixlen 64 delete
+
+CMD_IFCONFIG_IF1_MTU_1500		ifconfig MY_IF1 mtu 1500
+CMD_IFCONFIG_IF2_MTU_1500		ifconfig MY_IF2 mtu 1500
+CMD_IFCONFIG_IF3_MTU_1500		ifconfig MY_IF3 mtu 1500
+CMD_IFCONFIG_IF1_MTU_1280		ifconfig MY_IF1 mtu 1280
+CMD_IFCONFIG_IF2_MTU_1280		ifconfig MY_IF2 mtu 1280
+
+# ndp
+CMD_CLEAR_NCE_IF1			execute "ndp -cn"
+CMD_CLEAR_NCE_IF2			execute "echo > /dev/null"
+CMD_CLEAR_NCE_IF3			execute "echo > /dev/null"
+CMD_PRINT_NCE_IF1			execute "ndp -a"
+CMD_PRINT_NCE_IF2			execute "echo > /dev/null"
+CMD_PRINT_NCE_IF3			execute "echo > /dev/null"
+
+# route
+CMD_FLUSH_ROUTE_PREFIX1_IF1		ndp -Rn
+CMD_FLUSH_ROUTE_PREFIX2_IF1		ndp -Rn
+CMD_FLUSH_ROUTE_PREFIX3_IF1		ndp -Rn
+CMD_FLUSH_ROUTE_PREFIX2_IF2		ndp -Rn
+CMD_FLUSH_ROUTE_PREFIX1_IF3		ndp -Rn
+CMD_FLUSH_ROUTE_PREFIX3_IF3		ndp -Rn
+CMD_FLUSH_ROUTE_PREFIX2_IF1		ndp -Rn
+CMD_FLUSH_ROUTE_PREFIX3_IF2		ndp -Rn
+CMD_FLUSH_ROUTE_LOGO			ndp -Rn
+CMD_FLUSH_ROUTE_REDIRECT                route delete -inet6 REF2_IF1_PREFIX2_GA
+CMD_FLUSH_ROUTE_STATIC_PREFIX1          route delete -inet6 -net PREFIX1::/64
+CMD_FLUSH_ROUTE_STATIC_PREFIX2          route delete -inet6 -net PREFIX2::/64
+CMD_FLUSH_ROUTE_STATIC_PREFIX3          route delete -inet6 -net PREFIX3::/64
+CMD_FLUSH_PREFIX_LIST			ndp -Pn
+
+#
+CMD_1_5_ADD_ROUTE		route add -inet6 PREFIX2:: -prefixlen 64 REF1_IF1_LLA%MY_IF1
+CMD_1_5_DELETE_ROUTE		route add -inet6 PREFIX2:: -prefixlen 64 REF1_IF1_LLA%MY_IF1
+
+# ref1
+CMD_1_6_B_ADD_ROUTE             route add -inet6 PREFIX2:: -prefixlen 64 LOGO_IF1_LLA%MY_IF1
+
+# ref1
+CMD_1_6_D1_ADD_ROUTE		route add -inet6 PREFIX3:: -prefixlen 64 REF2_IF1_LLA%MY_IF2
+# ref2
+CMD_1_6_D2_ADD_ROUTE		route add -inet6 PREFIX1:: -prefixlen 64 REF1_IF2_LLA%MY_IF1
+
+# tar
+CMD_1_6_D3_ADD_ROUTE		route add -inet6 PREFIX1:: -prefixlen 64 REF2_IF2_LLA%MY_IF3
+CMD_1_6_E_ADD_ROUTE		route add -inet6 PREFIX1:: -prefixlen 64 REF2_IF2_LLA%MY_IF3
+
+
+# sysctl
+CMD_SYSCTL_ACCEPT_RA		sysctl -w net.inet6.ip6.accept_rtadv=1
+CMD_SYSCTL_NOT_ACCEPT_RA	sysctl -w net.inet6.ip6.accept_rtadv=0
+
+CMD_SYSCTL_FORWARDING		sysctl -w net.inet6.ip6.forwarding=1
+CMD_SYSCTL_NOT_FORWARDING	sysctl -w net.inet6.ip6.forwarding=0
+
+# rtadvd
+CMD_RTADVD_IF1				rtadvd -c /tmp/rtadvd.conf MY_IF1
+CMD_RTADVD_IF2				rtadvd -c /tmp/rtadvd.conf MY_IF2
+CMD_RTADVD_IF3				rtadvd -c /tmp/rtadvd.conf MY_IF3
+CMD_RTADVD_IFS_1_2			rtadvd -c /tmp/rtadvd.conf MY_IF1 MY_IF2
+
+CMD_STOP_RTADVD				killall -9 rtadvd
+CMD_RM_RTADVD_PID			/bin/sh -c echo > /dev/null
+CMD_RM_RTADVD_CONF			rm -f /tmp/rtadvd.conf
+
+# rtsol
+CMD_RTSOL_IF1			rtsol MY_IF1
+CMD_RTSOL_IF2			rtsol MY_IF2
+CMD_RTSOL_IF3			rtsol MY_IF3
+
+# rtadvd.conf
+CMD_RTADVD_CONF_GENERIC_1	/bin/sh -c echo default:\\ > /tmp/rtadvd.conf
+CMD_RTADVD_CONF_GENERIC_2	/bin/sh -c echo         :vltime#2592000: >> /tmp/rtadvd.conf
+CMD_RTADVD_CONF_GENERIC_3	/bin/sh -c echo MY_IF1:\\ >> /tmp/rtadvd.conf
+CMD_RTADVD_CONF_GENERIC_4	/bin/sh -c echo         :addr=\"PREFIX1::\":mtu#1500:tc=default: >> /tmp/rtadvd.conf
+CMD_RTADVD_CONF_GENERIC_5	/bin/sh -c echo > /dev/null
+CMD_RTADVD_CONF_GENERIC_6	/bin/sh -c echo > /dev/null
+CMD_RTADVD_CONF_GENERIC_7	/bin/sh -c echo > /dev/null
+CMD_RTADVD_CONF_GENERIC_8	/bin/sh -c echo > /dev/null
+
+CMD_RTADVD_CONF_1_3_B_1	/bin/sh -c echo default:\\ > /tmp/rtadvd.conf
+CMD_RTADVD_CONF_1_3_B_2	/bin/sh -c echo         :vltime#2592000: >> /tmp/rtadvd.conf
+CMD_RTADVD_CONF_1_3_B_3	/bin/sh -c echo > /dev/null
+CMD_RTADVD_CONF_1_3_B_4	/bin/sh -c echo > /dev/null
+CMD_RTADVD_CONF_1_3_B_5	/bin/sh -c echo > /dev/null
+CMD_RTADVD_CONF_1_3_B_6	/bin/sh -c echo > /dev/null
+
+# CMD_RTADVD_CONF_1_3_B_3	/bin/sh -c echo MY_IF1:\\ >> /tmp/rtadvd.conf
+# CMD_RTADVD_CONF_1_3_B_4	/bin/sh -c echo         :addr=\"PREFIX1::\":mtu#1500:tc=default: >> /tmp/rtadvd.conf
+# CMD_RTADVD_CONF_1_3_B_5	/bin/sh -c echo MY_IF1:\\ >> /tmp/rtadvd.conf
+# CMD_RTADVD_CONF_1_3_B_6	/bin/sh -c echo         :addr=\"PREFIX2::\":mtu#1500:tc=default: >> /tmp/rtadvd.conf
+
+CMD_RTADVD_CONF_1_3_B_7	/bin/sh -c echo > /dev/null
+CMD_RTADVD_CONF_1_3_B_8	/bin/sh -c echo > /dev/null
+CMD_RTADVD_CONF_1_3_B_9	/bin/sh -c echo > /dev/null
+CMD_RTADVD_CONF_1_3_B_A	/bin/sh -c echo > /dev/null
+CMD_RTADVD_CONF_1_3_B_B	/bin/sh -c echo > /dev/null
+CMD_RTADVD_CONF_1_3_B_C	/bin/sh -c echo > /dev/null
+CMD_RTADVD_CONF_1_3_B_D	/bin/sh -c echo > /dev/null
+
+
+CMD_RTADVD_CONF_1_3_C_1	/bin/sh -c echo default:\\ > /tmp/rtadvd.conf
+CMD_RTADVD_CONF_1_3_C_2	/bin/sh -c echo         :vltime#30:maxinterval#1800:mininterval#450: >> /tmp/rtadvd.conf
+CMD_RTADVD_CONF_1_3_C_3	/bin/sh -c echo MY_IF1:\\ >> /tmp/rtadvd.conf
+CMD_RTADVD_CONF_1_3_C_4	/bin/sh -c echo         :addr=\"PREFIX1::\":mtu#1500:tc=default: >> /tmp/rtadvd.conf
+CMD_RTADVD_CONF_1_3_C_5	/bin/sh -c echo > /dev/null
+CMD_RTADVD_CONF_1_3_C_6	/bin/sh -c echo > /dev/null
+CMD_RTADVD_CONF_1_3_C_7	/bin/sh -c echo > /dev/null
+CMD_RTADVD_CONF_1_3_C_8	/bin/sh -c echo > /dev/null
+CMD_RTADVD_CONF_1_3_C_9	/bin/sh -c echo > /dev/null
+
+
+CMD_RTADVD_CONF_1_4_1	/bin/sh -c echo default:\\ > /tmp/rtadvd.conf
+CMD_RTADVD_CONF_1_4_2	/bin/sh -c echo         :vltime#2592000: >> /tmp/rtadvd.conf
+CMD_RTADVD_CONF_1_4_3_RL0	/bin/sh -c echo MY_IF1:\\ >> /tmp/rtadvd.conf
+CMD_RTADVD_CONF_1_4_3_RL600	/bin/sh -c echo MY_IF1:\\ >> /tmp/rtadvd.conf
+CMD_RTADVD_CONF_1_4_4_RL0	/bin/sh -c echo         :addr=\"PREFIX1::\":rltime#0:mtu#1500:tc=default: >> /tmp/rtadvd.conf
+CMD_RTADVD_CONF_1_4_4_RL600	/bin/sh -c echo         :addr=\"PREFIX1::\":rltime#600:mtu#1500:tc=default: >> /tmp/rtadvd.conf
+CMD_RTADVD_CONF_1_4_5	/bin/sh -c echo MY_IF2:\\ >> /tmp/rtadvd.conf
+CMD_RTADVD_CONF_1_4_6_RL1800	/bin/sh -c echo         :addr=\"PREFIX2::\":rltime#600:mtu#1500:tc=default: >> /tmp/rtadvd.conf
+CMD_RTADVD_CONF_1_4_6_RL600	/bin/sh -c echo         :addr=\"PREFIX2::\":rltime#600:maxinterval#100:mtu#1500:tc=default: >> /tmp/rtadvd.conf
+CMD_RTADVD_CONF_1_4_7	/bin/sh -c echo > /dev/null
+CMD_RTADVD_CONF_1_4_8	/bin/sh -c echo > /dev/null
+CMD_RTADVD_CONF_1_4_9	/bin/sh -c echo > /dev/null
+CMD_RTADVD_CONF_1_4_A	/bin/sh -c echo > /dev/null
+CMD_RTADVD_CONF_1_4_B	/bin/sh -c echo > /dev/null
+CMD_RTADVD_CONF_1_4_C_RL1800	/bin/sh -c echo > /dev/null
+CMD_RTADVD_CONF_1_4_C_RL600	/bin/sh -c echo > /dev/null
+CMD_RTADVD_CONF_1_4_D	/bin/sh -c echo > /dev/null
+CMD_RTADVD_CONF_1_4_E	/bin/sh -c echo > /dev/null
+CMD_RTADVD_CONF_1_4_F	/bin/sh -c echo > /dev/null
+CMD_RTADVD_CONF_1_4_G	/bin/sh -c echo > /dev/null
+CMD_RTADVD_CONF_1_4_H	/bin/sh -c echo > /dev/null
+CMD_RTADVD_CONF_1_4_I	/bin/sh -c echo > /dev/null
+
+
+CMD_RTADVD_CONF_1_5_1	/bin/sh -c echo default:\\ > /tmp/rtadvd.conf
+CMD_RTADVD_CONF_1_5_2	/bin/sh -c echo         :vltime#2592000: >> /tmp/rtadvd.conf
+CMD_RTADVD_CONF_1_5_3	/bin/sh -c echo MY_IF2:\\ >> /tmp/rtadvd.conf
+CMD_RTADVD_CONF_1_5_4	/bin/sh -c echo         :addr=\"PREFIX2::\":mtu#1500:tc=default: >> /tmp/rtadvd.conf
+CMD_RTADVD_CONF_1_5_5	/bin/sh -c echo > /dev/null
+CMD_RTADVD_CONF_1_5_6	/bin/sh -c echo > /dev/null
+CMD_RTADVD_CONF_1_5_7	/bin/sh -c echo > /dev/null
+CMD_RTADVD_CONF_1_5_8	/bin/sh -c echo > /dev/null
+
+
+CMD_RTADVD_CONF_1_6_A_1	/bin/sh -c echo default:\\ > /tmp/rtadvd.conf
+CMD_RTADVD_CONF_1_6_A_2	/bin/sh -c echo         :vltime#2592000: >> /tmp/rtadvd.conf
+CMD_RTADVD_CONF_1_6_A_3	/bin/sh -c echo MY_IF1:\\ >> /tmp/rtadvd.conf
+CMD_RTADVD_CONF_1_6_A_4	/bin/sh -c echo         :addr=\"PREFIX1::\":mtu#1500:tc=default: >> /tmp/rtadvd.conf
+CMD_RTADVD_CONF_1_6_A_5	/bin/sh -c echo MY_IF2:\\ >> /tmp/rtadvd.conf
+CMD_RTADVD_CONF_1_6_A_6	/bin/sh -c echo         :addr=\"PREFIX2::\":mtu#1280:tc=default: >> /tmp/rtadvd.conf
+CMD_RTADVD_CONF_1_6_A_7	/bin/sh -c echo > /dev/null
+CMD_RTADVD_CONF_1_6_A_8	/bin/sh -c echo > /dev/null
+CMD_RTADVD_CONF_1_6_A_9	/bin/sh -c echo > /dev/null
+CMD_RTADVD_CONF_1_6_A_A	/bin/sh -c echo > /dev/null
+CMD_RTADVD_CONF_1_6_A_B	/bin/sh -c echo > /dev/null
+CMD_RTADVD_CONF_1_6_A_C	/bin/sh -c echo > /dev/null
+CMD_RTADVD_CONF_1_6_A_D	/bin/sh -c echo > /dev/null
+CMD_RTADVD_CONF_1_6_A_E	/bin/sh -c echo > /dev/null
+CMD_RTADVD_CONF_1_6_A_F	/bin/sh -c echo > /dev/null
+CMD_RTADVD_CONF_1_6_A_G	/bin/sh -c echo > /dev/null
+CMD_RTADVD_CONF_1_6_A_H	/bin/sh -c echo > /dev/null
+CMD_RTADVD_CONF_1_6_A_I	/bin/sh -c echo > /dev/null
+
+
+CMD_RTADVD_CONF_1_6_C_1	/bin/sh -c echo default:\\ > /tmp/rtadvd.conf
+CMD_RTADVD_CONF_1_6_C_2	/bin/sh -c echo         :vltime#2592000: >> /tmp/rtadvd.conf
+CMD_RTADVD_CONF_1_6_C_3	/bin/sh -c echo MY_IF1:\\ >> /tmp/rtadvd.conf
+CMD_RTADVD_CONF_1_6_C_4	/bin/sh -c echo         :addr=\"PREFIX1::\":mtu#1280:tc=default: >> /tmp/rtadvd.conf
+CMD_RTADVD_CONF_1_6_C_5	/bin/sh -c echo > /dev/null
+CMD_RTADVD_CONF_1_6_C_6	/bin/sh -c echo > /dev/null
+CMD_RTADVD_CONF_1_6_C_7	/bin/sh -c echo > /dev/null
+CMD_RTADVD_CONF_1_6_C_8	/bin/sh -c echo > /dev/null
+CMD_RTADVD_CONF_1_6_C_9	/bin/sh -c echo > /dev/null
+
+
+CMD_RTADVD_CONF_1_6_D1_1	/bin/sh -c echo default:\\ > /tmp/rtadvd.conf
+CMD_RTADVD_CONF_1_6_D1_2	/bin/sh -c echo         :vltime#2592000: >> /tmp/rtadvd.conf
+CMD_RTADVD_CONF_1_6_D1_3	/bin/sh -c echo MY_IF1:\\ >> /tmp/rtadvd.conf
+CMD_RTADVD_CONF_1_6_D1_4	/bin/sh -c echo         :addr=\"PREFIX1::\":mtu#1500:tc=default: >> /tmp/rtadvd.conf
+CMD_RTADVD_CONF_1_6_D1_5	/bin/sh -c echo MY_IF2:\\ >> /tmp/rtadvd.conf
+CMD_RTADVD_CONF_1_6_D1_6	/bin/sh -c echo         :addr=\"PREFIX2::\":mtu#1280:tc=default: >> /tmp/rtadvd.conf
+CMD_RTADVD_CONF_1_6_D1_7	/bin/sh -c echo > /dev/null
+CMD_RTADVD_CONF_1_6_D1_8	/bin/sh -c echo > /dev/null
+CMD_RTADVD_CONF_1_6_D1_9	/bin/sh -c echo > /dev/null
+CMD_RTADVD_CONF_1_6_D1_A	/bin/sh -c echo > /dev/null
+CMD_RTADVD_CONF_1_6_D1_B	/bin/sh -c echo > /dev/null
+CMD_RTADVD_CONF_1_6_D1_C	/bin/sh -c echo > /dev/null
+CMD_RTADVD_CONF_1_6_D1_D	/bin/sh -c echo > /dev/null
+CMD_RTADVD_CONF_1_6_D1_E	/bin/sh -c echo > /dev/null
+CMD_RTADVD_CONF_1_6_D1_F	/bin/sh -c echo > /dev/null
+CMD_RTADVD_CONF_1_6_D1_G	/bin/sh -c echo > /dev/null
+
+
+CMD_RTADVD_CONF_1_6_D2_1	/bin/sh -c echo default:\\ > /tmp/rtadvd.conf
+CMD_RTADVD_CONF_1_6_D2_2	/bin/sh -c echo         :vltime#2592000: >> /tmp/rtadvd.conf
+CMD_RTADVD_CONF_1_6_D2_3	/bin/sh -c echo MY_IF1:\\ >> /tmp/rtadvd.conf
+CMD_RTADVD_CONF_1_6_D2_4	/bin/sh -c echo         :addr=\"PREFIX2::\":mtu#1280:tc=default: >> /tmp/rtadvd.conf
+CMD_RTADVD_CONF_1_6_D2_5	/bin/sh -c echo MY_IF2:\\ >> /tmp/rtadvd.conf
+CMD_RTADVD_CONF_1_6_D2_6	/bin/sh -c echo         :addr=\"PREFIX3::\":mtu#1500:tc=default: >> /tmp/rtadvd.conf
+CMD_RTADVD_CONF_1_6_D2_7	/bin/sh -c echo > /dev/null
+CMD_RTADVD_CONF_1_6_D2_8	/bin/sh -c echo > /dev/null
+CMD_RTADVD_CONF_1_6_D2_9	/bin/sh -c echo > /dev/null
+CMD_RTADVD_CONF_1_6_D2_A	/bin/sh -c echo > /dev/null
+CMD_RTADVD_CONF_1_6_D2_B	/bin/sh -c echo > /dev/null
+CMD_RTADVD_CONF_1_6_D2_C	/bin/sh -c echo > /dev/null
+CMD_RTADVD_CONF_1_6_D2_D	/bin/sh -c echo > /dev/null
+CMD_RTADVD_CONF_1_6_D2_E	/bin/sh -c echo > /dev/null
+CMD_RTADVD_CONF_1_6_D2_F	/bin/sh -c echo > /dev/null
+CMD_RTADVD_CONF_1_6_D2_G	/bin/sh -c echo > /dev/null
+CMD_RTADVD_CONF_1_6_D2_H	/bin/sh -c echo > /dev/null
+CMD_RTADVD_CONF_1_6_D2_I	/bin/sh -c echo > /dev/null
+
+
+CMD_RTADVD_CONF_1_6_D3_1	/bin/sh -c echo default:\\ > /tmp/rtadvd.conf
+CMD_RTADVD_CONF_1_6_D3_2	/bin/sh -c echo         :vltime#2592000: >> /tmp/rtadvd.conf
+CMD_RTADVD_CONF_1_6_D3_3	/bin/sh -c echo MY_IF3:\\ >> /tmp/rtadvd.conf
+CMD_RTADVD_CONF_1_6_D3_4	/bin/sh -c echo         :addr=\"PREFIX3::\":mtu#1500:tc=default: >> /tmp/rtadvd.conf
+CMD_RTADVD_CONF_1_6_D3_5	/bin/sh -c echo > /dev/null
+CMD_RTADVD_CONF_1_6_D3_6	/bin/sh -c echo > /dev/null
+CMD_RTADVD_CONF_1_6_D3_7	/bin/sh -c echo > /dev/null
+CMD_RTADVD_CONF_1_6_D3_8	/bin/sh -c echo > /dev/null
+
+
+CMD_RTADVD_CONF_1_7_A_1	/bin/sh -c echo default:\\ > /tmp/rtadvd.conf
+CMD_RTADVD_CONF_1_7_A_2	/bin/sh -c echo         :vltime#2592000: >> /tmp/rtadvd.conf
+CMD_RTADVD_CONF_1_7_A_3	/bin/sh -c echo MY_IF1:\\ >> /tmp/rtadvd.conf
+CMD_RTADVD_CONF_1_7_A_4	/bin/sh -c echo         :addr=\"PREFIX1::\":mtu#1500:tc=default: >> /tmp/rtadvd.conf
+CMD_RTADVD_CONF_1_7_A_5	/bin/sh -c echo MY_IF2:\\ >> /tmp/rtadvd.conf
+CMD_RTADVD_CONF_1_7_A_6	/bin/sh -c echo         :addr=\"PREFIX2::\":mtu#1500:tc=default: >> /tmp/rtadvd.conf
+CMD_RTADVD_CONF_1_7_A_7	/bin/sh -c echo > /dev/null
+CMD_RTADVD_CONF_1_7_A_8	/bin/sh -c echo > /dev/null
+CMD_RTADVD_CONF_1_7_A_9	/bin/sh -c echo > /dev/null
+CMD_RTADVD_CONF_1_7_A_A	/bin/sh -c echo > /dev/null
+CMD_RTADVD_CONF_1_7_A_B	/bin/sh -c echo > /dev/null
+CMD_RTADVD_CONF_1_7_A_C	/bin/sh -c echo > /dev/null
+CMD_RTADVD_CONF_1_7_A_D	/bin/sh -c echo > /dev/null
+CMD_RTADVD_CONF_1_7_A_E	/bin/sh -c echo > /dev/null
+CMD_RTADVD_CONF_1_7_A_F	/bin/sh -c echo > /dev/null
+CMD_RTADVD_CONF_1_7_A_G	/bin/sh -c echo > /dev/null

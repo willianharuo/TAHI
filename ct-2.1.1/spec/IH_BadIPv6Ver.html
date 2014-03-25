@@ -1,0 +1,103 @@
+<HTML>
+<HEAD>
+<TITLE>IH_BadIPv6Ver - Bad IPv6 Version</TITLE>
+<LINK REV="made" HREF="mailto:hackers@FreeBSD.org">
+</HEAD>
+
+<BODY>
+
+<!-- INDEX BEGIN -->
+<!--
+
+<UL>
+
+	<LI><A HREF="#NAME">NAME</A>
+	<LI><A HREF="#TARGET">TARGET</A>
+	<LI><A HREF="#SYNOPSIS">SYNOPSIS</A>
+	<LI><A HREF="#INITIALIZATION">INITIALIZATION</A>
+	<LI><A HREF="#TEST_PROCEDURE">TEST PROCEDURE</A>
+	<LI><A HREF="#JUDGMENT">JUDGMENT</A>
+	<LI><A HREF="#TERMINATION">TERMINATION</A>
+	<LI><A HREF="#SEE_ALSO">SEE ALSO</A>
+</UL>
+-->
+<!-- INDEX END -->
+
+<P>
+<H1><A NAME="NAME">NAME</A></H1>
+<P>
+IH_BadIPv6Ver - Bad IPv6 Version
+
+<P>
+<HR>
+<H1><A NAME="TARGET">TARGET</A></H1>
+<P>
+Host and Router
+
+<P>
+<HR>
+<H1><A NAME="SYNOPSIS">SYNOPSIS</A></H1>
+<P>
+<STRONG>IH_BadIPv6Ver.seq</STRONG>
+
+
+
+<P>
+<HR>
+<H1><A NAME="INITIALIZATION">INITIALIZATION</A></H1>
+<P>
+NONE
+
+<P>
+<HR>
+<H1><A NAME="TEST_PROCEDURE">TEST PROCEDURE</A></H1>
+<P>
+This is one of robustness tests for bad Version field.
+
+<P>
+The test check that Version field in IPv6 header processing.
+
+<P>
+<PRE>  1. Send bad Echo Request
+  2. Wait 5 sec.
+  3. Send Echo Request
+  4. If NS received then send NA, and wait Echo Reply again
+  5. Receive Echo Reply
+</PRE>
+<P>
+<PRE>  Bad Echo Request Data is:
+</PRE>
+<P>
+<PRE>        ICMP Echo Request
+            Type           = 128 (Echo Request)
+            Code           = 0
+            Checksum       = (auto)
+            Identifier     = 0xffff
+            SequenceNumber = 1
+            PayloadData    = {1,2,3,4,5,6,7,8}
+</PRE>
+
+<P>
+<HR>
+<H1><A NAME="JUDGMENT">JUDGMENT</A></H1>
+<P>
+<PRE>  PASS : echo reply packet received.
+</PRE>
+<P>
+<PRE>  FAIL : don't received echo reply packet.
+</PRE>
+<P>
+<HR>
+<H1><A NAME="TERMINATION">TERMINATION</A></H1>
+<P>
+NONE
+
+<P>
+<HR>
+<H1><A NAME="SEE_ALSO">SEE ALSO</A></H1>
+<P>
+perldoc V6evalTool
+
+</BODY>
+
+</HTML>

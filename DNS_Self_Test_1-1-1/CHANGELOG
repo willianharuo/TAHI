@@ -1,0 +1,107 @@
+
+
+
+	CHANGELOG for DNS Conformance Test Package
+
+
+
+2007/08/30	Release 1.1.1
+	Official release
+
+
+2007/08/10
+	correct relationship with remote control
+		- CL/CL_RFC3425_3_IQUERY.seq
+
+
+2007/08/02
+	add $REQ_IQUERY as app_type in INDEX_client
+		- DNSConfig.pm
+		- INDEX_client
+
+	correct variable name to export
+		- DNSConfig.pm
+
+	handle multicast correctly
+		- CL/CL_RFC1123_6_1_3_2_Multicast.seq
+
+
+2007/07/20	Release 1.1
+	Official release
+
+
+2007/07/18
+	add $NUT_EDNS0_SIZE as configurable parameter
+		- DNS.pm
+		- DNSConfig.pm
+		- SV/SV_RFC2671_4_1_OPT_pseudo_RR.seq
+		- SV/SV_RFC2671_4_1_OPT_pseudo_RR_recursive.seq
+		- SV/SV_RFC2671_5_1_OPT_presence.seq
+		- SV/SV_RFC2671_5_2_OPT_lack.seq
+		- SV/SV_RFC2671_5_3_OPT_not_understand.seq
+
+
+2007/07/13
+	support IPv6 transport
+		- SV/SV_RFC1123_6_1_3_2_Multicast.seq
+
+	use well-understood remote control arguments for zone update
+		- SV/SV_RFC1995_2_IXFR_server_I_add.seq
+		- SV/SV_RFC1995_2_IXFR_server_I_change.seq
+		- SV/SV_RFC1995_2_IXFR_server_I_remove.seq
+		- SV/SV_RFC1995_2_IXFR_server_TCP.seq
+		- SV/SV_RFC1995_2_IXFR_server_newer.seq
+		- SV/SV_RFC1995_2_IXFR_server_older.seq
+		- SV/SV_RFC1995_2_IXFR_server_same.seq
+		- SV/SV_RFC1996_3_2_master_NOTIFY_ignore_non_zero_field.seq
+		- SV/SV_RFC1996_3_4_master_send_Notify.seq
+
+
+2007/07/12
+	correct $NutConfig{'ModeRequiredTestMode'}
+		- SV/SV_RFC1034_4_3_5_NotCompZoneTransfer.seq
+		- SV/SV_RFC1034_4_3_5_ZoneTransfer.seq
+		- SV/SV_RFC1123_6_1_3_2_query_while_zone_trans.seq
+		- SV/SV_RFC1995_2_IXFR_client.seq
+		- SV/SV_RFC1995_2_IXFR_client_AXFR.seq
+		- SV/SV_RFC1995_2_IXFR_client_F.seq
+		- SV/SV_RFC1995_2_IXFR_client_I_add.seq
+		- SV/SV_RFC1995_2_IXFR_client_I_all.seq
+		- SV/SV_RFC1995_2_IXFR_client_I_change.seq
+		- SV/SV_RFC1995_2_IXFR_client_I_condense.seq
+		- SV/SV_RFC1995_2_IXFR_client_I_remove.seq
+		- SV/SV_RFC1995_2_IXFR_client_TCP.seq
+		- SV/SV_RFC1996_1_2_IXFR_client_Notify.seq
+		- SV/SV_RFC1996_3_10_slave_ignore_unknown.seq
+		- SV/SV_RFC1996_3_12_master_recv_NOTIMP.seq
+		- SV/SV_RFC1996_3_2_slave_NOTIFY_ignore_non_zero_field.seq
+		- SV/SV_RFC1996_3_3_slave_NOTIFY_response.seq
+		- SV/SV_RFC1996_3_5_master_NOTIFY_retransmission.seq
+		- SV/SV_RFC1996_3_6_master_NOTIFY_retrans_recv_ICMP.seq
+		- SV/SV_RFC1996_3_6_master_NOTIFY_retrans_recv_response.seq
+		- SV/SV_RFC1996_3_6_master_NOTIFY_retransmission.seq
+		- SV/SV_RFC1996_3_7_slave_NOTIFY_diff_SOA.seq
+		- SV/SV_RFC1996_3_7_slave_NOTIFY_no_SOA.seq
+		- SV/SV_RFC1996_3_9_master_NOTIFY_continue_service.seq
+
+
+2006/06/23	Release 1.0
+	Official release
+		- unify packages rekeased at 2006/02/28
+
+
+2006/02/28	Release 1.0
+	Official release
+
+
+2005/12/06	Release 0.2
+	Alpha version release
+		- includes only client tests
+
+
+2005/11/01	Release 0.1
+	Alpha version release
+		- includes only client tests
+
+
+							[end of CHANGELOG]

@@ -1,0 +1,404 @@
+#!/usr/bin/perl
+#
+# Copyright (C) 1999, 2000, 2001, 2002, 2003 Yokogawa Electric Corporation,
+# IPA (Information-technology Promotion Agency, Japan).
+# All rights reserved.
+# 
+# Redistribution and use of this software in source and binary forms, with 
+# or without modification, are permitted provided that the following 
+# conditions and disclaimer are agreed and accepted by the user:
+# 
+# 1. Redistributions of source code must retain the above copyright 
+# notice, this list of conditions and the following disclaimer.
+# 
+# 2. Redistributions in binary form must reproduce the above copyright 
+# notice, this list of conditions and the following disclaimer in the 
+# documentation and/or other materials provided with the distribution.
+# 
+# 3. Neither the names of the copyrighters, the name of the project which 
+# is related to this software (hereinafter referred to as "project") nor 
+# the names of the contributors may be used to endorse or promote products 
+# derived from this software without specific prior written permission.
+# 
+# 4. No merchantable use may be permitted without prior written 
+# notification to the copyrighters. However, using this software for the 
+# purpose of testing or evaluating any products including merchantable 
+# products may be permitted without any notification to the copyrighters.
+# 
+# 
+# 
+# THIS SOFTWARE IS PROVIDED BY THE COPYRIGHTERS, THE PROJECT AND 
+# CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING 
+# BUT NOT LIMITED THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS 
+# FOR A PARTICULAR PURPOSE, ARE DISCLAIMED.  IN NO EVENT SHALL THE 
+# COPYRIGHTERS, THE PROJECT OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, 
+# INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES 
+# (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR 
+# SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) 
+# HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN 
+# CONTRACT,STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) 
+# ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF 
+# THE POSSIBILITY OF SUCH DAMAGE.
+#
+# $TAHI: ct/nd/hostRecvRas2.seq,v 1.26 2002/02/27 01:08:25 masaxmasa Exp $
+
+########################################################################
+BEGIN { $V6evalTool::TestVersion = '$Name: REL_2_1_1 $ '; }
+ 
+use V6evalTool;
+use nd;
+
+ndOptions(@ARGV);
+
+# The following generate debugging messages.
+$nd::debug=$ndOpt_v|$ndOpt_vv;
+
+# You can specifies debug options to a remote control program.
+# If you want to know more detail, please see the following:
+# - V6evalTool.pm: perldoc V6evalTool
+# - V6evalRemote.pm: perldoc V6evalRemote
+$nd::remote_debug="-o1" if $ndOpt_vv;
+
+$IF=Link0;
+
+$wait_dad=3;
+$wait_echo=2;
+
+#
+#
+#
+$type=$V6evalTool::NutDef{Type};
+if($type eq router) {
+    vLogHTML("This test is for the host only<BR>");
+    exit $V6evalTool::exitHostOnly;
+}
+
+$type=$V6evalTool::NutDef{Type};
+if($type ne host) {
+    vLogHTML(ndErrmsg("ERROR: $V6evalTool::NutDef{Type}: ".
+		      "Unknown target type<BR>"));
+    exit $V6evalTool::exitFail;
+}
+
+#
+#
+#
+vCapture($IF);
+
+#
+#
+#
+goto error if ndClearPrefix() != 0;
+#goto error if nd2NoNce($IF) != 0;
+
+#
+# 
+#
+$pktdesc{ra_tn2allnode_sll_a}='Router TN send RA w/ SLL w/ Prefix A';
+$pktdesc{ra_y2allnode_sll_b}='Router Y send RA w/ SLL w/ Prefix B';
+$pktdesc{ra_z2allnode_sll_c}='Router Z send RA w/ SLL w/ Prefix C';
+%ret=vSend($IF,
+	   ra_tn2allnode_sll_a,
+	   ra_y2allnode_sll_b,
+	   ra_z2allnode_sll_c,
+	   );
+goto error if $ret{status} != 0;
+
+vLogHTML("Wait for DAD NSs<BR>");
+vRecv($IF, $wait_dad, 0, 0);
+
+$pktdesc{unicast_na_tn2nut_RSO_tll}='Router TN send NA w/ TLL, then REACHABLE';
+$pktdesc{unicast_na_y2nut_RSO_tll}='Router Y send NA w/ TLL, then REACHABLE';
+$pktdesc{unicast_na_z2nut_RSO_tll}='Router Z send NA w/ TLL, then REACHABLE';
+%ret=vSend($IF,
+	   unicast_na_tn2nut_RSO_tll,
+	   unicast_na_y2nut_RSO_tll,
+	   unicast_na_z2nut_RSO_tll,
+	   );
+
+vLogHTML("<HR><FONT SIZE=\"+1\">Test</FONT><BR>");
+
+$pktdesc{echo_request_x2nut_a}='Send echo-request (Prefix A)';
+$pktdesc{echo_request_x2nut_b}='Send echo-request (Prefix B)';
+$pktdesc{echo_request_x2nut_c}='Send echo-request (Prefix C)';
+%ret=vSend($IF,
+	   echo_request_x2nut_a,
+	   echo_request_x2nut_b,
+	   echo_request_x2nut_c,
+	   );
+goto error if $ret{status} != 0;
+
+$i=0;
+$a_done=0;
+$b_done=0;
+$c_done=0;
+$pktdesc{echo_reply_nut2x_a}='Got echo-reply (Prefix A)';
+$pktdesc{echo_reply_nut2x_b}='Got echo-reply (Prefix B)';
+$pktdesc{echo_reply_nut2x_c}='Got echo-reply (Prefix C)';
+while(1) {
+    %ret=vRecv($IF, $wait_echo, 0, 1,
+	       echo_reply_nut2x_a,
+	       echo_reply_nut2x_b,
+	       echo_reply_nut2x_c,
+	       );
+    last if $ret{status} == 1; # timeout
+    goto error if $ret{status} != 0; # other error
+    if($ret{recvFrame} eq echo_reply_nut2x_a) {
+	if($a_done) {
+            vLogHTML(ndErrmsg("ERROR: Got duplicated echo-reply<BR>"));
+	    goto error;
+	}
+	$a_done=1;
+    } elsif($ret{recvFrame} eq echo_reply_nut2x_b) {
+	if($b_done) {
+            vLogHTML(ndErrmsg("ERROR: Got duplicated echo-reply<BR>"));
+	    goto error;
+	}
+	$b_done=1;
+    } elsif($ret{recvFrame} eq echo_reply_nut2x_c) {
+	if($c_done) {
+            vLogHTML(ndErrmsg("ERROR: Got duplicated echo-reply<BR>"));
+	    goto error;
+	}
+	$c_done=1;
+    }
+    $i++;
+}
+if($i != 3) {
+    vLogHTML(ndErrmsg("ERROR: Some echo-reply was missed<BR>"));
+    goto error;
+}
+
+#
+#
+#
+vLogHTML("<HR><FONT SIZE=\"+1\">Initialization</FONT><BR>");
+clear();
+
+#
+#
+#
+vLogHTML("*** OK ***<BR>");
+exit $V6evalTool::exitPass;
+
+error:
+    clear();
+    vLogHTML(vErrmsg(%ret)."<BR>");
+    vLogHTML(ndErrmsg("*** NG ***<BR>"));
+    exit $V6evalTool::exitFail;
+
+#
+#
+#
+sub clear()
+{
+    vLogHTML("<HR><FONT SIZE=\"+1\">Termination</FONT><BR>");
+    $pktdesc{ra_tn2allnode_clrrtr}='Clear TN from the Default Router List';
+    $pktdesc{ra_y2allnode_clrrtr}='Clear Y from the Default Router List';
+    $pktdesc{ra_z2allnode_clrrtr}='Clear Z from the Default Router List';
+    vSend($IF,
+	  ra_tn2allnode_clrrtr,
+	  ra_y2allnode_clrrtr,
+	  ra_z2allnode_clrrtr,
+	  );
+}
+
+########################################################################
+__END__
+
+=head1 NAME
+
+hostRecvRas2 - Verifying that a host accept the union of all RAs
+
+=head1 TARGET
+
+Host only
+
+=head1 SYNOPSIS
+
+ hostRecvRas2.seq [-tooloption ...] -p hostRecvRas2.def
+
+=head1 INITIALIZATION
+
+=begin html
+<OL>
+  <LI>Clear the Prefix List that was learned with RAs.
+  <LI>Create a neighbor cache entry for TN, Y, Z
+      where the IsRouter flag is TRUE.
+  <LI>Set their state to REACHABLEs.
+  <LI>Give three global prefixes by TN, Y and Z:
+      <UL>
+        <LI>3ffe:501:ffff:100::/64
+        <LI>3ffe:501:ffff:108::/64
+        <LI>3ffe:501:ffff:107::/64
+      </UL>
+</OL>
+<PRE>
+  TN                 NUT
+  ----------------------
+<BR>
+  State: NONCE (for all)
+<BR>
+  ==== unsolicited RA ===>
+       src=TN's link-local
+       dst=all-node
+       M=0, O=0
+       RouterLifetime=600
+       ReachableTime=0
+       RetransTimer=0
+       w/ SLLA
+       Prefix Option:
+           L=1, A=1
+           ValidLifetime=2592000
+           PreferredLifetime=604800
+           Prefix=3ffe:501:ffff:100::/64
+<BR>
+  State: STALE (for TN), NONCE (for Y, Z)
+<BR>
+  ==== unsolicited RA ===>
+       src=Y's link-local
+       dst=all-node
+       M=0, O=0
+       RouterLifetime=600
+       ReachableTime=0
+       RetransTimer=0
+       w/ SLLA
+       Prefix Option:
+           L=1, A=1
+           ValidLifetime=2592000
+           PreferredLifetime=604800
+           Prefix=3ffe:501:ffff:108::/64
+<BR>
+  State: STALE (for TN, Y), NONCE (for Z)
+<BR>
+  ==== unsolicited RA ===>
+       src=Z's link-local
+       dst=all-node
+       M=0, O=0
+       RouterLifetime=600
+       ReachableTime=0
+       RetransTimer=0
+       w/ SLLA
+       Prefix Option:
+           L=1, A=1
+           ValidLifetime=2592000
+           PreferredLifetime=604800
+           Prefix=3ffe:501:ffff:107::/64
+<BR>
+  State: STALE (for all)
+<BR>
+  <=== Ns for DAD ====
+       src=unspecified
+       dst=solicited-node[NUT's global, prefix=3ffe:501:ffff:100::/64]
+       target=NUT's global
+<BR>
+  <=== Ns for DAD ====
+       src=unspecified
+       dst=solicited-node[NUT's global, prefix=3ffe:501:ffff:108::/64]
+       target=NUT's global
+<BR>
+  <=== Ns for DAD ====
+       src=unspecified
+       dst=solicited-node[NUT's global, prefix=3ffe:501:ffff:107::/64]
+       target=NUT's global
+<BR>
+  Wait (3 sec)
+<BR>
+  ==== solicited NA ===>
+        src=TN's link-local
+        dst=NUT's link-local
+        R=1, S=1, O=1
+        target=TN's link-local
+        TLLA=TN's LLA
+<BR>
+  State: REACHABLE (for TN), STALE (for Y and Z)
+  ==== solicited NA ===>
+        src=Y's link-local
+        dst=NUT's link-local
+        R=1, S=1, O=1
+        target=Y's link-local
+        TLLA=X's LLA
+<BR>
+  State: REACHABLE (for TN, Y), STALE (for Z)
+  ==== solicited NA ===>
+        src=Z's link-local
+        dst=NUT's link-local
+        R=1, S=1, O=1
+        target=Z's link-local
+        TLLA=Z's LLA
+<BR>
+  State: REACHABLE (for all)
+</PRE>
+
+=head1 TEST PROCEDURE
+
+B<hostRecvRas> verifies that a host accept the union of all RAs.
+
+=begin html
+<PRE>
+  TN               NUT
+  ----------------------
+<BR>
+  State: REACHABLE (for all)
+<BR>
+  ==== echo-request ===>
+       src=off-link global, but LLA is TN's one
+       dst=NUT's global, prefix==3ffe:501:ffff:100::/64
+<BR>
+  <=== <A HREF="#JDG2">Judgment #2</A>: echo-reply ====
+       src=NUT's global, prefix==3ffe:501:ffff:100::/64
+       dst=off-link global, but LLA is one of the routers(TN, Y, Z)
+<BR>
+  ==== echo-request ===>
+       src=off-link global, but LLA is TN's one
+       dst=NUT's global, prefix==3ffe:501:ffff:108::/64
+<BR>
+  <=== <A HREF="#JDG2">Judgment #2</A>: echo-reply ====
+       src=NUT's global, prefix==3ffe:501:ffff:108::/64
+       dst=off-link global, but LLA is one of the routers(TN, Y, Z)
+<BR>
+  ==== echo-request ===>
+       src=off-link global, but LLA is TN's one
+       dst=NUT's global, prefix==3ffe:501:ffff:107::/64
+<BR>
+  <=== <A HREF="#JDG2">Judgment #2</A>: echo-reply ====
+       src=NUT's global, prefix==3ffe:501:ffff:107::/64
+       dst=off-link global, but LLA is one of the routers(TN, Y, Z)
+</PRE>
+
+=end html
+
+=head1 JUDGMENT
+
+=for html <A NAME="JDG1"></A>
+
+  1. NUT accepts the union of all received information; the receipt of
+     a RA must not invalidate all information received in a previous RA
+     or from another source.
+
+=for html <A NAME="JDG2"></A>
+
+  2. NUT throw three echo-replies to the default router (i.e. TN),
+     and their source addresses are different global prefixes.
+
+=head1 TERMINATION
+
+  Send the following RAs to clear the Default Router List:
+  - RA (src=TN) with RouterLifetime=0
+  - RA (src=Y)  with RouterLifetime=0
+  - RA (src=Z)  with RouterLifetime=0
+
+  Clear the Prefix List by remote command. XXX
+
+=head1 NOTE
+
+  The test invokes the following command:
+  - Clear the Prefix List
+
+=head1 SEE ALSO
+
+  perldoc V6evalTool
+  perldoc V6evalRemote
+
+=cut
+

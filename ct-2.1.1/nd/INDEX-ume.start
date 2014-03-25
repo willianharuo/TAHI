@@ -1,0 +1,8 @@
+#
+# $Name: REL_2_1_1 $
+#
+#<seq>:<def>:[<opt>]:[<log>]:<desc>
+#
+&print:<B>Initializing the NUT</B>
+./reset.seq:/dev/null:::Initialization (please ignore)
+# EOF

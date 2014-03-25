@@ -1,0 +1,29 @@
+System		manual
+
+UserID		testee
+UserPassword	dnstest
+
+# Please describe regular expression format
+# If you use '$' (/bin/sh default prompt), you need to use it with '\'.
+# Single '$' matches the null string at the end of the input string.
+UserPrompt	^.*\$ $
+
+RootID		root
+RootPassword	dnstest
+
+# Please describe regular expression format
+RootPrompt	^.*# $
+
+# Please describe regular expression format
+LoginPrompt	^[L|l]ogin: $
+
+# Please describe regular expression format
+PasswordPrompt	^[P|p]assword:$
+
+# escape prompt for FreeBSD
+EscapePrompt \?
+# escape prompt for Linux
+#EscapePrompt \>
+
+Link0	em0
+#Link1	em1

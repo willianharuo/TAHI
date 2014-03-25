@@ -1,0 +1,113 @@
+<HTML>
+<HEAD>
+<TITLE>automatic_encapsulation_router.seq - Verify that encapsulation a 
+	IPv6 datagram in the automatic tunneling of IPv6 over IPv4</TITLE>
+<LINK REV="made" HREF="mailto:hackers@FreeBSD.org">
+</HEAD>
+
+<BODY>
+
+<!-- INDEX BEGIN -->
+<!--
+
+<UL>
+
+	<LI><A HREF="#NAME">NAME</A>
+	<LI><A HREF="#TARGET">TARGET</A>
+	<LI><A HREF="#SYNOPSIS">SYNOPSIS</A>
+	<LI><A HREF="#INITIALIZATION">INITIALIZATION</A>
+	<LI><A HREF="#TEST_PROCEDURE">TEST PROCEDURE</A>
+	<LI><A HREF="#SEE_ALSO">SEE ALSO</A>
+</UL>
+-->
+<!-- INDEX END -->
+
+<P>
+<H1><A NAME="NAME">NAME</A></H1>
+<P>
+<PRE>        automatic_encapsulation_router.seq - Verify that encapsulation a 
+        IPv6 datagram in the automatic tunneling of IPv6 over IPv4 
+</PRE>
+<P>
+<HR>
+<H1><A NAME="TARGET">TARGET</A></H1>
+<P>
+<PRE>        Router
+</PRE>
+<P>
+<HR>
+<H1><A NAME="SYNOPSIS">SYNOPSIS</A></H1>
+<P>
+<PRE>        automatic_encapsulation_router.seq [-tooloption ...] -p 
+        automatic_encapsulation_router.def
+</PRE>
+<P>
+<HR>
+<H1><A NAME="INITIALIZATION">INITIALIZATION</A></H1>
+<PRE>
+	Before this test starts, run <A HREF="./initialize.html">initialize.seq</A>.
+</PRE>
+
+<P>
+<HR>
+<H1><A NAME="TEST_PROCEDURE">TEST PROCEDURE</A></H1>
+<P>
+<PRE>        This test verifies that NUT encapsulates the IPv6 packet in 
+        automatic tunneling of IPv6 over IPv4.
+        
+        Network Topology
+</PRE>
+<P>
+<PRE>        Link0
+        --------------------------
+            |               |
+           TN              NUT
+            |               |
+        --------------------------
+        Link1
+</PRE>
+<P>
+<PRE>        TN -- (Link0) -- NUT        TN -- (Link1) -- NUT
+        
+        ---------------------      ------------------------
+</PRE>
+<P>
+<PRE>        1.
+        ===================&gt;
+        ICMPv6 Echo Request
+                IPv6 Header
+                        src address : TN LINK0 IPv4 compatible IPv6 address
+                        dst address : Off-link IPv4 compatible IPv6 address
+</PRE>
+<P>
+<PRE>        2.
+        &lt;&lt;JUDGMENT&gt;&gt;
+                                &lt;===================
+        IPv4 packet encapsulating IPv6 packet
+                Outer Header (IPv4)
+                        src address : NUT's Link1 IPv6 address
+                        dst address : Off-link IPv6 address
+                Inner Header (IPv6)
+                        src address : TN LINK0 IPv4 compatible IPv6 address
+                        dst address : Off-link IPv4 compatible IPv6 address
+         
+=head1 JUDGMENT
+</PRE>
+<P>
+<PRE>        &lt;&lt; PASS &gt;&gt;
+                NUT received IPv4 packet encapsulating IPv6 datagram
+                
+</PRE>
+<P>
+<PRE>        &lt;&lt; FAIL &gt;&gt;      
+                NUT did not receive IPv4 packet encapsulating IPv6 datagram
+</PRE>
+<P>
+<HR>
+<H1><A NAME="SEE_ALSO">SEE ALSO</A></H1>
+<P>
+<PRE>        perldoc V6evalTool
+</PRE>
+</BODY>
+
+</HTML>

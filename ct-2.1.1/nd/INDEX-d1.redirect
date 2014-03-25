@@ -1,0 +1,28 @@
+#
+# $Name: REL_2_1_1 $
+#
+&print:3.  Redirect
+#
+&print:3.1. Sending Redirect (Host Only)
+#
+&print:3.2. Receiving Redirect (Host Only)
+&#./ncStateByRedirect4Nonce.seq:./ncStateByRedirect4Nonce.def:::Redirect vs NONCE
+&#./ncStateByRedirect4Incomplete.seq:./ncStateByRedirect4Incomplete.def:::Redirect vs INCOMPLETE
+&#./ncStateByRedirect4Reachable.seq:./ncStateByRedirect4Reachable.def:::Redirect vs REACHABLE
+&#./ncStateByRedirect4Stale.seq:./ncStateByRedirect4Stale.def:::Redirect vs STALE
+&#./ncStateByRedirect4Probe.seq:./ncStateByRedirect4Probe.def:::Redirect vs PROBE
+&#./hostRecvRedirectInvalid.seq:./hostRecvRedirectInvalid.def:::Invalid Redirect vs Neighbor Cache State
+&#./hostRecvRedirect4OnlinkDC.seq:./hostRecvRedirect4OnlinkDC.def:::Redirect vs Destination Cache; Redirect to a host
+&#./hostRecvRedirect4OfflinkDC.seq:./hostRecvRedirect4OfflinkDC.def:::Redirect vs Destination Cache; Redirect to a better router
+&#./hostRecvRedirect4OnlinkNUD.seq:./hostRecvRedirect4OnlinkNUD.def:::Redirect vs Neighbor Unreachability Detection; Redirect to a host
+&#./hostRecvRedirect4OfflinkNUD.seq:./hostRecvRedirect4OfflinkNUD.def:::Redirect vs Neighbor Unreachability Detection; Redirect to a better router
+&#./hostRecvRedirect4RFlag.seq:./hostRecvRedirect4RFlag.def:::Redirect vs NA w/ RFlag=0 #1
+&#./hostRecvRedirect4RFlag2.seq:./hostRecvRedirect4RFlag2.def:::Redirect vs NA w/ RFlag=0 #2
+&#./hostRecvRedirect4RouterLifetime0.seq:./hostRecvRedirect4RouterLifetime0.def:::Redirect vs RA w/ RouterLifetime=0 #1
+&#./hostRecvRedirect4RouterLifetime02.seq:./hostRecvRedirect4RouterLifetime02.def:::Redirect vs RA w/ RouterLifetime=0 #2
+&#./hostRecvRedirect4Nonce.seq:./hostRecvRedirect4Nonce.def:::Redirect vs NONCE
+#
+&print:3.3. Sending Redirect (Router Only)
+#
+&print:3.4. Receiving Redirect (Router Only)
+# EOF

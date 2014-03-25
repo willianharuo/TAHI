@@ -1,0 +1,991 @@
+#!/usr/bin/perl
+#
+# Copyright (C) 2006 Yokogawa Electric Corporation.
+# All rights reserved.
+# 
+# Redistribution and use of this software in source and binary
+# forms, with or without modification, are permitted provided that
+# the following conditions and disclaimer are agreed and accepted
+# by the user:
+# 
+# 1. Redistributions of source code must retain the above copyright
+#    notice, this list of conditions and the following disclaimer.
+# 
+# 2. Redistributions in binary form must reproduce the above copyright
+#    notice, this list of conditions and the following disclaimer in
+#    the documentation and/or other materials provided with
+#    the distribution.
+# 
+# 3. Neither the names of the copyrighters, the name of the project
+#    which is related to this software (hereinafter referred to as
+#    "project") nor the names of the contributors may be used to
+#    endorse or promote products derived from this software without
+#    specific prior written permission.
+# 
+# 4. No merchantable use may be permitted without prior written
+#    notification to the copyrighters.
+# 
+# 5. The copyrighters, the project and the contributors may prohibit
+#    the use of this software at any time.
+# 
+# THIS SOFTWARE IS PROVIDED BY THE COPYRIGHTERS, THE PROJECT AND
+# CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING
+# BUT NOT LIMITED THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS
+# FOR A PARTICULAR PURPOSE, ARE DISCLAIMED.  IN NO EVENT SHALL THE
+# COPYRIGHTERS, THE PROJECT OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT,
+# INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
+# (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+# SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
+# HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT,
+# STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING
+# IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+# POSSIBILITY OF SUCH DAMAGE.
+#
+# $TAHI: ct-dns/dns/CL/CL_RFC3403_4_NAPTR_preference.seq,v 1.1.1.1 2006/06/02 05:15:42 akisada Exp $
+# $Id: CL_RFC3403_4_NAPTR_preference.seq,v 1.1.1.1 2006/06/02 05:15:42 akisada Exp $
+#
+######################################################################
+
+BEGIN {
+        $kCommon::TestVersion = '$Name: REL_1_1_1 $';
+        push( @INC, '/usr/local/koi/libdata' );
+        push( @INC, '..' );
+}
+
+END {
+}
+
+# use strict;
+use DNS;
+
+#------------------------------#
+# Query configuration          #
+#------------------------------#
+my $QueryConfig_1={ 
+#mode
+	'ModeRemoteAsync' => 'yes',
+	'ModeRequiredTestMode' => 'client',
+	'ModeManualNoPause' => 'yes',
+#query
+	'QueryAppType' => $APP_TYPE,
+	'Query0Mode' => 'sip',
+	'Query0Addr0' => $TN_NET1_NODE2_ADDR,
+	'Query0Protocol' => 'UDP',
+	'Query0Tries' => $RETRANSMIT_COUNT_CLIENT,
+	'Query0AUS' => '+81-90-1111-0001',
+	'Query0KEY' => '819011110001',
+	'Query0Type' => 'NAPTR',
+	'Query0Class' => 'IN',
+	'Query0Value' => '1.0.0.0.1.1.1.1.0.9.1.8.e164.arpa',   
+};
+
+################################
+# configuration                #
+################################
+my @dns_session_config = ();
+my $dns_param          = { 'dns_session_config' => \@dns_session_config };
+
+$dns_session_config[0] = {
+        'TN_INTERFACE'   => 'Link0',
+        'TN_ADDR'        => $TN_NET1_NODE2_ADDR,
+        'TN_ADDR_PORT'   => $TN_SV_PORT,
+        'TN_ADDR_PROTO'  => 'UDP',
+        'TN_ADDR_FAMILY' => $ADDR_FAMILY,
+        'NUT_ADDR'       => $NUT_ADDR_0,
+        'NUT_ADDR_PORT'  => $NUT_SV_PORT
+};
+
+$dns_session_config[1] = {
+        'TN_INTERFACE'   => 'Link0',
+        'TN_ADDR'        => $TN_NET1_NODE2_ADDR,
+        'TN_ADDR_PORT'   => $TN_SIP_PORT,
+        'TN_ADDR_PROTO'  => 'UDP',
+	'TN_ADDR_FRAME'  => 'SIP',
+        'TN_ADDR_FAMILY' => $ADDR_FAMILY,
+        'NUT_ADDR'       => $NUT_ADDR_0,
+        'NUT_ADDR_PORT'  => $NUT_SV_PORT,
+	'MODE_LISTEN'    => 'yes'
+};
+
+my @dns_session   = ();
+my @gen_dns_msg_0 = ();
+my @exp_dns_msg_0 = ();
+
+$dns_session[0] = {
+        'socket_ref'      => undef,
+        'dns_one_session' => [
+			      {
+                        'gen_dns_msg' => \@gen_dns_msg_0,
+                        'dec_dns_msg' => undef,
+                        'exp_dns_msg' => \@exp_dns_msg_0
+                }
+        ]
+};
+
+$dns_session[1] = {
+        'socket_ref'      => undef,
+        'dns_one_session' => [
+			      {
+                        'gen_dns_msg' => undef,
+                        'dec_dns_msg' => undef,
+                        'exp_dns_msg' => undef,
+                }
+        ]
+};
+
+#--------------------------
+# Send packet definition
+#--------------------------
+#--------------------------
+# 2nd ( TN(NS1)->NUT )
+#--------------------------
+$gen_dns_msg_0[0]->{'header'} = {
+        'id'      => undef,
+        'qr'      => 1,
+        'opcode'  => 0,
+        'aa'      => 1,
+        'tc'      => 0,
+        'rd'      => 0,
+        'ra'      => 0,
+        'z'       => 0,
+        'rcode'   => 0,
+        'qdcount' => 1,
+        'ancount' => 2,
+        'nscount' => 1,
+        'arcount' => 2,
+};
+
+$gen_dns_msg_0[0]->{'question'}->[0] = {
+        # 2nd packet question
+        'qname'  => Gen_DNS_Name('1.0.0.0.1.1.1.1.0.9.1.8.e164.arpa.'),
+        'qtype'  => 0x0023, #NAPTR
+        'qclass' => 0x0001,
+};
+
+$gen_dns_msg_0[0]->{'answer'}->[0] = {
+        # 2nd packet answer
+        'name'     => Gen_DNS_Name( '', 0xC00C ),
+        'type'     => 0x0023, #NAPTR
+        'class'    => 0x0001,
+        'ttl'      => 86400,
+        'rdlength' => 45,
+        'rdata'    => Gen_DNS_RDATA_NAPTR(
+					  100,               #ORDER
+					  11,                #PREFERENCE
+					  'U',               #FLAG
+					  'E2U+sip',         #SERVICES
+					  '!^.*$!sip:info1@example.com!i', #REGEXP
+					  Gen_DNS_Name(''),  #REPLACEMENT
+	),
+};
+
+$gen_dns_msg_0[0]->{'answer'}->[1] = {
+        # 2nd packet answer
+        'name'     => Gen_DNS_Name( '', 0xC00C ),
+        'type'     => 0x0023, #NAPTR
+        'class'    => 0x0001,
+        'ttl'      => 86400,
+        'rdlength' => 45,
+        'rdata'    => Gen_DNS_RDATA_NAPTR(
+					  100,               #ORDER
+					  10,                #PREFERENCE
+					  'U',               #FLAG
+					  'E2U+sip',         #SERVICES
+					  '!^.*$!sip:info2@example.com!i', #REGEXP
+					  Gen_DNS_Name(''),  #REPLACEMENT
+					 ),
+};
+
+$gen_dns_msg_0[0]->{'authority'}->[0] = {
+
+        # 2nd packet
+        'name'     => Gen_DNS_Name( '',    0xC014 ),
+        'type'     => 0x0002,
+        'class'    => 0x0001,
+        'ttl'      => 86400,
+        'rdlength' => 17,
+        'rdata'    => Gen_DNS_Name('NS1.example.com'),
+};
+
+$gen_dns_msg_0[0]->{'additional'}->[0] = {
+
+        # 2nd packet
+        'name'     => Gen_DNS_Name( '', 0xC0B1 ),
+        'type'     => 0x0001,
+        'class'    => 0x0001,
+        'ttl'      => 86400,
+        'rdlength' => 4,
+        'rdata'    => Gen_DNS_RDATA_A('192.168.1.20'),
+};
+
+$gen_dns_msg_0[0]->{'additional'}->[1] = {
+
+        # 2nd packet
+        'name'     => Gen_DNS_Name( '', 0xC0B1 ),
+        'type'     => 0x001c, #AAAA
+        'class'    => 0x0001,
+        'ttl'      => 86400,
+        'rdlength' => 16,
+        'rdata'    => Gen_DNS_RDATA_AAAA('3ffe:501:ffff:101::20'),
+};
+
+################################
+# expected packet definition   #
+################################
+#-----------------------
+# 1st ( NUT->TN(NS1) )
+#-----------------------
+$exp_dns_msg_0[0]->{'header'} = {
+
+        # 1st packet header
+        'id'      => undef,
+        'qr'      => 0,
+        'opcode'  => 0,
+        'aa'      => 0,
+        'tc'      => 0,
+        'rd'      => undef,
+        'ra'      => 0,
+        'z'       => 0,
+        'rcode'   => 0,
+        'qdcount' => 1,
+        'ancount' => 0,
+        'nscount' => 0,
+        'arcount' => undef,
+};
+
+$exp_dns_msg_0[0]->{'question'}->[0] = {
+        'qname'  => '1.0.0.0.1.1.1.1.0.9.1.8.e164.arpa.',
+        'qtype'  => 0x0023, #NAPTR
+        'qclass' => 0x0001,
+};
+
+################################
+# start tests                  #
+################################
+Print_Message(
+        "=",
+        [
+                "Setup\n",
+		"\tConfigure your resolve.conf as follows:\n",
+		"\t\t192.168.1.20 (IPv4) or 3ffe:501:ffff:101::20 (IPv6)\n\n",
+                "\tIf DNS Client1 (NUT) use a SIP user agent as DDDS application, then set up SIP Proxy address:\n",
+                "\t192.168.1.20 (IPv4) or 3ffe:501:ffff:101::20 (IPv6).\n\n",
+                "\tApplication Unique String (AUS): +81-90-1111-0001\n",
+                "\tConverted to the Key: 819011110001\n",
+                "\tUsed domain-name to retrieve Rewrite Rules as NAPTR records: 1.0.0.0.1.1.1.1.0.9.1.8.e164.arpa.\n",
+        ]
+);
+
+my $ret = DNSStartConnect( $dns_param, \@dns_session );
+
+unless ( defined($ret) ) {
+        Debug_Print("ERROR:DNSStartConnect\n");
+        DNSExit($FAIL);
+}
+
+#------------------------------#
+# Send Query from Nut          #
+#------------------------------#
+my $remoteRet = DNSRemote("runquery.rmt",$QueryConfig_1);
+unless ( defined($remoteRet) ) {
+        Debug_Print("ERROR:DNSRemote\n");
+        DNSExit($FAIL);
+}
+
+Print_Message(
+        "=",
+        [
+                "Invoke some application\n",
+                "\tEx\n",
+                "\tCall number +81-90-1111-0001 by SIP UA\n",
+        ]
+);
+
+#------------------------------#
+# 1st test (receive)           #
+#------------------------------#
+$ret = undef;
+$ret = DNSRecv(
+        1, 60,
+        $dns_session[0]->{'socket_ref'},
+        $dns_session[0]->{'dns_one_session'}->[0]
+);
+
+unless ( defined($ret) ) {
+        Debug_Print("ERROR: Can't receive DNS message\n");
+        DNSExit($FAIL);
+}
+
+Print_Message( "=", ["Receive 1st message\n"] );
+
+#------------------------------#
+# Judgment (1st test)          #
+#------------------------------#
+Print_Message(
+        "#",
+        [
+                "Judgment (1st packet)\n",
+                "1. check Standard query format for NAPTR type.\n",
+        ]
+);
+
+my $recv_data = $dns_session[0]->{'dns_one_session'}->[0]->{'dec_dns_msg'}->[0];
+
+$ret = undef;
+$ret = JudgeDNSMsg( $recv_data, $exp_dns_msg_0[0] );
+
+unless ( defined($ret) ) {
+        DNSExit($FAIL);
+}
+
+Print_Message( "=", ["1st packet PASS\n"] );
+
+#------------------------------#
+# 2nd packet (send)            #
+#------------------------------#
+#-------------------------------
+# Copy Header RD and ID from NUT query
+#-------------------------------
+$gen_dns_msg_0[0]->{'header'}->{'id'} = $recv_data->{'header'}->{'id'};
+$gen_dns_msg_0[0]->{'header'}->{'rd'} = $recv_data->{'header'}->{'rd'};
+
+$ret = undef;
+$ret = DNSSend(
+        1,
+        $dns_session[0]->{'socket_ref'},
+        $dns_session[0]->{'dns_one_session'}->[0]
+);
+
+unless ( defined($ret) ) {
+        Debug_Print("ERROR: Can't send DNS message\n");
+        DNSExit($FAIL);
+}
+
+#------------------------------#
+# 3rd packet (receive)         #
+#------------------------------#
+# XYZ $DEC_MESSAGE_TYPE parametor is temporary.
+$DEC_MESSAGE_TYPE = $dns_session_config[1]->{'TN_ADDR_FRAME'};
+$ret = undef;
+$ret = DNSRecv(
+        1, 30,
+        $dns_session[1]->{'socket_ref'},
+        $dns_session[1]->{'dns_one_session'}->[0]
+);
+
+unless ( defined($ret) ) {
+        Debug_Print("ERROR: Can't receive DNS message\n");
+        DNSExit($FAIL);
+}
+
+#Print_Message( "=", ["Receive 3rd message\n"] );
+#------------------------------#
+# Judgment (3rd packet)        #
+#------------------------------#
+Print_Message(
+        "#",
+        [
+		"Judgment (3rd packet)\n",
+		"3. Received the SIP message in response to NAPTR RR of PREFERENCE=10.\n"
+        ]
+);
+
+$recv_data = $dns_session[1]->{'dns_one_session'}->[0]->{'raw_dns_msg'}->[0];
+
+my $match_string = 'INVITE sip:info2@example.com SIP\/2.0';
+
+if($recv_data =~ m/$match_string/){
+	Print_Message( "=", ["OK recv msg containing $match_string\n"] );
+}else{
+        Debug_Print("ERROR: Can't receive msg containing $match_string\n");
+        DNSExit($FAIL);
+}
+# XYZ $DEC_MESSAGE_TYPE parametor is temporary
+$DEC_MESSAGE_TYPE = undef;
+
+Print_Message( "=", ["3rd packet PASS\n"] );
+Print_Message( "=", ["Preference comparison test is PASS\n"] );
+
+
+#NOTREACHED
+
+DNSExit($OK);
+__END__
+#####################################################################################
+
+=head1 NAME
+
+	CL_RFC3403_4_NAPTR_preference - Preference comparison
+
+=head1 VERIFICATION POINTS
+
+	Verify a NUT process when NUT received message that includes multiple Naming Authority 
+	Pointer (NAPTR) Resource Records (RR) containing different preference.
+
+=begin html
+	<UL>
+        <DD><LI>PREFERENCE
+	<UL>
+        <DD>   Although it is called "preference" in deference to DNS
+        <DD>   terminology, this field is equivalent to the Priority value in the
+        <DD>   DDDS Algorithm.  It is a 16-bit unsigned integer that specifies
+        <DD>   the order in which NAPTR records with equal Order values SHOULD be
+        <DD>   processed, low numbers being processed before high numbers.  This
+        <DD>   is similar to the preference field in an MX record, and is used so
+        <DD>   domain administrators can direct clients towards more capable
+        <DD>   hosts or lighter weight protocols.  A client MAY look at records
+        <DD>   with higher preference values if it has a good reason to do so
+        <DD>   such as not supporting some protocol or service very well.
+	</UL>
+        </LI>
+	<BR>
+        <DD><LI>When multiple RRs have the same "order" and all other criteria being
+        <DD>equal, the client should use the value of the preference field to
+        <DD>select the next NAPTR to consider.  However, because it will often be
+        <DD>the case where preferred protocols or services exist, clients may use
+        <DD>this additional criteria to sort the records.
+	</LI>
+	</UL>
+
+=end html
+
+=head1 TARGET
+
+	Client (ADVANCED)
+
+=head1 SYNOPSIS
+
+=begin html
+<PRE>
+	<A HREF="./CL_RFC3403_4_NAPTR_preference.seq">CL_RFC3403_4_NAPTR_preference.seq</A> [-tooloption ...]: KOI tool option
+	See also <A HREF="../DNSConfig.pm">DNSConfig.pm</A>
+</PRE>
+
+=end html
+
+=head1 INITIALIZATION
+
+=begin html
+	<ul>
+	<li><STRONG>Network Topology</STRONG></li> 
+	<PRE>
+        AP Server1(TN):A.example.com     DNS Server1(TN)
+          |3ffe:501:ffff:101::10           |3ffe:501:ffff:101::20
+          |192.168.1.10                    |192.168.1.20
+          |                                |
+Net-y   --+--------+-----------------------+-------- 3ffe:501:ffff:101::/64 
+                   |                                 192.168.1/24
+                   |
+                   |
+                 ROUTER1(TN)
+                   |3ffe:501:ffff:100::1
+                   |192.168.0.1
+                   |
+Net-z   --+--------+-------------------------------- 3ffe:501:ffff:100::/64 
+          |                                          192.168.0/24
+        DNS Client1(NUT)
+           3ffe:501:ffff:100:XXXX
+           192.168.0.10
+	<BR>
+	XXXX: EUI64 address
+	</PRE>
+	<p></p>
+	<li><STRONG>Setup</STRONG></li>
+	<PRE>
+	Set the DNS Server1 (TN)'s address on DNS Client1 (NUT) as above mentioned Network Topology.
+	If NUT use a SIP user agent as DDDS application, then set up SIP Proxy address:
+	192.168.1.20 (IPv4) or 3ffe:501:ffff:101::20 (IPv6).
+	<BR>
+	Application Unique String (AUS): +81-90-1111-0001
+	Converted to the Key: 819011110001
+	Used domain-name to retrieve Rewrite Rules as NAPTR records: 1.0.0.0.1.1.1.1.0.9.1.8.e164.arpa.
+	</PRE>
+	</UL>
+
+=end html
+
+=head1 TEST PROCEDURE
+
+	This test sequence is following.
+
+    DNS Client1 (NUT)                               DNS Server1 (TN)
+        |                                               |
+        | Invoke some application                       |
+        |    on NUT (Ex. SIP UA)                        |
+        |                                               |
+        |---------------------------------------------->|
+        | 1. Send standard query                        |
+        |    QNAME="1.0.0.0.1.1.1.1.0.9.1.8.e164.arpa." |
+        |    QTYPE=NAPTR                                |  
+        |                                               |
+        |<----------------------------------------------|
+        | 2. Send standard response                     |
+        |                                               |
+        |                                               |
+        |---------------------------------------------->|
+        | 3. Request packet from some application       |
+        |    Ex. SIP UA)                                |
+        |    INVITE sip:info2@example.com to SIP Proxy  |
+        |                                               |
+        v                                               v
+
+	1. DNS Client (NUT) sends a standard query with QNAME = "1.0.0.0.1.1.1.1.0.9.1.8.e164.arpa." type NAPTR 
+	2. DNS Server1 (NUT) transmits a response to DNS Client1 (NUT) with:
+
+	   $ORIGIN 1.0.0.0.1.1.1.1.0.9.1.8.e164.arpa.
+            ;;       order pref flags service    regexp                              replacement
+	    IN NAPTR 100   11   "u"   "E2U+sip"  "!^.*$!sip:info1@example.com!i"     .
+	    IN NAPTR 100   10   "u"   "E2U+sip"  "!^.*$!sip:info2@example.com!i"     .
+
+	3. DNS Client (NUT) sends request packet to SIP Proxy in resposne to NAPTR record. Judgment (Check *3)
+
+=begin html
+	<UL>
+	<DD><LI>Packet Description</LI><BR>
+	<BR>
+	<DD>1st packet.
+	<P></P>
+	<DD><TABLE BORDER="1">
+		<TBODY>
+		<TR>
+			<TD COLSPAN="3">
+			<CENTER>Standard query from DNS Client1 (NUT) to Server1 (TN) </CENTER>
+			</TD>
+		</TR>
+		<TR>
+			<TD ROWSPAN="2">IP Header</TD>
+			<TD>Source Address</TD>
+			<TD>NUT_NETZ</TD>
+		</TR>
+		<TR>
+			<TD>Destination Address</TD>
+			<TD>SV1_NETY</TD>
+		</TR>
+		<TR>
+			<TD COLSPAN="1" ROWSPAN="2">UDP Header</TD>
+			<TD>Src Port</TD>
+			<TD>ANY</TD>
+		</TR>
+		<TR>
+			<TD>Dst Port</TD>
+			<TD>53</TD>
+		</TR>
+		<TR>
+			<TD COLSPAN="1" ROWSPAN="13">DNS Header</TD>
+			<TD>ID</TD>
+			<TD>ANY</TD>
+		</TR>
+		<TR>
+			<TD>QR</TD>
+			<TD>0</TD>
+		</TR>
+		<TR>
+			<TD>OPCODE</TD>
+			<TD>0</TD>
+		</TR>
+		<TR>
+			<TD>AA</TD>
+			<TD>0</TD>
+		</TR>
+		<TR>
+			<TD>TC</TD>
+			<TD>0</TD>
+		</TR>
+		<TR>
+			<TD>RD</TD>
+			<TD>0</TD>
+		</TR>
+		<TR>
+			<TD>RA</TD>
+			<TD>0</TD>
+		</TR>
+		<TR>
+			<TD>Z</TD>
+			<TD>0</TD>
+		</TR>
+		<TR>
+			<TD>RCODE</TD>
+			<TD>0</TD>
+		</TR>
+		<TR>
+			<TD>QDCOUNT</TD>
+			<TD>1</TD>
+		</TR>
+		<TR>
+			<TD>ANCOUNT</TD>
+			<TD>0</TD>
+		</TR>
+		<TR>
+			<TD>NSCOUNT</TD>
+			<TD>0</TD>
+		</TR>
+		<TR>
+			<TD>ARCOUNT</TD>
+			<TD>0</TD>
+		</TR>
+		<TR>
+			<TD COLSPAN="1" ROWSPAN="3">DNS Question section</TD>
+			<TD>QNAME</TD>
+			<TD>1.0.0.0.1.1.1.1.0.9.1.8.e164.arpa.</TD>
+		</TR>
+		<TR>
+			<TD>QTYPE</TD>
+			<TD>NAPTR (0x0023)</TD>
+		</TR>
+		<TR>
+			<TD>QCLASS</TD>
+			<TD>IN (0x0001)</TD>
+		</TR>
+		</TBODY>
+	</TABLE>
+	<BR>
+	<DD>2nd packet.
+	<P></P>
+	<DD><TABLE BORDER="1">
+		<TBODY>
+		<TR>
+			<TD COLSPAN="3">
+			<CENTER>Standard query response from DNS Server1 (TN) to Client1 (NUT)</CENTER>
+			</TD>
+		</TR>
+		<TR>
+			<TD ROWSPAN="2">IP Header</TD>
+			<TD>Source Address</TD>
+			<TD>SV1_NETY</TD>
+		</TR>
+		<TR>
+			<TD>Destination Address</TD>
+			<TD>NUT_NETZ</TD>
+		</TR>
+		<TR>
+			<TD COLSPAN="1" ROWSPAN="2">UDP Header</TD>
+			<TD>Src Port</TD>
+			<TD>53</TD>
+		</TR>
+		<TR>
+			<TD>Dst Port</TD>
+			<TD>Value that NUT uses</TD>
+		</TR>
+		<TR>
+			<TD COLSPAN="1" ROWSPAN="13">DNS Header</TD>
+			<TD>ID</TD>
+			<TD>Value that NUT uses</TD>
+		</TR>
+		<TR>
+			<TD>QR</TD>
+			<TD>1</TD>
+		</TR>
+		<TR>
+			<TD>OPCODE</TD>
+			<TD>0</TD>
+		</TR>
+		<TR>
+			<TD>AA</TD>
+			<TD>1</TD>
+		</TR>
+		<TR>
+			<TD>TC</TD>
+			<TD>0</TD>
+		</TR>
+		<TR>
+			<TD>RD</TD>
+			<TD>0</TD>
+		</TR>
+		<TR>
+			<TD>RA</TD>
+			<TD>0</TD>
+		</TR>
+		<TR>
+			<TD>Z</TD>
+			<TD>0</TD>
+		</TR>
+		<TR>
+			<TD>RCODE</TD>
+			<TD>0</TD>
+		</TR>
+		<TR>
+			<TD>QDCOUNT</TD>
+			<TD>1</TD>
+		</TR>
+		<TR>
+			<TD>ANCOUNT</TD>
+			<TD>2</TD>
+		</TR>
+		<TR>
+			<TD>NSCOUNT</TD>
+			<TD>1</TD>
+		</TR>
+		<TR>
+			<TD>ARCOUNT</TD>
+			<TD>2</TD>
+		</TR>
+		<TR>
+			<TD COLSPAN="1" ROWSPAN="3">DNS Question section</TD>
+			<TD>QNAME</TD>
+			<TD>1.0.0.0.1.1.1.1.0.9.1.8.e164.arpa.</TD>
+		</TR>
+		<TR>
+			<TD>QTYPE</TD>
+			<TD>NAPTR (0x0023)</TD>
+		</TR>
+		<TR>
+			<TD>QCLASS</TD>
+			<TD>IN (0x0001)</TD>
+		</TR>
+		<TR>
+			<TD COLSPAN="1" ROWSPAN="11">DNS Answer section</TD>
+			<TD>NAME</TD>
+			<TD>1.0.0.0.1.1.1.1.0.9.1.8.e164.arpa. (Pointer 0xC00C)</TD>
+		</TR>
+		<TR>
+			<TD>TYPE</TD>
+			<TD>NAPTR (0x0023)</TD>
+		</TR>
+		<TR>
+			<TD>CLASS</TD>
+			<TD>IN (0x0001)</TD>
+		</TR>
+		<TR>
+			<TD>TTL</TD>
+			<TD>86400sec</TD>
+		</TR>
+		<TR>
+			<TD>RDLENGTH</TD>
+			<TD>45</TD>
+		</TR>
+		<TR>
+			<TD>ORDER</TD>
+			<TD>100</TD>
+		</TR>
+		<TR>
+			<TD>PREFERENCE</TD>
+			<TD>11</TD>
+		</TR>
+		<TR>
+			<TD>FLAGS</TD>
+			<TD>U</TD>
+		</TR>
+		<TR>
+			<TD>SERVICES</TD>
+			<TD>E2U+sip</TD>
+		</TR>
+		<TR>
+			<TD>REGEXP</TD>
+			<TD>!^.*$!sip:info1@example.com!i</TD>
+		</TR>
+		<TR>
+			<TD>REPLACEMENT</TD>
+			<TD>.</TD>
+		</TR>
+		<TR>
+			<TD COLSPAN="1" ROWSPAN="11">DNS Answer section</TD>
+			<TD>NAME</TD>
+			<TD>1.0.0.0.1.1.1.1.0.9.1.8.e164.arpa. (Pointer 0xC00C)</TD>
+		</TR>
+		<TR>
+			<TD>TYPE</TD>
+			<TD>NAPTR (0x0023)</TD>
+		</TR>
+		<TR>
+			<TD>CLASS</TD>
+			<TD>IN (0x0001)</TD>
+		</TR>
+		<TR>
+			<TD>TTL</TD>
+			<TD>86400sec</TD>
+		</TR>
+		<TR>
+			<TD>RDLENGTH</TD>
+			<TD>45</TD>
+		</TR>
+		<TR>
+			<TD>ORDER</TD>
+			<TD>100</TD>
+		</TR>
+		<TR>
+			<TD>PREFERENCE</TD>
+			<TD>10</TD>
+		</TR>
+		<TR>
+			<TD>FLAGS</TD>
+			<TD>U</TD>
+		</TR>
+		<TR>
+			<TD>SERVICES</TD>
+			<TD>E2U+sip</TD>
+		</TR>
+		<TR>
+			<TD>REGEXP</TD>
+			<TD>!^.*$!sip:info2@example.com!i</TD>
+		</TR>
+		<TR>
+			<TD>REPLACEMENT</TD>
+			<TD>.</TD>
+		</TR>
+		<TR>
+			<TD COLSPAN="1" ROWSPAN="6">DNS Authority section</TD>
+			<TD>NAME</TD>
+			<TD>1.1.1.1.0.9.1.8.e164.arpa. (Pointer 0xC014)</TD>
+		</TR>
+		<TR>
+			<TD>TYPE</TD>
+			<TD>NS (0x0002)</TD>
+		</TR>
+		<TR>
+			<TD>CLASS</TD>
+			<TD>IN (0x0001)</TD>
+		</TR>
+		<TR>
+			<TD>TTL</TD>
+			<TD>86400sec</TD>
+		</TR>
+		<TR>
+			<TD>RDLENGTH</TD>
+			<TD>17</TD>
+		</TR>
+		<TR>
+			<TD>NSDNAME</TD>
+			<TD>NS1.example.com</TD>
+		</TR>
+		<TR>
+			<TD COLSPAN="1" ROWSPAN="6">DNS Additional section</TD>
+			<TD>NAME</TD>
+			<TD>NS1.example.com (Pointer 0xC0B1)</TD>
+		</TR>
+		<TR>
+			<TD>TYPE</TD>
+			<TD>A (0x0001)</TD>
+		</TR>
+		<TR>
+			<TD>CLASS</TD>
+			<TD>IN (0x0001)</TD>
+		</TR>
+		<TR>
+			<TD>TTL</TD>
+			<TD>86400sec</TD>
+		</TR>
+		<TR>
+			<TD>RDLENGTH</TD>
+			<TD>4</TD>
+		</TR>
+		<TR>
+			<TD>ADDRESS</TD>
+			<TD>192.168.1.20</TD>
+		</TR>
+		<TR>
+			<TD COLSPAN="1" ROWSPAN="6">DNS Additional section</TD>
+			<TD>NAME</TD>
+			<TD>NS1.example.com (Pointer 0xC0B1)</TD>
+		</TR>
+		<TR>
+			<TD>TYPE<BR>
+			</TD>
+			<TD>AAAA (0x001C)</TD>
+		</TR>
+		<TR>
+			<TD>CLASS</TD>
+			<TD>IN (0x0001)</TD>
+		</TR>
+		<TR>
+			<TD>TTL</TD>
+			<TD>86400sec</TD>
+		</TR>
+		<TR>
+			<TD>RDLENGTH</TD>
+			<TD>16</TD>
+		</TR>
+		<TR>
+			<TD>ADDRESS</TD>
+			<TD>3ffe:501:ffff:101::20</TD>
+		</TR>
+		</TBODY>
+	</TABLE>
+	<BR>
+	<DD>3rd packet.
+	<P></P>
+	<DD>If NUT uses a SIP UA.
+	<DD><TABLE BORDER="1">
+		<TBODY>
+		<TR>
+			<TD COLSPAN="3">
+			<CENTER>Request packet from DNS Client (NUT) to SIP Proxy (TN) </CENTER>
+			</TD>
+		</TR>
+		<TR>
+			<TD ROWSPAN="2">IP Header</TD>
+			<TD>Source Address</TD>
+			<TD>NUT_NETZ</TD>
+		</TR>
+		<TR>
+			<TD>Destination Address</TD>
+			<TD>SV1_NETY</TD>
+		</TR>
+		<TR>
+			<TD COLSPAN="1" ROWSPAN="2">UDP Header</TD>
+			<TD>Src Port</TD>
+			<TD>ANY</TD>
+		</TR>
+		<TR>
+			<TD>Dst Port</TD>
+			<TD>5060</TD>
+		</TR>
+			<TD COLSPAN="1" ROWSPAN="3">SIP message</TD>
+			<TD>Request-Line</TD>
+			<TD>INVITE sip:info2@example.com SIP/2.0</TD>
+		</TR>
+		<TR>
+			<TD>message-header</TD>
+			<TD>ANY</TD>
+		</TR>
+		<TR>
+			<TD>message-body</TD>
+			<TD>ANY</TD>
+		</TR>
+		</TBODY>
+	</TABLE>
+	<BR>
+	<BR>
+	<DD>Exp.
+	<BR>
+	<DD><TABLE BORDER="1">
+		<TBODY>
+		<TR>
+			<TD>NUT_NETZ</TD>
+			<TD>DNS Client1's (NUT) Net-z address</TD>
+		</TR>
+		<TR>
+			<TD>SV1_NETY</TD>
+			<TD>DNS Server1's (TN) Net-y address</TD>
+		</TR>
+		</TBODY>
+	</TABLE>
+	</UL>
+
+=end html
+
+=head1 JUDGMENT
+
+	3. Received the domain-name included in NAPTR RR of PREFERENCE=10.
+
+
+=head1 TERMINATION
+
+	If NUT has cache function, clear the cache.
+
+=head1 REFERENCE
+
+=begin html
+<PRE>
+	RFC3403 Dynamic Delegation Discovery System (DDDS)
+                Part Three: The Domain Name System (DNS) Database
+	        4. NAPTR RR Format 
+	        6. Example
+	        8. Notes
+        RFC3761 The E.164 to Uniform Resource Identifiers (URI)
+                Dynamic Delegation Discovery System (DDDS) Application (ENUM)
+
+</PRE>
+
+=end html
+
+=cut

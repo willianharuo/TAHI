@@ -1,0 +1,408 @@
+#!/usr/bin/perl
+#
+# Copyright (C) 1999, 2000, 2001, 2002, 2003 Yokogawa Electric Corporation,
+# IPA (Information-technology Promotion Agency, Japan).
+# All rights reserved.
+# 
+# Redistribution and use of this software in source and binary forms, with 
+# or without modification, are permitted provided that the following 
+# conditions and disclaimer are agreed and accepted by the user:
+# 
+# 1. Redistributions of source code must retain the above copyright 
+# notice, this list of conditions and the following disclaimer.
+# 
+# 2. Redistributions in binary form must reproduce the above copyright 
+# notice, this list of conditions and the following disclaimer in the 
+# documentation and/or other materials provided with the distribution.
+# 
+# 3. Neither the names of the copyrighters, the name of the project which 
+# is related to this software (hereinafter referred to as "project") nor 
+# the names of the contributors may be used to endorse or promote products 
+# derived from this software without specific prior written permission.
+# 
+# 4. No merchantable use may be permitted without prior written 
+# notification to the copyrighters. However, using this software for the 
+# purpose of testing or evaluating any products including merchantable 
+# products may be permitted without any notification to the copyrighters.
+# 
+# 
+# 
+# THIS SOFTWARE IS PROVIDED BY THE COPYRIGHTERS, THE PROJECT AND 
+# CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING 
+# BUT NOT LIMITED THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS 
+# FOR A PARTICULAR PURPOSE, ARE DISCLAIMED.  IN NO EVENT SHALL THE 
+# COPYRIGHTERS, THE PROJECT OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, 
+# INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES 
+# (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR 
+# SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) 
+# HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN 
+# CONTRACT,STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) 
+# ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF 
+# THE POSSIBILITY OF SUCH DAMAGE.
+#
+# $TAHI: ct/nd/routerRecvRs.seq,v 1.10 2002/02/27 01:08:28 masaxmasa Exp $
+
+########################################################################
+BEGIN { $V6evalTool::TestVersion = '$Name: REL_2_1_1 $ '; }
+ 
+use V6evalTool;
+use nd;
+use ra;
+
+ndOptions(@ARGV);
+
+# The following generate debugging messages.
+$nd::debug=$ndOpt_v|$ndOpt_vv;
+
+# You can specifies debug options to a remote control program.
+# If you want to know more detail, please see the following:
+# - V6evalTool.pm: perldoc V6evalTool
+# - V6evalRemote.pm: perldoc V6evalRemote
+$nd::remote_debug="-o1" if $ndOpt_vv;
+
+$IF=Link0;
+$exit_rtn=$V6evalTool::exitPass;
+$idx=0;
+$wait_ra=2;
+$wait_ras=$nd::MIN_DELAY_BETWEEN_RAS+1;
+
+#
+#
+#
+$type=$V6evalTool::NutDef{Type};
+if($type eq host) {
+    vLogHTML("This test is for the router only<BR>");
+    exit $V6evalTool::exitRouterOnly;
+}
+
+$type=$V6evalTool::NutDef{Type};
+if($type ne router) {
+    vLogHTML(ndErrmsg("ERROR: $V6evalTool::NutDef{Type}: ".
+		      "Unknown target type<BR>"));
+    exit $V6evalTool::exitFail;
+}
+
+if(raIsMarkDefaultRA() == 0) {
+    vLogHTML(ndErrmsg("ERROR: Need RA configuration<BR>"));
+    exit $V6evalTool::exitFail;
+}
+
+#
+#
+#
+$idx_ptn=0;
+$idx_msg=1;
+
+#
+@def_rs_unspec2allrouter=
+    (
+     'rs_unspec2allrouter',
+     'RS w/o SLL, src=unspecific',
+     );
+
+#
+@def_rs_tn2allrouter=
+    (
+     'rs_tn2allrouter',
+     'RS w/o SLL, src=link-local',
+     );
+
+#
+@def_rs_tn2allrouter_sll=
+    (
+     'rs_tn2allrouter_sll',
+     'RS w/ SLL, src=link-local',
+     );
+
+#
+@def_rs_tn2allrouter_invalid_hlimit=
+    (
+     'rs_tn2allrouter_invalid_hlimit',
+     'RS w/o SLL, hop limit!=255 (INVALID)',
+     );
+
+#
+@def_rs_tn2allrouter_invalid_chksum=
+    (
+     'rs_tn2allrouter_invalid_chksum',
+     'RS w/o SLL, invalid checksum (INVALID)',
+     );
+
+#
+@def_rs_tn2allrouter_invalid_icmpcode=
+    (
+     'rs_tn2allrouter_invalid_icmpcode',
+     'RS w/o SLL, icmp code!=0 (INVALID)',
+     );
+
+#
+@def_rs_unspec2allrouter_sll_invalid=
+    (
+     'rs_unspec2allrouter_sll_invalid',
+     'RS w/ SLL, src=unspecified (INVALID)',
+     );
+
+#
+#
+#
+@defs=
+    (
+     \@def_rs_unspec2allrouter,
+     \@def_rs_tn2allrouter,
+     \@def_rs_tn2allrouter_sll,
+     );
+
+#
+@invalid_defs=
+    (
+     \@def_rs_tn2allrouter_invalid_hlimit,
+     \@def_rs_tn2allrouter_invalid_chksum,
+     \@def_rs_tn2allrouter_invalid_icmpcode,
+     \@def_rs_unspec2allrouter_sll_invalid,
+     );
+
+#
+#
+#
+vCapture($IF);
+
+#
+#
+#
+$idx=0;
+foreach(@defs) {
+    $ptn=@$_[$idx_ptn];
+    $msg=@$_[$idx_msg];
+
+    vLogHTML("<HR><FONT SIZE=\"+2\">*** $msg ***<BR>");
+    $title{$idx}="<TD>$msg</TD><TD>exp:sending RA</TD>";
+
+    vLogHTML("<FONT SIZE=\"+1\">Initialization</FONT><BR>");
+    if(nd2NoNce($IF) != 0) {
+	$exit_rtn=$V6evalTool::exitFail;
+	$title{$idx}.="<TD>result:ERROR</TD>";
+    } else {
+	vLogHTML("<FONT SIZE=\"+1\">Test</FONT><BR>");
+	vClear($IF);
+	$pktdesc{$ptn}="Send $msg";
+	%ret=vSend($IF, $ptn);
+	if(raRecvDefaultRA($IF, $wait_ra, $ret{sentTime1}, 0, %ret2) != 0) {
+	    $title{$idx}.="<TD>result:sent RA</TD>";
+	    $result{$idx}=$V6evalTool::exitPass;
+	    vLogHTML("<A NAME=\"T$idx\">OK</A><BR>");
+	} else {
+	    $title{$idx}.="<TD>result:NOT sent RA</TD>";
+	    $result{$idx}=$V6evalTool::exitFail;
+	    $exit_rtn=$V6evalTool::exitFail;
+	    vLogHTML("<A NAME=\"T$idx\">".ndErrmsg(NG)."</A><BR>");
+	}
+    }
+    $idx++;
+    vSleep($wait_ras, "Wait for MIN_DELAY_BETWEEN_RAS (3 sec)");
+}
+
+#
+#
+#
+foreach(@invalid_defs) {
+    $ptn=@$_[$idx_ptn];
+    $msg=@$_[$idx_msg];
+
+    vLogHTML("<HR><FONT SIZE=\"+2\">*** $msg ***<BR>");
+    $title{$idx}="<TD>$msg</TD><TD>exp:NOT sending RA</TD>";
+
+    vLogHTML("<FONT SIZE=\"+1\">Initialization</FONT><BR>");
+    if(nd2NoNce($IF) != 0) {
+	$exit_rtn=$V6evalTool::exitFail;
+	$title{$idx}.="<TD>result:ERROR</TD>";
+    } else {
+	vLogHTML("<FONT SIZE=\"+1\">Test</FONT><BR>");
+	vClear($IF);
+	$pktdesc{$ptn}="Send $msg";
+	%ret=vSend($IF, $ptn);
+	if(raRecvAnyRA($IF, $wait_ra, $ret{sentTime1}, 0, %ret2) == 0) {
+	    $title{$idx}.="<TD>result:NOT sent RA</TD>";
+	    $result{$idx}=$V6evalTool::exitPass;
+	    vLogHTML("<A NAME=\"T$idx\">OK</A><BR>");
+	} else {
+	    vLogHTML(ndErrmsg("ERROR: ".
+			      "NUT sent RA in respond to invalid RS<BR>"));
+	    $title{$idx}.="<TD>result:sent RA</TD>";
+	    $result{$idx}=$V6evalTool::exitFail;
+	    $exit_rtn=$V6evalTool::exitFail;
+	    vLogHTML("<A NAME=\"T$idx\">".ndErrmsg(NG)."</A><BR>");
+	}
+    }
+    $idx++;
+    vSleep($wait_ras, "Wait for MIN_DELAY_BETWEEN_RAS (3 sec)");
+}
+$idx--;
+
+#
+#
+#
+@col=('PTN', 'EXP', 'RESULT');
+ndPrintSummaryHTML("*** Test Summary: Receiving RS vs Sending RA ***", @col,
+                   %title, %result, $idx);
+
+#
+#
+#
+exit $exit_rtn;
+
+########################################################################
+__END__
+
+=head1 NAME
+
+routerRecvRs - Verifying that NUT responds valid RSs
+
+=head1 TARGET
+
+  Router Only
+
+=head1 SYNOPSIS
+
+  routerRecvRs.seq [-tooloption ...] -p routerRecvRs.def
+
+=head1 INITIALIZATION
+
+  Clear NC state for TN.
+
+=head1 TEST PROCEDURE
+
+B<routerRecvRs> verifies that NUT responds valid RSs and ignores invalid RSs.
+
+=begin html
+<PRE>
+  TN               NUT
+  ----------------------
+  State: NONCE (for TN)
+<BR>
+  ==== valid/invalid RS ===>
+<BR>
+  <=== RA ====
+<BR>
+  Wait for MIN_DELAY_BETWEEN_RAS sec.
+</PRE>
+
+=end html
+
+=head1 JUDGMENT
+
+=begin html
+<PRE>
+  1. NUT must send a valid RA when received a valid RS.
+<BR>
+  ========================================+=================
+  RS				          | Expected RA
+  ========================================+=================
+  RS w/o SLL, src=unspecific	          | sending RA
+  ----------------------------------------+-----------------
+  RS w/o SLL, src=link-local	          | sending RA
+  ----------------------------------------+-----------------
+  RS w/ SLL,  src=link-local	          | sending RA
+  ----------------------------------------+-----------------
+  RS w/o SLL, hop *limit!=255 (INVALID)	  | NOT sending RA
+  ----------------------------------------+-----------------
+  RS w/o SLL, *invalid checksum	(INVALID) | NOT sending RA
+  ----------------------------------------+-----------------
+  RS w/o SLL, *icmp code!=0( INVALID)	  | NOT sending RA
+  ----------------------------------------+-----------------
+  RS *w/ SLL,  *src=unspecified (INVALID) | NOT sending RA
+  ========================================+=================
+<BR>
+  2. NUT sends the following RA that was configured by
+     <A HREF="startDefaultRA.html">the previous test</A>.
+<BR>
+  3. The received RA may have
+     - Source link-layer address option
+     - MUT option
+     - Prefix option
+</PRE>
+
+=end html
+
+=head1 TERMINATION
+
+  N/A
+
+=head1 NOTE
+
+  N/A
+
+=head1 REFERENCE
+
+=begin html
+<PRE>
+RFC2461
+<HR>
+4.3.  Neighbor Solicitation Message Format
+   IP Fields:
+<BR>
+      Source Address
+                     Either an address assigned to the interface from
+                     which this message is sent or (if Duplicate Address
+                     Detection is in progress [ADDRCONF]) the
+                     unspecified address.
+<BR>
+      Destination Address
+                     Either the solicited-node multicast address
+                     corresponding to the target address, or the target
+                     address.
+<BR>
+      Hop Limit      <B>255</B>
+<BR>
+      Authentication Header
+                     If a Security Association for the IP Authentication
+                     Header exists between the sender and the
+                     destination address, then the sender SHOULD include
+                     this header.
+<BR>
+   ICMP Fields:
+<BR>
+      Type           135
+<BR>
+      Code           0
+<BR>
+      Checksum       The ICMP checksum.  See [ICMPv6].
+<BR>
+      Reserved       This field is unused.  It MUST be initialized to
+                     zero by the sender and MUST be ignored by the
+                     receiver.
+<BR>
+      Target Address
+                     The IP address of the target of the solicitation.
+                     It MUST NOT be a multicast address.
+<BR>
+   Possible options:
+<BR>
+      Source link-layer address
+                     The link-layer address for the sender.  <B>MUST NOT be
+                     included when the source IP address is the
+                     unspecified address</B>.  Otherwise, on link layers
+                     that have addresses this option MUST be included in
+                     multicast solicitations and SHOULD be included in
+                     unicast solicitations.
+<BR>
+<HR>
+6.2.6.  Processing Router Solicitations
+<BR>
+   In addition to sending periodic, unsolicited advertisements, a router
+   sends advertisements in response to valid solicitations received on
+   an advertising interface.  <B>A router MAY choose to unicast the
+   response directly to the soliciting host's address (if the
+   solicitation's source address is not the unspecified address), but
+   the usual case is to multicast the response to the all-nodes group.</B>
+   In the latter case, the interface's interval timer is reset to a new
+   random value, as if an unsolicited advertisement had just been sent
+   (see Section 6.2.4).
+<HR>
+</PRE>
+
+=head1 SEE ALSO
+
+  perldoc V6evalTool
+  perldoc V6evalRemote
+
+=cut

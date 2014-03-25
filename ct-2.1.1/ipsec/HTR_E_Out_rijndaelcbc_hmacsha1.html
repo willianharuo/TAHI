@@ -1,0 +1,208 @@
+<HTML>
+<HEAD>
+<TITLE>HTR_E_Out_rijndaelcbc_hmacsha1 - Host Transport Mode ESP Outbound RIJNDAEL-CBC with HMAC-SHA1 authentication</TITLE>
+<LINK REV="made" HREF="mailto:hackers@FreeBSD.org">
+</HEAD>
+
+<BODY>
+
+<!-- INDEX BEGIN -->
+<!--
+
+<UL>
+
+	<LI><A HREF="#NAME">NAME</A>
+	<LI><A HREF="#TARGET">TARGET</A>
+	<LI><A HREF="#SYNOPSIS">SYNOPSIS</A>
+	<LI><A HREF="#INITIALIZATION">INITIALIZATION</A>
+	<LI><A HREF="#TEST_PROCEDURE">TEST PROCEDURE</A>
+	<LI><A HREF="#JUDGMENT">JUDGMENT</A>
+	<LI><A HREF="#SEE_ALSO">SEE ALSO</A>
+</UL>
+-->
+<!-- INDEX END -->
+
+<P>
+<H1><A NAME="NAME">NAME</A></H1>
+<P>
+<PRE>  HTR_E_Out_rijndaelcbc_hmacsha1 - Host Transport Mode ESP Outbound RIJNDAEL-CBC with HMAC-SHA1 authentication
+  
+</PRE>
+<P>
+<HR>
+<H1><A NAME="TARGET">TARGET</A></H1>
+<P>
+<PRE>  Host
+</PRE>
+<P>
+<HR>
+<H1><A NAME="SYNOPSIS">SYNOPSIS</A></H1>
+<PRE>
+  <A HREF="./HTR_E_Out_rijndaelcbc_hmacsha1.seq">HTR_E_Out_rijndaelcbc_hmacsha1.seq</A> [-tooloption ...] -pkt <A HREF="./HTR_E_rijndaelcbc_hmacsha1.def">HTR_E_rijndaelcbc_hmacsha1.def</A>
+    -tooloption : v6eval tool option
+  See also <A HREF="./HTR_E_common.def">HTR_E_common.def</A> and <A HREF="./HTR_common.def">HTR_common.def</A>
+</PRE>
+
+<P>
+<HR>
+<H1><A NAME="INITIALIZATION">INITIALIZATION</A></H1>
+<P>
+For details of Network Topology, see <A HREF="00README">00README</A>
+</P>
+<P>
+Set NUT's SAD and SPD as following:
+</P>
+<PRE>
+              NET5      NET3
+    HOST1_NET5 -- Router -- NUT
+         <----transport------
+</PRE>
+<P>
+Security Association Database (SAD)
+</P>
+<TABLE border="1">
+  <TR>
+    <TD>source address</TD>
+    <TD>NUT_NET3</TD></TR>
+  <TR>
+    <TD>destination address</TD>
+    <TD>HOST1_NET5</TD></TR>
+  <TR>
+    <TD>SPI</TD>
+    <TD>0x1000</TD></TR>
+  <TR>
+    <TD>mode</TD>
+    <TD>transport</TD></TR>
+  <TR>
+    <TD>protocol</TD>
+    <TD>ESP</TD></TR>
+  <TR>
+    <TD>ESP algorithm</TD>
+    <TD>RIJNDAEL-CBC</TD></TR>
+  <TR>
+    <TD>ESP algorithm key</TD>
+    <TD>TAHITEST89ABCDEF</TD></TR>
+  <TR>
+    <TD>ESP authentication</TD>
+    <TD>HMAC-SHA1</TD></TR>
+  <TR>
+    <TD>ESP authentication key</TD>
+    <TD>TAHITEST89ABCDEF0123</TD></TR>
+</TABLE>
+<P>
+Security Policy Database (SPD)
+</P>
+<TABLE border="1">
+  <TR>
+    <TD>source address</TD>
+    <TD>NUT_NET3</TD></TR>
+  <TR>
+    <TD>destination address</TD>
+    <TD>HOST1_NET5</TD></TR>
+  <TR>
+    <TD>upper spec</TD>
+    <TD>any</TD></TR>
+  <TR>
+    <TD>direction</TD>
+    <TD>out</TD></TR>
+  <TR>
+    <TD>protocol</TD>
+    <TD>ESP</TD></TR>
+  <TR>
+    <TD>mode</TD>
+    <TD>transport</TD></TR>
+</TABLE>
+
+<P>
+<HR>
+<H1><A NAME="TEST_PROCEDURE">TEST PROCEDURE</A></H1>
+<PRE>
+ Tester                      Target
+   |                           |
+   |-------------------------->|
+   |      ICMP Echo Request    |
+   |                           |
+   |<--------------------------|
+   |      ICMP Echo Reply      |
+   |        (with ESP)         |
+   |                           |
+   v                           v
+</PRE>
+<OL>
+  <LI>Send ICMP Echo Request
+  <LI>Receive ICMP Echo Reply with ESP
+</OL>
+<P>
+ICMP Echo Request
+</P>
+<TABLE border="1">
+  <TR>
+    <TD>IP Header</TD>
+    <TD>Source Address</TD>
+    <TD>HOST1_NET5</TD></TR>
+  <TR>
+    <TD></TD>
+    <TD>Destination Address</TD>
+    <TD>NUT_NET3</TD></TR>
+  <TR>
+    <TD>ICMP</TD>
+    <TD>Type</TD>
+    <TD>128 (Echo Request)</TD></TR>
+</TABLE>
+<P>
+ICMP Echo Reply with ESP
+</P>
+<TABLE border="1">
+  <TR>
+    <TD>IP Header</TD>
+    <TD>Source Address</TD>
+    <TD>NUT_NET3</TD></TR>
+  <TR>
+    <TD></TD>
+    <TD>Destination Address</TD>
+    <TD>HOST1_NET5</TD></TR>
+  <TR>
+    <TD>ESP</TD>
+    <TD>SPI</TD>
+    <TD>0x1000</TD></TR>
+  <TR>
+    <TD></TD>
+    <TD>Algorithm</TD>
+    <TD>RIJNDAEL-CBC</TD></TR>
+  <TR>
+    <TD></TD>
+    <TD>Key</TD>
+    <TD>TAHITEST89ABCDEF</TD></TR>
+  <TR>
+    <TD></TD>
+    <TD>Authentication Algorithm</TD>
+    <TD>HMAC-SHA1</TD></TR>
+  <TR>
+    <TD></TD>
+    <TD>Authentication Key</TD>
+    <TD>TAHITEST89ABCDEF0123</TD></TR>
+  <TR>
+    <TD>ICMP</TD>
+    <TD>Type</TD>
+    <TD>129 (Echo Reply)</TD></TR>
+</TABLE>
+
+<P>
+<HR>
+<H1><A NAME="JUDGMENT">JUDGMENT</A></H1>
+<P>
+<PRE>  PASS: ICMP Echo Reply with ESP received
+</PRE>
+<P>
+<HR>
+<H1><A NAME="SEE_ALSO">SEE ALSO</A></H1>
+<P>
+<PRE>  perldoc V6evalTool
+</PRE>
+<PRE>
+  <A HREF="./IPSEC.html">IPSEC.html</A> IPsec Test Common Utility
+</PRE>
+
+</BODY>
+
+</HTML>

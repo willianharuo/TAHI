@@ -1,0 +1,18 @@
+#
+# $Name: REL_2_1_1 $
+#
+# $TAHI: ct/robust/INDEX,v 1.11 2001/10/05 06:39:14 masaxmasa Exp $
+#
+#<seq>:<def>:[<opt>]:[<log>]:<desc>
+#
+
+########################################################################
+&print:<B>Initialize</B>
+./Init.seq:/dev/null:::Copy initial target node configuration
+
+########################################################################
+&print:<B>Test</B>
+./FloodPing.seq:./ping.def:times=512::Flood Ping
+./FromManyNodes.seq:./ping.def:nodes=512::NCE, DCE memory management
+
+./FH_Overlap_UDP.seq:./FH_Overlap_UDP.def:::Fragment packets with Overlap data(UDP):

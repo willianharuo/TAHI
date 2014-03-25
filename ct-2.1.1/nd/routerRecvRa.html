@@ -1,0 +1,171 @@
+<HTML>
+<HEAD>
+<TITLE>routerRecvRa - TBD</TITLE>
+<LINK REV="made" HREF="mailto:hackers@FreeBSD.org">
+</HEAD>
+
+<BODY>
+
+<!-- INDEX BEGIN -->
+<!--
+
+<UL>
+
+	<LI><A HREF="#NAME">NAME</A>
+	<LI><A HREF="#TARGET">TARGET</A>
+	<LI><A HREF="#SYNOPSIS">SYNOPSIS</A>
+	<LI><A HREF="#INITIALIZATION">INITIALIZATION</A>
+	<LI><A HREF="#TEST_PROCEDURE">TEST PROCEDURE</A>
+	<LI><A HREF="#JUDGMENT">JUDGMENT</A>
+	<LI><A HREF="#TERMINATION">TERMINATION</A>
+	<LI><A HREF="#NOTE">NOTE</A>
+	<LI><A HREF="#REFERENCE">REFERENCE</A>
+	<LI><A HREF="#SEE_ALSO">SEE ALSO</A>
+</UL>
+-->
+<!-- INDEX END -->
+
+<P>
+<H1><A NAME="NAME">NAME</A></H1>
+<P>
+routerRecvRa - TBD
+
+<P>
+<HR>
+<H1><A NAME="TARGET">TARGET</A></H1>
+<P>
+Router only
+
+<P>
+<HR>
+<H1><A NAME="SYNOPSIS">SYNOPSIS</A></H1>
+<P>
+<PRE>  routerRecvRa.seq [-tooloption ...] -p routerRecvRa.def
+</PRE>
+<P>
+<HR>
+<H1><A NAME="INITIALIZATION">INITIALIZATION</A></H1>
+<P>
+<PRE>  Clear NC state for TN.
+</PRE>
+<P>
+<HR>
+<H1><A NAME="TEST_PROCEDURE">TEST PROCEDURE</A></H1>
+<P>
+<STRONG>routerRecvRa</STRONG> verifies that state transition for a NUT in NONCE state when receiving a
+RA.
+
+<PRE>
+  TN               NUT
+  ----------------------
+<BR>
+  State: NONCE (for TN)
+<BR>
+  ==== RA ===>
+<BR>
+  <A HREF="#JDG1">Judgment</A>: <A HREF="nd.html">Examining NUT's neighbor cache state</A>
+</PRE>
+
+<P>
+<HR>
+<H1><A NAME="JUDGMENT">JUDGMENT</A></H1>
+<A NAME="JDG1"></A>
+<PRE>
+<HR>
+  =================+=============================
+  RA               | Neighbor Cache                                
+                   +---------+-------+-----------
+                   | Current | New   | LLA       
+  =================+=========+=======+===========
+  w/o TLLA         | NONCE   | NONCE | unchanged 
+  -----------------+---------+-------+-----------
+  w/  TLLA         | NONCE   | NONCE | unchanged
+  -----------------+---------+-------+-----------
+  w/ TLLA          | NONCE   | NONCE | unchanged
+  src!=link-local  |         |       |
+  (INVALID)        |         |       |
+  -----------------+---------+-------+-----------
+  w/ TLLA          | NONCE   | NONCE | unchanged
+  hoplimit!=255    |         |       |
+  (INVALID)        |         |       |
+  -----------------+---------+-------+-----------
+  w/ TLLA          | NONCE   | NONCE | unchanged
+  invalid checksum |         |       |
+  (INVALID)        |         |       |
+  -----------------+---------+-------+-----------
+  w/ TLLA          | NONCE   | NONCE | unchanged
+  icmp code!=0     |         |       |
+  (INVALID)        |         |       |
+  =================+=========+=======+===========
+</PRE>
+
+<P>
+<HR>
+<H1><A NAME="TERMINATION">TERMINATION</A></H1>
+<P>
+<PRE>  N/A
+</PRE>
+<P>
+<HR>
+<H1><A NAME="NOTE">NOTE</A></H1>
+<PRE>
+  <A HREF="#REF1">RFC2461 does not describes an NCE state transition in a router when receiving RAs.</A>
+  However, it seems to be better that any RA should not affect the state.
+</PRE>
+
+<P>
+<HR>
+<H1><A NAME="REFERENCE">REFERENCE</A></H1>
+<PRE>
+RFC2461
+<HR>
+6.2.7.  Router Advertisement Consistency
+<BR>
+   Routers SHOULD inspect valid Router Advertisements sent by other
+   routers and verify that the routers are advertising consistent
+   information on a link.  Detected inconsistencies indicate that one or
+   more routers might be misconfigured and SHOULD be logged to system or
+   network management.  The minimum set of information to check
+   includes:
+<BR>
+    - Cur Hop Limit values (except for the unspecified value of zero).
+<BR>
+    - Values of the M or O flags.
+<BR>
+    - Reachable Time values (except for the unspecified value of zero).
+<BR>
+    - Retrans Timer values (except for the unspecified value of zero).
+<BR>
+    - Values in the MTU options.
+<BR>
+    - Preferred and Valid Lifetimes for the same prefix.  If
+      AdvPreferredLifetime and/or AdvValidLifetime decrement in real
+      time as specified in section 6.2.7 then the comparison of the
+      lifetimes can not compare the content of the fields in the Router
+      Advertisement but must instead compare the time at which the
+      prefix will become deprecated and invalidated, respectively.  Due
+      to link propagation delays and potentially poorly synchronized
+      clocks between the routers such comparison SHOULD allow some time
+      skew.
+<BR>
+   Note that it is not an error for different routers to advertise
+   different sets of prefixes.  Also, some routers might leave some
+   fields as unspecified, i.e., with the value zero, while other routers
+   specify values.  The logging of errors SHOULD be restricted to
+   conflicting information that causes hosts to switch from one value to
+   another with each received advertisement.
+<BR>
+   <A NAME="REF1"><B>Any other action on reception of Router Advertisement messages by a
+   router is beyond the scope of this document.</B></A>
+</PRE>
+
+<P>
+<HR>
+<H1><A NAME="SEE_ALSO">SEE ALSO</A></H1>
+<P>
+<PRE>  perldoc V6evalTool
+  perldoc V6evalRemote
+</PRE>
+</BODY>
+
+</HTML>

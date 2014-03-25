@@ -1,0 +1,306 @@
+#!/usr/bin/perl
+#
+# Copyright (C) 1999, 2000, 2001, 2002, 2003 Yokogawa Electric Corporation,
+# IPA (Information-technology Promotion Agency, Japan).
+# All rights reserved.
+# 
+# Redistribution and use of this software in source and binary forms, with 
+# or without modification, are permitted provided that the following 
+# conditions and disclaimer are agreed and accepted by the user:
+# 
+# 1. Redistributions of source code must retain the above copyright 
+# notice, this list of conditions and the following disclaimer.
+# 
+# 2. Redistributions in binary form must reproduce the above copyright 
+# notice, this list of conditions and the following disclaimer in the 
+# documentation and/or other materials provided with the distribution.
+# 
+# 3. Neither the names of the copyrighters, the name of the project which 
+# is related to this software (hereinafter referred to as "project") nor 
+# the names of the contributors may be used to endorse or promote products 
+# derived from this software without specific prior written permission.
+# 
+# 4. No merchantable use may be permitted without prior written 
+# notification to the copyrighters. However, using this software for the 
+# purpose of testing or evaluating any products including merchantable 
+# products may be permitted without any notification to the copyrighters.
+# 
+# 
+# 
+# THIS SOFTWARE IS PROVIDED BY THE COPYRIGHTERS, THE PROJECT AND 
+# CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING 
+# BUT NOT LIMITED THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS 
+# FOR A PARTICULAR PURPOSE, ARE DISCLAIMED.  IN NO EVENT SHALL THE 
+# COPYRIGHTERS, THE PROJECT OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, 
+# INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES 
+# (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR 
+# SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) 
+# HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN 
+# CONTRACT,STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) 
+# ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF 
+# THE POSSIBILITY OF SUCH DAMAGE.
+#
+# $TAHI: ct/nd/sendUcastNS.seq,v 1.28 2003/02/21 12:22:10 akisada Exp $
+
+########################################################################
+BEGIN { $V6evalTool::TestVersion = '$Name: REL_2_1_1 $ '; }
+ 
+use V6evalTool;
+use nd;
+
+ndOptions(@ARGV);
+
+# The following generate debugging messages.
+$nd::debug=$ndOpt_v|$ndOpt_vv;
+
+# You can specifies debug options to a remote control program.
+# If you want to know more detail, please see the following:
+# - V6evalTool.pm: perldoc V6evalTool
+# - V6evalRemote.pm: perldoc V6evalRemote
+$nd::remote_debug="-o1" if $ndOpt_vv;
+
+$IF=Link0;
+$exit_rtn=$V6evalTool::exitPass;
+$wait_echo=2;
+$wait_probe=$nd::DELAY_FIRST_PROBE_TIME + 1;
+$wait_ucast_ns=$nd::RETRANS_TIMER * $nd::MAX_UNICAST_SOLICIT + 1;
+$max_unicast_solicit=$nd::MAX_UNICAST_SOLICIT;
+$retrans_timer=$nd::RETRANS_TIMER;
+$wait_incomplete=($nd::RETRANS_TIMER * $nd::MAX_MULTICAST_SOLICIT) + 1
+    if $V6evalTool::NutDef{System} =~ /solaris/; # patch for solaris
+
+#
+# Start capture buffer
+#
+vLogHTML("<FONT SIZE=\"+1\">Initialization</FONT><BR>");
+vCapture($IF);
+
+#
+# Need to clear neighbor cache entries of the target.
+#
+goto error if nd2Stale($IF) != 0;
+
+#
+# Send an echo-request (src:tn's link, dst:nut's link)
+#
+$pktdesc{echo_request}="Send echo-request";
+%ret=vSend($IF, echo_request);
+%ret=vSend($IF, echo_request)
+    if $V6evalTool::NutDef{System} =~ /solaris/ ; # patch for solaris bug
+
+#
+# Should capture an echo-reply (src:nut's link, dst:tn's link)
+#
+$pktdesc{echo_reply}="Got an echo-reply, then DELAY";
+%ret=vRecv($IF, $wait_echo, $ret{sentTime1}, 1, echo_reply);
+goto error if $ret{status} != 0;
+
+#
+#
+#
+vLogHTML("<FONT SIZE=\"+1\">Test</FONT><BR>");
+
+#
+# Should capture all unicast NSs (src:nut's link, dst:tn's link)
+# that should be sent in PROBE state
+#
+vLogHTML("Wait for being PROBE ($wait_probe sec.), then unicast NS<BR>");
+$wait=$wait_probe;
+for($i=0; $i<$max_unicast_solicit*2 ;$i++) {
+    $pktdesc{unicast_ns}="Got unicast NS #$i";
+    $pktdesc{unicast_ns_sll}="Got unicast NS #$i";
+    %ret=vRecv($IF, $wait, 0, 1,
+	       unicast_ns,
+	       unicast_ns_sll
+	       );
+    last if $ret{status} != 0;
+    $n = $ret{recvCount};
+    $time[$i] = $ret{"recvTime$n"};
+    $wait=$wait_ucast_ns;
+}
+if($V6evalTool::NutDef{System} =~ /solaris/) { # patch for solaris
+    vRecv($IF, $wait_incomplete, 0, 0);
+}
+if($i == 0) {
+    #
+    # Could not get any NS.
+    #
+    vLogHTML(ndErrmsg("ERROR: Could not get any multicast NS<BR>"));
+    goto error;
+} elsif($i == 1) {
+    vLogHTML(ndErrmsg("ERROR: Got single NS, ".
+		      "could not test interval time<BR>"));
+    goto error;
+} elsif($i > $max_unicast_solicit) {
+    #
+    # The number of NSs was > MAX_UNICAST_SOLICIT
+    #
+    vLogHTML(ndErrmsg("ERROR: Too many unicast NSs ".
+		      "(> $max_unicast_solicit)<BR>"));
+    $exit_rtn=$V6evalTool::exitFail;
+}
+
+#
+# Check intervals of the NSs.
+#
+for($j=0, $over=0, $mark=''; $j<$i-1; $j++, $mark='') {
+    $delta = int($time[$j+1] - $time[$j] + 0.5);
+    if($delta < $retrans_timer) {
+        #
+        # An interval > RetransTimer
+        #
+        $over=1;
+        $mark=ndErrmsg('*');
+    }
+    vLogHTML("Retransmit interval[$j]: $mark$delta sec.<BR>");
+}
+if($over) {
+    vLogHTML(ndErrmsg("ERROR: Rate limit violation ".
+		      "(&lt; $retrans_timer sec.)<BR>"));
+    $exit_rtn=$V6evalTool::exitFail;
+}
+
+if($exit_rtn == $V6evalTool::exitPass) {
+    vLogHTML("OK<BR>");
+} else {
+    vLogHTML(ndErrmsg("NG<BR>"));
+}
+exit $exit_rtn;
+
+ error:
+    vLogHTML(vErrmsg(%ret)."<BR>");
+    vLogHTML(ndErrmsg("NG<BR>"));
+    exit $V6evalTool::exitFail;
+
+########################################################################
+__END__
+
+=head1 NAME
+
+sendUcastNS - Verify that NUT sends unicast NSs by the default config.
+
+=head1 TARGET
+
+Host and Router
+
+=head1 SYNOPSIS
+
+  sendUcastNS.seq [-tooloption ...] -p sendUcastNS.def
+
+=head1 INITIALIZATION
+
+  Clear NC state for TN.
+
+=head1 TEST PROCEDURE
+
+B<sendUcastNS> verifies NUT send unicast NSs by the
+default rules:
+
+  - MAX_MULTICAST_SOLICIT
+  - RETRANS_TIMER
+
+=begin html
+<PRE>
+  TN		  NUT
+  ---------------------
+<BR>
+  State: NONCE (for TN)
+<BR>
+  ==== echo-request ===>
+  	src=TN's link-local
+  	dst=NUT's link-local
+<BR>
+  State: INCOMPLETE (for TN)
+<BR>
+  <=== <A HREF="#JDG1">Judgment #1</A>: multicast NS ===
+  	src=NUT's link-local
+  	dst=sol-node[TN's link-local]
+  	w/ SLLA
+  	timeout: RETRANS_TIMER * MAX_MULTICAST_SOLICIT
+<BR>
+  ==== solicited NA ===>
+  	src=TN's link-local
+  	dst=NUT's link-local
+  	R=0, S=1, O=1
+  	w/ TLLA
+<BR>
+  State: REACHABLE (for TN)
+<BR>
+  <=== <A HREF="#JDG2">Judgment #2</A>: echo-reply   ====
+  	src=NUT's link-local
+  	dst=TN's link-local
+<BR>
+  Wait (REACHABLE_TIME * MAX_RANDOM_FACTOR)
+<BR>
+  State: STALE (for TN)
+<BR>
+  ==== echo-request ===>
+  	src=TN's link-local
+  	dst=NUT's link-local
+<BR>
+  <=== <A HREF="#JDG3">Judgment #3</A>: echo-reply   ====
+  	src=NUT's link-local
+  	dst=TN's link-local
+<BR>
+  State: DELAY (for TN)
+<BR>
+  Wait (DELAY_FIRST_PROBE_TIME)
+<BR>
+  State: PROBE (for TN)
+<BR>
+  <=== <A HREF="#JDG4">Judgment #4</A>: unicast NS   ====
+  	src=NUT's link-local
+  	dst=TN's link-local
+  	w/ or w/o SLLA
+<BR>
+  <=== <A HREF="#JDG4">Judgment #4:</A> unicast NS   ====
+  	src=NUT's link-local
+  	dst=TN's link-local
+  	w/ or w/o SLLA
+<BR>
+  <=== <A HREF="#JDG4">Judgment #4</A>: unicast NS   ====
+  	src=NUT's link-local
+  	dst=TN's link-local
+  	w/ or w/o SLLA
+</PRE>
+
+=end html
+
+=head1 JUDGMENT
+
+=begin html
+<PRE>
+<A NAME="JDG1"></A>
+  1. NUT must send at the least one multicast NS:
+     src=NUT's link-local, dst=sol-node[TN's link-local], s/ SLLA
+<A NAME="JDG2"></A>
+  2. NUT must send an echo-reply:
+     src=NUT's link-local, dst=TN's link-local
+<A NAME="JDG3"></A>
+  3. NUT must send an echo-reply:
+     src=NUT's link-local, dst=TN's link-local
+<A NAME="JDG4"></A>
+  4. NUT must send unicast NS:
+     src=NUT's link-local, dst=TN's link-local, w/ or w/o SLLA
+<BR>
+     4.1. The number of the unicast NSs <= MAX_UNICAST_SOLICIT(3)
+<BR>
+     4.2. Intervals between the unicast NSs >= RETRANS_TIMER(1 sec.)
+</PRE>
+
+=end html
+
+=head1 TERMINATION
+
+  N/A
+
+=head1 NOTE
+
+  The test does not invoke any remote command.
+
+=head1 SEE ALSO
+
+  perldoc V6evalTool
+  perldoc V6evalRemote
+
+=cut

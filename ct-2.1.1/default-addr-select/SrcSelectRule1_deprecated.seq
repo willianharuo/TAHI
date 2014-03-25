@@ -1,0 +1,296 @@
+#!/usr/bin/perl
+#
+# Copyright (C) 2003 Yokogawa Electric Corporation, 
+# INTAP(Interoperability Technology Association
+# for Information Processing, Japan).  All rights reserved.
+# 
+# Redistribution and use of this software in source and binary forms, with 
+# or without modification, are permitted provided that the following 
+# conditions and disclaimer are agreed and accepted by the user:
+# 
+# 1. Redistributions of source code must retain the above copyright 
+# notice, this list of conditions and the following disclaimer.
+# 
+# 2. Redistributions in binary form must reproduce the above copyright 
+# notice, this list of conditions and the following disclaimer in the 
+# documentation and/or other materials provided with the distribution.
+# 
+# 3. Neither the names of the copyrighters, the name of the project which 
+# is related to this software (hereinafter referred to as "project") nor 
+# the names of the contributors may be used to endorse or promote products 
+# derived from this software without specific prior written permission.
+# 
+# 4. No merchantable use may be permitted without prior written 
+# notification to the copyrighters. However, using this software for the 
+# purpose of testing or evaluating any products including merchantable 
+# products may be permitted without any notification to the copyrighters.
+# 
+# 
+# 
+# THIS SOFTWARE IS PROVIDED BY THE COPYRIGHTERS, THE PROJECT AND 
+# CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING 
+# BUT NOT LIMITED THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS 
+# FOR A PARTICULAR PURPOSE, ARE DISCLAIMED.  IN NO EVENT SHALL THE 
+# COPYRIGHTERS, THE PROJECT OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, 
+# INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES 
+# (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR 
+# SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) 
+# HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN 
+# CONTRACT,STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) 
+# ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF 
+# THE POSSIBILITY OF SUCH DAMAGE.
+#
+# $TAHI: ct/default-addr-select/SrcSelectRule1_deprecated.seq,v 1.3 2003/04/22 03:57:46 akisada Exp $
+#
+######################################################################
+BEGIN {
+	$V6evalTool::TestVersion = '$Name: REL_2_1_1 $';
+}
+
+use V6evalTool;
+
+if ($V6evalTool::NutDef{Type} ne 'host') {
+	vLogHTML("This test is for the Host only<BR>");
+	exit $V6evalTool::exitHostOnly;
+}
+
+use ADDR_SELECT;
+
+$TRUE = $ADDR_SELECT::TRUE;
+$FALSE = $ADDR_SELECT::FALSE;
+$IF = $ADDR_SELECT::IF;
+$NUT_LLA = nutLLA($IF);
+$NUT_LLA = nutLLA($IF);
+$TEST_STRING = "Test for Default Source Address Selection Rule1(Prefer same address) with deprecated address";
+$C_BLUE = $ADDR_SELECT::C_BLUE;
+
+@RESULT;
+$RESULT_TABLE = "<TABLE BORDER=1><TR><TH><BR></TH><TH>Destination & Candidate Source</TH><TH>Judgment</TH></TR>";
+$RESULT_TEST = $TRUE;
+
+#====== Test #======
+vLogHTML("<FONT COLOR=$C_BLUE>#### $TEST_STRING ####</FONT><BR>");
+vLogHTML("<A HREF=\"#RESULT\">#### Jump to Test Result ####</A><BR>");
+
+$RESULT[@RESULT] = check_NoOpt("01",$FALSE,"3ffe::","fec0::1","3ffe::3","fec0::3");
+$RESULT[@RESULT] = check_NoOpt("02",$FALSE,"fec0::","3ffe::1","fec0::3","3ffe::3");
+
+#====== Test Result #======
+vLogHTML("<A NAME=\"RESULT\"><HR><B><FONT COLOR=$C_BLUE>#### Test ($TEST_STRING) Result ####</FONT></B><BR>");
+$RESULT_TABLE .= "</TABLE>";
+vLogHTML("$RESULT_TABLE");
+
+foreach $RESULT_CHECK (@RESULT){
+	if(!$RESULT_CHECK){
+		$RESULT_TEST = $FALSE;
+	}
+}
+
+if($RESULT_TEST){
+	vLogHTML("<FONT COLOR=$C_BLUE>#### All Check: Please check by your eyes ####</FONT><BR>");
+	exit $V6evalTool::exitWarn;
+}else{
+	vLogHTML('<FONT COLOR="#FF0000">#### Some Checks are Fail: NG ####</FONT><BR>');
+	exit $V6evalTool::exitFail;
+}
+
+#======================================================================
+# check_NoOpt($CHECK_NUM,$NEED_NCE_DST,$G_PREFIX,$SOURCE2,$TEST_DST1,$TEST_DST2)
+# 	$CHECK_NUM : check number
+#	$NEED_NCE_DST : need nutMakeNCE_Destination() flag
+#	$G_PREFIX : (to make deprecated address $SOURCE1)
+#	$SOURCE2
+#	$TEST_DST1 : destination of SOURCE1 at checkNUT_SrcAddr
+#	$TEST_DST2 : destination of SOURCE2 at checkNUT_SrcAddr
+#======================================================================
+sub check_NoOpt($$$$$$$) {
+	my ($CHECK_NUM,$ON_LINK,$G_PREFIX,$SOURCE2,$TEST_DST1,$TEST_DST2) = @_;
+
+	$SOURCE1 = prefix2G_ADDR_NUT($G_PREFIX,$IF);
+	my $DESTINATION = $SOURCE1;
+	my $SOURCE3 = $NUT_LLA;
+	my $CHECK_TXT = "Destination = $DESTINATION<BR> Candidate Source = $SOURCE1(deprecated), $SOURCE2, $SOURCE3<BR> Expected Source = $SOURCE1(deprecated)";
+
+	my $RESULT_LINE = "<TR><TD><A HREF=\"#C$CHECK_NUM\">$CHECK_NUM</A></TD><TD>$CHECK_TXT</TD><TD>";
+	my $RESULT = $TRUE;
+
+	#====== Check : Initialize  Add source address & NCE in NUT #======
+	vLogHTML("<A NAME=\"C$CHECK_NUM\"><HR><FONT size=\"+2\" COLOR=$C_BLUE>#### Check $CHECK_NUM: Start ($CHECK_TXT) ####</FONT><BR>");
+
+	nutInitialize() || exit $V6evalTool::exitFatal;
+
+	$CPP = "-DSOURCE1=\\\"$SOURCE1\\\" -DSOURCE3=\\\"$SOURCE3\\\" -DDESTINATION=\\\"$DESTINATION\\\"";
+	if($SOURCE2 ne ''){
+		$CPP .= " -DSOURCE2=\\\"$SOURCE2\\\"";
+	}
+	vCPP($CPP);
+
+	nutDeprecatedIPv6AddrAdd($G_PREFIX,$CPP);
+	if($SOURCE2 ne ''){
+		nutIPv6AddrAdd($SOURCE2,"64") || exit $V6evalTool::exitFatal;
+	}
+
+	$ret = checkNUT_SrcAddr($CPP,$SOURCE1,$TEST_DST1,$SOURCE2,$TEST_DST2);
+	if (!$ret) {
+		vLogHTML("<FONT COLOR=\"#FF0000\">#### Check $CHECK_NUM: Fail ####</FONT><BR>");
+		nutReboot() || exit $V6evalTool::exitFatal;
+		$RESULT_LINE .= "<FONT COLOR=\"#FF0000\">Fail</FONT></TD></TR>";
+		$RESULT_TABLE .= $RESULT_LINE;
+		return $FALSE;
+	}
+	
+	if($RESULT){
+		#====== Check : Send ping6 to DESTINATION #======
+		vCapture($IF);
+		vClear("$IF");
+
+		vLogHTML("<A NAME=\"P$CHECK_NUM\">");
+		nutPing6($DESTINATION) || exit $V6evalTool::exitFatal;
+		%ret = vRecv("$IF", 5, 0, 0, 'echo_request_NUT2DESTINATION');
+
+		#====== Check : Judgment : recive packet's source address = SOURCE1 ? #======
+		if ($ret{"status"} != 0) {
+			vLogHTML('<FONT size=\"+2\" COLOR="#0000FF">#### Please check by your eyes ####</FONT><BR>');
+			vLogHTML("<FONT COLOR=$C_BLUE>#### Source address = Destination = $SOURCE1 ?####</FONT><BR>");
+		}else{
+			vLogHTML("<FONT COLOR=\"#FF0000\">#### Packet Received ####</FONT><BR>");
+			$RESULT = $FALSE;
+		}
+	}
+
+	if($RESULT){
+		vLogHTML("<FONT size=\"+2\" COLOR=$C_BLUE>#### Check $CHECK_NUM: CEHCK ####</FONT><BR>");
+		$RESULT_LINE .= "<FONT COLOR=$C_BLUE><A HREF=\"#P$CHECK_NUM\">CHECK</A></FONT></TD></TR>";
+		$RESULT_TABLE .= $RESULT_LINE;
+		nutClear($SOURCE1,"64",$SOURCE2,"64") || exit $V6evalTool::exitFatal;
+		return $TRUE;
+	}else{
+		vLogHTML("<FONT size=\"+2\" COLOR=\"#FF0000\">#### Check $CHECK_NUM: Fail ####</FONT><BR>");
+		$RESULT_LINE .= "<FONT COLOR=\"#FF0000\">Fail</FONT></TD></TR>";
+		$RESULT_TABLE .= $RESULT_LINE;
+		nutClear($SOURCE1,"64",$SOURCE2,"64") || exit $V6evalTool::exitFatal;
+		return $FALSE;
+	}
+}
+
+######################################################################
+__END__
+
+=head1 NAME
+
+  SrcSelectRule1_deprecated.seq - Source Address Selection
+                                  Check Rule 1(Prefer same address) with deprecated address
+
+  Rule 1: Prefer same address.
+    If SA = D, then prefer SA.
+
+  Source addresses used for this test are "preferred address" and "deprecated address".
+
+=head1 TARGET
+
+  Host
+
+=head1 SYNOPSIS
+
+=begin html
+<PRE>
+  <A HREF="./SrcSelectRule1_deprecated.seq">SrcSelectRule1_deprecated.seq</A> [-tooloption ...] -pkt <A HREF="./ADDR_SELECT.def">ADDR_SELECT.def</A>
+    -tooloption : v6eval tool option
+</PRE>
+
+=end html
+
+=head1 INITIALIZATION
+
+  None
+
+=head1 TEST PROCEDURE
+
+  This TEST performs the following Check procedures for
+  every address group defined by Check 01 - *.
+    
+  *Check procedure
+  
+  1. Initialize :
+     1.1. Set IPv6 Default Route in NUT
+          (Default Router address = <TN-Link0-LinkLocalAddress>)
+     1.2. Add Candidate Source Addresses (deprecated / public ) in NUT
+          * deprecated address is added by RA(PreferredLifetime=1) (TN->NUT)
+     1.3. Check Candidate Source Addresses by Ping6 (TN->NUT)
+  2. Send Ping6 from NUT to Destination
+     2.1. NUT send ICMPv6 echo request (NUT->TN)
+  3. Judgment :
+     if (recive packet's Destination & Source Addresses)
+     = (expected Destination & Source Addresses), Check pass
+  4. Cleanup :
+     4.1. Delete Candidate Source Addresses in NUT
+     4.2. Clear prefix list & NCE & default router list in NUT
+
+	NUT              TN    Default Router
+	 |                |      |
+	 ======(INITIALIZE)=======
+	 |                |      |
+	 |<-<-<-<-<-<-<-<-+      | Set IPv6 Default Route
+	 |<-<-<-<-<-<-<-<-+      | Add Candidate Source Addresses
+	 |                |      |
+	 |<----------------------+ RA (PreferredLifetime=1)
+	 |                |      |
+	 |<----------------------+ Echo Request to Candidate Source Addresses 1
+	 +---------------------->| Echo Reply
+	 |                |      |
+	 |<----------------------+ Echo Request to Candidate Source Addresses 2
+	 +---------------------->| Echo Reply
+	 |                |      |
+	 ======(INITIALIZE)=======
+	 |                |      |
+	 |<-<-<-<-<-<-<-<-+      | Excute ping6 command
+	 |                |      |
+
+  GS(Unicast Global Scope), GSM(Multicast Global Scope), OSM(Multicast Organization Scope),
+  SS(Unicast Site local Scope), SSM(Multicast Site local Scope), LS(Link local Scope)
+  LLA(Link Local Address)
+
+  Check 01:
+    Destination: 3ffe::NUT'sEUI64(deprecated)(GS)
+    Candidate Source Addresses: 3ffe::NUT'sEUI64(deprecated)(GS) or fec0::1(SS) or LLA(LS)
+    Result: 3ffe::NUT'sEUI64(deprecated)(GS)
+
+  Check 02:
+    Destination: fec0::NUT'sEUI64(deprecated)(SS)
+    Candidate Source fec0::NUT'sEUI64(deprecated)(SS) or Addresses: 3ffe::1(GS) or LLA(LS)
+    Result: fec::NUT'sEUI64(deprecated)(SS)
+
+=head1 JUDGEMENT
+
+  Check 01 - 02
+    PASS: Don't receive Echo Request
+        and if possible,
+        Please check source address in ping6 command result by your eyes
+
+          e.g.
+          target5# /sbin/ping6 -n -c 1 -i 1 -h 64 -s 2 -p 00 -I ed0 3ffe::1
+          PATTERN: 0x00
+          PING6(50=40+8+2 bytes) 3ffe::1 --> 3ffe::1
+                                 ^^^^^^^     ^^^^^^^
+          if source address and destination adddress are equal, Check PASS
+
+        *Please rewrite the following file.
+         tn.def : "RemoteLog       1"
+
+  TEST
+    PASS: All Check = PASS
+
+=head1 SEE ALSO
+
+  perldoc V6evalTool
+
+=begin html
+<PRE>
+  <A HREF="ADDR_SELECT.html">ADDR_SELECT.html</A> "Default Address Selection for IPv6" Test Common Utility<BR>
+  <A HREF="das_rules.html">das_rules.html</A> "Default Address Selection for IPv6" Rules
+</PRE>
+
+=end html
+
+=cut
+

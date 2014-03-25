@@ -1,0 +1,97 @@
+<HTML>
+<HEAD>
+<TITLE>FH_Big65535.seq - check Fragment Reassembly</TITLE>
+<LINK REV="made" HREF="mailto:hackers@FreeBSD.org">
+</HEAD>
+
+<BODY>
+
+<!-- INDEX BEGIN -->
+<!--
+
+<UL>
+
+	<LI><A HREF="#NAME">NAME</A>
+	<LI><A HREF="#TARGET">TARGET</A>
+	<LI><A HREF="#SYNOPSIS">SYNOPSIS</A>
+	<LI><A HREF="#INITIALIZATION">INITIALIZATION</A>
+	<LI><A HREF="#TEST_PROCEDURE">TEST PROCEDURE</A>
+	<LI><A HREF="#JUDGMENT">JUDGMENT</A>
+	<LI><A HREF="#SEE_ALSO">SEE ALSO</A>
+</UL>
+-->
+<!-- INDEX END -->
+
+<P>
+<H1><A NAME="NAME">NAME</A></H1>
+<P>
+FH_Big65535.seq - check Fragment Reassembly (Payload Size = 65535)
+
+<P>
+<HR>
+<H1><A NAME="TARGET">TARGET</A></H1>
+<P>
+Host and Router
+
+<P>
+<HR>
+<H1><A NAME="SYNOPSIS">SYNOPSIS</A></H1>
+<PRE>
+  <A HREF="./FH_Big65535.seq">FH_Big65535.seq</A> [-tooloption ...] -pkt <A HREF="./FH_Big65535.def">FH_Big65535.def</A>
+    -tooloption : v6eval tool option
+  See also <A HREF="./FH_BigPayload.def">FH_BigPayload.def</A>
+</PRE>
+
+<P>
+<HR>
+<H1><A NAME="INITIALIZATION">INITIALIZATION</A></H1>
+<P>
+<PRE>  1. Ping to Target (create Neighbor Cache Entries, if not exist)
+  2. Override Neighbor Cache Entries
+</PRE>
+<P>
+<HR>
+<H1><A NAME="TEST_PROCEDURE">TEST PROCEDURE</A></H1>
+<P>
+<PRE>  Tester                      Target
+    |                           |
+    |--------------------------&gt;| 
+    |   Echo Request            |  * 46 fragments
+    |                           |
+    |                           |
+    |&lt;--------------------------|
+    |   Echo Reply              |  * 46 fragments
+    |                           |
+    |                           |
+    v                           v
+</PRE>
+<P>
+<PRE>  1. Send Echo Request (46 fragments)
+  2. Receive Echo Reply (46 fragments)
+</PRE>
+<P>
+<PRE>  This test assumes MTU is 1500 (Ethernet Default).
+  Each fragment packet's Payload Length is 1456 octets.
+  Received fragment packets' Fragment ID are ignored.
+</PRE>
+<P>
+<HR>
+<H1><A NAME="JUDGMENT">JUDGMENT</A></H1>
+<P>
+<PRE>  PASS: All fragment packet of Echo Reply Received
+</PRE>
+<P>
+<PRE>  WARN: Any fragment packet of Echo Reply Received
+</PRE>
+<P>
+<PRE>        Maybe some packets are not captured by bpf.
+</PRE>
+<P>
+<HR>
+<H1><A NAME="SEE_ALSO">SEE ALSO</A></H1>
+<P>
+<PRE>  perldoc V6evalTool
+</PRE>
+</BODY>
+
+</HTML>

@@ -1,0 +1,290 @@
+#!/usr/bin/perl
+#
+# Copyright (C) 1999, 2000, 2001, 2002, 2003 Yokogawa Electric Corporation,
+# IPA (Information-technology Promotion Agency, Japan).
+# All rights reserved.
+# 
+# Redistribution and use of this software in source and binary forms, with 
+# or without modification, are permitted provided that the following 
+# conditions and disclaimer are agreed and accepted by the user:
+# 
+# 1. Redistributions of source code must retain the above copyright 
+# notice, this list of conditions and the following disclaimer.
+# 
+# 2. Redistributions in binary form must reproduce the above copyright 
+# notice, this list of conditions and the following disclaimer in the 
+# documentation and/or other materials provided with the distribution.
+# 
+# 3. Neither the names of the copyrighters, the name of the project which 
+# is related to this software (hereinafter referred to as "project") nor 
+# the names of the contributors may be used to endorse or promote products 
+# derived from this software without specific prior written permission.
+# 
+# 4. No merchantable use may be permitted without prior written 
+# notification to the copyrighters. However, using this software for the 
+# purpose of testing or evaluating any products including merchantable 
+# products may be permitted without any notification to the copyrighters.
+# 
+# 
+# 
+# THIS SOFTWARE IS PROVIDED BY THE COPYRIGHTERS, THE PROJECT AND 
+# CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING 
+# BUT NOT LIMITED THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS 
+# FOR A PARTICULAR PURPOSE, ARE DISCLAIMED.  IN NO EVENT SHALL THE 
+# COPYRIGHTERS, THE PROJECT OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, 
+# INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES 
+# (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR 
+# SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) 
+# HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN 
+# CONTRACT,STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) 
+# ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF 
+# THE POSSIBILITY OF SUCH DAMAGE.
+#
+# $TAHI: ct/mip6-ha-20/BU_ND_S0_L1.seq,v 1.7 2003/02/20 08:15:46 akisada Exp $
+#
+################################################################
+
+BEGIN {$V6evalTool::TestVersion = '$Name: REL_2_1_1 $';}
+
+use V6evalTool;
+use MIP6;
+
+my $IF0			= 'Link0';
+
+my $NutType		= $V6evalTool::NutDef{'Type'};
+
+if($NutType ne 'router') {
+	vLogHTML('<FONT COLOR="#00FF00">This test is only for the router.</FONT><BR>');
+	exit($V6evalTool::exitRouterOnly);
+}
+
+
+$pktdesc{'ereq_from_tn_to_nut_global'}			= '    Send Echo Request: CN1 (LinkX) -&gt; NUT (Link0) (global)';
+$pktdesc{'erep_from_nut_to_tn_global'}			= '    Recv Echo Reply: NUT (Link0) -&gt; CN1 (LinkX) (global)';
+$pktdesc{'ereq_from_tn_to_hoa_global'}			= '    Send Echo Request: CN1 (LinkX) -&gt; MN (Link0) (global)';
+$pktdesc{'ereq_from_tn_to_hoa_global_encapsulated'}	= '    Recv Echo Request (encapsulated): CN1 (LinkX) -&gt; MN (Link0) (global)';
+$pktdesc{'ereq_from_mn_to_tn_global_encapsulated'}	= '    Send Echo Request (encapsulated): MN (Link0) -&gt; CN1 (LinkX) (global)';
+$pktdesc{'ereq_from_mn_to_tn_global'}			= '    Recv Echo Request: MN (Link0) -&gt; CN1 (LinkX) (global)';
+$pktdesc{'ereq_from_tn_to_hoa_y_global'}		= '    Send Echo Request (forwarded): CN1 (LinkX) -&gt; MN (LinkY) (global)';
+$pktdesc{'ereq_from_tn_to_hoa_0_global'}		= '    Send Echo Request (forwarded): CN1 (LinkX) -&gt; MN (Link0) (global)';
+
+vCapture($IF0);
+
+#--------------------------------------------------------------#
+vLogHTML('<FONT COLOR="#FF0000" SIZE="5"><U><B>INITIALIZATION</B></U></FONT><BR>');
+vClear($IF0);
+
+vLogHTML('<FONT SIZE="4"><U><B>Check Reachability</B></U></FONT><BR>');
+if(MIP6_CheckReachability($IF0) < 0) {
+	vLogHTML('<FONT COLOR="#FF0000">Can\'t get Echo Reply</FONT><BR>');
+	exit($V6evalTool::exitFail);
+}
+
+vClear($IF0);
+
+vLogHTML('<FONT SIZE="4"><U><B>Primary CoA Registration</B></U></FONT><BR>');
+
+my $sn = 0;
+my $a = 1;
+my $h = 1;
+my $l = 1;
+my $lt = 0xffff;
+
+if(MIP6_Registration($IF0, $sn, $a, $h, $l, $lt) < 0) {
+	vLogHTML('<FONT COLOR="#FF0000">Can\'t get BA</FONT><BR>');
+	exit($V6evalTool::exitFail);
+}
+
+vClear($IF0);
+vLogHTML('<FONT SIZE="4"><U><B>Check Binding Cache</B></U></FONT><BR>');
+if(MIP6_CheckBindingCache($IF0) < 0) {
+	vLogHTML('<FONT COLOR="#FF0000">Can\'t get Echo Request</FONT><BR>');
+	exit($V6evalTool::exitFail);
+}
+
+#--------------------------------------------------------------#
+vLogHTML('<FONT COLOR="#FF0000" SIZE="5"><U><B>TEST PROCEDURE</B></U></FONT><BR>');
+vClear($IF0);
+if(MIP6_ProxyND($IF0, $l) < 0) {
+	exit($V6evalTool::exitFail);
+}
+
+vStop($IF0);
+
+vLogHTML('<B>PASS</B><BR>');
+exit($V6evalTool::exitPass);
+
+#
+# perldoc
+#
+################################################################
+__END__
+
+=head1 NAME
+
+BU_ND_S0_L1 - ND L=1
+
+=head1 TARGET
+
+=begin html
+<PRE>
+Router
+</PRE>
+
+=end html
+
+=head1 SYNOPSIS
+
+=begin html
+<PRE>
+<A HREF="./BU_ND_S0_L1.seq">BU_ND_S0_L1.seq</A> [-tooloption ...] -pkt <A HREF="./BU_ND_S0_L1.def">BU_ND_S0_L1.def</A>
+</PRE>
+<BLOCKQUOTE>
+<PRE>
+-tooloption: v6eval tool option
+</PRE>
+</BLOCKQUOTE>
+
+=end html
+
+=head1 TOPOLOGY
+
+=begin html
+<BLOCKQUOTE>
+<PRE>
+                        MN'     CN1
+                        |       |
+        --------+-------+-------+------- LinkX
+                |
+       NUT      R0      MN      CN0
+        |       |       |       |
+--------+-------+-------+-------+------- Link0
+</PRE>
+</BLOCKQUOTE>
+<BLOCKQUOTE>
+<TABLE BORDER>
+<TR>
+<TD><TT>Link0</TT></TD>
+<TD><TT>global</TT></TD>
+<TD><TT>3ffe:501:ffff:100::/64</TT></TD>
+<TD><TT>home link</TT></TD>
+</TR>
+<TR>
+<TD><TT>LinkX</TT></TD>
+<TD><TT>global</TT></TD>
+<TD><TT>3ffe:501:ffff:102::/64</TT></TD>
+<TD><TT>foreign link</TT></TD>
+</TR>
+<TR>
+<TD ROWSPAN="2"><TT>R0(Link0)</TT></TD>
+<TD><TT>global</TT></TD>
+<TD><TT>3ffe:501:ffff:100::a0a0</TT></TD>
+<TD ROWSPAN="2"><TT>&nbsp;</TT></TD>
+</TR>
+<TR>
+<TD><TT>ether</TT></TD>
+<TD><TT>00:00:00:00:a0:a0</TT></TD>
+</TR>
+<TR>
+<TD><TT>MN</TT></TD>
+<TD><TT>global</TT></TD>
+<TD><TT>3ffe:501:ffff:100:200:ff:fe00:30</TT></TD>
+<TD><TT>home address</TT></TD>
+</TR>
+<TR>
+<TD><TT>MN'</TT></TD>
+<TD><TT>global</TT></TD>
+<TD><TT>3ffe:501:ffff:102:200:ff:fe00:30</TT></TD>
+<TD><TT>care-of address</TT></TD>
+</TR>
+<TR>
+<TD><TT>CN0</TT></TD>
+<TD><TT>global</TT></TD>
+<TD><TT>3ffe:501:ffff:100:&lt;TN&gt;</TT></TD>
+<TD><TT>&nbsp;</TT></TD>
+</TR>
+<TR>
+<TD><TT>CN1</TT></TD>
+<TD><TT>global</TT></TD>
+<TD><TT>3ffe:501:ffff:102:&lt;TN&gt;</TT></TD>
+<TD><TT>&nbsp;</TT></TD>
+</TR>
+</TABLE>
+</BLOCKQUOTE>
+
+=end html
+
+=head1 INITIALIZATION
+
+=begin html
+<BLOCKQUOTE>
+<PRE>
+NUT      MN      MN'     CN1
+ |       |       |       |
+ | <-------------------- | Echo Request
+ | --------------------> | Echo Reply
+ |       |       |       |
+ | <------------ |       | BU
+ | ------------> |       | BA
+ |       |       |       |
+ |       | <------------ | Echo Request
+ | ============> |       | Echo Request (encapsulated)
+ |       |       |       |
+</PRE>
+</BLOCKQUOTE>
+<P>
+<PRE>
+1. Send Echo Request
+2. Wait Echo Reply
+3. Receive Echo Reply
+4. Send BU
+5. Wait BA
+6. Receive BA
+7. Send Echo Request
+8. Wait Echo Request (encapsulated)
+9. Receive Echo Request (encapsulated)
+</PRE>
+
+=end html
+
+=head1 TEST PROCEDURE
+
+=begin html
+<BLOCKQUOTE>
+<PRE>
+NUT      CN0
+ |       |
+ | <---- | NS
+ | ----> | NA
+ |       |
+</PRE>
+</BLOCKQUOTE>
+<P>
+<PRE>
+1. Send NS
+2. Wait NA
+3. Receive NA
+</PRE>
+
+=end html
+
+=head1 JUDGEMENT
+
+=begin html
+<PRE>
+PASS: receives NA
+</PRE>
+
+=end html
+
+=head1 SEE ALSO
+
+=begin html
+<PRE>
+<A HREF="./MIP6.pm">MIP6.pm</A>
+<A HREF="./MIP6.def">MIP6.def</A>
+</PRE>
+
+=end html
+
+=cut

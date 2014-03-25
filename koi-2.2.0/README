@@ -1,0 +1,236 @@
+
+
+
+				README
+
+			     TAHI Project
+
+		     $Date: 2009/12/11 04:03:55 $
+
+
+
+Terminology
+===========
+
+Tester Node (TN)
+	A tester node for the conformance tests.
+
+Node Under Test (NUT)
+	A testee node for the conformance tests.
+
+Network Under Test
+	The network where the conformance tests are executed.
+
+Tester Interface
+	The network interface of TN
+	hooked up to the Network Under Test.
+
+Interface Under Test
+	The network interface of NUT
+	hooked up to the Network Under Test.
+
+
+
+Prerequisites
+=============
+
+Prerequisites for TN:
+	- Operating System
+		FreeBSD/i386 6.3-RELEASE or higher
+
+
+
+Installation
+============
+
+KOI needs the following perl modules:
+	- Expect
+	- Socket6
+	- Digest-MD5
+	- Crypt-Rijndael
+	- Crypt-OpenSSL-RSA
+	- Crypt-OpenSSL-X509
+
+These perl modules can be installed by following commands:
+
+	$ su
+	# ( cd /usr/ports/lang/p5-Expect/ && make install )
+	# ( cd /usr/ports/net/p5-Socket6/ && make install )
+	# ( cd /usr/ports/security/p5-Digest-MD5/ && make install )
+	# ( cd /usr/ports/security/p5-Crypt-Rijndael/ && make install )
+	# ( cd /usr/ports/security/p5-Crypt-OpenSSL-RSA/ && make install )
+	# ( cd /usr/ports/security/p5-Crypt-OpenSSL-X509/ && make install )
+
+KOI is installed by following commands:
+
+	$ tar xvfz koi-X.X.X.tar.gz
+	$ cd koi-X.X.X
+	$ make
+	$ su
+	# make install
+	# make -f Makefile.cert install
+
+KOI is installed to </usr/local/koi/> by default.
+
+
+
+Making bpf special device
+=========================
+
+The user who executes conformance test needs to belong in
+'wheel' group
+
+	# vi /etc/group
+
+and editing the following files are needed.
+
+	# vi /etc/rc.conf
+
+	</etc/rc.conf>
+	----------------------------------------------------------------
+	devfs_system_ruleset="devfsrules_unhide_bpf"
+	----------------------------------------------------------------
+
+	# vi /etc/devfs.rules
+
+	</etc/devfs.rules>
+	----------------------------------------------------------------
+	[devfsrules_unhide_bpf=1025]
+	add path 'bpf*' user root group wheel mode 0660 unhide
+	----------------------------------------------------------------
+
+
+
+Setting up <tn.def>
+===================
+
+	# cd /usr/local/koi/etc
+	# cp tn.def.sample tn.def
+	# vi tn.def
+
+
+* the case of using ssh login
+
+	</usr/local/koi/etc/tn.def>
+	----------------------------------------------------------------
+	RemoteMethod    ssh
+	RemoteTarget    192.168.0.1
+	Link0           fxp0
+	----------------------------------------------------------------
+
+	'RemoteTarget' is NUT's address to use login.
+	'Link0' is network interface name for testing.
+
+
+* the case of using serial line login
+
+	</usr/local/koi/etc/tn.def>
+	----------------------------------------------------------------
+	RemoteMethod    cu
+	RemoteTarget    cuaa0
+	Link0           fxp0
+	----------------------------------------------------------------
+
+	'RemoteTarget' is TN's serial port device name.
+
+
+* the case of using multiple network interfaces
+
+	If you use multiple networks, you can describe them as
+	follows:
+
+	</usr/local/koi/etc/tn.def>
+	----------------------------------------------------------------
+	RemoteMethod    ssh
+	RemoteTarget    192.168.0.1
+	Link0           fxp0
+	Link1           fxp1
+	----------------------------------------------------------------
+
+
+
+Setting up <nut.def>
+====================
+
+	# cd /usr/local/koi/etc
+	# cp nut.def.sample nut.def
+	# vi nut.def
+
+
+* the case of automatic test using ssh login
+
+	</usr/local/koi/etc/nut.def>
+	----------------------------------------------------------------
+	System          freebsd-bind9
+	UserID          testee
+	UserPassword    dnstest
+	UserPrompt      \$
+	RootID          root
+	RootPassword    dnstest
+	RootPrompt      #
+	LoginPrompt     ^[L|l]ogin:
+	PasswordPrompt  ^[P|p]assword:
+	Link0           em0
+	----------------------------------------------------------------
+
+	'System' is used when koi specifies location of remote files.
+
+	'UserID' is user ID for login. It is used as ssh argument with
+	command option '-l'.
+
+	'UserPassword' is password of 'UserID' user.
+
+	'UserPrompt' is 'UserID' user's command prompt. Default Bourne
+	shell(/bin/sh)'s command prompt is '$'. Then you use it with
+	'\', because koi evaluate 'UserPrompt' string as regular
+	expression. If you use default /bin/csh, you can describe
+	single character '%'.
+
+	'RootID' is root user's ID.
+
+	'RootPassword' is password of 'RootID' user.
+	'RootPrompt' is 'UserID' user's command prompt. Please refer
+	to 'UserPrompt'. In most cases, 'RootPrompt' seems to be
+	single character '#'.
+
+	'LoginPrompt' is ssh command login prompt. You can use regular
+	expression.
+
+	'PasswordPrompt' is ssh command password prompt. You can use
+	regular expression.
+
+
+* the case of automatic test using serial line login
+
+	sample: /usr/local/koi/etc/nut.def
+	----------------------------------------------------------------
+	System		freebsd-bind9
+	RootID		root
+	RootPassword	dnstest
+	RootPrompt	#
+	LoginPrompt	^[L|l]ogin:
+	PasswordPrompt	^[P|p]assword:
+	Link0		em0
+	----------------------------------------------------------------
+
+
+* the case of manual test
+
+	sample: /usr/local/koi/etc/nut.def
+	----------------------------------------------------------------
+	System		manual
+	Link0		em0
+	----------------------------------------------------------------
+
+
+
+Configure serial line
+=====================
+
+	# touch /var/log/aculog
+	# chown uucp:dialer /var/log/aculog
+	# chmod 660 /var/log/aculog
+
+The user who executes conformance test need to belong in 'dialer' group.
+
+	# vi /etc/group

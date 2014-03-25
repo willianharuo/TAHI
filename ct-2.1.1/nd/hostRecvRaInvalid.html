@@ -1,0 +1,133 @@
+<HTML>
+<HEAD>
+<TITLE>hostRecvRaInvalid - Verifying that NUT discard invalid RAs</TITLE>
+<LINK REV="made" HREF="mailto:hackers@FreeBSD.org">
+</HEAD>
+
+<BODY>
+
+<!-- INDEX BEGIN -->
+<!--
+
+<UL>
+
+	<LI><A HREF="#NAME">NAME</A>
+	<LI><A HREF="#TARGET">TARGET</A>
+	<LI><A HREF="#SYNOPSIS">SYNOPSIS</A>
+	<LI><A HREF="#INITIALIZATION">INITIALIZATION</A>
+	<LI><A HREF="#TEST_PROCEDURE">TEST PROCEDURE</A>
+	<LI><A HREF="#JUDGMENT">JUDGMENT</A>
+	<LI><A HREF="#TERMINATION">TERMINATION</A>
+	<LI><A HREF="#NOTE">NOTE</A>
+	<LI><A HREF="#SEE_ALSO">SEE ALSO</A>
+</UL>
+-->
+<!-- INDEX END -->
+
+<P>
+<H1><A NAME="NAME">NAME</A></H1>
+<P>
+hostRecvRaInvalid - Verifying that NUT discard invalid RAs
+
+<P>
+<HR>
+<H1><A NAME="TARGET">TARGET</A></H1>
+<P>
+Host only
+
+<P>
+<HR>
+<H1><A NAME="SYNOPSIS">SYNOPSIS</A></H1>
+<P>
+<PRE>  hostRecvRaInvalid.seq [-tooloption ...] -p hostRecvRaInvalid.def
+</PRE>
+<P>
+<HR>
+<H1><A NAME="INITIALIZATION">INITIALIZATION</A></H1>
+<P>
+<PRE>  Clear NC state for TN.
+</PRE>
+<P>
+<HR>
+<H1><A NAME="TEST_PROCEDURE">TEST PROCEDURE</A></H1>
+<P>
+<STRONG>hostRecvRaInvalid</STRONG> verifies that NUT discard invalid RAs.
+
+<PRE>
+  TN               NUT
+  ----------------------
+<BR>
+  State: NONCE (for TN)
+<BR>
+  ==== <A HREF="#JDG1">invalid RA</A> ===>
+<BR>
+  <A HREF="#JDG1">Judgment</A>: <A HREF="nd.html">Examining NUT's neighbor cache state</A>
+</PRE>
+
+<P>
+<HR>
+<H1><A NAME="JUDGMENT">JUDGMENT</A></H1>
+<A NAME="JDG1"></A>
+<PRE>
+<HR>
+6.1.2.  Validation of Router Advertisement Messages
+<BR>
+     A node must silently discard any received Router Advertisement
+     messages that do not satisfy all of the following validity checks:
+<BR>
+     - <A NAME="INVALID_A"><B>IP Source Address is a link-local address.</A></B>  Routers must use
+       their link-local address as the source for Router Advertisement
+       and Redirect messages so that hosts can uniquely identify
+       routers.
+<BR>
+     - <A NAME="INVALID_B"><B>The IP Hop Limit field has a value of 255</A></B>, i.e., the packet
+       could not possibly have been forwarded by a router.
+<BR>
+     - If the message includes an IP Authentication Header, the message
+       authenticates correctly.
+<BR>
+     - <A NAME="INVALID_C"><B>ICMP Checksum is valid.</A></B>
+<BR>
+     - <A NAME="INVALID_D"><B>ICMP Code is 0.</A></B>
+<BR>
+     - ICMP length (derived from the IP length) is 16 or more octets.
+<BR>
+     - All included options have a length that is greater than zero.
+<HR>
+  ==================================================+====================
+  Invalid RA                                        | The Neighbor Cache
+  -----------+----------+-------+-------------------+---------+----------
+  Src        | Dst      | SLLA  | Other             | Current | New
+  ===========+==========+=======+===================+=========+==========
+  <A HREF="#INVALID_A">*global</A>    | all-node | exist | N/A               | NONCE   | unchanged
+  -----------+----------+-------+-------------------+---------+----------
+  link-local | all-node | exist | <A HREF="#INVALID_B">*hop limit=2</A>      | NONCE   | unchanged
+  -----------+----------+-------+-------------------+---------+----------
+  link-local | all-node | exist | <A HREF="#INVALID_C">*invalid checksum</A> | NONCE   | unchanged
+  -----------+----------+-------+-------------------+---------+----------
+  link-local | all-node | exist | <A HREF="#INVALID_D">*icmp code=1</A>      | NONCE   | unchanged
+  ===========+==========+=======+===================+=========+==========
+</PRE>
+
+<P>
+<HR>
+<H1><A NAME="TERMINATION">TERMINATION</A></H1>
+<P>
+<PRE>  N/A
+</PRE>
+<P>
+<HR>
+<H1><A NAME="NOTE">NOTE</A></H1>
+<P>
+<PRE>  The test does not invoke any remote command.
+</PRE>
+<P>
+<HR>
+<H1><A NAME="SEE_ALSO">SEE ALSO</A></H1>
+<P>
+<PRE>  perldoc V6evalTool
+  perldoc V6evalRemote
+</PRE>
+</BODY>
+
+</HTML>

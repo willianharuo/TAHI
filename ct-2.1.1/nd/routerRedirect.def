@@ -1,0 +1,817 @@
+// Copyright (C) 1999, 2000, 2001, 2002, 2003 Yokogawa Electric Corporation,
+// IPA (Information-technology Promotion Agency, Japan).
+// All rights reserved.
+// 
+// Redistribution and use of this software in source and binary forms, with 
+// or without modification, are permitted provided that the following 
+// conditions and disclaimer are agreed and accepted by the user:
+// 
+// 1. Redistributions of source code must retain the above copyright 
+// notice, this list of conditions and the following disclaimer.
+// 
+// 2. Redistributions in binary form must reproduce the above copyright 
+// notice, this list of conditions and the following disclaimer in the 
+// documentation and/or other materials provided with the distribution.
+// 
+// 3. Neither the names of the copyrighters, the name of the project which 
+// is related to this software (hereinafter referred to as "project") nor 
+// the names of the contributors may be used to endorse or promote products 
+// derived from this software without specific prior written permission.
+// 
+// 4. No merchantable use may be permitted without prior written 
+// notification to the copyrighters. However, using this software for the 
+// purpose of testing or evaluating any products including merchantable 
+// products may be permitted without any notification to the copyrighters.
+// 
+// 
+// 
+// THIS SOFTWARE IS PROVIDED BY THE COPYRIGHTERS, THE PROJECT AND 
+// CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING 
+// BUT NOT LIMITED THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS 
+// FOR A PARTICULAR PURPOSE, ARE DISCLAIMED.  IN NO EVENT SHALL THE 
+// COPYRIGHTERS, THE PROJECT OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, 
+// INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES 
+// (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR 
+// SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) 
+// HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN 
+// CONTRACT,STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) 
+// ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF 
+// THE POSSIBILITY OF SUCH DAMAGE.
+//
+// $TAHI: ct/nd/routerRedirect.def,v 1.10 2002/03/26 10:23:07 masaxmasa Exp $
+
+#ifndef _ROUTER_REDIRECT_DEF
+#define _ROUTER_REDIRECT_DEF
+
+#define SIZE_ETHER_HEADER       14
+
+//----------------------------------------------------------------------
+// Definitions for TN
+//----------------------------------------------------------------------
+
+//----------------------------------------------------------------------
+// multicast NS
+//      NUT(link-local/global#1) ==> TN(solicited-node[global])
+//      target=TN(global#1)
+//      w/ SLLA
+//----------------------------------------------------------------------
+FEM_icmp6_ns(RRDmulticast_ns_nut2tnsolnode_sll, _HETHER_nut2tnsolnode,
+        {
+         _SRC(nutv6());
+         _DST(_IPV6_SOLNODE_MCAST(
+                tn2v6(_GLOBAL0_UCAST_PRFX, _GLOBAL0_UCAST_PRFXLEN)));
+         HopLimit=255;
+        },
+        {
+         TargetAddress=tn2v6(_GLOBAL0_UCAST_PRFX, _GLOBAL0_UCAST_PRFXLEN);
+         option=_SLLOPT_nut;
+        }
+)
+
+//----------------------------------------------------------------------
+FEM_icmp6_ns(RRDmulticast_ns_nutg2tnsolnode_sll, _HETHER_nut2tnsolnode,
+        {
+//         _SRC(nutv6());
+	 _SRC(nut2v6(_GLOBAL0_UCAST_PRFX, _GLOBAL0_UCAST_PRFXLEN));
+         _DST(_IPV6_SOLNODE_MCAST(
+                tn2v6(_GLOBAL0_UCAST_PRFX, _GLOBAL0_UCAST_PRFXLEN)));
+         HopLimit=255;
+        },
+        {
+         TargetAddress=tn2v6(_GLOBAL0_UCAST_PRFX, _GLOBAL0_UCAST_PRFXLEN);
+         option=_SLLOPT_nut;
+        }
+)
+
+//----------------------------------------------------------------------
+// unicast NA w/ TLLA
+//      TN(global#1) ==> NUT(link-local/global#1)
+//      target=TN(global#1)
+//      r=0, s=1, o=1 w/ TLLA
+//----------------------------------------------------------------------
+FEM_icmp6_na(RRDunicast_na_tn2nut_rSO_tll, _HETHER_tn2nut,
+        {
+         _SRC(tn2v6(_GLOBAL0_UCAST_PRFX, _GLOBAL0_UCAST_PRFXLEN));
+	 _DST(nutv6());
+         HopLimit=255;
+        },
+        {
+         RFlag=0;
+         SFlag=1;
+         OFlag=1;
+         TargetAddress=tn2v6(_GLOBAL0_UCAST_PRFX, _GLOBAL0_UCAST_PRFXLEN);
+         option=_TLLOPT_tn;
+        }
+)
+
+//----------------------------------------------------------------------
+FEM_icmp6_na(RRDunicast_na_tn2nutg_rSO_tll, _HETHER_tn2nut,
+        {
+         _SRC(tn2v6(_GLOBAL0_UCAST_PRFX, _GLOBAL0_UCAST_PRFXLEN));
+         _DST(nut2v6(_GLOBAL0_UCAST_PRFX, _GLOBAL0_UCAST_PRFXLEN));
+//	 _DST(nutv6());
+         HopLimit=255;
+        },
+        {
+         RFlag=0;
+         SFlag=1;
+         OFlag=1;
+         TargetAddress=tn2v6(_GLOBAL0_UCAST_PRFX, _GLOBAL0_UCAST_PRFXLEN);
+         option=_TLLOPT_tn;
+        }
+)
+
+//----------------------------------------------------------------------
+// multicast NS for DAD
+//      unspecified ==> solnode[NUT's global #2]
+//      target=NUT(global#2)
+//      w/o SLLA
+//----------------------------------------------------------------------
+FEM_icmp6_ns(RRDmulticast_ns_unspec2nutsolnode_g2, RRDhether_nut2nutg2,
+        {
+         _SRC(v6(_UNSPEC_ADDR));
+         _DST(_IPV6_SOLNODE_MCAST(
+                v6merge(_GLOBAL8_UCAST_PRFX, _GLOBAL8_UCAST_PRFXLEN,
+                        v6ether(A0N_MAC_ADDR)))
+             );
+         HopLimit=255;
+        },
+        {
+         TargetAddress=v6merge(_GLOBAL8_UCAST_PRFX, _GLOBAL8_UCAST_PRFXLEN,
+                       v6ether(A0N_MAC_ADDR));
+        }
+)
+
+//----------------------------------------------------------------------
+// Definitions for R1
+//----------------------------------------------------------------------
+_HETHER_define(RRDhether_nut2nutg2, nutether(),
+        _ETHER_SOLNODE_MCAST(v6ether(A0N_MAC_ADDR)))
+
+_HETHER_define(RRDhether_nut2ronesolnode, nutether(),
+        _ETHER_SOLNODE_MCAST(v6ether(A1N_MAC_ADDR)))
+
+_HETHER_define(RRDhether_nut2rone, nutether(),
+	ether(A1N_MAC_ADDR))
+
+_HETHER_define(RRDhether_rone2nut, ether(A1N_MAC_ADDR), nutether())
+
+_TLLOPT_define(RRDtllopt_rone, ether(A1N_MAC_ADDR))
+
+//----------------------------------------------------------------------
+// multicast NS
+//      NUT(link-local) ==> R1(solicited-node[link])
+//      target=R1(link-local)
+//      w/ SLLA
+//----------------------------------------------------------------------
+FEM_icmp6_ns(RRDmulticast_ns_nut2ronesolnode_sll, RRDhether_nut2ronesolnode,
+{
+         _SRC(nutv6());
+         _DST(_IPV6_SOLNODE_MCAST(v6ether(A1N_MAC_ADDR)));
+         HopLimit=255;
+        },
+        {
+         TargetAddress=v6ether(A1N_MAC_ADDR);
+         option=_SLLOPT_nut;
+        }
+)
+
+//----------------------------------------------------------------------
+// multicast NS
+//      NUT(global) ==> R1(solicited-node[global])
+//      target=R1(link-local)
+//      w/ SLLA
+//----------------------------------------------------------------------
+FEM_icmp6_ns(RRDmulticast_ns_nutg2ronesolnode_sll, RRDhether_nut2ronesolnode,
+{
+         //_SRC(nutv6());
+         _SRC(v6(_GLOBAL8A0N_UCAST_ADDR));
+         _DST(_IPV6_SOLNODE_MCAST(v6ether(A1N_MAC_ADDR)));
+         HopLimit=255;
+        },
+        {
+         TargetAddress=v6ether(A1N_MAC_ADDR);
+         option=_SLLOPT_nut;
+        }
+)
+
+//----------------------------------------------------------------------
+// multicast NS
+//      NUT(link-local) ==> R1(solicited-node[global#1])
+//      target=R1(global#1)
+//      w/ SLLA
+//----------------------------------------------------------------------
+FEM_icmp6_ns(RRDmulticast_ns_nut2ronesolnode_sll_g1, RRDhether_nut2ronesolnode,
+{
+         _SRC(nutv6());
+         _DST(_IPV6_SOLNODE_MCAST(v6ether(A1N_MAC_ADDR)));
+         HopLimit=255;
+        },
+        {
+         TargetAddress=v6merge(_GLOBAL0_UCAST_PRFX, _GLOBAL0_UCAST_PRFXLEN,
+                       v6ether(A1N_MAC_ADDR));
+         option=_SLLOPT_nut;
+        }
+)
+
+//----------------------------------------------------------------------
+// multicast NS
+//      NUT(global) ==> R1(solicited-node[global#1])
+//      target=R1(global#1)
+//      w/ SLLA
+//----------------------------------------------------------------------
+FEM_icmp6_ns(RRDmulticast_ns_nutg2ronesolnode_sll_g1, RRDhether_nut2ronesolnode,
+{
+         _SRC(v6merge(_GLOBAL0_UCAST_PRFX, _GLOBAL0_UCAST_PRFXLEN, nutv6()));
+         _DST(_IPV6_SOLNODE_MCAST(v6ether(A1N_MAC_ADDR)));
+         HopLimit=255;
+        },
+        {
+         TargetAddress=v6merge(_GLOBAL0_UCAST_PRFX, _GLOBAL0_UCAST_PRFXLEN,
+                       v6ether(A1N_MAC_ADDR));
+         option=_SLLOPT_nut;
+        }
+)
+
+//----------------------------------------------------------------------
+// unicast NA
+//      R1(link-local) ==> NUT(link-local)
+//      R=1, S=1, O=1
+//      target=R1(link-local)
+//      w/ TLLA
+//----------------------------------------------------------------------
+FEM_icmp6_na(RRDunicast_na_rone2nut_RSO_tll, RRDhether_rone2nut,
+        {
+         _SRC(v6ether(A1N_MAC_ADDR));
+         _DST(nutv6());
+         HopLimit=255;
+        },
+        {
+         RFlag=1;
+         SFlag=1;
+         OFlag=1;
+         TargetAddress=v6ether(A1N_MAC_ADDR);
+         option=RRDtllopt_rone;
+        }
+)
+
+//----------------------------------------------------------------------
+// unicast NA
+//      R1(global#1) ==> NUT(link-local)
+//      R=1, S=1, O=1
+//      target=R1(global#1)
+//      w/ TLLA
+//----------------------------------------------------------------------
+FEM_icmp6_na(RRDunicast_na_rone2nut_RSO_tll_g1, RRDhether_rone2nut,
+        {
+	  _SRC(v6merge(_GLOBAL0_UCAST_PRFX, _GLOBAL0_UCAST_PRFXLEN,
+                       v6ether(A1N_MAC_ADDR)));
+         _DST(nutv6());
+         HopLimit=255;
+        },
+        {
+         RFlag=1;
+         SFlag=1;
+         OFlag=1;
+         TargetAddress=v6merge(_GLOBAL0_UCAST_PRFX, _GLOBAL0_UCAST_PRFXLEN,
+                       v6ether(A1N_MAC_ADDR));
+         option=RRDtllopt_rone;
+        }
+)
+//----------------------------------------------------------------------
+// unicast NA
+//      R1(global#1) ==> NUT(global)
+//      R=1, S=1, O=1
+//      target=R1(global#1)
+//      w/ TLLA
+//----------------------------------------------------------------------
+FEM_icmp6_na(RRDunicast_na_rone2nutg_RSO_tll_g1, RRDhether_rone2nut,
+        {
+	  _SRC(v6merge(_GLOBAL0_UCAST_PRFX, _GLOBAL0_UCAST_PRFXLEN,
+                       v6ether(A1N_MAC_ADDR)));
+         _DST(v6merge(_GLOBAL0_UCAST_PRFX, _GLOBAL0_UCAST_PRFXLEN,
+			nutv6()));
+         HopLimit=255;
+        },
+        {
+         RFlag=1;
+         SFlag=1;
+         OFlag=1;
+         TargetAddress=v6merge(_GLOBAL0_UCAST_PRFX, _GLOBAL0_UCAST_PRFXLEN,
+                       v6ether(A1N_MAC_ADDR));
+         option=RRDtllopt_rone;
+        }
+)
+
+//----------------------------------------------------------------------
+// Definitions for Host2
+//----------------------------------------------------------------------
+
+_HETHER_define(RRDhether_nut2hosttwosolnode, nutether(),
+        _ETHER_SOLNODE_MCAST(v6ether(A2N_MAC_ADDR)))
+
+_HETHER_define(RRDhether_hosttwo2nut, ether(A2N_MAC_ADDR), nutether())
+
+_HETHER_define(RRDhether_nut2hosttwo, nutether(), ether(A2N_MAC_ADDR))
+
+_TLLOPT_define(RRDtllopt_hosttwo, ether(A2N_MAC_ADDR))
+
+//----------------------------------------------------------------------
+// multicast NS
+//      NUT(link-local/global#2) ==> H2(solicited-node[global#2])
+//      target=H1(global#2)
+//      w/ SLLA
+//----------------------------------------------------------------------
+FEM_icmp6_ns(RRDmulticast_ns_nut2hosttwosolnode_sll,
+	     RRDhether_nut2hosttwosolnode,
+        {
+         _SRC(nutv6());
+         _DST(_IPV6_SOLNODE_MCAST(v6ether(A2N_MAC_ADDR)));
+         HopLimit=255;
+        },
+        {
+         TargetAddress=v6merge(_GLOBAL8_UCAST_PRFX, _GLOBAL8_UCAST_PRFXLEN,
+			v6ether(A2N_MAC_ADDR));
+         option=_SLLOPT_nut;
+        }
+)
+
+//----------------------------------------------------------------------
+FEM_icmp6_ns(RRDmulticast_ns_nutg2hosttwosolnode_sll,
+	     RRDhether_nut2hosttwosolnode,
+        {
+//       _SRC(nutv6());
+         _SRC(v6merge(_GLOBAL8_UCAST_PRFX, _GLOBAL8_UCAST_PRFXLEN,
+		      v6ether(A0N_MAC_ADDR)));
+         _DST(_IPV6_SOLNODE_MCAST(v6ether(A2N_MAC_ADDR)));
+         HopLimit=255;
+        },
+        {
+         TargetAddress=v6merge(_GLOBAL8_UCAST_PRFX, _GLOBAL8_UCAST_PRFXLEN,
+			v6ether(A2N_MAC_ADDR));
+         option=_SLLOPT_nut;
+        }
+)
+
+//----------------------------------------------------------------------
+// unicast NA w/ TLLA
+//      TN(global#2) ==> NUT(link-local/global#2)
+//      target=TN(global#2)
+//      r=0, s=1, o=1 w/ TLLA
+//----------------------------------------------------------------------
+FEM_icmp6_na(RRDunicast_na_hosttwo2nut_rSO_tll,
+	     RRDhether_hosttwo2nut,
+        {
+	 _SRC(v6merge(_GLOBAL8_UCAST_PRFX, _GLOBAL8_UCAST_PRFXLEN,
+		v6ether(A2N_MAC_ADDR)));
+	 _DST(nutv6());
+         HopLimit=255;
+        },
+        {
+         RFlag=0;
+         SFlag=1;
+         OFlag=1;
+         TargetAddress=v6merge(_GLOBAL8_UCAST_PRFX, _GLOBAL8_UCAST_PRFXLEN,
+			v6ether(A2N_MAC_ADDR));
+         option=RRDtllopt_hosttwo;
+        }
+)
+
+//----------------------------------------------------------------------
+FEM_icmp6_na(RRDunicast_na_hosttwo2nutg_rSO_tll,
+	     RRDhether_hosttwo2nut,
+        {
+	 _SRC(v6merge(_GLOBAL8_UCAST_PRFX, _GLOBAL8_UCAST_PRFXLEN,
+		v6ether(A2N_MAC_ADDR)));
+//	 _DST(nutv6());
+         _DST(v6merge(_GLOBAL8_UCAST_PRFX, _GLOBAL8_UCAST_PRFXLEN,
+		      v6ether(A0N_MAC_ADDR)));
+         HopLimit=255;
+        },
+        {
+         RFlag=0;
+         SFlag=1;
+         OFlag=1;
+         TargetAddress=v6merge(_GLOBAL8_UCAST_PRFX, _GLOBAL8_UCAST_PRFXLEN,
+			v6ether(A2N_MAC_ADDR));
+         option=RRDtllopt_hosttwo;
+        }
+)
+
+//----------------------------------------------------------------------
+// echo-request
+//      TN(global#1) ==> H2(global#2) thrown to NUT, hoplimit=64
+//      TN(global#1) ==> H2(global#2) thrown to NUT, hoplimit=63
+//      TN(global#1) ==> H2(global#2) forwarded by NUT, hoplimit=63
+//----------------------------------------------------------------------
+FEM_icmp6_echo_request(RRDecho_request_tn2hosttwo, _HETHER_tn2nut,
+        {
+         _SRC(tn2v6(_GLOBAL0_UCAST_PRFX, _GLOBAL0_UCAST_PRFXLEN));
+         _DST(v6merge(_GLOBAL8_UCAST_PRFX, _GLOBAL8_UCAST_PRFXLEN,
+                        v6ether(A2N_MAC_ADDR)));
+         HopLimit=64;
+         },
+        {
+         payload=RRDecho_data_hosttwo;
+        }
+)
+
+//----------------------------------------------------------------------
+FEM_icmp6_echo_request(RRDecho_request_tn2hosttwo_hl63, _HETHER_tn2nut,
+        {
+         _SRC(tn2v6(_GLOBAL0_UCAST_PRFX, _GLOBAL0_UCAST_PRFXLEN));
+         _DST(v6merge(_GLOBAL8_UCAST_PRFX, _GLOBAL8_UCAST_PRFXLEN,
+                        v6ether(A2N_MAC_ADDR)));
+         HopLimit=63;
+        },
+        {
+         payload=RRDecho_data_hosttwo;
+        }
+)
+
+//----------------------------------------------------------------------
+FEM_icmp6_echo_request(RRDecho_request_tn2hosttwo_via_nut,
+	               RRDhether_nut2hosttwo,
+        {
+         _SRC(tn2v6(_GLOBAL0_UCAST_PRFX, _GLOBAL0_UCAST_PRFXLEN));
+         _DST(v6merge(_GLOBAL8_UCAST_PRFX, _GLOBAL8_UCAST_PRFXLEN,
+                        v6ether(A2N_MAC_ADDR)));
+         HopLimit=63;
+        },
+        {
+         payload=RRDecho_data_hosttwo;
+        }
+)
+
+//----------------------------------------------------------------------
+Payload RRDecho_data_hosttwo {
+        data=repeat(0xee, 0x10);
+}
+
+//----------------------------------------------------------------------
+// Redirect w/o TLL
+//      NUT(link-local) ==> TN(global#1)
+//      icmp target=H2(global#2)
+//      icmp destination=H2(global#2)
+//		no option
+//		O{tll, redirect, redirect2}
+//		C{tll, redirect}
+//		C(tll, redirect2}
+//----------------------------------------------------------------------
+FEM_icmp6_redirect(RRDredirect_hosttwo, _HETHER_nut2tn,
+        {
+         _SRC(nutv6());
+         _DST(tn2v6(_GLOBAL0_UCAST_PRFX, _GLOBAL0_UCAST_PRFXLEN));
+         HopLimit=255;
+        },
+        {
+         TargetAddress=
+		v6merge(_GLOBAL8_UCAST_PRFX, _GLOBAL8_UCAST_PRFXLEN,
+			v6ether(A2N_MAC_ADDR));
+         DestinationAddress=
+		v6merge(_GLOBAL8_UCAST_PRFX, _GLOBAL8_UCAST_PRFXLEN,
+			v6ether(A2N_MAC_ADDR));
+        }
+)
+
+//----------------------------------------------------------------------
+FEM_icmp6_redirect(RRDredirect_hosttwo_t, _HETHER_nut2tn,
+        {
+         _SRC(nutv6());
+         _DST(tn2v6(_GLOBAL0_UCAST_PRFX, _GLOBAL0_UCAST_PRFXLEN));
+         HopLimit=255;
+        },
+        {
+         TargetAddress=
+		v6merge(_GLOBAL8_UCAST_PRFX, _GLOBAL8_UCAST_PRFXLEN,
+			v6ether(A2N_MAC_ADDR));
+         DestinationAddress=
+		v6merge(_GLOBAL8_UCAST_PRFX, _GLOBAL8_UCAST_PRFXLEN,
+			v6ether(A2N_MAC_ADDR));
+	 option=_TLLOPT_nut;
+        }
+)
+
+//----------------------------------------------------------------------
+FEM_icmp6_redirect(RRDredirect_hosttwo_r, _HETHER_nut2tn,
+        {
+         _SRC(nutv6());
+         _DST(tn2v6(_GLOBAL0_UCAST_PRFX, _GLOBAL0_UCAST_PRFXLEN));
+         HopLimit=255;
+        },
+        {
+         TargetAddress=
+		v6merge(_GLOBAL8_UCAST_PRFX, _GLOBAL8_UCAST_PRFXLEN,
+			v6ether(A2N_MAC_ADDR));
+         DestinationAddress=
+		v6merge(_GLOBAL8_UCAST_PRFX, _GLOBAL8_UCAST_PRFXLEN,
+			v6ether(A2N_MAC_ADDR));
+	 option=RRDredirected_header_hosttwo;
+        }
+)
+
+//----------------------------------------------------------------------
+FEM_icmp6_redirect(RRDredirect_hosttwo_r2, _HETHER_nut2tn,
+        {
+         _SRC(nutv6());
+         _DST(tn2v6(_GLOBAL0_UCAST_PRFX, _GLOBAL0_UCAST_PRFXLEN));
+         HopLimit=255;
+        },
+        {
+         TargetAddress=
+		v6merge(_GLOBAL8_UCAST_PRFX, _GLOBAL8_UCAST_PRFXLEN,
+			v6ether(A2N_MAC_ADDR));
+         DestinationAddress=
+		v6merge(_GLOBAL8_UCAST_PRFX, _GLOBAL8_UCAST_PRFXLEN,
+			v6ether(A2N_MAC_ADDR));
+	 option=RRDredirected_header_hosttwo_hl63;
+        }
+)
+
+//----------------------------------------------------------------------
+FEM_icmp6_redirect(RRDredirect_hosttwo_t_and_r, _HETHER_nut2tn,
+        {
+         _SRC(nutv6());
+         _DST(tn2v6(_GLOBAL0_UCAST_PRFX, _GLOBAL0_UCAST_PRFXLEN));
+         HopLimit=255;
+        },
+        {
+         TargetAddress=
+		v6merge(_GLOBAL8_UCAST_PRFX, _GLOBAL8_UCAST_PRFXLEN,
+			v6ether(A2N_MAC_ADDR));
+         DestinationAddress=
+		v6merge(_GLOBAL8_UCAST_PRFX, _GLOBAL8_UCAST_PRFXLEN,
+			v6ether(A2N_MAC_ADDR));
+	 option=comb(_TLLOPT_nut, RRDredirected_header_hosttwo);
+        }
+)
+
+//----------------------------------------------------------------------
+FEM_icmp6_redirect(RRDredirect_hosttwo_t_and_r2, _HETHER_nut2tn,
+        {
+         _SRC(nutv6());
+         _DST(tn2v6(_GLOBAL0_UCAST_PRFX, _GLOBAL0_UCAST_PRFXLEN));
+         HopLimit=255;
+        },
+        {
+         TargetAddress=
+		v6merge(_GLOBAL8_UCAST_PRFX, _GLOBAL8_UCAST_PRFXLEN,
+			v6ether(A2N_MAC_ADDR));
+         DestinationAddress=
+		v6merge(_GLOBAL8_UCAST_PRFX, _GLOBAL8_UCAST_PRFXLEN,
+			v6ether(A2N_MAC_ADDR));
+	 option=comb(_TLLOPT_nut, RRDredirected_header_hosttwo_hl63);
+        }
+)
+
+//----------------------------------------------------------------------
+Opt_ICMPv6_Redirected RRDredirected_header_hosttwo {
+        payload=RRD_hosttwo;
+}
+
+//----------------------------------------------------------------------
+Payload RRD_hosttwo {
+        data=right(RRDecho_request_tn2hosttwo, SIZE_ETHER_HEADER);
+}
+
+//----------------------------------------------------------------------
+Opt_ICMPv6_Redirected RRDredirected_header_hosttwo_hl63 {
+        payload=RRD_hosttwo_hl63;
+}
+
+//----------------------------------------------------------------------
+Payload RRD_hosttwo_hl63 {
+        data=right(RRDecho_request_tn2hosttwo_hl63, SIZE_ETHER_HEADER);
+}
+
+//----------------------------------------------------------------------
+// Definitions for Host3
+//----------------------------------------------------------------------
+
+//----------------------------------------------------------------------
+// echo-request
+//      TN(global#1) ==> H3(global#3) thrown to NUT, hoplimit=64
+//	TN(global#1) ==> H3(global#3) thrown to NUT, hoplimit=63
+//      TN(global#1) ==> H3(global#3) via NUT, hoplimit=63
+//----------------------------------------------------------------------
+FEM_icmp6_echo_request(RRDecho_request_tn2hostthree, _HETHER_tn2nut,
+        {
+         _SRC(tn2v6(_GLOBAL0_UCAST_PRFX, _GLOBAL0_UCAST_PRFXLEN));
+         _DST(v6merge(_GLOBAL9_UCAST_PRFX, _GLOBAL9_UCAST_PRFXLEN,
+                        v6ether(A3N_MAC_ADDR)));
+         HopLimit=64;
+        },
+        {
+         payload=RRDecho_data_hostthree;
+        }
+)
+
+//----------------------------------------------------------------------
+FEM_icmp6_echo_request(RRDecho_request_tn2hostthree_hl63, _HETHER_tn2nut,
+        {
+         _SRC(tn2v6(_GLOBAL0_UCAST_PRFX, _GLOBAL0_UCAST_PRFXLEN));
+         _DST(v6merge(_GLOBAL9_UCAST_PRFX, _GLOBAL9_UCAST_PRFXLEN,
+                        v6ether(A3N_MAC_ADDR)));
+         HopLimit=63;
+        },
+        {
+         payload=RRDecho_data_hostthree;
+        }
+)
+
+//----------------------------------------------------------------------
+FEM_icmp6_echo_request(RRDecho_request_tn2hostthree_via_nut,
+		       RRDhether_nut2rone,
+        {
+         _SRC(tn2v6(_GLOBAL0_UCAST_PRFX, _GLOBAL0_UCAST_PRFXLEN));
+         _DST(v6merge(_GLOBAL9_UCAST_PRFX, _GLOBAL9_UCAST_PRFXLEN,
+                        v6ether(A3N_MAC_ADDR)));
+         HopLimit=63;
+        },
+        {
+         payload=RRDecho_data_hostthree;
+        }
+)
+
+//----------------------------------------------------------------------
+Payload RRDecho_data_hostthree {
+        data=repeat(0xff, 0x10);
+}
+
+//----------------------------------------------------------------------
+// Redirect w/o TLL
+//      NUT(link-local) ==> TN(global#1)
+//      icmp target=R1(link-local)
+//      icmp destination=H3(global#3)
+//              no option
+//              O{tll, redirect, redirect2}
+//              C{tll, redirect}
+//              C(tll, redirect2}
+//----------------------------------------------------------------------
+FEM_icmp6_redirect(RRDredirect_hostthree, _HETHER_nut2tn,
+        {
+         _SRC(nutv6());
+         _DST(tn2v6(_GLOBAL0_UCAST_PRFX, _GLOBAL0_UCAST_PRFXLEN));
+         HopLimit=255;
+        },
+        {
+         TargetAddress=v6ether(A1N_MAC_ADDR);
+         DestinationAddress=
+                v6merge(_GLOBAL9_UCAST_PRFX, _GLOBAL9_UCAST_PRFXLEN,
+                        v6ether(A3N_MAC_ADDR));
+        }
+)
+
+//----------------------------------------------------------------------
+FEM_icmp6_redirect(RRDredirect_hostthree_t, _HETHER_nut2tn,
+        {
+         _SRC(nutv6());
+         _DST(tn2v6(_GLOBAL0_UCAST_PRFX, _GLOBAL0_UCAST_PRFXLEN));
+         HopLimit=255;
+        },
+        {
+         TargetAddress=v6ether(A1N_MAC_ADDR);
+         DestinationAddress=
+                v6merge(_GLOBAL9_UCAST_PRFX, _GLOBAL9_UCAST_PRFXLEN,
+                        v6ether(A3N_MAC_ADDR));
+	 option=RRDtllopt_rone;
+        }
+)
+
+//----------------------------------------------------------------------
+FEM_icmp6_redirect(RRDredirect_hostthree_r, _HETHER_nut2tn,
+        {
+         _SRC(nutv6());
+         _DST(tn2v6(_GLOBAL0_UCAST_PRFX, _GLOBAL0_UCAST_PRFXLEN));
+         HopLimit=255;
+        },
+        {
+         TargetAddress=v6ether(A1N_MAC_ADDR);
+         DestinationAddress=
+                v6merge(_GLOBAL9_UCAST_PRFX, _GLOBAL9_UCAST_PRFXLEN,
+                        v6ether(A3N_MAC_ADDR));
+	 option=RRDredirected_header_hostthree;
+        }
+)
+
+//----------------------------------------------------------------------
+FEM_icmp6_redirect(RRDredirect_hostthree_r2, _HETHER_nut2tn,
+        {
+         _SRC(nutv6());
+         _DST(tn2v6(_GLOBAL0_UCAST_PRFX, _GLOBAL0_UCAST_PRFXLEN));
+         HopLimit=255;
+        },
+        {
+         TargetAddress=v6ether(A1N_MAC_ADDR);
+         DestinationAddress=
+                v6merge(_GLOBAL9_UCAST_PRFX, _GLOBAL9_UCAST_PRFXLEN,
+                        v6ether(A3N_MAC_ADDR));
+	 option=RRDredirected_header_hostthree_hl63;
+        }
+)
+
+//----------------------------------------------------------------------
+FEM_icmp6_redirect(RRDredirect_hostthree_t_and_r, _HETHER_nut2tn,
+        {
+         _SRC(nutv6());
+         _DST(tn2v6(_GLOBAL0_UCAST_PRFX, _GLOBAL0_UCAST_PRFXLEN));
+         HopLimit=255;
+        },
+        {
+         TargetAddress=v6ether(A1N_MAC_ADDR);
+         DestinationAddress=
+                v6merge(_GLOBAL9_UCAST_PRFX, _GLOBAL9_UCAST_PRFXLEN,
+                        v6ether(A3N_MAC_ADDR));
+	 option=comb(RRDtllopt_rone, RRDredirected_header_hostthree);
+        }
+)
+
+//----------------------------------------------------------------------
+FEM_icmp6_redirect(RRDredirect_hostthree_t_and_r2, _HETHER_nut2tn,
+        {
+         _SRC(nutv6());
+         _DST(tn2v6(_GLOBAL0_UCAST_PRFX, _GLOBAL0_UCAST_PRFXLEN));
+         HopLimit=255;
+        },
+        {
+         TargetAddress=v6ether(A1N_MAC_ADDR);
+         DestinationAddress=
+                v6merge(_GLOBAL9_UCAST_PRFX, _GLOBAL9_UCAST_PRFXLEN,
+                        v6ether(A3N_MAC_ADDR));
+	 option=comb(RRDtllopt_rone, RRDredirected_header_hostthree_hl63);
+        }
+)
+
+//----------------------------------------------------------------------
+Opt_ICMPv6_Redirected RRDredirected_header_hostthree {
+        payload=RRD_hostthree;
+}
+
+//----------------------------------------------------------------------
+Payload RRD_hostthree {
+        data=right(RRDecho_request_tn2hostthree, SIZE_ETHER_HEADER);
+}
+
+//----------------------------------------------------------------------
+Opt_ICMPv6_Redirected RRDredirected_header_hostthree_hl63 {
+        payload=RRD_hostthree_hl63;
+}
+
+//----------------------------------------------------------------------
+Payload RRD_hostthree_hl63 {
+        data=right(RRDecho_request_tn2hostthree_hl63, SIZE_ETHER_HEADER);
+}
+
+//----------------------------------------------------------------------
+// Redirect w/o TLL
+//      NUT(link-local) ==> TN(global#1)
+//      icmp target=R1(global#1)
+//      icmp destination=H3(global#3)
+//              any option
+//----------------------------------------------------------------------
+FEM_icmp6_redirect(RRDredirect_hostthree_invalid_tgt, _HETHER_nut2tn,
+        {
+         _SRC(nutv6());
+         _DST(tn2v6(_GLOBAL0_UCAST_PRFX, _GLOBAL0_UCAST_PRFXLEN));
+         HopLimit=255;
+        },
+        {
+//         TargetAddress=v6ether(A1N_MAC_ADDR);
+         TargetAddress=v6merge(_GLOBAL0_UCAST_PRFX, _GLOBAL0_UCAST_PRFXLEN,
+                       v6ether(A1N_MAC_ADDR));
+         DestinationAddress=
+                v6merge(_GLOBAL9_UCAST_PRFX, _GLOBAL9_UCAST_PRFXLEN,
+                        v6ether(A3N_MAC_ADDR));
+	 option=stop;
+        }
+)
+
+//----------------------------------------------------------------------
+// Definitions for wildcard
+//----------------------------------------------------------------------
+
+_HETHER_define(hether_any2any, any, any)
+
+//----------------------------------------------------------------------
+// Redirect w/o TLL
+//      any ==> any
+//      icmp any
+//      icmp any
+//	any option
+//----------------------------------------------------------------------
+FEM_icmp6_redirect(RRDredirect_any, hether_any2any,
+        {
+         _SRC(any);
+         _DST(any);
+         HopLimit=any;
+        },
+        {
+         TargetAddress=any;
+         DestinationAddress=any;
+	 option=stop;
+        }
+)
+
+//----------------------------------------------------------------------
+
+#endif // _ROUTER_REDIRECT_DEF //

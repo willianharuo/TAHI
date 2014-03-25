@@ -1,0 +1,410 @@
+/* 
+ *
+ * Copyright (C) 2003 Yokogawa Electric Corporation , 
+ * INTAP(Interoperability Technology Association for Information 
+ * Processing, Japan) , IPA (Information-technology Promotion Agency,Japan)
+ * Copyright (C) IBM Corporation 2003.
+ * All rights reserved.
+ *
+ * Redistribution and use of this software in source and binary forms, with 
+ * or without modification, are permitted provided that the following 
+ * conditions and disclaimer are agreed and accepted by the user:
+ *
+ * 1. Redistributions of source code must retain the above copyright 
+ * notice, this list of conditions and the following disclaimer.
+ *
+ * 2. Redistributions in binary form must reproduce the above copyright 
+ * notice, this list of conditions and the following disclaimer in the 
+ * documentation and/or other materials provided with the distribution.
+ *
+ * 3. Neither the names of the copyrighters, the name of the project which 
+ * is related to this software (hereinafter referred to as "project") nor 
+ * the names of the contributors may be used to endorse or promote products 
+ * derived from this software without specific prior written permission.
+ *
+ * 4. No merchantable use may be permitted without prior written 
+ * notification to the copyrighters. However, using this software for the 
+ * purpose of testing or evaluating any products including merchantable 
+ * products may be permitted without any notification to the copyrighters.
+ *
+ *
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHTERS, THE PROJECT AND 
+ * CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING 
+ * BUT NOT LIMITED THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS 
+ * FOR A PARTICULAR PURPOSE, ARE DISCLAIMED.  IN NO EVENT SHALL THE 
+ * COPYRIGHTERS, THE PROJECT OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, 
+ * INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES 
+ * (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR 
+ * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) 
+ * HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN 
+ * CONTRACT,STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) 
+ * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF 
+ * THE POSSIBILITY OF SUCH DAMAGE.
+ *
+ *    Author: Kazuo Hiekata <hiekata@yamato.ibm.com>
+ *
+ */
+/*-----------------------------------------------------------------------------------*
+ *  Echo Request
+ *-----------------------------------------------------------------------------------*/
+//================================================================
+//  Echo Request
+//  Echo Request: TN ----> NUT0
+FEM_icmp6_echo_request(
+	echorequest_tn_to_nut0,
+	_HETHER_ha0_to_nut0,
+	{
+		_SRC(v6(TN_GLOBAL_UCAST));
+		_DST(NUT0_GLOBAL_UCAST);
+	},
+	{
+		payload = data8;
+	}
+)
+//================================================================
+//  Echo Request
+//  Echo Request: TN ----> NUT1
+FEM_icmp6_echo_request(
+	echorequest_tn_to_nut1,
+	_HETHER_r1_to_nut1,
+	{
+		_SRC(v6(TN_GLOBAL_UCAST));
+		_DST(NUT1_GLOBAL_UCAST);
+	},
+	{
+		payload = data8;
+	}
+)
+//================================================================
+//  Echo Request
+//  Echo Request: TN ----> NUT2
+FEM_icmp6_echo_request(
+	echorequest_tn_to_nut2,
+	_HETHER_r2_to_nut2,
+	{
+		_SRC(v6(TN_GLOBAL_UCAST));
+		_DST(NUT2_GLOBAL_UCAST);
+	},
+	{
+		payload = data8;
+	}
+)
+//================================================================
+//  Echo Request(encapsulated)
+//  Echo Request: TN --> NUT1 (out: HA0->NUT1, in: TN->NUT0)
+FEM_hdr_ipv6_exth(
+	echorequest_tunnel_tn_to_nut1,
+	_HETHER_r1_to_nut1,
+	{
+		_SRC(v6(HA0_GLOBAL_UCAST));
+		_DST(NUT1_GLOBAL_UCAST);
+	},
+	{
+		header = _HDR_IPV6_NAME(echorequest_tunnel_tn_to_nut1);
+		upper  = _PACKET_IPV6_NAME(echorequest_tn_to_nut0);
+	}
+)
+//================================================================
+//  Echo Request (with Routing Header)
+//  Echo Request: TN --> NUT1 (RH: NUT0)
+FEM_icmp6_echo_request_exth(
+	echorequest_rh_tn_to_nut1,
+	_HETHER_r1_to_nut1,
+	{
+		_SRC(v6(TN_GLOBAL_UCAST));
+		_DST(NUT1_GLOBAL_UCAST);
+	},
+	{
+		header = _HDR_IPV6_NAME(echorequest_rh_tn_to_nut1);
+		exthdr = ext_routing_to_homeaddress_nut0;
+		upper  = _ICMPV6_NAME(echorequest_rh_tn_to_nut1);
+	},
+	{
+		payload = data8;
+	}
+)
+//================================================================
+//  Echo Request(encapsulated)
+//  Echo Request: TN --> NUT2 (out: HA0->NUT2, in: TN->NUT0)
+FEM_hdr_ipv6_exth(
+	echorequest_tunnel_tn_to_nut2,
+	_HETHER_r2_to_nut2,
+	{
+		_SRC(v6(HA0_GLOBAL_UCAST));
+		_DST(NUT2_GLOBAL_UCAST);
+	},
+	{
+		header = _HDR_IPV6_NAME(echorequest_tunnel_tn_to_nut2);
+		upper  = _PACKET_IPV6_NAME(echorequest_tn_to_nut0);
+	}
+)
+//================================================================
+//  Echo Request (with Routing Header)
+//  Echo Request: TN --> NUT2 (RH: NUT0)
+FEM_hdr_ipv6_exth(
+	echorequest_rh_tn_to_nut2,
+	_HETHER_r2_to_nut2,
+	{
+		_SRC(v6(TN_GLOBAL_UCAST));
+		_DST(NUT2_GLOBAL_UCAST);
+	},
+	{
+		header = _HDR_IPV6_NAME(echorequest_rh_tn_to_nut2);
+		exthdr = ext_routing_to_homeaddress_nut0;
+		upper  = _PACKET_IPV6_NAME(echorequest_tn_to_nut0);
+	}
+)
+//================================================================
+//  Echo Request (with Routing Header)
+//  Echo Request: inside a tunneled packet only, HA0 tunnels [TN->NUT1(RH)]
+FEM_icmp6_echo_request_exth(
+	echorequest_rh_tn_to_nut1_via_ha0,
+	_HETHER_r1_to_nut1,
+	{
+		_SRC(v6(TN_GLOBAL_UCAST));
+		_DST(NUT0_GLOBAL_UCAST);
+	},
+	{
+		header = _HDR_IPV6_NAME(echorequest_rh_tn_to_nut1_via_ha0);
+		exthdr = ext_routing_from_nut1;
+		upper  = _ICMPV6_NAME(echorequest_rh_tn_to_nut1_via_ha0);
+	},
+	{
+		payload = data8;
+	}
+)
+//================================================================
+//  Echo Request(encapsulated)
+//  Echo Request: TN --> NUT2 (out: HA0->NUT2, in: TN->NUT1(RH))
+FEM_hdr_ipv6_exth(
+	echorequest_tunnel_tn_to_nut1to2_ha0,
+	_HETHER_r2_to_nut2,
+	{
+		_SRC(v6(HA0_GLOBAL_UCAST));
+		_DST(NUT2_GLOBAL_UCAST);
+	},
+	{
+		header = _HDR_IPV6_NAME(echorequest_tunnel_tn_to_nut1to2_ha0);
+		upper  = _PACKET_IPV6_NAME(echorequest_rh_tn_to_nut1_via_ha0);
+	}
+)
+//================================================================
+//  Echo Request (with Routing Header)
+//  Echo Request: inside a tunneled packet only. HA2 tunnels [TN->NUT1(RH)]
+FEM_icmp6_echo_request_exth(
+	echorequest_rh_tn_to_nut1_via_ha2,
+	_HETHER_r1_to_nut1,
+	{
+		_SRC(v6(TN_GLOBAL_UCAST));
+		_DST(NUT1_GLOBAL_UCAST);
+	},
+	{
+		header = _HDR_IPV6_NAME(echorequest_rh_tn_to_nut1_via_ha2);
+		exthdr = ext_routing_to_homeaddress_nut0;
+		upper  = _ICMPV6_NAME(echorequest_rh_tn_to_nut1_via_ha2);
+	},
+	{
+		payload = data8;
+	}
+)
+//================================================================
+//  Echo Request(encapsulated)
+//  Echo Request: TN --> NUT2 (out: HA2->NUT2, in: TN->NUT1(RH))
+FEM_hdr_ipv6_exth(
+	echorequest_tunnel_tn_to_nut1to2_ha2,
+	_HETHER_r2_to_nut2,
+	{
+		_SRC(v6(HA2_GLOBAL_UCAST));
+		_DST(NUT2_GLOBAL_UCAST);
+	},
+	{
+		header = _HDR_IPV6_NAME(echorequest_tunnel_tn_to_nut1to2_ha2);
+		upper  = _PACKET_IPV6_NAME(echorequest_rh_tn_to_nut1_via_ha2);
+	}
+)
+//================================================================
+//  Echo Request(w/ Binding Acknowledgement)
+//  Echo Request: HA0 --> NUT1 (w/ Binding Acknowledgement)
+FEM_icmp6_echo_request_exth(
+	echorequest_binack_ha0_to_nut1,
+	_HETHER_r1_to_nut1,
+	{
+		_SRC(v6(HA0_GLOBAL_UCAST));
+		_DST(NUT1_GLOBAL_UCAST);
+	},
+	{
+		header = _HDR_IPV6_NAME(echorequest_binack_ha0_to_nut1);
+		exthdr = ext_routing_to_homeaddress_nut0;
+		exthdr = ext_bindingacknowledgement;
+		upper  = _ICMPV6_NAME(echorequest_binack_ha0_to_nut1);
+	},
+	{
+		payload = data8;
+	}
+)
+/*-----------------------------------------------------------------------------------*
+ *  Echo Reply
+ *-----------------------------------------------------------------------------------*/
+//================================================================
+//  Echo Reply
+//  Echo Reply: NUT0 ----> TN
+FEM_icmp6_echo_reply(
+	echoreply_nut0_to_ha1,
+	_HETHER_nut0_to_ha1,
+	{
+		_SRC(NUT0_GLOBAL_UCAST);
+		_DST(v6(HA1_GLOBAL_UCAST));
+	},
+	{
+		payload = data8;
+	}
+)
+//================================================================
+//  Echo Reply
+//  Echo Reply: NUT0 ----> HA0
+FEM_icmp6_echo_reply(
+	echoreply_nut1_to_ha0,
+	_HETHER_nut1_to_r1,
+	{
+		_SRC(NUT1_GLOBAL_UCAST);
+		_DST(v6(HA0_GLOBAL_UCAST));
+	},
+	{
+		payload = data8;
+	}
+)
+//================================================================
+//  Echo Reply
+//  Echo Reply: NUT0 ----> TN
+FEM_icmp6_echo_reply(
+	echoreply_nut0_to_tn,
+	_HETHER_nut0_to_ha0,
+	{
+		_SRC(NUT0_GLOBAL_UCAST);
+		_DST(v6(TN_GLOBAL_UCAST));
+	},
+	{
+		payload = data8;
+	}
+)
+//================================================================
+//  Echo Reply
+//  Echo Reply: NUT1 ----> TN
+FEM_icmp6_echo_reply(
+	echoreply_nut1_to_tn,
+	_HETHER_nut1_to_r1,
+	{
+		_SRC(NUT1_GLOBAL_UCAST);
+		_DST(v6(TN_GLOBAL_UCAST));
+	},
+	{
+		payload = data8;
+	}
+)
+//================================================================
+//  Echo Reply (w/ Home Address Option)
+//  Echo Reply: NUT1 ----> TN(Home Address Option)
+FEM_icmp6_echo_reply_exth(
+	echoreply_opt_home_nut1_to_tn,
+	_HETHER_nut1_to_r1,
+	{
+		_SRC(NUT1_GLOBAL_UCAST);
+		_DST(v6(TN_GLOBAL_UCAST));
+	},
+	{
+		header = _HDR_IPV6_NAME(echoreply_opt_home_nut1_to_tn);
+		exthdr = ext_homeaddress_nut0;
+		upper  = _ICMPV6_NAME(echoreply_opt_home_nut1_to_tn);
+	},
+	{
+		payload = data8;
+	}
+)
+//================================================================
+//  Echo Reply
+//  Echo Reply: NUT2 ----> TN
+FEM_icmp6_echo_reply(
+	echoreply_nut2_to_tn,
+	_HETHER_nut2_to_r2,
+	{
+		_SRC(NUT2_GLOBAL_UCAST);
+		_DST(v6(TN_GLOBAL_UCAST));
+	},
+	{
+		payload = data8;
+	}
+)
+//================================================================
+//  Echo Reply (w/ Home Address Option)
+//  Echo Reply: NUT1 ----> TN(Home Address Option: NUT0)
+FEM_icmp6_echo_reply_exth(
+	echoreply_opt_home0_nut2_to_tn,
+	_HETHER_nut2_to_r2,
+	{
+		_SRC(NUT2_GLOBAL_UCAST);
+		_DST(v6(TN_GLOBAL_UCAST));
+	},
+	{
+		header = _HDR_IPV6_NAME(echoreply_opt_home0_nut2_to_tn);
+		exthdr = ext_homeaddress_nut0;
+		upper  = _ICMPV6_NAME(echoreply_opt_home0_nut2_to_tn);
+	},
+	{
+		payload = data8;
+	}
+)
+//================================================================
+//  Echo Reply (w/ Home Address Option)
+//  Echo Reply: NUT2 ----> TN(Home Address Option: NUT1)
+FEM_icmp6_echo_reply_exth(
+	echoreply_opt_home1_nut2_to_tn,
+	_HETHER_nut2_to_r2,
+	{
+		_SRC(NUT2_GLOBAL_UCAST);
+		_DST(v6(TN_GLOBAL_UCAST));
+	},
+	{
+		header = _HDR_IPV6_NAME(echoreply_opt_home1_nut2_to_tn);
+		exthdr = ext_homeaddress_nut1;
+		upper  = _ICMPV6_NAME(echoreply_opt_home1_nut2_to_tn);
+	},
+	{
+		payload = data8;
+	}
+)
+//================================================================
+//  Echo Reply(encapsulated)
+//  reversed tunneled Echo Reply (out:NUT1->HA0, in:NUT0->TN)
+//FEM_icmp6_echo_reply(
+FEM_hdr_ipv6_exth(
+	echoreply_rev_tun_nut1_to_tn,
+	_HETHER_nut1_to_r1,
+	{
+		_SRC(NUT1_GLOBAL_UCAST);
+		_DST(v6(HA0_GLOBAL_UCAST));
+	},
+	{
+		header = _HDR_IPV6_NAME(echoreply_rev_tun_nut1_to_tn);
+		upper  = _PACKET_IPV6_NAME(echoreply_nut0_to_tn);
+	}
+)
+//================================================================
+//  Echo Reply(encapsulated)
+//  reversed tunneled Echo Reply (out:NUT2->HA0, in:NUT0->TN)
+//FEM_icmp6_echo_reply(
+FEM_hdr_ipv6_exth(
+	echoreply_rev_tun_nut2_to_tn,
+	_HETHER_nut2_to_r2,
+	{
+		_SRC(NUT2_GLOBAL_UCAST);
+		_DST(v6(HA0_GLOBAL_UCAST));
+	},
+	{
+		header = _HDR_IPV6_NAME(echoreply_rev_tun_nut2_to_tn);
+		upper  = _PACKET_IPV6_NAME(echoreply_nut0_to_tn);
+	}
+)
+Payload data8 {
+	data = repeat(0x00, 8);
+}

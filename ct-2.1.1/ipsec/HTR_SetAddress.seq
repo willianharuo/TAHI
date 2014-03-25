@@ -1,0 +1,331 @@
+#!/usr/bin/perl
+#
+# Copyright (C) 1999, 2000, 2001, 2002, 2003 Yokogawa Electric Corporation,
+# IPA (Information-technology Promotion Agency, Japan).
+# All rights reserved.
+# 
+# Redistribution and use of this software in source and binary forms, with 
+# or without modification, are permitted provided that the following 
+# conditions and disclaimer are agreed and accepted by the user:
+# 
+# 1. Redistributions of source code must retain the above copyright 
+# notice, this list of conditions and the following disclaimer.
+# 
+# 2. Redistributions in binary form must reproduce the above copyright 
+# notice, this list of conditions and the following disclaimer in the 
+# documentation and/or other materials provided with the distribution.
+# 
+# 3. Neither the names of the copyrighters, the name of the project which 
+# is related to this software (hereinafter referred to as "project") nor 
+# the names of the contributors may be used to endorse or promote products 
+# derived from this software without specific prior written permission.
+# 
+# 4. No merchantable use may be permitted without prior written 
+# notification to the copyrighters. However, using this software for the 
+# purpose of testing or evaluating any products including merchantable 
+# products may be permitted without any notification to the copyrighters.
+# 
+# 
+# 
+# THIS SOFTWARE IS PROVIDED BY THE COPYRIGHTERS, THE PROJECT AND 
+# CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING 
+# BUT NOT LIMITED THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS 
+# FOR A PARTICULAR PURPOSE, ARE DISCLAIMED.  IN NO EVENT SHALL THE 
+# COPYRIGHTERS, THE PROJECT OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, 
+# INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES 
+# (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR 
+# SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) 
+# HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN 
+# CONTRACT,STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) 
+# ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF 
+# THE POSSIBILITY OF SUCH DAMAGE.
+#
+# $TAHI: ct/ipsec/HTR_SetAddress.seq,v 1.16 2003/06/05 11:09:34 ozoe Exp $
+#
+######################################################################
+BEGIN {
+    unshift(@INC, '../ipsec/');
+    $V6evalTool::TestVersion = '$Name: REL_2_1_1 $ ';
+}
+
+use V6evalTool;
+use IPSEC;
+
+%pktdesc = (
+    echo_request_from_router	=> 'Send Echo Request from Router',
+    echo_reply_to_router	=> 'Recv Echo Reply to Router',
+
+    echo_request_from_host1	=> 'Send Echo Request from Host1',
+    echo_reply_to_host1		=> 'Recv Echo Reply to Host1',
+
+    ns_to_router		=> 'Recv Neighbor Solicitation',
+    na_from_router		=> 'Send Neighbor Advertisement',
+
+    ra_to_nut			=> 'Send Router Advertisement',
+);
+
+ipsecCheckNUT(host);
+
+$if_nut = $V6evalTool::NutDef{Link0_device};
+
+ipsecReboot();
+
+$IF = Link0;
+
+#----- start capturing
+vCapture($IF);
+
+if ($IPSEC::IPsecAddr{IPSEC_IPVERSION} == 4) {
+    # for IPv4
+
+    $ret = vRemote(
+	"manualaddrconf.rmt",
+	"if=$if_nut",
+	"addrfamily=inet",
+	"type=delete",
+	);
+
+    if ($ret) {
+	vLogHTML('<FONT COLOR="#FF0000">NG</FONT>');
+	exit $V6evalTool::exitFatal;
+    }
+
+    $ret = vRemote(
+	"manualaddrconf.rmt",
+	"if=$if_nut",
+	"addrfamily=inet",
+	"addr=$IPSEC::IPsecAddr{IPSEC_NUT_NET3_ADDR}",
+	"netmask=$IPSEC::IPsecAddr{IPSEC_NET3_NETMASK}",
+	"type=add",
+	);
+
+    if ($ret) {
+	vLogHTML('<FONT COLOR="#FF0000">NG</FONT>');
+	exit $V6evalTool::exitFatal;
+    }
+
+    $ret = vRemote(
+	"route.rmt",
+	"cmd=add",
+	"addrfamily=inet",
+	"addrtype=net",
+	"prefix=$IPSEC::IPsecAddr{IPSEC_NET5_PREFIX}",
+	"netmask=$IPSEC::IPsecAddr{IPSEC_NET5_NETMASK}",
+	"gateway=$IPSEC::IPsecAddr{IPSEC_ROUTER_NET3_ADDR}",
+	"if=$if_nut",
+	);
+
+    if ($ret) {
+	vLogHTML('<FONT COLOR="#FF0000">NG</FONT>');
+	exit $V6evalTool::exitFatal;
+    }
+}
+else {
+    # for IPv6
+    ## RA
+
+    vSend($IF, ra_to_nut);
+}
+
+vSleep(10);
+
+#======================================================================
+# ping TN(Router) <-> NUT
+
+%status = vSend($IF, echo_request_from_router);
+
+if ($IPSEC::IPsecAddr{IPSEC_IPVERSION} == 4) {
+}
+else{
+    $addr = $status{"Frame_Ether.Packet_IPv6.Hdr_IPv6.DestinationAddress"};
+    setaddr($addr);
+}
+
+$type=$V6evalTool::NutDef{Type};
+
+if ($IPSEC::IPsecAddr{IPSEC_IPVERSION} == 4 || $type eq 'host') {
+
+    %ret = vRecv($IF, 5, 0, 0, ns_to_router, echo_reply_to_router);
+    if ($ret{status} != 0) {
+        vLogHTML('<FONT COLOR="#FF0000">NG</FONT>');
+        exit $V6evalTool::exitFail;
+    }
+    if ($ret{recvFrame} eq 'ns_to_router') {
+        vSend($IF, na_from_router);
+        %ret = vRecv($IF, 5, 0, 0, echo_reply_to_router);
+        if ($ret{status} != 0) {
+            vLogHTML('<FONT COLOR="#FF0000">NG</FONT>');
+            exit $V6evalTool::exitFail;
+        }
+    }
+
+    if ($ret{recvFrame} ne 'echo_reply_to_router') {
+        vLogHTML('<FONT COLOR="#FF0000">NG</FONT>');
+        exit $V6evalTool::exitFail;
+    }
+}
+else {
+
+    $ret = vRemote(
+	'manualaddrconf.rmt',
+	"if=$if_nut",
+	"addr=$IPSEC::IPsecAddr{IPSEC_NUT_NET3_ADDR}",
+	"len=$IPSEC::IPsecAddr{IPSEC_NET3_PREFIX_LEN}",
+	'type=unicast'
+	);
+
+    if ($ret) {
+	vLogHTML('<FONT COLOR="#FF0000">NG</FONT>');
+	exit $V6evalTool::exitFatal;
+    }
+
+    $ret = vRemote(
+	'route.rmt',
+	'cmd=add',
+	"if=$if_nut",
+	"prefix=$IPSEC::IPsecAddr{IPSEC_NET5_PREFIX}",
+	"prefixlen=$IPSEC::IPsecAddr{IPSEC_NET5_PREFIX_LEN}",
+	"gateway=$IPSEC::IPsecAddr{IPSEC_ROUTER_NET3_ADDR}",
+	);
+
+    if ($ret) {
+	vLogHTML('<FONT COLOR="#FF0000">NG</FONT>');
+	exit $V6evalTool::exitFatal;
+    }
+
+    vSleep(10);
+
+    vSend($IF, echo_request_from_router);
+
+    %ret = vRecv($IF, 5, 0, 0, ns_to_router, echo_reply_to_router);
+    if ($ret{status} != 0) {
+        vLogHTML('<FONT COLOR="#FF0000">NG</FONT>');
+        exit $V6evalTool::exitFail;
+    }
+    if ($ret{recvFrame} eq 'ns_to_router') {
+        vSend($IF, na_from_router);
+        %ret = vRecv($IF, 5, 0, 0, echo_reply_to_router);
+        if ($ret{status} != 0) {
+            vLogHTML('<FONT COLOR="#FF0000">NG</FONT>');
+            exit $V6evalTool::exitFail;
+        }
+    }
+
+    if ($ret{recvFrame} ne 'echo_reply_to_router') {
+        vLogHTML('<FONT COLOR="#FF0000">NG</FONT>');
+        exit $V6evalTool::exitFail;
+    }
+}
+
+#======================================================================
+# ping TN(Host1) <-> NUT
+
+vSend($IF, echo_request_from_host1);
+
+%ret = vRecv($IF, 5, 0, 0, ns_to_router, echo_reply_to_host1);
+if ($ret{status} != 0) {
+    vLogHTML('<FONT COLOR="#FF0000">NG</FONT>');
+    exit $V6evalTool::exitFail;
+}
+if ($ret{recvFrame} eq 'ns_to_router') {
+    vSend($IF, na_from_router);
+    %ret = vRecv($IF, 5, 0, 0, echo_reply_to_host1);
+    if ($ret{status} != 0) {
+        vLogHTML('<FONT COLOR="#FF0000">NG</FONT>');
+        exit $V6evalTool::exitFail;
+    }
+}
+
+if ($ret{recvFrame} ne 'echo_reply_to_host1') {
+    vLogHTML('<FONT COLOR="#FF0000">NG</FONT>');
+    exit $V6evalTool::exitFail;
+}
+
+vLogHTML('OK');
+exit $V6evalTool::exitPass;
+
+#======================================================================
+#
+# Create ipsec address define list from template file
+#
+#
+sub setaddr()
+{
+	my($addr) = @_;
+	$addr_def = "ipsecaddr".".def";
+	$addr_tmpl = "ipsecaddr".".def.tmpl";
+	if(open(IN, "$addr_tmpl") == 0) {;
+	   print STDERR "$addr_tmpl: $!\n";
+	   goto error;
+	}
+	print "NUT Address: $addr\n" if $V6evalRemote::debug;
+	if(open(OUT, "> $addr_def") == 0) {
+	    print STDERR "$addr_def: $!\n";
+	    goto error;
+	}
+	while(<IN>) {
+		s/IPSECGLOBALADDR/$addr/;
+		print OUT $_;
+	}
+	close(IN);
+	close(OUT);
+
+	print "Set IPSEC_NUT_NET3_ADDR: $addr\n" if $V6evalRemote::debug;
+
+	open (FILE, "ipsecaddr.def") || die "Cannot open $!\n";
+	while ( <FILE> ) {
+	if ( /^#define\s+(\S+)\s+(\S+)/ ) {
+			#print  $1 . " " . $2 . "\n";
+			$IPSEC::IPsecAddr{$1} = $2;
+		}
+	}
+	close FILE;
+
+	vCPP("");
+
+	return(1);
+error:
+	return(0);
+}
+
+######################################################################
+__END__
+
+=head1 NAME
+
+  HTR_SetAddress - set global address and default router
+                   for Host Transport Mode Test
+
+=head1 TARGET
+
+  Host
+
+=head1 SYNOPSIS
+
+=begin html
+<PRE>
+  <A HREF="./HTR_SetAddress.seq">HTR_SetAddress.seq</A> [-tooloption ...] -pkt <A HREF="./HTR_common.def">HTR_common.def</A>
+    -tooloption : v6eval tool option
+</PRE>
+
+=end html
+
+=head1 INITIALIZATION
+
+  NONE
+
+=head1 TEST PROCEDURE
+
+  1. Configure network
+  2. Ping
+
+=head1 JUDGMENT
+
+  NONE
+
+=head1 SEE ALSO
+
+  perldoc V6evalTool
+
+=cut
+

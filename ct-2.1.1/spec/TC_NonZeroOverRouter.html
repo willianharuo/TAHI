@@ -1,0 +1,209 @@
+<HTML>
+<HEAD>
+<TITLE>TC_NonZeroOverRouter - check Traffic Class Non-Zero over Router</TITLE>
+<LINK REV="made" HREF="mailto:hackers@FreeBSD.org">
+</HEAD>
+
+<BODY>
+
+<!-- INDEX BEGIN -->
+<!--
+
+<UL>
+
+	<LI><A HREF="#NAME">NAME</A>
+	<LI><A HREF="#TARGET">TARGET</A>
+	<LI><A HREF="#SYNOPSIS">SYNOPSIS</A>
+	<LI><A HREF="#INITIALIZATION">INITIALIZATION</A>
+	<LI><A HREF="#TEST_PROCEDURE">TEST PROCEDURE</A>
+	<LI><A HREF="#JUDGMENT">JUDGMENT</A>
+	<LI><A HREF="#REFERENCE">REFERENCE</A>
+	<LI><A HREF="#SEE_ALSO">SEE ALSO</A>
+</UL>
+-->
+<!-- INDEX END -->
+
+<P>
+<H1><A NAME="NAME">NAME</A></H1>
+<P>
+<PRE>  TC_NonZeroOverRouter - check Traffic Class Non-Zero over Router
+</PRE>
+<P>
+<HR>
+<H1><A NAME="TARGET">TARGET</A></H1>
+<P>
+<PRE>  Router
+</PRE>
+<P>
+<HR>
+<H1><A NAME="SYNOPSIS">SYNOPSIS</A></H1>
+<PRE>
+  <A HREF="./TC_NonZeroOverRouter.seq">TC_NonZeroOverRouter.seq</A> [-tooloption ...] -pkt <A HREF="./TC_NonZeroOverRouter.def">TC_NonZeroOverRouter.def</A>
+    -tooloption : v6eval tool option
+  See also <A HREF="./IH_Router.def">IH_Router.def</A>
+</PRE>
+
+<P>
+<HR>
+<H1><A NAME="INITIALIZATION">INITIALIZATION</A></H1>
+<P>
+<PRE>  None
+</PRE>
+<P>
+<HR>
+<H1><A NAME="TEST_PROCEDURE">TEST PROCEDURE</A></H1>
+<P>
+<PRE>  Tester                      Target                      Tester
+              (Link0)                     (Link1)
+    |                           |                           |
+    |--------------------------&gt;|                           |
+    |   Echo Request to Link0   |                           |
+    |                           |                           |
+    |                           |--------------------------&gt;|
+    |                           |   Neighbor Solicitation   |
+    |                           |                           |
+    |                           |&lt;--------------------------|
+    |                           |   Neighbor Advertisement  |
+    |                           |                           |
+    |                           |--------------------------&gt;|
+    |                           |   Echo Request from Link1 |
+    |                           |                           |
+    |                           |                           |
+    |                           |&lt;--------------------------|
+    |                           |   Echo Reply to Link1     |
+    |                           |                           |
+    |&lt;--------------------------|                           |
+    |   Neighbor Solicitation   |                           |
+    |                           |                           |
+    |--------------------------&gt;|                           |
+    |   Neighbor Advertisement  |                           |
+    |                           |                           |
+    |&lt;--------------------------|                           |
+    |   Echo Reply from Link0   |                           |
+    |                           |                           |
+    v                           v                           v
+</PRE>
+<P>
+<PRE>  1. Send Echo Request to Link0
+  2. Wait Echo Reply from Link1 or NS from Link1
+  3. If NS received then send NA to Link1, and wait Echo Reply form Link1 again
+  4. Receive Echo Reply from Link1
+  5. Send Echo Request to Link1
+  6. Wait Echo Reply from Link0 or NS from Link0
+  7. If NS received then send NA to Link0, and wait Echo Reply form Link0 again
+  8. Receive Echo Reply from Link0
+</PRE>
+<P>
+<PRE>  Echo Request to Link0 Data is:
+</PRE>
+<P>
+<PRE>        IPv6 Header
+            Version            = 6
+            Traffic Class      = 0x12 (8 bit)
+            FlowLabel          = 0
+            PayloadLength      = 16
+            NextHeader         = 58 (ICMP)
+            SourceAddress      = Tester Global Address (Link0)
+            DestinationAddress = Tester Global Address (Link1)
+</PRE>
+<P>
+<PRE>        ICMP Echo Request
+            Type           = 128 (Echo Request)
+            Code           = 0
+            Checksum       = (auto)
+            Identifier     = 0xffff
+            SequenceNumber = 1
+            PayloadData    = {1,2,3,4,5,6,7,8}
+</PRE>
+<P>
+<PRE>  Neighbor Solicitation packet's IP source Address selection may be:
+    - Link Local Address
+    - Global Address
+  This test IS NOT the Neighbor Discovery test, so admit both implementation.
+</PRE>
+<P>
+<HR>
+<H1><A NAME="JUDGMENT">JUDGMENT</A></H1>
+<P>
+<PRE>  PASS: Echo Reply Received from Link0
+</PRE>
+<P>
+<PRE>        IPv6 Header
+            Version             = 6
+            Traffic Class       = 0x12 (8 bit)
+            FlowLabel           = 0
+            PayloadLength       = 16
+            NextHeader          = 58 (ICMP)
+            SourceAddress      = Tester Global Address (Link1)
+            DestinationAddress = Tester Global Address (Link0)
+</PRE>
+<P>
+<PRE>        ICMP Echo Reply
+            Type           = 129 (Echo Reply)
+            Code           = 0
+            Checksum       = (auto)
+            Identifier     = 0xffff (same as Echo Request)
+            SequenceNumber = 1 (same as Echo Request)
+            PayloadData    = {1,2,3,4,5,6,7,8} (same as Echo Request)
+</PRE>
+<P>
+<HR>
+<H1><A NAME="REFERENCE">REFERENCE</A></H1>
+<P>
+RFC2460 3. IPv6 Header Format
+
+<P>
+<PRE>   Traffic Class        8-bit traffic class field.  See section 7.
+</PRE>
+<P>
+7. Traffic Classes
+
+<P>
+<PRE>   The 8-bit Traffic Class field in the IPv6 header is available for use
+   by originating nodes and/or forwarding routers to identify and
+   distinguish between different classes or priorities of IPv6 packets.
+   At the point in time at which this specification is being written,
+   there are a number of experiments underway in the use of the IPv4
+   Type of Service and/or Precedence bits to provide various forms of
+   &quot;differentiated service&quot; for IP packets, other than through the use
+   of explicit flow set-up.  The Traffic Class field in the IPv6 header
+   is intended to allow similar functionality to be supported in IPv6.
+   It is hoped that those experiments will eventually lead to agreement
+   on what sorts of traffic classifications are most useful for IP
+   packets.  Detailed definitions of the syntax and semantics of all or
+   some of the IPv6 Traffic Class bits, whether experimental or intended
+   for eventual standardization, are to be provided in separate
+   documents.
+</PRE>
+<P>
+<PRE>   The following general requirements apply to the Traffic Class field:
+</PRE>
+<P>
+<PRE>      o  The service interface to the IPv6 service within a node must
+         provide a means for an upper-layer protocol to supply the value
+         of the Traffic Class bits in packets originated by that upper-
+         layer protocol.  The default value must be zero for all 8 bits.
+</PRE>
+<P>
+<PRE>      o  Nodes that support a specific (experimental or eventual
+         standard) use of some or all of the Traffic Class bits are
+         permitted to change the value of those bits in packets that
+         they originate, forward, or receive, as required for that
+         specific use.  Nodes should ignore and leave unchanged any bits
+         of the Traffic Class field for which they do not support a
+         specific use.
+</PRE>
+<P>
+<PRE>      o  An upper-layer protocol must not assume that the value of the
+         Traffic Class bits in a received packet are the same as the
+         value sent by the packet's source.
+</PRE>
+<P>
+<HR>
+<H1><A NAME="SEE_ALSO">SEE ALSO</A></H1>
+<P>
+<PRE>  perldoc V6evalTool
+</PRE>
+</BODY>
+
+</HTML>

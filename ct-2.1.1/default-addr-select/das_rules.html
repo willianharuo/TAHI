@@ -1,0 +1,125 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<HTML><HEAD><TITLE>Default Address Selection for IPv6 rules</TITLE>
+<META http-equiv="Content-Type" content="text/htm>
+</HEAD><BODY text="#000000" bgColor="#ffffff" link="#0000ff" vlink="#840084" alink="#00aa00">
+<FONT size="+3"><B><U>Default Address Selection for IPv6</U></B></FONT><BR><BR>
+<A HREF="#DPT">default policy table</A><BR>
+<A HREF="#SAS">Source Address Selection Rules</A><BR>
+<A HREF="#DAS">Destination Address Selection Rules</A><BR><BR>
+ref. <A HREF="ftp://ftp.rfc-editor.org/in-notes/rfc3484.txt">RFC3484</A><BR><BR>
+
+<HR>
+<A NAME="DPT"><B><U>default policy table</U></B></A>
+<PRE>
+          Prefix        Precedence Label 
+          ::1/128               50     0 
+          ::/0                  40     1 
+          2002::/16             30     2 
+          ::/96                 20     3 
+          ::ffff:0:0/96         10     4 
+</PRE>
+<HR>
+<A NAME="SAS"><B><U>Source Address Selection</U></B></A>
+<PRE>
+   Rule 1: Prefer same address. 
+   If SA = D, then prefer SA. Similarly, if SB = D, then prefer SB. 
+
+   Rule 2: Prefer appropriate scope. 
+   If Scope(SA) < Scope(SB): If Scope(SA) < Scope(D), then prefer SB 
+   and otherwise prefer SA. 
+   Similarly, if Scope(SB) < Scope(SA): If Scope(SB) < Scope(D), then 
+   prefer SA and otherwise prefer SB. 
+
+   Rule 3: Avoid deprecated addresses. 
+   The addresses SA and SB have the same scope. If one of the two 
+   source addresses is "preferred" and one of them is "deprecated" (in 
+   the RFC 2462 sense), then prefer the one that is "preferred." 
+
+   Rule 4: Prefer home addresses. 
+   If SA is simultaneously a home address and care-of address and SB is 
+   not, then prefer SA. Similarly, if SB is simultaneously a home 
+   address and care-of address and SA is not, then prefer SB. 
+   If SA is just a home address and SB is just a care-of address, then 
+   prefer SA. Similarly, if SB is just a home address and SA is just a 
+   care-of address, then prefer SB. 
+
+   Rule 5: Prefer outgoing interface. 
+   If SA is assigned to the interface that will be used to send to D 
+   and SB is assigned to a different interface, then prefer SA. 
+   Similarly, if SB is assigned to the interface that will be used to 
+   send to D and SA is assigned to a different interface, then prefer 
+   SB. 
+
+   Rule 6: Prefer matching label. 
+   If Label(SA) = Label(D) and Label(SB) <> Label(D), then prefer SA. 
+   Similarly, if Label(SB) = Label(D) and Label(SA) <> Label(D), then 
+   prefer SB. 
+
+   Rule 7: Prefer public addresses. 
+   If SA is a public address and SB is a temporary address, then prefer 
+   SA. Similarly, if SB is a public address and SA is a temporary 
+   address, then prefer SB. 
+
+   Rule 8: Use longest matching prefix. 
+   If CommonPrefixLen(SA, D) > CommonPrefixLen(SB, D), then prefer SA. 
+   Similarly, if CommonPrefixLen(SB, D) > CommonPrefixLen(SA, D), then 
+   prefer SB. 
+
+</PRE>
+<HR>
+<A NAME="DAS"><B><U>Destination Address Selection</U></B></A>
+<PRE>
+   Rule 1: Avoid unusable destinations. 
+   If DB is known to be unreachable or if Source(DB) is undefined, then 
+   prefer DA. Similarly, if DA is known to be unreachable or if 
+   Source(DA) is undefined, then prefer DB. 
+
+   Rule 2: Prefer matching scope. 
+   If Scope(DA) = Scope(Source(DA)) and Scope(DB) <> Scope(Source(DB)), 
+   then prefer DA. Similarly, if Scope(DA) <> Scope(Source(DA)) and 
+   Scope(DB) = Scope(Source(DB)), then prefer DB. 
+
+   Rule 3: Avoid deprecated addresses. 
+   If Source(DA) is deprecated and Source(DB) is not, then prefer DB. 
+   Similarly, if Source(DA) is not deprecated and Source(DB) is 
+   deprecated, then prefer DA. 
+  
+   Rule 4: Prefer home addresses. 
+   If Source(DA) is simultaneously a home address and care-of address 
+   and Source(DB) is not, then prefer DA. Similarly, if Source(DB) is 
+   simultaneously a home address and care-of address and Source(DA) is 
+   not, then prefer DB. 
+   If Source(DA) is just a home address and Source(DB) is just a care-
+   of address, then prefer DA. Similarly, if Source(DA) is just a care-
+   of address and Source(DB) is just a home address, then prefer DB. 
+
+   Rule 5: Prefer matching label. 
+   If Label(Source(DA)) = Label(DA) and Label(Source(DB)) <> Label(DB), 
+   then prefer DA. Similarly, if Label(Source(DA)) <> Label(DA) and 
+   Label(Source(DB)) = Label(DB), then prefer DB. 
+
+   Rule 6: Prefer higher precedence. 
+   If Precedence(DA) > Precedence(DB), then prefer DA. Similarly, if 
+   Precedence(DA) < Precedence(DB), then prefer DB. 
+
+   Rule 7: Prefer native transport. 
+   If DA is reached via an encapsulating transition mechanism (eg, IPv6 
+   in IPv4) and DB is not, then prefer DB. Similarly, if DB is reached 
+   via encapsulation and DA is not, then prefer DA. 
+
+   Rule 8: Prefer smaller scope. 
+   If Scope(DA) < Scope(DB), then prefer DA. Similarly, if Scope(DA) > 
+   Scope(DB), then prefer DB. 
+
+   Rule 9: Use longest matching prefix. 
+   When DA and DB belong to the same address family (both are IPv6 or 
+   both are IPv4): If CommonPrefixLen(DA, Source(DA)) > 
+   CommonPrefixLen(DB, Source(DB)), then prefer DA. Similarly, if 
+   CommonPrefixLen(DA, Source(DA)) < CommonPrefixLen(DB, Source(DB)), 
+   then prefer DB. 
+
+   Rule 10: Otherwise, leave the order unchanged. 
+   If DA preceded DB in the original list, prefer DA. Otherwise prefer 
+   DB. 
+</PRE>
+</BODY></HTML>

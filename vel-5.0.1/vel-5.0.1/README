@@ -1,0 +1,263 @@
+                                README
+
+                             TAHI Project
+
+                      $Date: 2009/03/30 02:23:54 $
+
+[Introduction]
+
+    vel is an automatic Interoperability test execution tool.
+    It is an abbreviation for Virtual Evaluation Laboratory.
+
+    The features of vel are as follows:
+    - Automatic Command Execution
+        vel can automatically execute command, ping6, ifconfig and so
+        on, operated by vel manager. vel manager reads test scenario
+        and operates vel agent. So test users can concentrate on
+        user's device operation.
+
+    - Automatic Configuration
+        The nodes other than node under testing in test environment
+        need configuration for each test. The configuration is
+        automatically performed.
+
+----------------------------------------------------------------------
+[Contents]
+
+    vel consists of the following three commands:
+
+    - velm
+        velm is a manager to control the progress of test sequence and
+        operate users , vela and velo.
+
+    - vela
+        vela is a network communication agent with velm. It runs at
+        each node which is operated by velm.
+
+    - velo
+        velo is a command executor. It runs at each node which is
+        operated by velm. It executes command as operated by velm.
+
+
+    vel include IPv6 Ready Logo Program Phase-2 Core Protocols
+    Interoperability test scenario maker.
+
+    - example/interop_ph2_core/
+        Directory interop_ph2_core includes Interoperability test
+        scenario maker. It supports Phase-2 Test Interoperability
+        Specification Core Protocols version 4.0.1.
+
+    vel supports following platforms:
+        - FreeBSD 7.0
+        - NetBSD 4.0.1
+        - OpenBSD 4.3
+        - Fedora9
+        - KAME
+        - USAGI
+
+----------------------------------------------------------------------
+[Installation]
+
+    In IPv6 Ready Logo Phase-2 Core Protocols Interoperability Test, 
+    For using vel, you need to prepare the following nodes:
+        - 4 target nodes
+            They are selected from the supported platforms.
+            They must not be duplicated.
+	    If you configure the target nodes to boot multi-OSs, you
+	    can reduce the number of nodes.
+
+        - 2 reference nodes
+            They are selected from the supported platforms.
+            FreeBSD is recommended.
+
+        - 1 dumper (packet monitor) node
+            It is selected from the supported platforms.
+            FreeBSD is recommended.
+
+        - 1 manager node
+            It is selected from the supported platforms.
+            FreeBSD is recommended.
+
+    It is required to install vel on the above nodes.
+
+    Follow these instructions to install vel.
+    In the default configuration, vel is installed under
+    /usr/local/vel. Especially, three executable files are installed in
+    /usr/local/vel/bin.
+    
+    % ./configure
+    % make
+    # make install
+
+----------------------------------------------------------------------
+[Making bpf special device]
+
+    The user who executes conformance test need to belong in wheel
+    group
+
+    # vi /etc/group
+
+    And editing the following files are needed.
+
+    # vi /etc/rc.conf
+    # vi /etc/devfs.rules
+
+    /etc/rc.conf
+    ======================================================
+    devfs_system_ruleset="devfsrules_unhide_bpf"
+    ======================================================
+
+    /etc/devfs.rules
+    ======================================================
+    [devfsrules_unhide_bpf=1025]
+    add path 'bpf*' user root group wheel mode 0660 unhide
+    ======================================================
+
+----------------------------------------------------------------------
+[Test Environment]
+
+    Before running test scripts, it is necessary to build Unified
+    Topology for IPv6 Ready Logo Phase-2 Core Protocols Interoperability
+    Test like the following.
+
+                                      Network 1
+        ------+--------------+-----------+------+-
+              |              |           |      |
+              | 1            |           | 1    +-------------+
+       TG +-----------+      |        +------+                |
+   +------| REF-1 (V) |      |        | LOGO |                |
+   |      +-----------+      |        +------+                |
+   |          | 2            |                                |
+   |          |              |        Network 2               |
+   |    ------+------+------------+------+-----+--            |
+   |                 |       |    |            |              |
+   |               1 |       |    |            +------+       |
+   |       TG +----------+   |    |                   |       |
+   | +--------| REF-2 (V)|   |    |                   |       |
+   | |        +----------+   |    |                   |       |
+   | |             2 |       |    |                   |       |
+   | |               |       |    |   Network 3       |       |
+   | |  ------+------+------------------------+---    |       |
+   | |        |              |    |           |       |       |
+   | |        | 3            |    |           |       |       |
+   | |  TG +----------+ 1    |    |           |       |       |
+   | | +---| TAR* (V) |------+    |           |       |       |
+   | | |   +----------+           |           |       |       |
+   | | |      | 2                 |           |       |       |
+   | | |      +-------------------+           |       |       |
+   | | |                                      |       |       |
+   | | |                                      |       | 2     |
+   | | |     Network for TG                   |  +---------+  |
+  -+-+-+----+-------+-                        +--| dump (V)|--+
+            |       |                          3 +---------+ 1
+         TG |       |                                 | TG
+      +---------+   +---------------------------------+
+      | vel mgr |
+      +---------+
+
+
+    In IPv6 Ready Logo Phase-2 Core Protocols Interoperability Test, 
+
+    LOGO    : device under testing
+    vel mgr : vel manager, device on which velm program runs
+    TAR*    : 4 interoperable devices from other vendors devices
+              including 2 hosts and 2 routers.
+    REF-1   : reference node
+    REF-2   : reference node
+    dump    : packet monitor
+    (V)     : device which vela and velo programs run
+              TAR*, REF-1, REF-2 and dump
+
+    Unified Topology always requires connections to at least 6 nodes:
+    LOGO, vel mgr, dump, REF-1, REF-2 and TAR. One TAR is enough at
+    each test. If the other 3 unused TARs' interface are down, all
+    TARs can connect to Unified Topology.
+
+    The number around devices box means network interface number of
+    each device.  
+    For example, REF-1 has 3 network interfaces, 1, 2 and TG (used by
+    remote control). Network interface 1 is connected to Network1.
+    REF-2 also has 3 network interfaces. Network interface 1 is
+    connected to Network 2.
+
+----------------------------------------------------------------------
+[Test]
+
+    There are 2 types of operation. One is vel client operation.
+    Another is vel manager operation. 'vel client' means a device on
+    which vela and velo program run, that is, TAR*, REF-1, REF-2, and
+    dump.  'vel manager' means a device which velm program run, that
+    is, just vel mgr.
+
+    [vel client operation]
+
+    It is necessary to run velo and vela program on each vel client by
+    root.
+    
+    # vela &
+    # velo &
+
+    [vel manager operation]
+
+    An example for Interoperability Test for IPv6 Ready Logo Phase-2
+    Core Protocols is in /usr/local/vel/example/interop_ph2_core.
+    Copy /usr/local/vel/example/interop_ph2_core directory to any
+    directory which you like.
+
+    % cp -pR /usr/local/vel/example/interop_ph2_core \\
+      $SOMEWHERE/interop_ph2_core
+
+    And you can edit config.txt to adjust your Unified Topology. For
+    further information, please see config.sample.txt in the
+    directory.
+
+    % cd $SOMEWHERE/interop_ph2_core
+    % vi config.txt
+
+    After editing config.txt, you runs make_scenario.pl.
+    make_scenario.pl generates Test scenarios to the directory named
+    by localtime expression.
+
+    % perl ./make_scenario.pl
+
+    After the above command, you find the scenario directory (whoes
+    name is date format like 20050831200637 (LOCALTIME) in the current
+    directory.
+
+    Please enter the scenario directory.
+    If you choose FreeBSD and Linux as target router and NetBSD and
+    USAGI as target host, you find 4 directories, router.FreeBSD/,
+    router.Linux/, host.NetBSD/ and host.USAGI/.
+    These directories includes each test scenario files.
+
+    If your device type is host, you can test Test IP6Interop 1.1 Part
+    E for your device with FreeBSD router by the next command.
+    Please remember to connect the target device to Unified
+    Topology. It is recommended that the other target devices are
+    disconnected.
+
+    % velm -e environment.def -s router.FreeBSD/host.router.1_1_E.sc \\
+      interop
+
+    The command synopsis is the following:
+
+    velm -e environment_file -s scenario_file scenario_name
+
+    environment_file includes your test environment information.
+    scenario_file includes test sequence for controlling all vel
+    clients. scenario_name is scenario name which is defined in
+    scenario_file. scenario_name is defined as 'interop' in sample
+    program.
+
+    And you can initialize your test environment by the next command.
+
+    % velm -e environment.def -s router.FreeBSD/host.router.cleanup.sc \\
+      interop
+
+    Running the cleanup scenario is recommended after each test.
+
+----------------------------------------------------------------------
+[Contact]
+
+    Feel free to send your opinion and question to
+    contact@tahi.org

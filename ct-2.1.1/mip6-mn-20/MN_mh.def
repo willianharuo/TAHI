@@ -1,0 +1,827 @@
+/* 
+ *
+ * Copyright (C) 2003 Yokogawa Electric Corporation , 
+ * INTAP(Interoperability Technology Association for Information 
+ * Processing, Japan) , IPA (Information-technology Promotion Agency,Japan)
+ * Copyright (C) IBM Corporation 2003.
+ * All rights reserved.
+ *
+ * Redistribution and use of this software in source and binary forms, with 
+ * or without modification, are permitted provided that the following 
+ * conditions and disclaimer are agreed and accepted by the user:
+ *
+ * 1. Redistributions of source code must retain the above copyright 
+ * notice, this list of conditions and the following disclaimer.
+ *
+ * 2. Redistributions in binary form must reproduce the above copyright 
+ * notice, this list of conditions and the following disclaimer in the 
+ * documentation and/or other materials provided with the distribution.
+ *
+ * 3. Neither the names of the copyrighters, the name of the project which 
+ * is related to this software (hereinafter referred to as "project") nor 
+ * the names of the contributors may be used to endorse or promote products 
+ * derived from this software without specific prior written permission.
+ *
+ * 4. No merchantable use may be permitted without prior written 
+ * notification to the copyrighters. However, using this software for the 
+ * purpose of testing or evaluating any products including merchantable 
+ * products may be permitted without any notification to the copyrighters.
+ *
+ *
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHTERS, THE PROJECT AND 
+ * CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING 
+ * BUT NOT LIMITED THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS 
+ * FOR A PARTICULAR PURPOSE, ARE DISCLAIMED.  IN NO EVENT SHALL THE 
+ * COPYRIGHTERS, THE PROJECT OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, 
+ * INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES 
+ * (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR 
+ * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) 
+ * HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN 
+ * CONTRACT,STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) 
+ * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF 
+ * THE POSSIBILITY OF SUCH DAMAGE.
+ *
+ *    Author: Kazuo Hiekata <hiekata@yamato.ibm.com>
+ *
+ */
+/*-----------------------------------------------------------------------------------*
+ *  Default
+ *-----------------------------------------------------------------------------------*/
+
+
+#ifndef KCN
+#define KCN     "00112233445566778899aabbccddeeff00112233"
+#endif
+
+// Home Test Message
+#ifndef HOT_NONCE_INDEX
+#define HOT_NONCE_INDEX 10
+#endif
+#ifndef HOT_NONCE
+#define HOT_NONCE "123456789abcdef0"
+#endif
+#ifndef HOT_HOTCOOKIE
+#define HOT_HOTCOOKIE "0123456789abcdef"
+#endif
+
+#ifndef HOT_KEYGENNONCE
+#define HOT_KEYGENNONCE  keygentoken(hexstr(KCN), NUT0_GLOBAL_UCAST, hexstr(HOT_NONCE), 0)
+#endif
+
+// Care-of Test Message
+#ifndef COT_NONCE_INDEX
+#define COT_NONCE_INDEX 20
+#endif
+#ifndef COT_NONCE
+#define COT_NONCE "123456789abcdef0"
+#endif
+#ifndef COT_COTCOOKIE
+#define COT_COTCOOKIE "abcdef0123456789"
+#endif
+#ifndef COT_KEYGENNONCE1
+#define COT_KEYGENNONCE1  keygentoken(hexstr(KCN), NUT1_GLOBAL_UCAST, hexstr(COT_NONCE), 1)
+#endif
+#ifndef COT_KEYGENNONCE2
+#define COT_KEYGENNONCE2  keygentoken(hexstr(KCN), NUT2_GLOBAL_UCAST, hexstr(COT_NONCE), 1)
+#endif
+
+// Binding Acknowledgement Message
+#ifndef BA_IDENTIFIER
+#define BA_IDENTIFIER 0
+#endif
+#ifndef BA_LENGTH
+#define BA_LENGTH auto
+#endif
+#ifndef BA_SEQUENCENUMBER
+#define BA_SEQUENCENUMBER 0
+#endif
+#ifndef BA_LIFETIME
+#define BA_LIFETIME 1500
+#endif
+#ifndef BA_STATUS
+#define BA_STATUS 0
+#endif
+#ifndef BA_INTERVAL
+#define BA_INTERVAL 1000
+#endif
+
+// Binding Update Message
+#ifndef BU_AFLAG
+#define BU_AFLAG any
+#endif
+#ifndef BU_HFLAG
+#define BU_HFLAG any
+#endif
+#ifndef BU_LFLAG
+#define BU_LFLAG any
+#endif
+#ifndef BU_SEQUENCENUMBER
+#define BU_SEQUENCENUMBER any
+#endif
+#ifndef BU_LIFETIME
+#define BU_LIFETIME any
+#endif
+#ifndef BU_ALTER_ADDR
+#define BU_ALTER_ADDR v6("fec0::1")
+#endif
+#ifndef BU_HO_NONCE_INDEX
+#define BU_HO_NONCE_INDEX HOT_NONCE_INDEX
+#endif
+#ifndef BU_CO_NONCE_INDEX
+#define BU_CO_NONCE_INDEX COT_NONCE_INDEX
+#endif
+
+// Binding Error
+#ifndef BE_STATUS
+#define BE_STATUS 1
+#endif
+#ifndef BE_ADDR
+#define BE_ADDR v6("fec0::2")
+#endif
+
+/*-----------------------------------------------------------------------------------*
+ *  Common Options
+ *-----------------------------------------------------------------------------------*/
+Opt_MH_Pad1 opt_mh_pad1 { }
+Opt_MH_PadN opt_mh_pad2 {
+	pad = repeat(0x00, 0);
+}
+Opt_MH_PadN opt_mh_pad4 {
+	pad = repeat(0x00, 2);
+}
+Opt_MH_PadN opt_mh_pad6 {
+	pad = repeat(0x00, 4);
+}
+Opt_MH_PadN opt_mh_pad8 {
+	pad = repeat(0x00, 6);
+}
+
+Opt_Pad1 opt_pad1 { }
+Opt_PadN opt_pad2 {
+	pad = repeat(0x00, 0);
+}
+Opt_PadN opt_pad4 {
+	pad = repeat(0x00, 2);
+}
+Opt_PadN opt_pad6 {
+	pad = repeat(0x00, 4);
+}
+Opt_PadN opt_pad8 {
+	pad = repeat(0x00, 6);
+}
+/*-----------------------------------------------------------------------------------*
+ *  ID-18 6.1.2 Binding Refresh Request (BRR) Message
+ *-----------------------------------------------------------------------------------*/
+//================================================================
+//  Binding Refresh Request
+//  Binding Refresh Request: TN ----> NUT1(LinkX)
+FEM_upp_no_next_header_exth(
+	bindingrequest_tn_to_nut1,
+	_HETHER_r1_to_nut1,
+	{
+		_SRC(v6(TN_GLOBAL_UCAST));
+		_DST(NUT1_GLOBAL_UCAST);
+	},
+	{
+		header = _HDR_IPV6_NAME(bindingrequest_tn_to_nut1);
+		exthdr = ext_routing_to_homeaddress_nut0;
+		exthdr = ext_bindingrequest_to_nut1;
+		upper  = _UPP_NONEXT_NAME(bindingrequest_tn_to_nut1);
+	},
+	{}
+)
+//================================================================
+//  Binding Refresh Request
+//  Binding Refresh Request: HA0 ----> NUT2(LinkY)
+FEM_upp_no_next_header_exth(
+	bindingrequest_ha0_to_nut2,
+	_HETHER_r2_to_nut2,
+	{
+		_SRC(v6(HA0_GLOBAL_UCAST));
+		_DST(NUT2_GLOBAL_UCAST);
+	},
+	{
+		header = _HDR_IPV6_NAME(bindingrequest_ha0_to_nut2);
+		exthdr = ext_routing_to_homeaddress_nut0;
+		exthdr = ext_bindingrequest_to_nut2;
+		upper  = _UPP_NONEXT_NAME(bindingrequest_ha0_to_nut2);
+	},
+	{}
+)
+Hdr_MH_BRR ext_bindingrequest_to_nut1 {
+	Reserved2    = 0;
+	option = opt_mh_pad2;
+	option = opt_brr_authdata;
+}
+Hdr_MH_BRR ext_bindingrequest_to_nut2 {
+	Reserved2    = 0;
+	option = opt_mh_pad2;
+	option = opt_brr_authdata;
+}
+Opt_MH_BindingAuthData opt_brr_authdata {
+	Authenticator = bsa(kbm(HOT_KEYGENNONCE, COT_KEYGENNONCE1), NUT1_GLOBAL_UCAST, v6(TN_GLOBAL_UCAST));
+}
+Upp_NoNext no_next {
+	data = repeat(0x01, 16);
+}
+/*-----------------------------------------------------------------------------------*
+ *  ID-18 6.1.3 Home Test Init (HoTI) Message
+ *-----------------------------------------------------------------------------------*/
+//================================================================
+//  Home Test Init(inner)
+//  Home Test Init(inner): NUT0(Link 0) ----> TN
+FEM_upp_no_next_header_exth(
+	hoti_nut0_to_tn_inner,
+	_HETHER_nut0_to_ha0,
+	{
+		_SRC(NUT0_GLOBAL_UCAST);
+		_DST(v6(TN_GLOBAL_UCAST));
+	},
+	{
+		header = _HDR_IPV6_NAME(hoti_nut0_to_tn_inner);
+		exthdr = ext_hoti_nut1_to_ha0;
+		upper  = _UPP_NONEXT_NAME(hoti_nut0_to_tn_inner);
+	},
+	{}
+)
+//================================================================
+//  Home Test Init
+//  Home Test Init: NUT1(Link X) ----> HA0(NUT0)
+//FEM_upp_no_next_header_exth(
+FEM_hdr_ipv6_exth(
+	hoti_nut1_to_ha0,
+	_HETHER_nut1_to_r1,
+	{
+		_SRC(NUT1_GLOBAL_UCAST);
+		_DST(v6(HA0_GLOBAL_UCAST));
+	},
+	{
+		header = _HDR_IPV6_NAME(hoti_nut1_to_ha0);
+		upper  = _PACKET_IPV6_NAME(hoti_nut0_to_tn_inner);
+	}
+)
+//================================================================
+//  Home Test Init
+//  Home Test Init: NUT2(Link Y) ----> HA0(NUT0)
+//FEM_upp_no_next_header_exth(
+FEM_hdr_ipv6_exth(
+	hoti_nut2_to_ha0,
+	_HETHER_nut2_to_r2,
+	{
+		_SRC(NUT2_GLOBAL_UCAST);
+		_DST(v6(HA0_GLOBAL_UCAST));
+	},
+	{
+		header = _HDR_IPV6_NAME(hoti_nut2_to_ha0);
+		upper  = _PACKET_IPV6_NAME(hoti_nut0_to_tn_inner);
+	}
+)
+Hdr_MH_HoTI ext_hoti_nut1_to_ha0 {
+	Reserved1    = 0;
+	Reserved2    = 0;
+	InitCookie = any; //hexstr(HOTI_HOTCOOKIE, 8);
+}
+Hdr_MH_HoTI ext_hoti_nut2_to_ha0 {
+	Reserved1    = 0;
+	Reserved2    = 0;
+	InitCookie = any; //hexstr(HOTI_HOTCOOKIE, 8);
+}
+/*-----------------------------------------------------------------------------------*
+ *  ID-18 6.1.4 Care-of Test Init (CoTI) Message
+ *-----------------------------------------------------------------------------------*/
+//================================================================
+//  Care-of Test Init
+//  Care-of Test Init: NUT1(Link X) ----> TN
+FEM_upp_no_next_header_exth(
+	coti_nut1_to_tn,
+	_HETHER_nut1_to_r1,
+	{
+		_SRC(NUT1_GLOBAL_UCAST);
+		_DST(v6(TN_GLOBAL_UCAST));
+	},
+	{
+		header = _HDR_IPV6_NAME(coti_nut1_to_tn);
+		exthdr = ext_coti_nut1_to_ha0;
+		upper  = _UPP_NONEXT_NAME(coti_nut1_to_tn);
+	},
+	{}
+)
+//================================================================
+//  Care-of Test Init
+//  Care-of Test Init: NUT2(Link Y) ----> TN
+FEM_upp_no_next_header_exth(
+	coti_nut2_to_tn,
+	_HETHER_nut2_to_r2,
+	{
+		_SRC(NUT2_GLOBAL_UCAST);
+		_DST(v6(TN_GLOBAL_UCAST));
+	},
+	{
+		header = _HDR_IPV6_NAME(coti_nut2_to_tn);
+		exthdr = ext_coti_nut1_to_ha0;
+		upper  = _UPP_NONEXT_NAME(coti_nut1_to_tn);
+	},
+	{}
+)
+Hdr_MH_CoTI ext_coti_nut1_to_ha0 {
+	Reserved2    = 0;
+	InitCookie = any; //hexstr(COTI_COTCOOKIE, 8);
+}
+/*-----------------------------------------------------------------------------------*
+ *  ID-18 6.1.5 Home Test (HoT) Message
+ *-----------------------------------------------------------------------------------*/
+//================================================================
+//  Home Test(inner)
+//  Home Test(inner): HA0 ----> NUT1(Link X)
+FEM_upp_no_next_header_exth(
+	hot_tn_to_nut0_inner,
+	_HETHER_r1_to_nut1,
+	{
+		_SRC(v6(TN_GLOBAL_UCAST));
+		_DST(NUT0_GLOBAL_UCAST);
+	},
+	{
+		header = _HDR_IPV6_NAME(hot_tn_to_nut0_inner);
+		exthdr = ext_hot_tn_to_nut0;
+		upper  = _UPP_NONEXT_NAME(hot_tn_to_nut0_inner);
+	},
+	{}
+)
+//================================================================
+//  Home Test
+//  Home Test: HA0(NUT0) ----> NUT1(Link X)
+//FEM_upp_no_next_header_exth(
+FEM_hdr_ipv6_exth(
+	hot_tn_to_nut1_via_ha0,
+	_HETHER_r1_to_nut1,
+	{
+		_SRC(v6(HA0_GLOBAL_UCAST));
+		_DST(NUT1_GLOBAL_UCAST);
+	},
+	{
+		header = _HDR_IPV6_NAME(hot_tn_to_nut1_via_ha0);
+		upper  = _PACKET_IPV6_NAME(hot_tn_to_nut0_inner);
+	}
+)
+
+Hdr_MH_HoT ext_hot_tn_to_nut0 {
+	Index     = HOT_NONCE_INDEX;
+	InitCookie = hexstr(HOT_HOTCOOKIE, 8);
+	KeygenToken  = HOT_KEYGENNONCE;
+}
+/*-----------------------------------------------------------------------------------*
+ *  ID-18 6.1.6 Care-of Test (CoT) Message
+ *-----------------------------------------------------------------------------------*/
+//================================================================
+//  Care-of Test
+//  Care-of Test: TN ----> NUT1(Link X)
+FEM_upp_no_next_header_exth(
+	cot_tn_to_nut1,
+	_HETHER_r1_to_nut1,
+	{
+		_SRC(v6(TN_GLOBAL_UCAST));
+		_DST(NUT1_GLOBAL_UCAST);
+	},
+	{
+		header = _HDR_IPV6_NAME(cot_tn_to_nut1);
+		exthdr = ext_cot_tn_to_nut1;
+		upper  = _UPP_NONEXT_NAME(cot_tn_to_nut1);
+	},
+	{}
+)
+Hdr_MH_CoT ext_cot_tn_to_nut1 {
+	Index     = COT_NONCE_INDEX;
+	InitCookie = hexstr(COT_COTCOOKIE, 8);// hexstr("0123456789abcdef", 8);
+	KeygenToken = COT_KEYGENNONCE1;
+}
+//================================================================
+//  Care-of Test
+//  Care-of Test: TN ----> NUT2(Link Y)
+FEM_upp_no_next_header_exth(
+	cot_tn_to_nut2,
+	_HETHER_r2_to_nut2,
+	{
+		_SRC(v6(TN_GLOBAL_UCAST));
+		_DST(NUT2_GLOBAL_UCAST);
+	},
+	{
+		header = _HDR_IPV6_NAME(cot_tn_to_nut2);
+		exthdr = ext_cot_tn_to_nut2;
+		upper  = _UPP_NONEXT_NAME(cot_tn_to_nut2);
+	},
+	{}
+)
+Hdr_MH_CoT ext_cot_tn_to_nut2 {
+	Index     = COT_NONCE_INDEX;
+	InitCookie = hexstr(COT_COTCOOKIE, 8);// hexstr("0123456789abcdef", 8);
+	KeygenToken = COT_KEYGENNONCE2;
+}
+/*-----------------------------------------------------------------------------------*
+ *  ID-18 6.1.7 Binding Update (BU) Message
+ *-----------------------------------------------------------------------------------*/
+//================================================================
+//  Binding Update
+//  Binding Update: any
+FEM_upp_no_next_header_exth(
+	bindingupdate_to_ha0,
+	_HETHER_any,
+	{
+		HopLimit = any;
+		_SRC(any);
+		_DST(v6(HA0_GLOBAL_UCAST));
+	},
+	{
+		header = _HDR_IPV6_NAME(bindingupdate_to_ha0);
+		exthdr = ext_homeaddress_nut0;
+		exthdr = ext_bindingupdate_to_ha;
+		upper  = _UPP_NONEXT_NAME(bindingupdate_to_ha0);
+	},
+	{}
+)
+//================================================================
+//  Binding Update
+//  Binding Update: NUT0(Link0) ----> HA0
+FEM_upp_no_next_header_exth(
+	bindingupdate_nut0_to_ha0,
+	_HETHER_nut0_to_ha0,
+	{
+		HopLimit = any;
+		_SRC(NUT0_GLOBAL_UCAST);
+		_DST(v6(HA0_GLOBAL_UCAST));
+	},
+	{
+		header = _HDR_IPV6_NAME(bindingupdate_nut0_to_ha0);
+		exthdr = ext_homeaddress_nut0;
+		exthdr = ext_bindingupdate_to_ha;
+		upper  = _UPP_NONEXT_NAME(bindingupdate_nut0_to_ha0);
+	},
+	{}
+)
+//================================================================
+//  Binding Update
+//  Binding Update: NUT1(LinkX) ----> HA0
+FEM_upp_no_next_header_exth(
+	bindingupdate_nut1_to_ha0,
+	_HETHER_nut1_to_r1,
+	{
+		HopLimit = any;
+		_SRC(NUT1_GLOBAL_UCAST);
+		_DST(v6(HA0_GLOBAL_UCAST));
+	},
+	{
+		header = _HDR_IPV6_NAME(bindingupdate_nut1_to_ha0);
+		exthdr = ext_homeaddress_nut0;
+		exthdr = ext_bindingupdate_to_ha;
+		upper  = _UPP_NONEXT_NAME(bindingupdate_nut1_to_ha0);
+	},
+	{}
+)
+//================================================================
+//  Binding Update
+//  Binding Update: NUT1(LinkX) ----> HA1
+FEM_upp_no_next_header_exth(
+	bindingupdate_nut1_to_ha1,
+	_HETHER_nut1_to_r1,
+	{
+		HopLimit = any;
+		_SRC(NUT1_GLOBAL_UCAST);
+		_DST(v6(HA1_GLOBAL_UCAST));
+	},
+	{
+		header = _HDR_IPV6_NAME(bindingupdate_nut1_to_ha1);
+		exthdr = ext_homeaddress_nut0;
+		exthdr = ext_bindingupdate_to_ha;
+		upper  = _UPP_NONEXT_NAME(bindingupdate_nut1_to_ha1);
+	},
+	{}
+)
+//================================================================
+//  Binding Update
+//  Binding Update: NUT1(LinkX) ----> TN(LinkZ)
+FEM_upp_no_next_header_exth(
+	bindingupdate_nut1_to_tn,
+	_HETHER_nut1_to_r1,
+	{
+		HopLimit = any;
+		_SRC(NUT1_GLOBAL_UCAST);
+		_DST(v6(TN_GLOBAL_UCAST));
+	},
+	{
+		header = _HDR_IPV6_NAME(bindingupdate_nut1_to_tn);
+		exthdr = ext_homeaddress_nut0;
+		exthdr = ext_bindingupdate_nut1_to_tn;
+		upper  = _UPP_NONEXT_NAME(bindingupdate_nut1_to_tn);
+	},
+	{}
+)
+//================================================================
+//  Binding Update
+//  Binding Update: NUT2(LinkY) ----> TN(LinkZ)
+FEM_upp_no_next_header_exth(
+	bindingupdate_nut2_to_tn,
+	_HETHER_nut2_to_r2,
+	{
+		HopLimit = any;
+		_SRC(NUT2_GLOBAL_UCAST);
+		_DST(v6(TN_GLOBAL_UCAST));
+	},
+	{
+		header = _HDR_IPV6_NAME(bindingupdate_nut2_to_tn);
+		exthdr = ext_homeaddress_nut0;
+		exthdr = ext_bindingupdate_nut2_to_tn;
+		upper  = _UPP_NONEXT_NAME(bindingupdate_nut2_to_tn);
+	},
+	{}
+)
+//================================================================
+//  Binding Update
+//  Binding Update: NUT2(LinkY) ----> HA0
+FEM_upp_no_next_header_exth(
+	bindingupdate_nut2_to_ha0,
+	_HETHER_nut2_to_r2,
+	{
+		HopLimit = any;
+		_SRC(NUT2_GLOBAL_UCAST);
+		_DST(v6(HA0_GLOBAL_UCAST));
+	},
+	{
+		header = _HDR_IPV6_NAME(bindingupdate_nut2_to_ha0);
+		exthdr = ext_homeaddress_nut0;
+		exthdr = ext_bindingupdate_to_ha;
+		upper  = _UPP_NONEXT_NAME(bindingupdate_nut2_to_ha0);
+	},
+	{}
+)
+//================================================================
+//  Binding Update
+//  Binding Update: NUT2(LinkY) ----> HA1
+FEM_upp_no_next_header_exth(
+	bindingupdate_nut2_to_ha1,
+	_HETHER_nut2_to_r2,
+	{
+		HopLimit = any;
+		_SRC(NUT2_GLOBAL_UCAST);
+		_DST(v6(HA1_GLOBAL_UCAST));
+	},
+	{
+		header = _HDR_IPV6_NAME(bindingupdate_nut2_to_ha1);
+		exthdr = ext_homeaddress_nut0;
+		exthdr = ext_bindingupdate_to_ha;
+		upper  = _UPP_NONEXT_NAME(bindingupdate_nut2_to_ha1);
+	},
+	{}
+)
+//================================================================
+//  Binding Update
+//  Binding Update: NUT2(LinkY) ----> HA2
+FEM_upp_no_next_header_exth(
+	bindingupdate_nut2_to_ha2,
+	_HETHER_nut2_to_r2,
+	{
+		HopLimit = any;
+		_SRC(NUT2_GLOBAL_UCAST);
+		_DST(v6(HA2_GLOBAL_UCAST));
+	},
+	{
+		header = _HDR_IPV6_NAME(bindingupdate_nut2_to_ha2);
+		exthdr = ext_homeaddress_nut1;
+		exthdr = ext_bindingupdate_to_ha;
+		upper  = _UPP_NONEXT_NAME(bindingupdate_nut2_to_ha2);
+	},
+	{}
+)
+//================================================================
+//  Binding Update
+//  Binding Update: any ----> HA2
+FEM_upp_no_next_header_exth(
+	bindingupdate_to_ha2,
+	_HETHER_any,
+	{
+		HopLimit = any;
+		_SRC(any);
+		_DST(v6(HA2_GLOBAL_UCAST));
+	},
+	{
+		header = _HDR_IPV6_NAME(bindingupdate_to_ha2);
+		exthdr = ext_homeaddress_nut0;
+		exthdr = ext_bindingupdate_to_ha;
+		upper  = _UPP_NONEXT_NAME(bindingupdate_to_ha2);
+	},
+	{}
+)
+Hdr_Destination ext_homeaddress_nut0 {
+	option = opt_pad4;
+	option = opt_homeaddress_nut0;
+}
+Hdr_Destination ext_homeaddress_nut1 {
+	option = opt_pad4;
+	option = opt_homeaddress_nut1;
+}
+Opt_HomeAddress opt_homeaddress_nut0 {
+	HomeAddress = NUT0_GLOBAL_UCAST;
+}
+Opt_HomeAddress opt_homeaddress_nut1 {
+	HomeAddress = NUT1_GLOBAL_UCAST;
+}
+Hdr_Destination ext_homeaddress_any {
+	option = any;
+}
+Hdr_MH_BU ext_bindingupdate_to_ha {
+	option = opt_mh_pad4;
+	AFlag       = BU_AFLAG;
+	HFlag       = BU_HFLAG;
+	LFlag       = BU_LFLAG;
+	Reserved1    = 0;
+	Reserved2    = 0;
+	SequenceNumber    = BU_SEQUENCENUMBER;
+	Lifetime          = BU_LIFETIME;
+}
+Hdr_MH_BU ext_bindingupdate_nut1_to_tn {
+	AFlag       = BU_AFLAG;
+	HFlag       = BU_HFLAG;
+	LFlag       = BU_LFLAG;
+	SequenceNumber    = BU_SEQUENCENUMBER;
+	Lifetime          = BU_LIFETIME;
+	Reserved1    = 0;
+	Reserved2    = 0;
+	option      = opt_bu_nonceindices;
+	option      = opt_bu_authdata_nut1_to_tn;
+}
+Opt_MH_BindingAuthData opt_bu_authdata_nut1_to_tn {
+	Authenticator = bsa(kbm(HOT_KEYGENNONCE, COT_KEYGENNONCE1), NUT1_GLOBAL_UCAST, v6(TN_GLOBAL_UCAST));
+}
+Opt_MH_BindingAuthData opt_bu_authdata_nut2_to_tn {
+	Authenticator = bsa(kbm(HOT_KEYGENNONCE, COT_KEYGENNONCE2), NUT2_GLOBAL_UCAST, v6(TN_GLOBAL_UCAST));
+}
+Opt_MH_NonceIndices opt_bu_nonceindices {
+	HoNonceIndex = BU_HO_NONCE_INDEX;
+	CoNonceIndex = BU_CO_NONCE_INDEX;
+}
+Opt_MH_AlternateCoA opt_bu_altercoa {
+	Address = BU_ALTER_ADDR;
+}
+/*-----------------------------------------------------------------------------------*
+ *  ID-18 6.1.8 Binding Acknowlegement (BA) Message
+ *-----------------------------------------------------------------------------------*/
+//================================================================
+//  Binding Acknowledgement
+//  Binding Acknowledgement: HA0 ----> NUT0(LinkX)
+FEM_upp_no_next_header_exth(
+	bindingacknowledgement_ha0_to_nut0,
+	_HETHER_ha0_to_nut0,
+	{
+		_SRC(v6(HA0_GLOBAL_UCAST));
+		_DST(NUT0_GLOBAL_UCAST);
+	},
+	{
+		header = _HDR_IPV6_NAME(bindingacknowledgement_ha0_to_nut0);
+		exthdr = ext_bindingacknowledgement;
+		upper  = _UPP_NONEXT_NAME(bindingacknowledgement_ha0_to_nut0);
+	},
+	{}
+)
+//================================================================
+//  Binding Acknowledgement
+//  Binding Acknowledgement: HA0 ----> NUT1(LinkX)
+FEM_upp_no_next_header_exth(
+	bindingacknowledgement_ha0_to_nut1,
+	_HETHER_r1_to_nut1,
+	{
+		_SRC(v6(HA0_GLOBAL_UCAST));
+		_DST(NUT1_GLOBAL_UCAST);
+	},
+	{
+		header = _HDR_IPV6_NAME(bindingacknowledgement_ha0_to_nut1);
+		exthdr = ext_routing_to_homeaddress_nut0;
+		exthdr = ext_bindingacknowledgement;
+		upper  = _UPP_NONEXT_NAME(bindingacknowledgement_ha0_to_nut1);
+	},
+	{}
+)
+//================================================================
+//  Binding Acknowledgement
+//  Binding Acknowledgement: HA0 ----> NUT2(LinkY)
+FEM_upp_no_next_header_exth(
+	bindingacknowledgement_ha0_to_nut2,
+	_HETHER_r2_to_nut2,
+	{
+		_SRC(v6(HA0_GLOBAL_UCAST));
+		_DST(NUT2_GLOBAL_UCAST);
+	},
+	{
+		header = _HDR_IPV6_NAME(bindingacknowledgement_ha0_to_nut2);
+		exthdr = ext_routing_to_homeaddress_nut0;
+		exthdr = ext_bindingacknowledgement;
+		upper  = _UPP_NONEXT_NAME(bindingacknowledgement_ha0_to_nut2);
+	},
+	{}
+)
+//================================================================
+//  Binding Acknowledgement
+//  Binding Acknowledgement: HA1 ----> NUT1(LinkX)
+FEM_upp_no_next_header_exth(
+	bindingacknowledgement_ha1_to_nut1,
+	_HETHER_r1_to_nut1,
+	{
+		_SRC(v6(HA1_GLOBAL_UCAST));
+		_DST(NUT1_GLOBAL_UCAST);
+	},
+	{
+		header = _HDR_IPV6_NAME(bindingacknowledgement_ha1_to_nut1);
+		exthdr = ext_routing_to_homeaddress_nut0;
+		exthdr = ext_bindingacknowledgement;
+		upper  = _UPP_NONEXT_NAME(bindingacknowledgement_ha1_to_nut1);
+	},
+	{}
+)
+//================================================================
+//  Binding Acknowledgement
+//  Binding Acknowledgement: HA1 ----> NUT2
+FEM_upp_no_next_header_exth(
+	bindingacknowledgement_ha1_to_nut2,
+	_HETHER_r2_to_nut2,
+	{
+		_SRC(v6(HA1_GLOBAL_UCAST));
+		_DST(NUT2_GLOBAL_UCAST);
+	},
+	{
+		header = _HDR_IPV6_NAME(bindingacknowledgement_ha1_to_nut2);
+		exthdr = ext_routing_to_homeaddress_nut0;
+		exthdr = ext_bindingacknowledgement;
+		upper  = _UPP_NONEXT_NAME(bindingacknowledgement_ha1_to_nut2);
+	},
+	{}
+)
+//================================================================
+//  Binding Acknowledgement
+//  Binding Acknowledgement: HA2 ----> NUT2
+FEM_upp_no_next_header_exth(
+	bindingacknowledgement_ha2_to_nut2,
+	_HETHER_r2_to_nut2,
+	{
+		_SRC(v6(HA2_GLOBAL_UCAST));
+		_DST(NUT2_GLOBAL_UCAST);
+	},
+	{
+		header = _HDR_IPV6_NAME(bindingacknowledgement_ha2_to_nut2);
+		exthdr = ext_routing_to_homeaddress_nut1;
+		exthdr = ext_bindingacknowledgement;
+		upper  = _UPP_NONEXT_NAME(bindingacknowledgement_ha2_to_nut2);
+	},
+	{}
+)
+Hdr_Routing ext_routing_to_homeaddress_nut0 {
+	SegmentsLeft = 1;
+	RoutingType  = 2;
+	Address      = NUT0_GLOBAL_UCAST;
+}
+Hdr_Routing ext_routing_to_homeaddress_nut1 {
+	SegmentsLeft = 1;
+	Address      = NUT1_GLOBAL_UCAST;
+}
+Hdr_Routing ext_routing_from_nut1 {
+	SegmentsLeft = 0;
+	Address      = NUT1_GLOBAL_UCAST;
+}
+Hdr_Routing ext_routing_from_nut2 {
+	SegmentsLeft = 0;
+	Address      = NUT2_GLOBAL_UCAST;
+}
+Hdr_MH_BA ext_bindingacknowledgement {
+	Status         = BA_STATUS;
+	Reserved1   = 0;
+	Reserved2   = 0;
+	SequenceNumber = BA_SEQUENCENUMBER;
+	Lifetime       = BA_LIFETIME;
+	option = opt_mh_pad4;
+}
+Opt_MH_BindingRefreshAdvice opt_ba_bindingrefreshadv {
+	Interval = BA_INTERVAL;
+}
+/*-----------------------------------------------------------------------------------*
+ *  ID-18 6.1.9 Binding Error (BE) Message
+ *-----------------------------------------------------------------------------------*/
+//================================================================
+//  Binding Acknowledgement
+//  Binding Acknowledgement: HA0 ----> NUT1(LinkX)
+FEM_upp_no_next_header_exth(
+	bindingerror_ha0_to_nut1,
+	_HETHER_r1_to_nut1,
+	{
+		_SRC(v6(HA0_GLOBAL_UCAST));
+		_DST(NUT1_GLOBAL_UCAST);
+	},
+	{
+		header = _HDR_IPV6_NAME(bindingerror_ha0_to_nut1);
+		exthdr = ext_routing_to_homeaddress_nut0;
+		exthdr = ext_bindingerror;
+		upper  = _UPP_NONEXT_NAME(bindingerror_ha0_to_nut1);
+	},
+	{}
+)
+Hdr_MH_BE ext_bindingerror {
+	Status         = BE_STATUS;
+	Reserved2   = 0;
+	Address     = BE_ADDR;
+}

@@ -1,0 +1,173 @@
+		CHANGELOG for IPv6 Conformance Test Tool
+
+		     $Date: 2003/05/29 13:02:32 $
+
+2003/05/29	Release 2.1.1
+	support gcc 3.X
+
+2003/05/23	Release 2.1
+	support FreeBSD 5.0-RELEASE
+
+	Add new packet format
+		RIPng
+			RFC 2080
+		DNS
+			RFC 1035
+			RFC 1183
+			RFC 1664
+			RFC 1886
+			RFC 2782
+			RFC 2915
+		DHCPv6
+			draft-ietf-dhc-dhcpv6-opt-dnsconfig-02.txt
+			draft-ietf-dhc-dhcpv6-opt-timeconfig-01.txt
+			draft-ietf-dhc-dhcpv6-28.txt
+			draft-ietf-dhc-dhcpv6-opt-prefix-delegation-02.txt
+		MIPv6 ID-21
+			draft-ietf-mobileip-ipv6-21.txt
+		Modified Router Advertisement & Route Information Option
+			draft-ietf-ipv6-router-selection-02.txt
+
+2002/11/19	Release 2.0.2
+	support FreeBSD 4.7 w/ KAME
+
+2002/11/15	Release 2.0.1
+	support FreeBSD 4.7 as TN
+
+2002/11/15
+	Update remote files
+		- v6eval/bin/remotes/usagi-i386/
+
+		contributed by USAGI Project
+
+2002/10/18	Release 2.0
+
+2002/09/16
+	Add remote files
+
+		- v6eval/bin/remotes/usagi-i386/mip6EnableMN.rmt
+		- v6eval/bin/remotes/mipl/mip6EnableMN.rmt
+
+		contributed by Linux Technology Center, IBM
+
+2002/07/16	Release 2.0b1
+	support MIP6 <draft-ietf-mobileip-ipv6-15.txt>
+
+2001/10/19	Release 1.3
+	Support MIP6 <ID-13> wich IPsec
+	Fix calculate checksum for MIP6 <ID-13> pakcet with HA option.
+	Change terminal program from tip to cu.
+	Change RCS tag name. Id -> TAHI
+        Add new functions to V6evalTool
+            vRemoteAsync()     ... asynchronous execution of remote control
+            vRemoteAsyncWait() ... wait vRemoteAsync()
+
+2001/09/20
+	Add HPUX remote files
+		- v6eval/bin/remotes/hpux
+
+		contributed by Anthony Galan <t_galan@yahoo.com>
+
+2001/06/14
+	Add AIX remote files
+		- v6eval/bin/remotes/aix
+
+		contributed by TIPSTER6 project <http://tipster6.ik.bme.hu/>
+
+2001/04/03
+	Replace telebit-tbc2k remote files
+		- v6eval/bin/remotes/telebit-tbc2k
+
+		contributed from Ericsson Telebit
+
+2000/12/01	Release 1.2
+	support MIP6 <draft-ietf-mobileip-ipv6-13.txt>
+
+	  Destination Options Header:
+	      Binding Update Option
+	      Binding Acknowledgement Option
+	      Binding Request Option
+	      Home Address Option
+	          Pad1 Sub-Option
+	          PadN Sub-Option
+	          Unique Identifier Sub-Option
+	          Alternate Care-of Address Sub-Option
+	  ICMPv6:
+	      Modified Router Advertisement
+	          Modified Prefix Information Option
+	          Advertisement Interval Option
+	          Home Agent Information Option
+	      ICMP Home Agent Address Discovery Request (use 143 as ICMP Type)
+	      ICMP Home Agent Address Discovery Reply   (use 144 as ICMP Type)
+
+2000/08/03
+	Move bin/*.rmt to bin/unknown/*.rmt and change .rmt search path.
+	Remove 'extern "C"' in lib/Pz/PvOctet.cc for FreeBSD 4.1.
+
+2000/07/28	Release 1.1
+	Does not support FreeBSD2.2.8 any more.
+	Ported : FreeBSD 4.X
+	Separate remote control file for each target.
+	  # See v6eval/bin/remotes/00README
+	New supported implementations:
+	  # NOTE: Does not fully support for some implementations
+	  Cisco IOS
+	  Hitachi GR2000
+	  IIJ SEIL
+	  MGCS SJ6
+	  Microsoft Windows2000
+	  NetBSD
+	  Sun Solaris
+	  Telebit TBC2000
+	Bug fix.
+
+2000/03/27	Release 1.0
+	change addresses used in conformance test. 
+	move remote control file from ct/*/* to v6eval/bin/remotes.
+
+2000/02/15	Release 0.6
+	rewrite kernel patch
+	  If you use a kernel with old patch, you need to rebuild kernel
+	  with new patch.
+	Ported : FreeBSD 3.4
+	bug fix
+
+1999/12/10
+	Add filter : pass IPv6 packet only or ALL.
+	Ported : FreeBSD 3.3
+	bug fix
+
+1999/10/28      Release 0.4
+        Header:
+           IPv4 & IPv4 Header Option
+           TCP Option
+           AH, ESP Header
+        Function:
+           {en,de}cription
+           authentication value caliculate
+
+1999/08/28 by nov
+	"RemoteLogout" and "RemoteMethod" is available in tn.def
+
+1999/08/02      Release 0.3
+        Header:
+           TCP header
+        Function:
+           "stop" function
+        Ported:
+           FreeBSD 3.2
+
+1999/05/01      Release 0.2
+	bugs fix
+	support "Tunnel Encapsulation Header Option" & "Redirected Header Option"
+	record all packets by tcpdump.
+	add patch function.
+
+1999/04/26 by nov
+	"RemoteSpeed" entry is available in /usr/local/v6eval/etc/tn.def.
+
+1999/04/14	Release 0.1
+	first public release
+
+
+							[end of CHANGELOG]

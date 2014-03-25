@@ -1,0 +1,248 @@
+<HTML>
+<TITLE>IPv6 Conformance Test</TITLE>
+<META NAME="GENERATOR" CONTENT="TAHI IPv6 Conformance Test Suite">
+<BODY BGCOLOR="#FFFFFF">
+<CENTER>
+<H1>IPv6 Conformance Test</H1>
+<HR>
+<TABLE BORDER=0>
+<TR><TD>Tool Version :</TD><TD>REL_2_1_1</TD></TR>
+<TR><TD>Test Program Version :</TD><TD>REL_2_1_1</TD></TR>
+</TABLE>
+<HR>
+<TABLE BORDER=0>
+<TR><TD>Start:</TD><TD>2003/06/11 20:01:15</TD></TR>
+<TR><TD>End :</TD><TD>2003/06/11 20:01:16</TD></TR>
+</TABLE>
+<HR>
+<HR>
+<TABLE BORDER=1>
+<TR>
+<TH>No.</TH><TH>Title</TH>
+<TH>Result</TH><TH>Log</TH><TH>Script</TH><TH>Packet</TH><TH>Dump<BR>(bin)</TH>
+</TR>
+<TR><TD><BR></TD><TD><B>Initializing the NUT</B></TD><TD><BR></TD><TD><BR></TD><TD><BR></TD><TD><BR></TD><TD><BR></TD></TR>
+<TR>
+<TD>1</TD><TD><A HREF="./reset.html">Initialization</A></TD><TD ALIGN="CENTER">PASS</TD><TD ALIGN="CENTER"><A HREF="1.html">X</A></TD><TD ALIGN="CENTER"><A HREF="./reset.seq">X</A></TD><TD ALIGN="CENTER">-</TD><TD ALIGN="CENTER"><A HREF="1.html.Link0.dump">Link0</A> </TD></TR>
+<TR><TD><BR></TD><TD><B>1.  Neighbor Discovery</B></TD><TD><BR></TD><TD><BR></TD><TD><BR></TD><TD><BR></TD><TD><BR></TD></TR>
+<TR><TD><BR></TD><TD><B>1.1.  Sending NS (Host/Router)</B></TD><TD><BR></TD><TD><BR></TD><TD><BR></TD><TD><BR></TD><TD><BR></TD></TR>
+<TR>
+<TD>2</TD><TD><A HREF="./sendNsBasicLocal.html">Verify that the NUT send NSs (link-local ==> link-local)</A></TD><TD ALIGN="CENTER">PASS</TD><TD ALIGN="CENTER"><A HREF="2.html">X</A></TD><TD ALIGN="CENTER"><A HREF="./sendNsBasicLocal.seq">X</A></TD><TD ALIGN="CENTER"><A HREF="./sendNsBasicLocal.def">X</A></TD><TD ALIGN="CENTER"><A HREF="2.html.Link0.dump">Link0</A> </TD></TR>
+<TR>
+<TD>3</TD><TD><A HREF="./sendNsBasicGlobGlob.html">Verify that the NUT send NSs (global ==> global)</A></TD><TD ALIGN="CENTER">PASS</TD><TD ALIGN="CENTER"><A HREF="3.html">X</A></TD><TD ALIGN="CENTER"><A HREF="./sendNsBasicGlobGlob.seq">X</A></TD><TD ALIGN="CENTER"><A HREF="./sendNsBasicGlobGlob.def">X</A></TD><TD ALIGN="CENTER"><A HREF="3.html.Link0.dump">Link0</A> </TD></TR>
+<TR>
+<TD>4</TD><TD><A HREF="./sendNsBasicGlobLink.html">Verify that the NUT send NSs (link-local ==> global)</A></TD><TD ALIGN="CENTER">PASS</TD><TD ALIGN="CENTER"><A HREF="4.html">X</A></TD><TD ALIGN="CENTER"><A HREF="./sendNsBasicGlobLink.seq">X</A></TD><TD ALIGN="CENTER"><A HREF="./sendNsBasicGlobLink.def">X</A></TD><TD ALIGN="CENTER"><A HREF="4.html.Link0.dump">Link0</A> </TD></TR>
+<TR>
+<TD>5</TD><TD><A HREF="./sendNsBasicLinkGlob.html">Verify that the NUT send NSs (global ==> link-local)</A></TD><TD ALIGN="CENTER">PASS</TD><TD ALIGN="CENTER"><A HREF="5.html">X</A></TD><TD ALIGN="CENTER"><A HREF="./sendNsBasicLinkGlob.seq">X</A></TD><TD ALIGN="CENTER"><A HREF="./sendNsBasicLinkGlob.def">X</A></TD><TD ALIGN="CENTER"><A HREF="5.html.Link0.dump">Link0</A> </TD></TR>
+<TR>
+<TD>6</TD><TD><A HREF="./sendMcastNS.html">Multicast NS w/ Default Config.</A></TD><TD ALIGN="CENTER">PASS</TD><TD ALIGN="CENTER"><A HREF="6.html">X</A></TD><TD ALIGN="CENTER"><A HREF="./sendMcastNS.seq">X</A></TD><TD ALIGN="CENTER"><A HREF="./sendMcastNS.def">X</A></TD><TD ALIGN="CENTER"><A HREF="6.html.Link0.dump">Link0</A> </TD></TR>
+<TR>
+<TD>7</TD><TD><A HREF="./sendMcastNS2.html">Multicast NS w/ RetransTimer=3sec.</A></TD><TD ALIGN="CENTER">PASS</TD><TD ALIGN="CENTER"><A HREF="7.html">X</A></TD><TD ALIGN="CENTER"><A HREF="./sendMcastNS2.seq">X</A></TD><TD ALIGN="CENTER"><A HREF="./sendMcastNS2.def">X</A></TD><TD ALIGN="CENTER"><A HREF="7.html.Link0.dump">Link0</A> </TD></TR>
+<TR>
+<TD>8</TD><TD><A HREF="./sendUcastNS.html">Unicast NS w/ Default Config.</A></TD><TD ALIGN="CENTER">PASS</TD><TD ALIGN="CENTER"><A HREF="8.html">X</A></TD><TD ALIGN="CENTER"><A HREF="./sendUcastNS.seq">X</A></TD><TD ALIGN="CENTER"><A HREF="./sendUcastNS.def">X</A></TD><TD ALIGN="CENTER"><A HREF="8.html.Link0.dump">Link0</A> </TD></TR>
+<TR>
+<TD>9</TD><TD><A HREF="./sendUcastNS2.html">Unicast NS w/ RetransTimer=3sec.</A></TD><TD ALIGN="CENTER">PASS</TD><TD ALIGN="CENTER"><A HREF="9.html">X</A></TD><TD ALIGN="CENTER"><A HREF="./sendUcastNS2.seq">X</A></TD><TD ALIGN="CENTER"><A HREF="./sendUcastNS2.def">X</A></TD><TD ALIGN="CENTER"><A HREF="9.html.Link0.dump">Link0</A> </TD></TR>
+<TR>
+<TD>10</TD><TD><A HREF="./adrsolvQueuOne.html">Address Resolution Queue (one entry for an address ?)</A></TD><TD ALIGN="CENTER">PASS</TD><TD ALIGN="CENTER"><A HREF="10.html">X</A></TD><TD ALIGN="CENTER"><A HREF="./adrsolvQueuOne.seq">X</A></TD><TD ALIGN="CENTER"><A HREF="./adrsolvQueuOne.def">X</A></TD><TD ALIGN="CENTER"><A HREF="10.html.Link0.dump">Link0</A> </TD></TR>
+<TR>
+<TD>11</TD><TD><A HREF="./adrsolvQueuTwo.html">Address Resolution Queue (more then one entry for an address ?)</A></TD><TD ALIGN="CENTER">PASS</TD><TD ALIGN="CENTER"><A HREF="11.html">X</A></TD><TD ALIGN="CENTER"><A HREF="./adrsolvQueuTwo.seq">X</A></TD><TD ALIGN="CENTER"><A HREF="./adrsolvQueuTwo.def">X</A></TD><TD ALIGN="CENTER"><A HREF="11.html.Link0.dump">Link0</A> </TD></TR>
+<TR>
+<TD>12</TD><TD><A HREF="./adrsolvQueuMulti.html">Address Resolution Queue (one entry per an address ?)</A></TD><TD ALIGN="CENTER">PASS</TD><TD ALIGN="CENTER"><A HREF="12.html">X</A></TD><TD ALIGN="CENTER"><A HREF="./adrsolvQueuMulti.seq">X</A></TD><TD ALIGN="CENTER"><A HREF="./adrsolvQueuMulti.def">X</A></TD><TD ALIGN="CENTER"><A HREF="12.html.Link0.dump">Link0</A> </TD></TR>
+<TR><TD><BR></TD><TD><B>1.2.  Receiving NS (Host/Router)</B></TD><TD><BR></TD><TD><BR></TD><TD><BR></TD><TD><BR></TD><TD><BR></TD></TR>
+<TR>
+<TD>13</TD><TD><A HREF="./recvNsBasic.html">Receiving valid NSs</A></TD><TD ALIGN="CENTER">PASS</TD><TD ALIGN="CENTER"><A HREF="13.html">X</A></TD><TD ALIGN="CENTER"><A HREF="./recvNsBasic.seq">X</A></TD><TD ALIGN="CENTER"><A HREF="./recvNsBasic.def">X</A></TD><TD ALIGN="CENTER"><A HREF="13.html.Link0.dump">Link0</A> </TD></TR>
+<TR>
+<TD>14</TD><TD><A HREF="./recvNsInvalid.html">Receiving invalid NSs</A></TD><TD ALIGN="CENTER">PASS</TD><TD ALIGN="CENTER"><A HREF="14.html">X</A></TD><TD ALIGN="CENTER"><A HREF="./recvNsInvalid.seq">X</A></TD><TD ALIGN="CENTER"><A HREF="./recvNsInvalid.def">X</A></TD><TD ALIGN="CENTER"><A HREF="14.html.Link0.dump">Link0</A> </TD></TR>
+<TR>
+<TD>15</TD><TD><A HREF="./recvNsRFlag.html">NS vs. IsRouter flag</A></TD><TD ALIGN="CENTER">PASS</TD><TD ALIGN="CENTER"><A HREF="15.html">X</A></TD><TD ALIGN="CENTER"><A HREF="./recvNsRFlag.seq">X</A></TD><TD ALIGN="CENTER"><A HREF="./recvNsRFlag.def">X</A></TD><TD ALIGN="CENTER"><A HREF="15.html.Link0.dump">Link0</A> </TD></TR>
+<TR>
+<TD>16</TD><TD><A HREF="./ncStateByNs4NoNce.html">NS vs. NONCE</A></TD><TD ALIGN="CENTER">PASS</TD><TD ALIGN="CENTER"><A HREF="16.html">X</A></TD><TD ALIGN="CENTER"><A HREF="./ncStateByNs4NoNce.seq">X</A></TD><TD ALIGN="CENTER"><A HREF="./ncStateByNs4NoNce.def">X</A></TD><TD ALIGN="CENTER"><A HREF="16.html.Link0.dump">Link0</A> </TD></TR>
+<TR>
+<TD>17</TD><TD><A HREF="./ncStateByNs4Incomplete.html">NS; NS vs. INCOMPLETE</A></TD><TD ALIGN="CENTER">PASS</TD><TD ALIGN="CENTER"><A HREF="17.html">X</A></TD><TD ALIGN="CENTER"><A HREF="./ncStateByNs4Incomplete.seq">X</A></TD><TD ALIGN="CENTER"><A HREF="./ncStateByNs4Incomplete.def">X</A></TD><TD ALIGN="CENTER"><A HREF="17.html.Link0.dump">Link0</A> </TD></TR>
+<TR>
+<TD>18</TD><TD><A HREF="./ncStateByNs4Reachable.html">NS; NS vs. REACHABLE</A></TD><TD ALIGN="CENTER">PASS</TD><TD ALIGN="CENTER"><A HREF="18.html">X</A></TD><TD ALIGN="CENTER"><A HREF="./ncStateByNs4Reachable.seq">X</A></TD><TD ALIGN="CENTER"><A HREF="./ncStateByNs4Reachable.def">X</A></TD><TD ALIGN="CENTER"><A HREF="18.html.Link0.dump">Link0</A> </TD></TR>
+<TR>
+<TD>19</TD><TD><A HREF="./ncStateByNs4Stale.html">NS; NS vs. STALE</A></TD><TD ALIGN="CENTER">PASS</TD><TD ALIGN="CENTER"><A HREF="19.html">X</A></TD><TD ALIGN="CENTER"><A HREF="./ncStateByNs4Stale.seq">X</A></TD><TD ALIGN="CENTER"><A HREF="./ncStateByNs4Stale.def">X</A></TD><TD ALIGN="CENTER"><A HREF="19.html.Link0.dump">Link0</A> </TD></TR>
+<TR>
+<TD>20</TD><TD><A HREF="./ncStateByNs4Probe.html">NS; NS vs. PROBE</A></TD><TD ALIGN="CENTER">PASS</TD><TD ALIGN="CENTER"><A HREF="20.html">X</A></TD><TD ALIGN="CENTER"><A HREF="./ncStateByNs4Probe.seq">X</A></TD><TD ALIGN="CENTER"><A HREF="./ncStateByNs4Probe.def">X</A></TD><TD ALIGN="CENTER"><A HREF="20.html.Link0.dump">Link0</A> </TD></TR>
+<TR><TD><BR></TD><TD><B>1.3.  Sending NA (Host/Router)</B></TD><TD><BR></TD><TD><BR></TD><TD><BR></TD><TD><BR></TD><TD><BR></TD></TR>
+<TR><TD><BR></TD><TD><B>1.4.  Receiving NA (Host/Router)</B></TD><TD><BR></TD><TD><BR></TD><TD><BR></TD><TD><BR></TD><TD><BR></TD></TR>
+<TR>
+<TD>21</TD><TD><A HREF="./recvNaRFlag.html">R flag vs. IsRouter flag</A></TD><TD ALIGN="CENTER">PASS</TD><TD ALIGN="CENTER"><A HREF="21.html">X</A></TD><TD ALIGN="CENTER"><A HREF="./recvNaRFlag.seq">X</A></TD><TD ALIGN="CENTER"><A HREF="./recvNaRFlag.def">X</A></TD><TD ALIGN="CENTER"><A HREF="21.html.Link0.dump">Link0</A> </TD></TR>
+<TR>
+<TD>22</TD><TD><A HREF="./ncStateByNa4Nonce.html">NA vs. NONCE</A></TD><TD ALIGN="CENTER">PASS</TD><TD ALIGN="CENTER"><A HREF="22.html">X</A></TD><TD ALIGN="CENTER"><A HREF="./ncStateByNa4Nonce.seq">X</A></TD><TD ALIGN="CENTER"><A HREF="./ncStateByNa4Nonce.def">X</A></TD><TD ALIGN="CENTER"><A HREF="22.html.Link0.dump">Link0</A> </TD></TR>
+<TR>
+<TD>23</TD><TD><A HREF="./ncStateByNa4Incomplete.html">NA vs. INCOMPLETE</A></TD><TD ALIGN="CENTER">PASS</TD><TD ALIGN="CENTER"><A HREF="23.html">X</A></TD><TD ALIGN="CENTER"><A HREF="./ncStateByNa4Incomplete.seq">X</A></TD><TD ALIGN="CENTER"><A HREF="./ncStateByNa4Incomplete.def">X</A></TD><TD ALIGN="CENTER"><A HREF="23.html.Link0.dump">Link0</A> </TD></TR>
+<TR>
+<TD>24</TD><TD><A HREF="./ncStateByNa4Reachable.html">NA vs. REACHABLE</A></TD><TD ALIGN="CENTER">PASS</TD><TD ALIGN="CENTER"><A HREF="24.html">X</A></TD><TD ALIGN="CENTER"><A HREF="./ncStateByNa4Reachable.seq">X</A></TD><TD ALIGN="CENTER"><A HREF="./ncStateByNa4Reachable.def">X</A></TD><TD ALIGN="CENTER"><A HREF="24.html.Link0.dump">Link0</A> </TD></TR>
+<TR>
+<TD>25</TD><TD><A HREF="./ncStateByNa4Stale.html">NA vs. STALE</A></TD><TD ALIGN="CENTER">PASS</TD><TD ALIGN="CENTER"><A HREF="25.html">X</A></TD><TD ALIGN="CENTER"><A HREF="./ncStateByNa4Stale.seq">X</A></TD><TD ALIGN="CENTER"><A HREF="./ncStateByNa4Stale.def">X</A></TD><TD ALIGN="CENTER"><A HREF="25.html.Link0.dump">Link0</A> </TD></TR>
+<TR>
+<TD>26</TD><TD><A HREF="./ncStateByNa4Probe.html">NA vs. PROBE</A></TD><TD ALIGN="CENTER">PASS</TD><TD ALIGN="CENTER"><A HREF="26.html">X</A></TD><TD ALIGN="CENTER"><A HREF="./ncStateByNa4Probe.seq">X</A></TD><TD ALIGN="CENTER"><A HREF="./ncStateByNa4Probe.def">X</A></TD><TD ALIGN="CENTER"><A HREF="26.html.Link0.dump">Link0</A> </TD></TR>
+<TR><TD><BR></TD><TD><B>2.  Router Discovery</B></TD><TD><BR></TD><TD><BR></TD><TD><BR></TD><TD><BR></TD><TD><BR></TD></TR>
+<TR><TD><BR></TD><TD><B>2.1.  Sending RS (Host Only)</B></TD><TD><BR></TD><TD><BR></TD><TD><BR></TD><TD><BR></TD><TD><BR></TD></TR>
+<TR>
+<TD>27</TD><TD><A HREF="./hostSendRs.html">Sending RS;</A></TD><TD ALIGN="CENTER">PASS</TD><TD ALIGN="CENTER"><A HREF="27.html">X</A></TD><TD ALIGN="CENTER"><A HREF="./hostSendRs.seq">X</A></TD><TD ALIGN="CENTER"><A HREF="./hostSendRs.def">X</A></TD><TD ALIGN="CENTER"><A HREF="27.html.Link0.dump">Link0</A> </TD></TR>
+<TR>
+<TD>28</TD><TD><A HREF="./hostSendRsAfterUnsolicitedRa.html">Sending RS after receiving unsolicited RA</A></TD><TD ALIGN="CENTER">PASS</TD><TD ALIGN="CENTER"><A HREF="28.html">X</A></TD><TD ALIGN="CENTER"><A HREF="./hostSendRsAfterUnsolicitedRa.seq">X</A></TD><TD ALIGN="CENTER"><A HREF="./hostSendRsAfterUnsolicitedRa.def">X</A></TD><TD ALIGN="CENTER"><A HREF="28.html.Link0.dump">Link0</A> </TD></TR>
+<TR>
+<TD>29</TD><TD><A HREF="./hostSendRsAfterSolicitedRa.html">Not sending RS after receiving solicited RA</A></TD><TD ALIGN="CENTER">PASS</TD><TD ALIGN="CENTER"><A HREF="29.html">X</A></TD><TD ALIGN="CENTER"><A HREF="./hostSendRsAfterSolicitedRa.seq">X</A></TD><TD ALIGN="CENTER"><A HREF="./hostSendRsAfterSolicitedRa.def">X</A></TD><TD ALIGN="CENTER"><A HREF="29.html.Link0.dump">Link0</A> </TD></TR>
+<TR><TD><BR></TD><TD><B>2.2.  Receiving RS (Host Only)</B></TD><TD><BR></TD><TD><BR></TD><TD><BR></TD><TD><BR></TD><TD><BR></TD></TR>
+<TR>
+<TD>30</TD><TD><A HREF="./hostRecvRs.html">Ignoring RS;</A></TD><TD ALIGN="CENTER">PASS</TD><TD ALIGN="CENTER"><A HREF="30.html">X</A></TD><TD ALIGN="CENTER"><A HREF="./hostRecvRs.seq">X</A></TD><TD ALIGN="CENTER"><A HREF="./hostRecvRs.def">X</A></TD><TD ALIGN="CENTER"><A HREF="30.html.Link0.dump">Link0</A> </TD></TR>
+<TR><TD><BR></TD><TD><B>2.3.  Sending RA (Host Only)</B></TD><TD><BR></TD><TD><BR></TD><TD><BR></TD><TD><BR></TD><TD><BR></TD></TR>
+<TR><TD><BR></TD><TD><B>2.4.  Receiving RA (Host Only)</B></TD><TD><BR></TD><TD><BR></TD><TD><BR></TD><TD><BR></TD><TD><BR></TD></TR>
+<TR>
+<TD>31</TD><TD><A HREF="./hostRecvRaRFlag.html">RA set IsRouter flag</A></TD><TD ALIGN="CENTER">PASS</TD><TD ALIGN="CENTER"><A HREF="31.html">X</A></TD><TD ALIGN="CENTER"><A HREF="./hostRecvRaRFlag.seq">X</A></TD><TD ALIGN="CENTER"><A HREF="./hostRecvRaRFlag.def">X</A></TD><TD ALIGN="CENTER"><A HREF="31.html.Link0.dump">Link0</A> </TD></TR>
+<TR>
+<TD>32</TD><TD><A HREF="./hostRecvRas.html">Receiving multiple RAs #1</A></TD><TD ALIGN="CENTER">PASS</TD><TD ALIGN="CENTER"><A HREF="32.html">X</A></TD><TD ALIGN="CENTER"><A HREF="./hostRecvRas.seq">X</A></TD><TD ALIGN="CENTER"><A HREF="./hostRecvRas.def">X</A></TD><TD ALIGN="CENTER"><A HREF="32.html.Link0.dump">Link0</A> </TD></TR>
+<TR>
+<TD>33</TD><TD><A HREF="./hostRecvRas2.html">Receiving multiple RAs #2</A></TD><TD ALIGN="CENTER">PASS</TD><TD ALIGN="CENTER"><A HREF="33.html">X</A></TD><TD ALIGN="CENTER"><A HREF="./hostRecvRas2.seq">X</A></TD><TD ALIGN="CENTER"><A HREF="./hostRecvRas2.def">X</A></TD><TD ALIGN="CENTER"><A HREF="33.html.Link0.dump">Link0</A> </TD></TR>
+<TR>
+<TD>34</TD><TD><A HREF="./hostRecvRaInvalid.html">Ignoring invalid RAs</A></TD><TD ALIGN="CENTER">PASS</TD><TD ALIGN="CENTER"><A HREF="34.html">X</A></TD><TD ALIGN="CENTER"><A HREF="./hostRecvRaInvalid.seq">X</A></TD><TD ALIGN="CENTER"><A HREF="./hostRecvRaInvalid.def">X</A></TD><TD ALIGN="CENTER"><A HREF="34.html.Link0.dump">Link0</A> </TD></TR>
+<TR>
+<TD>35</TD><TD><A HREF="./hostRecvRaReachableTime.html">ReachableTime vs BaseReachableTime</A></TD><TD ALIGN="CENTER">PASS</TD><TD ALIGN="CENTER"><A HREF="35.html">X</A></TD><TD ALIGN="CENTER"><A HREF="./hostRecvRaReachableTime.seq">X</A></TD><TD ALIGN="CENTER"><A HREF="./hostRecvRaReachableTime.def">X</A></TD><TD ALIGN="CENTER"><A HREF="35.html.Link0.dump">Link0</A> </TD></TR>
+<TR>
+<TD>36</TD><TD><A HREF="./hostRecvRaRLifetime0.html">RouterLifetime=0</A></TD><TD ALIGN="CENTER">PASS</TD><TD ALIGN="CENTER"><A HREF="36.html">X</A></TD><TD ALIGN="CENTER"><A HREF="./hostRecvRaRLifetime0.seq">X</A></TD><TD ALIGN="CENTER"><A HREF="./hostRecvRaRLifetime0.def">X</A></TD><TD ALIGN="CENTER"><A HREF="36.html.Link0.dump">Link0</A> </TD></TR>
+<TR>
+<TD>37</TD><TD><A HREF="./hostRecvRaRLifetimeN.html">RouterLifetime=5</A></TD><TD ALIGN="CENTER">PASS</TD><TD ALIGN="CENTER"><A HREF="37.html">X</A></TD><TD ALIGN="CENTER"><A HREF="./hostRecvRaRLifetimeN.seq">X</A></TD><TD ALIGN="CENTER"><A HREF="./hostRecvRaRLifetimeN.def">X</A></TD><TD ALIGN="CENTER"><A HREF="37.html.Link0.dump">Link0</A> </TD></TR>
+<TR>
+<TD>38</TD><TD><A HREF="./hostRecvRaNHD.html">Next-hop Determination</A></TD><TD ALIGN="CENTER">PASS</TD><TD ALIGN="CENTER"><A HREF="38.html">X</A></TD><TD ALIGN="CENTER"><A HREF="./hostRecvRaNHD.seq">X</A></TD><TD ALIGN="CENTER"><A HREF="./hostRecvRaNHD.def">X</A></TD><TD ALIGN="CENTER"><A HREF="38.html.Link0.dump">Link0</A> </TD></TR>
+<TR>
+<TD>39</TD><TD><A HREF="./hostRecvRaURD.html">The Default Router List vs Unreachability Detection</A></TD><TD ALIGN="CENTER">PASS</TD><TD ALIGN="CENTER"><A HREF="39.html">X</A></TD><TD ALIGN="CENTER"><A HREF="./hostRecvRaURD.seq">X</A></TD><TD ALIGN="CENTER"><A HREF="./hostRecvRaURD.def">X</A></TD><TD ALIGN="CENTER"><A HREF="39.html.Link0.dump">Link0</A> </TD></TR>
+<TR>
+<TD>40</TD><TD><A HREF="./ncStateByRa4Nonce.html">RA vs NONCE</A></TD><TD ALIGN="CENTER">PASS</TD><TD ALIGN="CENTER"><A HREF="40.html">X</A></TD><TD ALIGN="CENTER"><A HREF="./ncStateByRa4Nonce.seq">X</A></TD><TD ALIGN="CENTER"><A HREF="./ncStateByRa4Nonce.def">X</A></TD><TD ALIGN="CENTER"><A HREF="40.html.Link0.dump">Link0</A> </TD></TR>
+<TR>
+<TD>41</TD><TD><A HREF="./ncStateByRa4Incomplete.html">RA vs INCOMPLETE</A></TD><TD ALIGN="CENTER">PASS</TD><TD ALIGN="CENTER"><A HREF="41.html">X</A></TD><TD ALIGN="CENTER"><A HREF="./ncStateByRa4Incomplete.seq">X</A></TD><TD ALIGN="CENTER"><A HREF="./ncStateByRa4Incomplete.def">X</A></TD><TD ALIGN="CENTER"><A HREF="41.html.Link0.dump">Link0</A> </TD></TR>
+<TR>
+<TD>42</TD><TD><A HREF="./ncStateByRa4Reachable.html">RA vs REACHABLE</A></TD><TD ALIGN="CENTER">PASS</TD><TD ALIGN="CENTER"><A HREF="42.html">X</A></TD><TD ALIGN="CENTER"><A HREF="./ncStateByRa4Reachable.seq">X</A></TD><TD ALIGN="CENTER"><A HREF="./ncStateByRa4Reachable.def">X</A></TD><TD ALIGN="CENTER"><A HREF="42.html.Link0.dump">Link0</A> </TD></TR>
+<TR>
+<TD>43</TD><TD><A HREF="./ncStateByRa4Stale.html">RA vs STALE</A></TD><TD ALIGN="CENTER">PASS</TD><TD ALIGN="CENTER"><A HREF="43.html">X</A></TD><TD ALIGN="CENTER"><A HREF="./ncStateByRa4Stale.seq">X</A></TD><TD ALIGN="CENTER"><A HREF="./ncStateByRa4Stale.def">X</A></TD><TD ALIGN="CENTER"><A HREF="43.html.Link0.dump">Link0</A> </TD></TR>
+<TR>
+<TD>44</TD><TD><A HREF="./ncStateByRa4Probe.html">RA vs PROBE</A></TD><TD ALIGN="CENTER">PASS</TD><TD ALIGN="CENTER"><A HREF="44.html">X</A></TD><TD ALIGN="CENTER"><A HREF="./ncStateByRa4Probe.seq">X</A></TD><TD ALIGN="CENTER"><A HREF="./ncStateByRa4Probe.def">X</A></TD><TD ALIGN="CENTER"><A HREF="44.html.Link0.dump">Link0</A> </TD></TR>
+<TR><TD><BR></TD><TD>See Also</TD><TD><BR></TD><TD><BR></TD><TD><BR></TD><TD><BR></TD><TD><BR></TD></TR>
+<TR><TD><BR></TD><TD>Tests about MTU option are covered by <A HREF="../pmtu/index.html">Path MTU Discovery</A>.</TD><TD><BR></TD><TD><BR></TD><TD><BR></TD><TD><BR></TD><TD><BR></TD></TR>
+<TR><TD><BR></TD><TD>Tests about A flag (Prefix option) are covered by <A HREF="../stateless-addrconf/index.html">Stateless Address Autoconf</A>.</TD><TD><BR></TD><TD><BR></TD><TD><BR></TD><TD><BR></TD><TD><BR></TD></TR>
+<TR><TD><BR></TD><TD>Tests about Preferred Lifetime (Prefix option) are covered by <A HREF="../stateless-addrconf/index.html">Stateless Address Autoconf</A>.</TD><TD><BR></TD><TD><BR></TD><TD><BR></TD><TD><BR></TD><TD><BR></TD></TR>
+<TR><TD><BR></TD><TD>Tests about Valid Lifetime (Prefix option) are covered by <A HREF="../stateless-addrconf/index.html">Stateless Address Autoconf</A>.</TD><TD><BR></TD><TD><BR></TD><TD><BR></TD><TD><BR></TD><TD><BR></TD></TR>
+<TR><TD><BR></TD><TD>Tests about Preferred Lifetime (Prefix option) are covered by <A HREF="../stateless-addrconf/index.html">Stateless Address Autoconf</A>.</TD><TD><BR></TD><TD><BR></TD><TD><BR></TD><TD><BR></TD><TD><BR></TD></TR>
+<TR><TD><BR></TD><TD>Tests about Prefix Length (Prefix option) are covered by <A HREF="../stateless-addrconf/index.html">Stateless Address Autoconf</A>.</TD><TD><BR></TD><TD><BR></TD><TD><BR></TD><TD><BR></TD><TD><BR></TD></TR>
+<TR><TD><BR></TD><TD>Tests about Prefix Address (Prefix option) are covered by <A HREF="../stateless-addrconf/index.html">Stateless Address Autoconf</A>.</TD><TD><BR></TD><TD><BR></TD><TD><BR></TD><TD><BR></TD><TD><BR></TD></TR>
+<TR><TD><BR></TD><TD><B>2.5.  Sending RS (Router Only)</B></TD><TD><BR></TD><TD><BR></TD><TD><BR></TD><TD><BR></TD><TD><BR></TD></TR>
+<TR><TD><BR></TD><TD><B>2.6.  Receiving RS (Router Only)</B></TD><TD><BR></TD><TD><BR></TD><TD><BR></TD><TD><BR></TD><TD><BR></TD></TR>
+<TR>
+<TD>45</TD><TD><A HREF="./startDefaultRA.html">Start to advertise the default RA</A></TD><TD ALIGN="CENTER">PASS</TD><TD ALIGN="CENTER"><A HREF="45.html">X</A></TD><TD ALIGN="CENTER"><A HREF="./startDefaultRA.seq">X</A></TD><TD ALIGN="CENTER">-</TD><TD ALIGN="CENTER"><A HREF="45.html.Link0.dump">Link0</A> </TD></TR>
+<TR>
+<TD>46</TD><TD><A HREF="./routerRecvRs.html">Receiving RS vs Sending RA</A></TD><TD ALIGN="CENTER">PASS</TD><TD ALIGN="CENTER"><A HREF="46.html">X</A></TD><TD ALIGN="CENTER"><A HREF="./routerRecvRs.seq">X</A></TD><TD ALIGN="CENTER"><A HREF="./routerRecvRs.def">X</A></TD><TD ALIGN="CENTER"><A HREF="46.html.Link0.dump">Link0</A> </TD></TR>
+<TR>
+<TD>47</TD><TD><A HREF="./routerRecvRsInvalid.html">Invalid RS vs NC</A></TD><TD ALIGN="CENTER">PASS</TD><TD ALIGN="CENTER"><A HREF="47.html">X</A></TD><TD ALIGN="CENTER"><A HREF="./routerRecvRsInvalid.seq">X</A></TD><TD ALIGN="CENTER"><A HREF="./routerRecvRsInvalid.def">X</A></TD><TD ALIGN="CENTER"><A HREF="47.html.Link0.dump">Link0</A> </TD></TR>
+<TR>
+<TD>48</TD><TD><A HREF="./ncStateByRs4NoNce.html">RS vs. NONCE</A></TD><TD ALIGN="CENTER">PASS</TD><TD ALIGN="CENTER"><A HREF="48.html">X</A></TD><TD ALIGN="CENTER"><A HREF="./ncStateByRs4NoNce.seq">X</A></TD><TD ALIGN="CENTER"><A HREF="./ncStateByRs4NoNce.def">X</A></TD><TD ALIGN="CENTER"><A HREF="48.html.Link0.dump">Link0</A> </TD></TR>
+<TR>
+<TD>49</TD><TD><A HREF="./ncStateByRs4Incomplete.html">RS vs. INCOMPLETE</A></TD><TD ALIGN="CENTER">PASS</TD><TD ALIGN="CENTER"><A HREF="49.html">X</A></TD><TD ALIGN="CENTER"><A HREF="./ncStateByRs4Incomplete.seq">X</A></TD><TD ALIGN="CENTER"><A HREF="./ncStateByRs4Incomplete.def">X</A></TD><TD ALIGN="CENTER"><A HREF="49.html.Link0.dump">Link0</A> </TD></TR>
+<TR>
+<TD>50</TD><TD><A HREF="./ncStateByRs4Reachable.html">RS vs. REACHABLE</A></TD><TD ALIGN="CENTER">PASS</TD><TD ALIGN="CENTER"><A HREF="50.html">X</A></TD><TD ALIGN="CENTER"><A HREF="./ncStateByRs4Reachable.seq">X</A></TD><TD ALIGN="CENTER"><A HREF="./ncStateByRs4Reachable.def">X</A></TD><TD ALIGN="CENTER"><A HREF="50.html.Link0.dump">Link0</A> </TD></TR>
+<TR>
+<TD>51</TD><TD><A HREF="./ncStateByRs4Stale.html">RS vs. STALE</A></TD><TD ALIGN="CENTER">PASS</TD><TD ALIGN="CENTER"><A HREF="51.html">X</A></TD><TD ALIGN="CENTER"><A HREF="./ncStateByRs4Stale.seq">X</A></TD><TD ALIGN="CENTER"><A HREF="./ncStateByRs4Stale.def">X</A></TD><TD ALIGN="CENTER"><A HREF="51.html.Link0.dump">Link0</A> </TD></TR>
+<TR>
+<TD>52</TD><TD><A HREF="./ncStateByRs4Probe.html">RS vs. PROBE</A></TD><TD ALIGN="CENTER">PASS</TD><TD ALIGN="CENTER"><A HREF="52.html">X</A></TD><TD ALIGN="CENTER"><A HREF="./ncStateByRs4Probe.seq">X</A></TD><TD ALIGN="CENTER"><A HREF="./ncStateByRs4Probe.def">X</A></TD><TD ALIGN="CENTER"><A HREF="52.html.Link0.dump">Link0</A> </TD></TR>
+<TR><TD><BR></TD><TD><B>2.7.  Sending RA (Router Only)</B></TD><TD><BR></TD><TD><BR></TD><TD><BR></TD><TD><BR></TD><TD><BR></TD></TR>
+<TR>
+<TD>53</TD><TD><A HREF="./routerSendUnsolRaDefault.html">Sending Unsolicited RA Intervals (interval = 16sec)</A></TD><TD ALIGN="CENTER">PASS</TD><TD ALIGN="CENTER"><A HREF="53.html">X</A></TD><TD ALIGN="CENTER"><A HREF="./routerSendUnsolRaDefault.seq">X</A></TD><TD ALIGN="CENTER"><A HREF="./routerSendUnsolRaDefault.def">X</A></TD><TD ALIGN="CENTER"><A HREF="53.html.Link0.dump">Link0</A> </TD></TR>
+<TR>
+<TD>54</TD><TD><A HREF="./routerSendUnsolRaDefault2.html">Sending Unsolicited RA Intervals (7sec < interval < 10sec)</A></TD><TD ALIGN="CENTER">PASS</TD><TD ALIGN="CENTER"><A HREF="54.html">X</A></TD><TD ALIGN="CENTER"><A HREF="./routerSendUnsolRaDefault2.seq">X</A></TD><TD ALIGN="CENTER"><A HREF="./routerSendUnsolRaDefault2.def">X</A></TD><TD ALIGN="CENTER"><A HREF="54.html.Link0.dump">Link0</A> </TD></TR>
+<TR>
+<TD>55</TD><TD><A HREF="./routerSendSolRaDefault.html">Sending Solicited RA Intervals</A></TD><TD ALIGN="CENTER">PASS</TD><TD ALIGN="CENTER"><A HREF="55.html">X</A></TD><TD ALIGN="CENTER"><A HREF="./routerSendSolRaDefault.seq">X</A></TD><TD ALIGN="CENTER"><A HREF="./routerSendSolRaDefault.def">X</A></TD><TD ALIGN="CENTER"><A HREF="55.html.Link0.dump">Link0</A> </TD></TR>
+<TR>
+<TD>56</TD><TD><A HREF="./routerSendUnsolRaMin.html">Sending Unsolicited RA (min values)</A></TD><TD ALIGN="CENTER">PASS</TD><TD ALIGN="CENTER"><A HREF="56.html">X</A></TD><TD ALIGN="CENTER"><A HREF="./routerSendUnsolRaMin.seq">X</A></TD><TD ALIGN="CENTER"><A HREF="./routerSendUnsolRaMin.def">X</A></TD><TD ALIGN="CENTER"><A HREF="56.html.Link0.dump">Link0</A> </TD></TR>
+<TR>
+<TD>57</TD><TD><A HREF="./routerSendUnsolRaMax.html">Sending Unsolicited RA (max values)</A></TD><TD ALIGN="CENTER">PASS</TD><TD ALIGN="CENTER"><A HREF="57.html">X</A></TD><TD ALIGN="CENTER"><A HREF="./routerSendUnsolRaMax.seq">X</A></TD><TD ALIGN="CENTER"><A HREF="./routerSendUnsolRaMax.def">X</A></TD><TD ALIGN="CENTER"><A HREF="57.html.Link0.dump">Link0</A> </TD></TR>
+<TR><TD><BR></TD><TD><B>2.8.  Receiving RA (Router Only)</B></TD><TD><BR></TD><TD><BR></TD><TD><BR></TD><TD><BR></TD><TD><BR></TD></TR>
+<TR>
+<TD>58</TD><TD><A HREF="./routerRecvRa.html">Ignoring RA</A></TD><TD ALIGN="CENTER">PASS</TD><TD ALIGN="CENTER"><A HREF="58.html">X</A></TD><TD ALIGN="CENTER"><A HREF="./routerRecvRa.seq">X</A></TD><TD ALIGN="CENTER"><A HREF="./routerRecvRa.def">X</A></TD><TD ALIGN="CENTER"><A HREF="58.html.Link0.dump">Link0</A> </TD></TR>
+<TR>
+<TD>59</TD><TD><A HREF="./stopRA.html">Stop to advertise the RA</A></TD><TD ALIGN="CENTER">PASS</TD><TD ALIGN="CENTER"><A HREF="59.html">X</A></TD><TD ALIGN="CENTER"><A HREF="./stopRA.seq">X</A></TD><TD ALIGN="CENTER">-</TD><TD ALIGN="CENTER"><A HREF="59.html.Link0.dump">Link0</A> </TD></TR>
+<TR><TD><BR></TD><TD><B>3.  Redirect</B></TD><TD><BR></TD><TD><BR></TD><TD><BR></TD><TD><BR></TD><TD><BR></TD></TR>
+<TR><TD><BR></TD><TD><B>3.1. Sending Redirect (Host Only)</B></TD><TD><BR></TD><TD><BR></TD><TD><BR></TD><TD><BR></TD><TD><BR></TD></TR>
+<TR><TD><BR></TD><TD><B>3.2. Receiving Redirect (Host Only)</B></TD><TD><BR></TD><TD><BR></TD><TD><BR></TD><TD><BR></TD><TD><BR></TD></TR>
+<TR>
+<TD>60</TD><TD><A HREF="./ncStateByRedirect4Nonce.html">Redirect vs NONCE</A></TD><TD ALIGN="CENTER">PASS</TD><TD ALIGN="CENTER"><A HREF="60.html">X</A></TD><TD ALIGN="CENTER"><A HREF="./ncStateByRedirect4Nonce.seq">X</A></TD><TD ALIGN="CENTER"><A HREF="./ncStateByRedirect4Nonce.def">X</A></TD><TD ALIGN="CENTER"><A HREF="60.html.Link0.dump">Link0</A> </TD></TR>
+<TR>
+<TD>61</TD><TD><A HREF="./ncStateByRedirect4Incomplete.html">Redirect vs INCOMPLETE</A></TD><TD ALIGN="CENTER">PASS</TD><TD ALIGN="CENTER"><A HREF="61.html">X</A></TD><TD ALIGN="CENTER"><A HREF="./ncStateByRedirect4Incomplete.seq">X</A></TD><TD ALIGN="CENTER"><A HREF="./ncStateByRedirect4Incomplete.def">X</A></TD><TD ALIGN="CENTER"><A HREF="61.html.Link0.dump">Link0</A> </TD></TR>
+<TR>
+<TD>62</TD><TD><A HREF="./ncStateByRedirect4Reachable.html">Redirect vs REACHABLE</A></TD><TD ALIGN="CENTER">PASS</TD><TD ALIGN="CENTER"><A HREF="62.html">X</A></TD><TD ALIGN="CENTER"><A HREF="./ncStateByRedirect4Reachable.seq">X</A></TD><TD ALIGN="CENTER"><A HREF="./ncStateByRedirect4Reachable.def">X</A></TD><TD ALIGN="CENTER"><A HREF="62.html.Link0.dump">Link0</A> </TD></TR>
+<TR>
+<TD>63</TD><TD><A HREF="./ncStateByRedirect4Stale.html">Redirect vs STALE</A></TD><TD ALIGN="CENTER">PASS</TD><TD ALIGN="CENTER"><A HREF="63.html">X</A></TD><TD ALIGN="CENTER"><A HREF="./ncStateByRedirect4Stale.seq">X</A></TD><TD ALIGN="CENTER"><A HREF="./ncStateByRedirect4Stale.def">X</A></TD><TD ALIGN="CENTER"><A HREF="63.html.Link0.dump">Link0</A> </TD></TR>
+<TR>
+<TD>64</TD><TD><A HREF="./ncStateByRedirect4Probe.html">Redirect vs PROBE</A></TD><TD ALIGN="CENTER">PASS</TD><TD ALIGN="CENTER"><A HREF="64.html">X</A></TD><TD ALIGN="CENTER"><A HREF="./ncStateByRedirect4Probe.seq">X</A></TD><TD ALIGN="CENTER"><A HREF="./ncStateByRedirect4Probe.def">X</A></TD><TD ALIGN="CENTER"><A HREF="64.html.Link0.dump">Link0</A> </TD></TR>
+<TR>
+<TD>65</TD><TD><A HREF="./hostRecvRedirectInvalid.html">Invalid Redirect vs Neighbor Cache State</A></TD><TD ALIGN="CENTER">PASS</TD><TD ALIGN="CENTER"><A HREF="65.html">X</A></TD><TD ALIGN="CENTER"><A HREF="./hostRecvRedirectInvalid.seq">X</A></TD><TD ALIGN="CENTER"><A HREF="./hostRecvRedirectInvalid.def">X</A></TD><TD ALIGN="CENTER"><A HREF="65.html.Link0.dump">Link0</A> </TD></TR>
+<TR>
+<TD>66</TD><TD><A HREF="./hostRecvRedirect4OnlinkDC.html">Redirect vs Destination Cache; Redirect to a host</A></TD><TD ALIGN="CENTER">PASS</TD><TD ALIGN="CENTER"><A HREF="66.html">X</A></TD><TD ALIGN="CENTER"><A HREF="./hostRecvRedirect4OnlinkDC.seq">X</A></TD><TD ALIGN="CENTER"><A HREF="./hostRecvRedirect4OnlinkDC.def">X</A></TD><TD ALIGN="CENTER"><A HREF="66.html.Link0.dump">Link0</A> </TD></TR>
+<TR>
+<TD>67</TD><TD><A HREF="./hostRecvRedirect4OfflinkDC.html">Redirect vs Destination Cache; Redirect to a better router</A></TD><TD ALIGN="CENTER">PASS</TD><TD ALIGN="CENTER"><A HREF="67.html">X</A></TD><TD ALIGN="CENTER"><A HREF="./hostRecvRedirect4OfflinkDC.seq">X</A></TD><TD ALIGN="CENTER"><A HREF="./hostRecvRedirect4OfflinkDC.def">X</A></TD><TD ALIGN="CENTER"><A HREF="67.html.Link0.dump">Link0</A> </TD></TR>
+<TR>
+<TD>68</TD><TD><A HREF="./hostRecvRedirect4OnlinkNUD.html">Redirect vs Neighbor Unreachability Detection; Redirect to a host</A></TD><TD ALIGN="CENTER">PASS</TD><TD ALIGN="CENTER"><A HREF="68.html">X</A></TD><TD ALIGN="CENTER"><A HREF="./hostRecvRedirect4OnlinkNUD.seq">X</A></TD><TD ALIGN="CENTER"><A HREF="./hostRecvRedirect4OnlinkNUD.def">X</A></TD><TD ALIGN="CENTER"><A HREF="68.html.Link0.dump">Link0</A> </TD></TR>
+<TR>
+<TD>69</TD><TD><A HREF="./hostRecvRedirect4OfflinkNUD.html">Redirect vs Neighbor Unreachability Detection; Redirect to a better router</A></TD><TD ALIGN="CENTER">PASS</TD><TD ALIGN="CENTER"><A HREF="69.html">X</A></TD><TD ALIGN="CENTER"><A HREF="./hostRecvRedirect4OfflinkNUD.seq">X</A></TD><TD ALIGN="CENTER"><A HREF="./hostRecvRedirect4OfflinkNUD.def">X</A></TD><TD ALIGN="CENTER"><A HREF="69.html.Link0.dump">Link0</A> </TD></TR>
+<TR>
+<TD>70</TD><TD><A HREF="./hostRecvRedirect4RFlag.html">Redirect vs NA w/ RFlag=0 #1</A></TD><TD ALIGN="CENTER">PASS</TD><TD ALIGN="CENTER"><A HREF="70.html">X</A></TD><TD ALIGN="CENTER"><A HREF="./hostRecvRedirect4RFlag.seq">X</A></TD><TD ALIGN="CENTER"><A HREF="./hostRecvRedirect4RFlag.def">X</A></TD><TD ALIGN="CENTER"><A HREF="70.html.Link0.dump">Link0</A> </TD></TR>
+<TR>
+<TD>71</TD><TD><A HREF="./hostRecvRedirect4RFlag2.html">Redirect vs NA w/ RFlag=0 #2</A></TD><TD ALIGN="CENTER">PASS</TD><TD ALIGN="CENTER"><A HREF="71.html">X</A></TD><TD ALIGN="CENTER"><A HREF="./hostRecvRedirect4RFlag2.seq">X</A></TD><TD ALIGN="CENTER"><A HREF="./hostRecvRedirect4RFlag2.def">X</A></TD><TD ALIGN="CENTER"><A HREF="71.html.Link0.dump">Link0</A> </TD></TR>
+<TR>
+<TD>72</TD><TD><A HREF="./hostRecvRedirect4RouterLifetime0.html">Redirect vs RA w/ RouterLifetime=0 #1</A></TD><TD ALIGN="CENTER">PASS</TD><TD ALIGN="CENTER"><A HREF="72.html">X</A></TD><TD ALIGN="CENTER"><A HREF="./hostRecvRedirect4RouterLifetime0.seq">X</A></TD><TD ALIGN="CENTER"><A HREF="./hostRecvRedirect4RouterLifetime0.def">X</A></TD><TD ALIGN="CENTER"><A HREF="72.html.Link0.dump">Link0</A> </TD></TR>
+<TR>
+<TD>73</TD><TD><A HREF="./hostRecvRedirect4RouterLifetime02.html">Redirect vs RA w/ RouterLifetime=0 #2</A></TD><TD ALIGN="CENTER">PASS</TD><TD ALIGN="CENTER"><A HREF="73.html">X</A></TD><TD ALIGN="CENTER"><A HREF="./hostRecvRedirect4RouterLifetime02.seq">X</A></TD><TD ALIGN="CENTER"><A HREF="./hostRecvRedirect4RouterLifetime02.def">X</A></TD><TD ALIGN="CENTER"><A HREF="73.html.Link0.dump">Link0</A> </TD></TR>
+<TR>
+<TD>74</TD><TD><A HREF="./hostRecvRedirect4Nonce.html">Redirect vs NONCE</A></TD><TD ALIGN="CENTER">PASS</TD><TD ALIGN="CENTER"><A HREF="74.html">X</A></TD><TD ALIGN="CENTER"><A HREF="./hostRecvRedirect4Nonce.seq">X</A></TD><TD ALIGN="CENTER"><A HREF="./hostRecvRedirect4Nonce.def">X</A></TD><TD ALIGN="CENTER"><A HREF="74.html.Link0.dump">Link0</A> </TD></TR>
+<TR><TD><BR></TD><TD><B>3.3. Sending Redirect (Router Only)</B></TD><TD><BR></TD><TD><BR></TD><TD><BR></TD><TD><BR></TD><TD><BR></TD></TR>
+<TR>
+<TD>75</TD><TD><A HREF="./startRedirect.html">Setup env #1 for redirect tests</A></TD><TD ALIGN="CENTER">PASS</TD><TD ALIGN="CENTER"><A HREF="75.html">X</A></TD><TD ALIGN="CENTER"><A HREF="./startRedirect.seq">X</A></TD><TD ALIGN="CENTER"><A HREF="./startRedirect.def">X</A></TD><TD ALIGN="CENTER"><A HREF="75.html.Link0.dump">Link0</A> </TD></TR>
+<TR>
+<TD>76</TD><TD><A HREF="./routerSendRedirectOfflink.html">Redirect to a better router</A></TD><TD ALIGN="CENTER">PASS</TD><TD ALIGN="CENTER"><A HREF="76.html">X</A></TD><TD ALIGN="CENTER"><A HREF="./routerSendRedirectOfflink.seq">X</A></TD><TD ALIGN="CENTER"><A HREF="./routerSendRedirectOfflink.def">X</A></TD><TD ALIGN="CENTER"><A HREF="76.html.Link0.dump">Link0</A> </TD></TR>
+<TR>
+<TD>77</TD><TD><A HREF="./routerSendRedirectOnlink.html">Redirect to a host</A></TD><TD ALIGN="CENTER">PASS</TD><TD ALIGN="CENTER"><A HREF="77.html">X</A></TD><TD ALIGN="CENTER"><A HREF="./routerSendRedirectOnlink.seq">X</A></TD><TD ALIGN="CENTER"><A HREF="./routerSendRedirectOnlink.def">X</A></TD><TD ALIGN="CENTER"><A HREF="77.html.Link0.dump">Link0</A> </TD></TR>
+<TR>
+<TD>78</TD><TD><A HREF="./stopRedirect.html">Clear env #1 for redirect tests</A></TD><TD ALIGN="CENTER">PASS</TD><TD ALIGN="CENTER"><A HREF="78.html">X</A></TD><TD ALIGN="CENTER"><A HREF="./stopRedirect.seq">X</A></TD><TD ALIGN="CENTER">-</TD><TD ALIGN="CENTER"><A HREF="78.html.Link0.dump">Link0</A> </TD></TR>
+<TR>
+<TD>79</TD><TD><A HREF="./startRedirect2.html">Setup env #2 for redirect tests</A></TD><TD ALIGN="CENTER">PASS</TD><TD ALIGN="CENTER"><A HREF="79.html">X</A></TD><TD ALIGN="CENTER"><A HREF="./startRedirect2.seq">X</A></TD><TD ALIGN="CENTER"><A HREF="./startRedirect2.def">X</A></TD><TD ALIGN="CENTER"><A HREF="79.html.Link0.dump">Link0</A> </TD></TR>
+<TR>
+<TD>80</TD><TD><A HREF="./routerSendRedirectOfflink2.html">Redirect to the better router</A></TD><TD ALIGN="CENTER">PASS</TD><TD ALIGN="CENTER"><A HREF="80.html">X</A></TD><TD ALIGN="CENTER"><A HREF="./routerSendRedirectOfflink2.seq">X</A></TD><TD ALIGN="CENTER"><A HREF="./routerSendRedirectOfflink2.def">X</A></TD><TD ALIGN="CENTER"><A HREF="80.html.Link0.dump">Link0</A> </TD></TR>
+<TR>
+<TD>81</TD><TD><A HREF="./stopRedirect2.html">Clear env #2 for redirect tests</A></TD><TD ALIGN="CENTER">PASS</TD><TD ALIGN="CENTER"><A HREF="81.html">X</A></TD><TD ALIGN="CENTER"><A HREF="./stopRedirect2.seq">X</A></TD><TD ALIGN="CENTER">-</TD><TD ALIGN="CENTER"><A HREF="81.html.Link0.dump">Link0</A> </TD></TR>
+<TR><TD><BR></TD><TD><B>3.4. Receiving Redirect (Router Only)</B></TD><TD><BR></TD><TD><BR></TD><TD><BR></TD><TD><BR></TD><TD><BR></TD></TR>
+</TABLE>
+</CENTER>
+<HR>
+Index
+<UL>
+  <LI><A HREF="../spec/index.html">IPv6 Specification</A>
+  <LI><A HREF="../icmp/index.html">ICMPv6 for IPv6 Specification</A>
+  <LI>Neighbor Discovery
+  <LI><A HREF="../stateless-addrconf/index.html">IPv6 Stateless Address Autoconfiguration</A>
+  <LI><A HREF="../pmtu/index.html">IPv6 Path MTU Discovery</A>
+  <LI><A HREF="../router-select/index.html">Default Router Preferences, More-Specific Routes, and Load Sharing</A>
+  <LI><A HREF="../ipsec/index.html">IPSec AH and ESP for IPv6</A>
+  <LI><A HREF="../ipsec-udp/index.html">IPSec ESP for IPv6(UDP)</A>
+  <LI><A HREF="../ipsec4/index.html">IPSec AH and ESP for IPv4</A>
+  <LI><A HREF="../ipsec4-udp/index.html">IPSec AH and ESP for IPv4(UDP)</A>
+  <LI><A HREF="../mip6-cn-20/index.html">Mobility Support in IPv6 (ID-20) - Correspondent Node</A>
+  <LI><A HREF="../mip6-ha-20/index.html">Mobility Support in IPv6 (ID-20) - Home Agent</A>
+  <LI><A HREF="../mip6-mn-20/index.html">Mobility Support in IPv6 (ID-20) - Mobile Node</A>
+  <LI><A HREF="../default-addr-select/index.html">Default Address Selection for Internet Protocol version 6 (IPv6)</A>
+  <LI><A HREF="../dd/index.html">DNS discovery</A>
+  <LI><A HREF="../pd/index.html">Prefix delegation</A>
+  <LI><A HREF="../tunnel/index.html">IPv6 over IPv4 Tunnel</A>
+  <LI><A HREF="../natpt/index.html">NAT-PT</A>
+  <LI><A HREF="../robust/index.html">Robustness</A>
+</UL>
+
+<UL>
+  <LI><A HREF="../index.html">Up</A>
+  <LI><A HREF="http://www.tahi.org/">TAHI Project</A>
+</UL>
+<HR>
+This Report was generated by
+<A HREF="http://www.tahi.org/">TAHI</A> IPv6 Conformance Test Suite
+</BODY>
+</HTML>

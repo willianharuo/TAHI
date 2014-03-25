@@ -1,0 +1,417 @@
+#!/usr/bin/perl
+#
+# Copyright (C) 1999, 2000, 2001, 2002, 2003 Yokogawa Electric Corporation,
+# IPA (Information-technology Promotion Agency, Japan).
+# All rights reserved.
+# 
+# Redistribution and use of this software in source and binary forms, with 
+# or without modification, are permitted provided that the following 
+# conditions and disclaimer are agreed and accepted by the user:
+# 
+# 1. Redistributions of source code must retain the above copyright 
+# notice, this list of conditions and the following disclaimer.
+# 
+# 2. Redistributions in binary form must reproduce the above copyright 
+# notice, this list of conditions and the following disclaimer in the 
+# documentation and/or other materials provided with the distribution.
+# 
+# 3. Neither the names of the copyrighters, the name of the project which 
+# is related to this software (hereinafter referred to as "project") nor 
+# the names of the contributors may be used to endorse or promote products 
+# derived from this software without specific prior written permission.
+# 
+# 4. No merchantable use may be permitted without prior written 
+# notification to the copyrighters. However, using this software for the 
+# purpose of testing or evaluating any products including merchantable 
+# products may be permitted without any notification to the copyrighters.
+# 
+# 
+# 
+# THIS SOFTWARE IS PROVIDED BY THE COPYRIGHTERS, THE PROJECT AND 
+# CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING 
+# BUT NOT LIMITED THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS 
+# FOR A PARTICULAR PURPOSE, ARE DISCLAIMED.  IN NO EVENT SHALL THE 
+# COPYRIGHTERS, THE PROJECT OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, 
+# INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES 
+# (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR 
+# SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) 
+# HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN 
+# CONTRACT,STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) 
+# ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF 
+# THE POSSIBILITY OF SUCH DAMAGE.
+#
+# $TAHI: ct/nd/recvNsInvalid.seq,v 1.25 2002/02/27 03:54:08 masaxmasa Exp $
+
+########################################################################
+BEGIN { $V6evalTool::TestVersion = '$Name: REL_2_1_1 $ '; }
+ 
+use V6evalTool;
+use nd;
+
+ndOptions(@ARGV);
+
+# The following generate debugging messages.
+$nd::debug=$ndOpt_v|$ndOpt_vv;
+
+# You can specifies debug options to a remote control program.
+# If you want to know more detail, please see the following:
+# - V6evalTool.pm: perldoc V6evalTool
+# - V6evalRemote.pm: perldoc V6evalRemote
+$nd::remote_debug="-o1" if $ndOpt_vv;
+
+$IF=Link0;
+$exit_rtn=$V6evalTool::exitPass;
+$idx=0;
+
+$timeout=($nd::RETRANS_TIMER * $nd::MAX_MULTICAST_SOLICIT) + 1;
+
+#
+# Start capture buffer
+#
+vCapture($IF);
+
+#
+#
+#
+$idx_ptn=0;
+$idx_msg=1;
+$idx_errexp=2;
+$idx_errval=3;
+@null=();
+
+#
+@def_ucast_ns_tgt_mcast=
+    (
+     ucast_ns_tgt_mcast,
+     'Target=all-node multicast',
+     \@null,
+     $V6evalTool::exitFail,
+     );
+
+#
+@def_ucast_ns_unspec=
+    (
+     ucast_ns_unspec,
+     'Source=unspecified, Destination=link',
+     \@null,
+     $V6evalTool::exitFail,
+     );
+
+#
+@errptn_mcast_ns_unspec_sll=
+    (
+     multicast_na_tn2allnode_RsO_tll,
+     multicast_na_tn2allnode_rsO_tll,
+     );
+$pktdesc{multicast_na_tn2allnode_RsO_tll}=
+    ndWarnmsg('WARN: NUT sent a NA in response to the NS. '.
+	      'It seems for backward compatibility with RFC1970');
+$pktdesc{multicast_na_tn2allnode_rsO_tll}=
+    ndWarnmsg('WARN: NUT sent a NA in response to the NS. '.
+	      'It seems for backward compatibility with RFC1970');
+@def_mcast_ns_unspec_sll=
+    (
+     mcast_ns_unspec_sll,
+     'Source=unspecified, w/ SLL',
+     \@errptn_mcast_ns_unspec_sll,
+     $V6evalTool::exitWarn,
+     );
+
+#
+@def_mcast_ns_solnode_wo_sll=
+    (
+     mcast_ns_solnode_wo_sll,
+     'Destination=solicited-node, w/o SLL',
+     \@null,
+     $V6evalTool::exitWarn,
+     );
+
+#
+@def_ucast_ns_hoplimit=
+    (
+     ucast_ns_hoplimit,
+     'CurHopLimit!=255',
+     \@null,
+     $V6evalTool::exitFail,
+     );
+
+#
+#
+#
+@defs=
+    (
+     \@def_ucast_ns_tgt_mcast,
+     \@def_ucast_ns_unspec,
+     \@def_mcast_ns_unspec_sll,
+     \@def_mcast_ns_solnode_wo_sll,
+     \@def_ucast_ns_hoplimit,
+     );
+
+#
+#
+#
+$idx=0;
+foreach(@defs) {
+    $ptn=@$_[$idx_ptn];
+    $msg=@$_[$idx_msg];
+    $errexp=@$_[$idx_errexp];
+    $errval=@$_[$idx_errval];
+
+    vLogHTML("<FONT SIZE=\"+2\">*** NS: $msg ***</FONT><BR>");
+    $title{$idx}="<TD>$msg</TD>";
+    if(check($_)) {
+	$result{$idx}=$V6evalTool::exitPass;
+	vLogHTML("<A NAME=\"T$idx\">OK: The NS was ignored</A><BR>");
+    } else {
+	$exit_rtn=$errval if $exit_rtn != $V6evalTool::exitFail;
+	$result{$idx}=$errval;
+	if($errval==$V6evalTool::exitFail) {
+	    vLogHTML("<A NAME=\"T$idx\">".
+		     ndErrmsg("NG: Should ignore the NS")."</A><BR>");
+	} else {
+	    vLogHTML("<A NAME=\"T$idx\">".
+		     ndWarnmsg("NG: Didn't ignore the NS")."</A><BR>");
+	}
+	vLog("Wait for NUT to transmit NS 3 times.");
+	vSleep(5);
+    }
+    $idx++;
+}
+$idx--;
+
+#
+#
+#
+@col=('PTN');
+ndPrintSummaryHTML("*** Test Summary: invalid NA ***", @col,
+                   %title, %result, $idx);
+
+vLogHTML("****** EOT ******<BR>");
+exit $exit_rtn;
+
+#
+#
+#
+sub check(\@)
+{
+    my($def)=@_;
+    my($ptn)=@$def[$idx_ptn];
+    my($msg)=@$def[$idx_msg];
+    my($errexp)=@$def[$idx_errexp];
+    my($errval)=@$def[$idx_errval];
+
+    #
+    #
+    #
+    vLogHTML("<FONT SIZE=\"+1\">Initialization</FONT><BR>");
+    goto error if nd2NoNce($IF) != 0;
+
+    #
+    #
+    #
+    vLogHTML("<FONT SIZE=\"+1\">Test</FONT><BR>");
+    $pktdesc{$ptn}=
+	"Send NS: $msg";
+    %ret2=vSend($IF, $ptn);
+
+    #
+    #
+    #
+    %ret=vRecv($IF, $timeout, $ret2{sentTime1}, 1, @$errexp);
+    if($ret{status} == 0) {
+	# got specified error packet
+	return(0);
+    } elsif($ret{status} == 1) {
+	# timeout
+	vLogHTML("The NS was ignored<BR>");
+	return(1);
+    } else {
+	# got unexpected packet
+	vLogHTML("The NS was not ignored<BR>");
+	return(0);
+    }
+
+error:
+    return(0);
+}
+
+########################################################################
+__END__
+
+=head1 NAME
+
+recvNsInvalid - Verify that NUT ignores invalid NSs
+
+=head1 TARGET
+
+Host and Router
+
+=head1 SYNOPSIS
+
+  recvNsInvalid.seq [-tooloption ...] -p recvNsInvalid.def
+
+=head1 INITIALIZATION
+
+  Clear NC state for TN.
+
+=head1 TEST PROCEDURE
+
+B<recvNsInvalid> verifies that NUT ignores invalid NSs.
+
+=begin html
+<PRE>
+  TN                 NUT
+  ----------------------
+<BR>
+  State: NONCE
+<BR>
+  ==== <A HREF="#JDG1">invalid NS</A> ===>
+<BR>
+  <A HREF="#JDG2">Judgment #2:</A> Not to capture any packet from NUT within 5 sec.
+</PRE>
+
+=end html
+
+=head1 JUDGMENT
+
+=begin html
+<PRE>
+<A NAME="JDG1"></A>
+  1. NUT must ignore the following NS:
+<BR>
+  Source      |Destination         |Hop|Target             |SLL
+  ============+====================+===+===================+======
+  link-local   link-local           255 *all-node multicast exist
+  ------------+--------------------+---+-------------------+------
+  *unspecified *link-local          255 link-local          none
+  ------------+--------------------+---+-------------------+------
+  <A HREF="#NOTE2">*unspecified sol-node[link-local] 255 link-local          *exist</A>
+  ------------+--------------------+---+-------------------+------
+  <A HREF="#NOTE3">link         *sol-node[link-local]255 link-local          *none</A>
+  ------------+--------------------+---+-------------------+------
+  link-local   link-local           *2  link-local          exist
+  ============+====================+===+===================+======
+<A NAME="JDG2"></A>
+  2. NUT does not sends any packet.
+</PRE>
+
+=end html
+
+=head1 TERMINATION
+
+  N/A
+
+=head1 NOTE
+
+=begin html
+<PRE>
+  1. The test does not invoke any remote command.
+<BR>
+<A NAME="NOTE2"></A>
+  2. An implementation may send a NA in response to the NS (src=unspecified,
+     with SLLA option) because of backward compatibility with RFC1970.
+     RFC defined the NS as valid, whereas RFC2461 defined the NS as invalid.
+     In such case, this test judges "WARN" that never means the implementation
+     is wrong. The test intends to inform such behavior.
+<BR>
+<BLOCKQUOTE>
+RFC1970
+<HR>
+4.3.  Neighbor Solicitation Message Format
+<BR>
+IP Fields:
+<BR>
+   Source Address
+                  Either an address assigned to the interface from which
+                  this message is sent or (if Duplicate Address
+                  Detection is in progress [ADDRCONF]) <B>the unspecified
+                  address.</B>
+<BR>
+Possible options:
+<BR>
+   Source link-layer address
+                  The link-layer address for the sender.  <B>On link layers
+                  that have addresses this option MUST be included in
+                  multicast solicitations</B> and SHOULD be included in
+                  unicast solicitations.
+<HR>
+RFC2461
+<HR>
+4.3.  Neighbor Solicitation Message Format
+<BR>
+   Possible options:
+<BR>
+      Source link-layer address
+                     The link-layer address for the sender.  <B>MUST NOT be
+                     included when the source IP address is the
+                     unspecified address.</B>  Otherwise, on link layers
+                     that have addresses this option MUST be included in
+                     multicast solicitations and SHOULD be included in
+                     unicast solicitations.
+<HR>
+</BLOCKQUOTE>
+<BR>
+<A NAME="NOTE3"></A>
+  3. An implementation may send a NA in response to the NS (src=solicited-node
+     multicast, without SLLA option). The NS is not invalid as a receiver side,
+     whereas it is invalid as a sender side (please see the following).
+     In such case, this test judges "WARN" that never means the implementation
+     is wrong. The test intends to inform such behavior.
+<BR>
+<BLOCKQUOTE>
+RFC2461
+Sender side:
+<HR>
+4.3.  Neighbor Solicitation Message Format
+<BR>
+   Possible options:
+<BR>
+      Source link-layer address
+                     The link-layer address for the sender.  MUST NOT be
+                     included when the source IP address is the
+                     unspecified address.  Otherwise, <B>on link layers
+                     that have addresses this option MUST be included in
+                     multicast solicitations</B> and SHOULD be included in
+                     unicast solicitations.
+<HR>
+RFC2461
+Receiver side:
+<HR>
+7.1.1.  Validation of Neighbor Solicitations
+<BR>
+   A node must silently discard any received Neighbor Solicitation
+   messages that do not satisfy all of the following validity checks:
+<BR>
+   - The IP Hop Limit field has a value of 255, i.e., the packet
+     could not possibly have been forwarded by a router.
+<BR>
+   - If the message includes an IP Authentication Header, the message
+     authenticates correctly.
+<BR>
+   - ICMP Checksum is valid.
+<BR>
+   - ICMP Code is 0.
+<BR>
+   - ICMP length (derived from the IP length) is 24 or more octets.
+<BR>
+   - Target Address is not a multicast address.
+<BR>
+   - All included options have a length that is greater than zero.
+<BR>
+   - If the IP source address is the unspecified address, the IP
+     destination address is a solicited-node multicast address.
+<BR>
+   - If the IP source address is the unspecified address, there is no
+     source link-layer address option in the message.
+<HR>
+</BLOCKQUOTE>
+</PRE>
+
+=end html
+
+=head1 SEE ALSO
+
+  perldoc V6evalTool
+  perldoc V6evalRemote
+
+=cut

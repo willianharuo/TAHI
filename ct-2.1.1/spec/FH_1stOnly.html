@@ -1,0 +1,178 @@
+<HTML>
+<HEAD>
+<TITLE>FH_1stOnly - check Fragment Reassembly</TITLE>
+<LINK REV="made" HREF="mailto:hackers@FreeBSD.org">
+</HEAD>
+
+<BODY>
+
+<!-- INDEX BEGIN -->
+<!--
+
+<UL>
+
+	<LI><A HREF="#NAME">NAME</A>
+	<LI><A HREF="#TARGET">TARGET</A>
+	<LI><A HREF="#SYNOPSIS">SYNOPSIS</A>
+	<LI><A HREF="#INITIALIZATION">INITIALIZATION</A>
+	<LI><A HREF="#TEST_PROCEDURE">TEST PROCEDURE</A>
+	<LI><A HREF="#JUDGMENT">JUDGMENT</A>
+	<LI><A HREF="#REFERENCE">REFERENCE</A>
+	<LI><A HREF="#SEE_ALSO">SEE ALSO</A>
+</UL>
+-->
+<!-- INDEX END -->
+
+<P>
+<H1><A NAME="NAME">NAME</A></H1>
+<P>
+<PRE>  FH_1stOnly - check Fragment Reassembly (1st fragment only)
+</PRE>
+<P>
+<HR>
+<H1><A NAME="TARGET">TARGET</A></H1>
+<P>
+<PRE>  Host and Router
+</PRE>
+<P>
+<HR>
+<H1><A NAME="SYNOPSIS">SYNOPSIS</A></H1>
+<PRE>
+  <A HREF="./FH_1stOnly.seq">FH_1stOnly.seq</A> [-tooloption ...] -pkt <A HREF="./Fragment.def">Fragment.def</A>
+    -tooloption : v6eval tool option
+</PRE>
+
+<P>
+<HR>
+<H1><A NAME="INITIALIZATION">INITIALIZATION</A></H1>
+<P>
+<PRE>  1. Ping to Target (create Neighbor Cache Entries, if not exist)
+  2. Override Neighbor Cache Entries
+</PRE>
+<P>
+<HR>
+<H1><A NAME="TEST_PROCEDURE">TEST PROCEDURE</A></H1>
+<P>
+<PRE>  Tester                      Target
+    |                           |
+    |--------------------------&gt;|
+    |   Echo Request (1st)      |
+    |                           |
+    |                           |
+    |&lt;--------------------------|
+    |   ICMP Error              |
+    |                           |
+    |                           |
+    v                           v
+</PRE>
+<P>
+<PRE>  1. Send Echo Request (1st fragment)
+  2. Wait ICMP Error (timeout = 60 sec)
+  3. Receive ICMP Error
+</PRE>
+<P>
+<PRE>  Echo Request Data (original) is:
+</PRE>
+<P>
+<PRE>        IPv6 Header
+            Version            = 6
+            Traffic Class      = 0
+            FlowLabel          = 0
+            PayloadLength      = 1032
+            NextHeader         = 58 (ICMP)
+            SourceAddress      = Tester Link Local Address
+            DestinationAddress = Target Link Local Address
+</PRE>
+<P>
+<PRE>        ICMP Echo Request
+            Type           = 128 (Echo Request)
+            Code           = 0
+            Checksum       = (auto)
+            Identifier     = (auto)
+            SequenceNumber = 0
+            PayloadData    = data repeat{0x1, 512}
+                             data repeat{0x2, 512}
+</PRE>
+<P>
+<PRE>  Echo Request Data (1st fragment) is:
+</PRE>
+<P>
+<PRE>        IPv6 Header
+            Version            = 6
+            Traffic Class      = 0
+            FlowLabel          = 0
+            PayloadLength      = 528
+            NextHeader         = 44 (Fragment Header)
+            SourceAddress      = Tester Link Local Address
+            DestinationAddress = Target Link Local Address
+</PRE>
+<P>
+<PRE>        Fragment Header
+            NextHeader         = 58 (ICMP)
+            FragmentOffset     = 0
+            MFlag              = 1
+            Identification     = 32bit (Automatic generation)
+</PRE>
+<P>
+<PRE>        Payload
+            data               = 520 octets from the head of ICMP Echo request
+</PRE>
+<P>
+<HR>
+<H1><A NAME="JUDGMENT">JUDGMENT</A></H1>
+<P>
+<PRE>  PASS: ICMP Error Received
+</PRE>
+<P>
+<PRE>        IPv6 Header
+            Version             = 6
+            Traffic Class       = 0
+            FlowLabel           = 0
+            PayloadLength       = 16
+            NextHeader          = 58 (ICMP)
+            SourceAddress       = Target Link Local Address
+            Destination Address = Tester Link Local Address
+</PRE>
+<P>
+<PRE>        ICMP Error
+            Type           = 3 (Time Exceeded)
+            Code           = 1 (fragment reassembly time exceeded)
+            Checksum       = (auto)
+            PayloadData    = (Echo Request)
+</PRE>
+<P>
+<HR>
+<H1><A NAME="REFERENCE">REFERENCE</A></H1>
+<P>
+RFC2460
+
+<P>
+4.5 Fragment Header
+
+<P>
+<PRE>                        :
+</PRE>
+<P>
+<PRE>   The following error conditions may arise when reassembling fragmented
+   packets:
+</PRE>
+<PRE>
+      If insufficient fragments are received to complete reassembly of a
+      packet within 60 seconds of the reception of the first-arriving
+      fragment of that packet, reassembly of that packet must be
+      abandoned and all the fragments that have been received for that
+      packet must be discarded.  <B>If the first fragment (i.e., the one
+      with a Fragment Offset of zero) has been received, an ICMP Time
+      Exceeded -- Fragment Reassembly Time Exceeded message should be
+      sent to the source of that fragment.</B>
+<PRE>
+
+<P>
+<HR>
+<H1><A NAME="SEE_ALSO">SEE ALSO</A></H1>
+<P>
+<PRE>  perldoc V6evalTool
+</PRE>
+</BODY>
+
+</HTML>

@@ -1,0 +1,16 @@
+##
+## $Name: REL_2_1_1 $
+##
+## $TAHI: ct/ipsec4-udp/INDEX_router_common,v 1.4 2001/10/09 05:16:41 toba Exp $
+##
+##<seq>:<def>:[<opt>]:[<log>]:<desc>
+##
+
+&print:<B>Router Tunnel Common Inbound</B>
+
+&print:Inbound Connect SA bundles
+
+&#../ipsec/RTU_C_In_2SA_SspiSipsrcDproto.seq:./RTU_C_2SA_SspiSipDproto.def:-cpp="-include ./ipsecaddr.def"::Connect two SA bundles with same spi, same IPsrc, different protocol:2
+
+#
+#########################################################################

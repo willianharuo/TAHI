@@ -1,0 +1,16 @@
+##
+## $Name: REL_2_1_1 $
+##
+## $TAHI: ct/ipsec/INDEX_router_common,v 1.4 2001/10/05 06:38:55 masaxmasa Exp $
+##
+##<seq>:<def>:[<opt>]:[<log>]:<desc>
+##
+
+&print:<B>Router Tunnel Common Inbound</B>
+
+&print:Inbound Connect SA bundles
+
+./RTU_C_In_2SA_SspiSipsrcDproto.seq:./RTU_C_2SA_SspiSipDproto.def:::Connect two SA bundles with same spi, same IPsrc, different protocol:2
+
+#
+#########################################################################

@@ -1,0 +1,140 @@
+<HTML>
+<HEAD>
+<TITLE>hostSendRs - Verifying the host sending valid RSs</TITLE>
+<LINK REV="made" HREF="mailto:hackers@FreeBSD.org">
+</HEAD>
+
+<BODY>
+
+<!-- INDEX BEGIN -->
+<!--
+
+<UL>
+
+	<LI><A HREF="#NAME">NAME</A>
+	<LI><A HREF="#TARGET">TARGET</A>
+	<LI><A HREF="#SYNOPSIS">SYNOPSIS</A>
+	<LI><A HREF="#INITIALIZATION">INITIALIZATION</A>
+	<LI><A HREF="#TEST_PROCEDURE">TEST PROCEDURE</A>
+	<LI><A HREF="#JUDGMENT">JUDGMENT</A>
+	<LI><A HREF="#TERMINATION">TERMINATION</A>
+	<LI><A HREF="#NOTE">NOTE</A>
+	<LI><A HREF="#SEE_ALSO">SEE ALSO</A>
+</UL>
+-->
+<!-- INDEX END -->
+
+<P>
+<H1><A NAME="NAME">NAME</A></H1>
+<P>
+hostSendRs - Verifying the host sending valid RSs
+
+<P>
+<HR>
+<H1><A NAME="TARGET">TARGET</A></H1>
+<P>
+Host only
+
+<P>
+<HR>
+<H1><A NAME="SYNOPSIS">SYNOPSIS</A></H1>
+<P>
+<PRE>  hostSendRs.seq [-tooloption ...] -p hostSendRs.def
+</PRE>
+<P>
+<HR>
+<H1><A NAME="INITIALIZATION">INITIALIZATION</A></H1>
+<P>
+<PRE>  Reboot NUT.
+</PRE>
+<P>
+<HR>
+<H1><A NAME="TEST_PROCEDURE">TEST PROCEDURE</A></H1>
+<P>
+<STRONG>hostSendRs.seq</STRONG> verifies that NUT send valid RSs by the rules:
+
+<P>
+<PRE>  - MAX_SOLICITATION_INTERVAL
+  - MAX_RTR_SOLICITATIONS
+</PRE>
+<PRE>
+  TN                           NUT
+  --------------------------------
+<BR>
+  <=== <A HREF="#JDG1">Judgment #1</A>: DAD NS (if any) ===
+        src=unspecified
+        dst=solicited-node[NUT's link-local]
+        target=NUT's link-local
+        w/o SLLA
+<BR>
+  <=== <A HREF="#JDG2">Judgment #2</A>: RS ===
+        src=link-local or unspecified
+        dst=all-router
+        w/ or w/o SLLA
+<BR>
+  <=== <A HREF="#JDG2">Judgment #2</A>: RS ===
+        src=link-local or unspecified
+        dst=all-router
+        w/ or w/o SLLA
+<BR>
+  <=== <A HREF="#JDG2">Judgment #2</A>: RS ===
+        src=link-local or unspecified
+        dst=all-router
+        w/ or w/o SLLA
+</PRE>
+
+<P>
+<HR>
+<H1><A NAME="JUDGMENT">JUDGMENT</A></H1>
+<A NAME="JDG1"></A>
+
+<P>
+<PRE>  1. If TN captures the following DAD NSs, those will be discarded.
+     src=unspecified, dst=solicited-node[NUT's link-local]
+     target=NUT's link-local
+     w/o SLLA
+</PRE>
+<A NAME="JDG2"></A>
+
+<P>
+<PRE>  2. NUT sends the following RSs:
+</PRE>
+<P>
+<PRE>     2.1. The RSs are valid:
+          A) src=unspecified, dst=all-router, w/o SLLA
+          B) src=NUT's link-local, dst=all-router, w/o SLLA
+          C) src=NUT's link-local, dst=all-router, w/ SLLA
+</PRE>
+<P>
+<PRE>     2.2. A number of the RSs &lt;= MAX_RTR_SOLICITATIONS(3)
+</PRE>
+<P>
+<PRE>     2.3. Intervals between the RSs &gt;= MAX_SOLICITATION_INTERVAL(1 sec.)
+</PRE>
+<P>
+<HR>
+<H1><A NAME="TERMINATION">TERMINATION</A></H1>
+<P>
+<PRE>  N/A
+</PRE>
+<P>
+<HR>
+<H1><A NAME="NOTE">NOTE</A></H1>
+<P>
+<PRE>  1. The test dose NOT verify that NUT delays the transmission for
+     a random amount of time between 0 and MAX_RTR_SOLICITATION_DELAY.
+</PRE>
+<P>
+<PRE>  2. The test invokes the following command:
+     - reboot
+</PRE>
+<P>
+<HR>
+<H1><A NAME="SEE_ALSO">SEE ALSO</A></H1>
+<P>
+<PRE>  perldoc V6evalTool
+  perldoc V6evalRemote
+</PRE>
+</BODY>
+
+</HTML>

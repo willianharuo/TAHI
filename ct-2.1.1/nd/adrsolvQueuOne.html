@@ -1,0 +1,120 @@
+<HTML>
+<HEAD>
+<TITLE>adrsolvQueuOne - Verifying an address resolution queue</TITLE>
+<LINK REV="made" HREF="mailto:hackers@FreeBSD.org">
+</HEAD>
+
+<BODY>
+
+<!-- INDEX BEGIN -->
+<!--
+
+<UL>
+
+	<LI><A HREF="#NAME">NAME</A>
+	<LI><A HREF="#TARGET">TARGET</A>
+	<LI><A HREF="#SYNOPSIS">SYNOPSIS</A>
+	<LI><A HREF="#INITIALIZATION">INITIALIZATION</A>
+	<LI><A HREF="#TEST_PROCEDURE">TEST PROCEDURE</A>
+	<LI><A HREF="#JUDGMENT">JUDGMENT</A>
+	<LI><A HREF="#TERMINATION">TERMINATION</A>
+	<LI><A HREF="#NOTE">NOTE</A>
+	<LI><A HREF="#SEE_ALSO">SEE ALSO</A>
+</UL>
+-->
+<!-- INDEX END -->
+
+<P>
+<H1><A NAME="NAME">NAME</A></H1>
+<P>
+adrsolvQueuOne - Verifying an address resolution queue
+
+<P>
+<HR>
+<H1><A NAME="TARGET">TARGET</A></H1>
+<P>
+Host and Router
+
+<P>
+<HR>
+<H1><A NAME="SYNOPSIS">SYNOPSIS</A></H1>
+<P>
+<PRE>  adrsolvQueuOne.seq [-tooloption ...] -p adrsolvQueuOne.def
+</PRE>
+<P>
+<HR>
+<H1><A NAME="INITIALIZATION">INITIALIZATION</A></H1>
+<P>
+<PRE>  Clear NC state for TN.
+</PRE>
+<P>
+<HR>
+<H1><A NAME="TEST_PROCEDURE">TEST PROCEDURE</A></H1>
+<P>
+<STRONG>adrsolvQueuOne</STRONG> verifies that a NUT queues a packet whose LLA is not resolved.
+
+<PRE>
+  TN		   NUT
+  ----------------------
+<BR>
+  State: NONCE (for TN)
+<BR>
+  ==== echo-request ===>
+	src=TN's link-local
+	dst=NUT's link-local
+<BR>
+  State: INCOMPLETE (for TN)
+<BR>
+  <=== <A HREF="#JDG1">Judgment #1</A>: multicast NS ====
+	src=NUT's link-local
+	dst=solicited-node[TN's link-local]
+	w/ SLLA
+	timeout: $RETRANS_TIMER * $MAX_MULTICAST_SOLICIT
+<BR>
+  ==== solicited NA ===>
+	src=TN's link-local
+	dst=NUT's link-local
+	R=0, S=1, O=1
+	w/ TLLA
+<BR>
+  State: REACHABLE (for TN)
+	
+  <=== <A HREF="#JDG2">Judgment #2</A>: echo-reply ====
+	src=NUT's link-local
+	dst=TN's link-local
+</PRE>
+
+<P>
+<HR>
+<H1><A NAME="JUDGMENT">JUDGMENT</A></H1>
+<PRE>
+<A NAME="JDG1"></A>
+  1. NUT must send at the lease one multicast NS.
+     src=NUT's link-local, dst=sol-node[TN's link-local], w/ SLLA
+<A NAME="JDG2"></A>
+  2. NUT must send an echo-reply to TN.
+     src=NUT's link-local, dst=TN's link-local
+</PRE>
+
+<P>
+<HR>
+<H1><A NAME="TERMINATION">TERMINATION</A></H1>
+<P>
+<PRE>  N/A
+</PRE>
+<P>
+<HR>
+<H1><A NAME="NOTE">NOTE</A></H1>
+<P>
+<PRE>  The test does not invoke any remote command.
+</PRE>
+<P>
+<HR>
+<H1><A NAME="SEE_ALSO">SEE ALSO</A></H1>
+<P>
+<PRE>  perldoc V6evalTool
+  perldoc V6evalRemote
+</PRE>
+</BODY>
+
+</HTML>

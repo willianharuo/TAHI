@@ -1,0 +1,39 @@
+##
+## $Name: REL_2_1_1 $
+##
+## $TAHI: ct/ipsec4-udp/INDEX_router_ah,v 1.4 2001/10/09 05:16:41 toba Exp $
+##
+##<seq>:<def>:[<opt>]:[<log>]:<desc>
+##
+&print:<B>Router Tunnel AH Outbound</B>
+&print:Router Tunnel AH Outbound with authentication
+
+&#../ipsec/RTU_A_Out_hmacmd5.seq:./RTU_A_hmacmd5.def:-cpp="-include ./ipsecaddr.def"::Outbound AH packet (HMAC-MD5):2
+&#../ipsec/RTU_A_Out_hmacsha1.seq:./RTU_A_hmacsha1.def:-cpp="-include ./ipsecaddr.def"::Outbound AH packet (HMAC-SHA1):2
+
+&print:Router Tunnel AH Outbound Connect SA bundles
+&#../ipsec/RTU_A_Out_2SA_DspiDipdst.seq :./RTU_A_2SA_DspiDip.def:-cpp="-include ./ipsecaddr.def"::Connect two SA bundles with different spi, different IPdst:2
+&#../ipsec/RTU_A_Out_2SA_SspiDipdst.seq :./RTU_A_2SA_SspiDip.def:-cpp="-include ./ipsecaddr.def"::Connect two SA bundles with same spi, different IPdst:2
+
+
+&print:<B>Router Tunnel AH Inbound</B>
+&print:Router Tunnel AH Inbound with authentication
+&#../ipsec/RTU_A_In.seq  :  ../ipsec/RTU_A_common.def :-cpp="-include ./ipsecaddr.def":: Inbound AH Tunnel packet (with SPD entry):2
+###../ipsec/RTU_A_In_NoSPD.seq  :  ../ipsec/RTU_A_common.def :-cpp="-include ./ipsecaddr.def":: Inbound AH Tunnel packet (No SPD):2
+
+&#../ipsec/RTU_A_In_hmacmd5.seq:./RTU_A_hmacmd5.def:-cpp="-include ./ipsecaddr.def"::Inbound AH packet (HMAC-MD5):2
+&#../ipsec/RTU_A_In_hmacsha1.seq:./RTU_A_hmacsha1.def:-cpp="-include ./ipsecaddr.def"::Inbound AH packet (HMAC-SHA1):2
+
+&print:Router Tunnel AH Inbound Connect SA bundles
+&#../ipsec/RTU_A_In_2SA_DspiDipsrc.seq :./RTU_A_2SA_DspiDip.def:-cpp="-include ./ipsecaddr.def"::Connect two SA bundles with different spi, different IPsrc:2
+&#../ipsec/RTU_A_In_2SA_DspiSipsrc.seq :./RTU_A_2SA_DspiSip.def:-cpp="-include ./ipsecaddr.def"::Connect two SA bundles with different spi, same IPsrc:2
+
+&print:Router Tunnel AH Inbound, Detect modification of packet with AH
+&#./RTU_A_In_DM_IPv4H_dst.seq  :./RTU_A_DM_IPv4H.def:-cpp="-include ./ipsecaddr.def"::Detect modification of IPv4 header IP dst address with AH:2
+&#./RTU_A_In_DM_IPv4H_src.seq  :./RTU_A_DM_IPv4H.def:-cpp="-include ./ipsecaddr.def"::Detect modification of IPv4 header IP src address with AH:2
+&#./RTU_A_In_DM_IPv4H_ttl.seq  :./RTU_A_DM_IPv4H.def:-cpp="-include ./ipsecaddr.def"::Undetect modification of IPv4 header TTL with AH:2
+&#./RTU_A_In_DM_Inner_IPv4H_ttl.seq :./RTU_A_DM_Inner_IPv4H.def:-cpp="-include ./ipsecaddr.def"::Detect modification of inner IPv4 header TTL of AH tunnel:2
+&#./RTU_A_In_DM_Inner_Payload.seq :./RTU_A_DM_Inner_Payload.def:-cpp="-include ./ipsecaddr.def"::Detect modification of inner payload of AH tunnel:2
+
+#
+#########################################################################

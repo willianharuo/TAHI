@@ -1,0 +1,89 @@
+#
+# Copyright (C) 1999, 2000, 2001, 2002, 2003 Yokogawa Electric Corporation,
+# IPA (Information-technology Promotion Agency, Japan).
+# All rights reserved.
+# 
+# Redistribution and use of this software in source and binary forms, with 
+# or without modification, are permitted provided that the following 
+# conditions and disclaimer are agreed and accepted by the user:
+# 
+# 1. Redistributions of source code must retain the above copyright 
+# notice, this list of conditions and the following disclaimer.
+# 
+# 2. Redistributions in binary form must reproduce the above copyright 
+# notice, this list of conditions and the following disclaimer in the 
+# documentation and/or other materials provided with the distribution.
+# 
+# 3. Neither the names of the copyrighters, the name of the project which 
+# is related to this software (hereinafter referred to as "project") nor 
+# the names of the contributors may be used to endorse or promote products 
+# derived from this software without specific prior written permission.
+# 
+# 4. No merchantable use may be permitted without prior written 
+# notification to the copyrighters. However, using this software for the 
+# purpose of testing or evaluating any products including merchantable 
+# products may be permitted without any notification to the copyrighters.
+# 
+# 
+# 
+# THIS SOFTWARE IS PROVIDED BY THE COPYRIGHTERS, THE PROJECT AND 
+# CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING 
+# BUT NOT LIMITED THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS 
+# FOR A PARTICULAR PURPOSE, ARE DISCLAIMED.  IN NO EVENT SHALL THE 
+# COPYRIGHTERS, THE PROJECT OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, 
+# INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES 
+# (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR 
+# SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) 
+# HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN 
+# CONTRACT,STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) 
+# ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF 
+# THE POSSIBILITY OF SUCH DAMAGE.
+#
+# $Author?$
+#
+# $Name: REL_2_1_1 $
+#
+# $TAHI: ct/mip6-mn-20/INDEX_mn,v 1.2 2003/06/11 08:59:59 akisada Exp $
+#
+# <seq>:<def>:<opts>:<htmldoc>:<dsc>:<links>
+#
+
+&print:<B>Initialization</B>
+./MN_Init.seq:./MN_Common.def:::Reboot:
+&print:<B> General Tests </B>
+./MN_BasicBehavior.seq:./MN_Common.def:::testcase for MN basic behavior:
+&print:<B>11. Mobile Node Operation</B>
+&print:<B>11.3 Packet Processing</B>
+&print:<B>11.3.1 Sending Packets While Away from Home</B>
+./SendingPacketAtHomeLink.seq:./MN_Common.def:::Sending Packets at home link:
+./SendingPacketAtForeignLink1.seq:./MN_Common.def:::Sending Packets at foreign link(1):
+./SendingPacketAtForeignLink2.seq:./MN_Common.def:::Sending Packets at foreign link(2):
+&print:<B>11.3.3 Receiving Packets While Away from Home</B>
+./ReceivingPacketWoRH.seq:./MN_Common.def:::MN can received packets via HA:
+./ReceivingPacketWRH.seq:./MN_Common.def:::MN away from home can receive a packet(w/RH) from CN:
+./ReceivingPacketWRHold.seq:./MN_Common.def:::MN away from home can receive a packet(RH=old CoA) from CN:
+&print:<B>11.4 Home Agent and Prefix Management</B>
+&print:<B>11.4.1 Dynamic Home Agent Address Discovery</B>
+./SendingDHAAD.seq:./MN_Common.def:::MN sends ICMP HAAD request:
+./SendingDHAADandRegist.seq:./MN_Common.def:::MN sends home registration Binding Update:
+&print:<B>11.4.2 Sending Mobile Prefix Solicitations</B>
+./SendingMobilePrefixSol.seq:./MN_Common.def:::MN sends Mobile Node Prefix Solicitation when Home Address expires:
+&print:<B>11.5 Movement</B>
+&print:<B>11.5.1 Movement Detection</B>
+./MoveFromHomeToForeign.seq:./MN_Common.def:::MN detects movement from home to foreign:
+./MoveFromForeignToForeign.seq:./MN_Common.def:::MN detects movement from foreign to foreign:
+./MoveRobust.seq:./MN_Common.def:::Robustness of movement detection:
+&print:<B>11.5.2 Forming New Care-of Addresses</B>
+./MoveFreq.seq:./MN_Common.def:::CoA changes frequently:
+./MoveDAD.seq:./MN_Common.def:::MN does DAD after forming new CoA:
+&print:<B>11.5.4 Returning Home</B>
+./ReturningHome.seq:./MN_Common.def:::NUT sends Binding Update to HA when returning home:
+&print:<B>11.7 Processing Bindings</B>
+&print:<B>11.7.1 Sending Binding Updates to the Home Agent</B>
+./SendingBUtoHA.seq:./MN_Common.def:::MN sends Binding Update when changing primary CoA:
+&print:<B>11.7.2 Correspondent Binding Procedure</B>
+./SendingBUtoCN.seq:./MN_Common.def:::Sending Binding Update (wo/ A bit) to CN:
+&print:<B>11.7.3 Receiving Binding Acknowledgements</B>
+./ReceivingBA132.seq:./MN_Common.def:::MN receives Binding Acknowledgement(error 132):
+&print:<B>11.7.4 Receiving Binding Refresh Requests
+./ProcessingBRR.seq:./MN_Common.def:::Processing Binding Refresh Requests:

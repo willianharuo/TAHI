@@ -1,0 +1,462 @@
+#!/usr/bin/perl
+#
+# Copyright (C) 1999, 2000, 2001, 2002, 2003 Yokogawa Electric Corporation,
+# IPA (Information-technology Promotion Agency, Japan).
+# All rights reserved.
+# 
+# Redistribution and use of this software in source and binary forms, with 
+# or without modification, are permitted provided that the following 
+# conditions and disclaimer are agreed and accepted by the user:
+# 
+# 1. Redistributions of source code must retain the above copyright 
+# notice, this list of conditions and the following disclaimer.
+# 
+# 2. Redistributions in binary form must reproduce the above copyright 
+# notice, this list of conditions and the following disclaimer in the 
+# documentation and/or other materials provided with the distribution.
+# 
+# 3. Neither the names of the copyrighters, the name of the project which 
+# is related to this software (hereinafter referred to as "project") nor 
+# the names of the contributors may be used to endorse or promote products 
+# derived from this software without specific prior written permission.
+# 
+# 4. No merchantable use may be permitted without prior written 
+# notification to the copyrighters. However, using this software for the 
+# purpose of testing or evaluating any products including merchantable 
+# products may be permitted without any notification to the copyrighters.
+# 
+# 
+# 
+# THIS SOFTWARE IS PROVIDED BY THE COPYRIGHTERS, THE PROJECT AND 
+# CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING 
+# BUT NOT LIMITED THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS 
+# FOR A PARTICULAR PURPOSE, ARE DISCLAIMED.  IN NO EVENT SHALL THE 
+# COPYRIGHTERS, THE PROJECT OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, 
+# INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES 
+# (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR 
+# SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) 
+# HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN 
+# CONTRACT,STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) 
+# ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF 
+# THE POSSIBILITY OF SUCH DAMAGE.
+#
+# $TAHI: ct/nd/hostRecvRedirect4RFlag.seq,v 1.18 2002/02/27 06:11:40 masaxmasa Exp $
+
+########################################################################
+BEGIN { $V6evalTool::TestVersion = '$Name: REL_2_1_1 $ '; }
+ 
+use V6evalTool;
+use nd;
+
+ndOptions(@ARGV);
+
+# The following generate debugging messages.
+$nd::debug=$ndOpt_v|$ndOpt_vv;
+
+# You can specifies debug options to a remote control program.
+# If you want to know more detail, please see the following:
+# - V6evalTool.pm: perldoc V6evalTool
+# - V6evalRemote.pm: perldoc V6evalRemote
+$nd::remote_debug="-o1" if $ndOpt_vv;
+
+$IF=Link0;
+
+$wait_dad=3;
+$wait_echo=2;
+$wait_stale=$nd::REACHABLE_TIME * $nd::MAX_RANDOM_FACTOR;
+$drs_policy="fifo";
+
+#
+#
+#
+$type=$V6evalTool::NutDef{Type};
+if($type eq router) {
+    vLogHTML("This test is for the host only<BR>");
+    exit $V6evalTool::exitHostOnly;
+}
+
+$type=$V6evalTool::NutDef{Type};
+if($type ne host) {
+    vLogHTML(ndErrmsg("ERROR: $V6evalTool::NutDef{Type}: ".
+		      "Unknown target type<BR>"));
+    exit $V6evalTool::exitFail;
+}
+
+#
+#
+#
+retry:
+vLogHTML("<HR><FONT SIZE=\"+1\">Initialization</FONT><BR>");
+vCapture($IF);
+
+#
+# 
+#
+#goto error if ndClearPrefix() != 0;
+#goto error if ndClearDefr() != 0;
+#goto error if ndClearRoutes() != 0;
+goto error if nd2NoNce($IF) != 0;
+
+#
+#
+#
+vLogHTML("Set R1 as the default router, then set TN as the second router<BR>");
+$pktdesc{ra_rone2allnode_sll}=
+    'Router R1 sends RA w/ SLL, then STALE';
+$pktdesc{ra_tn2allnode_sll}=
+    'Router TN sends RA w/ SLL, then STALE';
+$pktdesc{unicast_na_rone2nut_RSO_tll}=
+    'Router R1 sends NA w/ TLL, then REACHABLE';
+$pktdesc{unicast_na_tn2nut_RSO_tll}=
+    'Router TN sends NA w/ TLL, then REACHABLE';
+
+#
+#
+#
+if($drs_policy eq "fifo") {
+    vSend($IF, 
+	  ra_rone2allnode_sll,
+	  unicast_na_rone2nut_RSO_tll,
+	  ra_tn2allnode_sll,
+	  unicast_na_tn2nut_RSO_tll,
+	  );
+} elsif($drs_policy eq "lifo") {
+    vSend($IF, 
+	  ra_tn2allnode_sll,
+	  unicast_na_tn2nut_RSO_tll,
+	  ra_rone2allnode_sll,
+	  unicast_na_rone2nut_RSO_tll,
+	  );
+} else {
+    goto error;
+}
+
+#
+#
+#
+vLogHTML("Wait for DAD<BR>");
+vRecv($IF, $wait_dad, 0, 0);
+
+#
+#
+#
+vLogHTML("<HR><FONT SIZE=\"+1\">Test</FONT><BR>");
+
+#
+#
+#
+vLogHTML("*** Verify that the default router work ***<BR>");
+$pktdesc{echo_request_a}=
+    "Send echo-request that is forwarded from the default router (R1)";
+%ret=vSend($IF, echo_request_a);
+
+$pktdesc{echo_reply_a}=
+    'Got echo-reply that was thrown to the default router (R1)';
+%ret=vRecv($IF, $wait_echo, $ret{sentTime1}, 0, echo_reply_a);
+if($ret{status} != 0) {
+    goto error if $drs_policy eq "lifo";
+    $drs_policy="lifo";
+    vLogHTML(ndWarnmsg("The NUT may have different policy ".
+                       "for Default Router Selection.<BR>".
+                       "Try again."));
+    goto retry;
+}
+
+#
+#
+#
+vLogHTML("*** Verify that redirect work ***<BR>");
+$pktdesc{redirect_rone2nut_tll}="Send redirect to the second router (TN)";
+vSend($IF, redirect_rone2nut_tll);
+
+#
+#
+#
+if(isRedirected($IF) ne REDIRECTED) {
+    vLogHTML(ndErrmsg("ERROR: Redirect did not work<BR>"));
+#    goto error;
+}
+
+#
+#
+#
+vLogHTML("*** Verify that IsRouter=0 removes Destination Cache entry ***<BR>");
+$pktdesc{unicast_na_tn2nut_rSO_tll}="Send NA w/ R=0, then IsRouter=0";
+vSend($IF, unicast_na_tn2nut_rSO_tll);
+
+#
+#
+#
+if(isRedirected($IF) ne IGNORED) {
+    vLogHTML("The echo-reply was thrown to the second router".
+	     "whose IsRouter flag is 0<BR>");
+    vLogHTML(ndErrmsg("ERROR: NUD does not work at redirected entry<BR>"));
+    goto error;
+}
+
+#
+#
+#
+vLogHTML("<HR><FONT SIZE=\"+1\">Termination</FONT><BR>");
+clear();
+vLogHTML("*** OK ***<BR>");
+exit $V6evalTool::exitPass;
+
+error:
+    vLogHTML("<HR><FONT SIZE=\"+1\">Termination</FONT><BR>");
+    clear();
+    vLogHTML("*** NG ***<BR>");
+    vLogHTML(vErrmsg(%ret)."<BR>");
+    exit $V6evalTool::exitFail;
+
+########################################################################
+sub isRedirected($)
+{
+    my($if)=@_;
+    my(%ret, $p);
+
+    #
+    #
+    #
+    $pktdesc{echo_reply_b}=
+	'Got echo-reply that was thrown to the default router (R1)';
+    $pktdesc{echo_reply_b2}=
+	'Got echo-reply that was thrown to the second router (TN)';
+    $pktdesc{multicast_ns_nut2tnsol_sll}=
+	"Got multicast NS for TN";
+    $pktdesc{echo_request_b}=
+	"Send echo-request that is forwarded from the default router (R1)";
+    $p=echo_request_b;
+
+    while(1) {
+	%ret=vSend($if, $p);
+	
+	%ret=vRecv($if, $wait_echo, $ret{sentTime1}, 0,
+		   echo_reply_b,
+		   echo_reply_b2,
+		   multicast_ns_nut2tnsol_sll,
+		   );
+	goto error if $ret{status} != 0;
+
+	#
+	#
+	#
+	if($ret{recvFrame} eq echo_reply_b) {
+	    vLogHTML("Redirect is ignored<BR>");
+	    return("IGNORED");
+	} elsif($ret{recvFrame} eq echo_reply_b2) {
+	    vLogHTML("Redirect is accepted<BR>");
+	    return("REDIRECTED");
+	} elsif($ret{recvFrame} eq multicast_ns_nut2tnsol_sll) {
+	    $p=unicast_na_tn2nut_rSO_tll;
+	} else {
+	    vLogHTML(ndErrmsg("ERROR: Got unexpected packet<BR>"));
+	    goto error;
+	}
+    }
+
+error:
+    vLogHTML(vErrmsg(%ret)."<BR>");
+    return ERROR;
+}
+
+sub clear()
+{
+    $pktdesc{ra_rone2allnode_clrrtr}=
+        'Clear R1 from the Default Router List';
+    $pktdesc{ra_tn2allnode_clrrtr}=
+        'Clear TN from the Default Router List';
+    vSend($IF,
+	  ra_rone2allnode_clrrtr,
+	  ra_tn2allnode_clrrtr,
+	  );
+}
+
+########################################################################
+__END__
+
+=head1 NAME
+
+hostRecvRedirect4RFlag - Verifying Redirect (to a better router) vs. IsRouter flag
+
+=head1 TARGET
+
+Host only
+
+=head1 SYNOPSIS
+
+  hostRecvRedirect4RFlag.seq [-tooloption ...]
+                              -p hostRecvRedirect4RFlag.def
+
+=head1 INITIALIZATION
+
+=begin html
+<OL>
+  <LI>Clear IPv6 routes.
+  <LI>Set R1 as the default router by sending RA and NA.
+  <LI>Set TN as the second router by sending RA and NA.
+</OL>
+<BR>
+<PRE>
+  TN                 NUT
+  ----------------------
+<BR>
+  State: NONCE (for R1, TN)
+<BR>
+  ==== unsolicited RA ===>
+       src=R1's link-local
+       dst=all-node
+       M=0, O=0
+       RouterLifetime=600
+       ReachableTime=0
+       RetransTimer=0
+       w/ SLLA
+       Prefix Option:
+           L=1, A=1
+           ValidLifetime=2592000
+           PreferredLifetime=604800
+           Prefix=3ffe:501:ffff:100::/64
+<BR>
+  State: STALE (for R1), NONCE (for TN)
+<BR>
+  ==== solicited NA ===>
+        src=R1's link-local
+        dst=NUT's link-local
+        R=1, S=1, O=1
+        target=R1's link-local
+        TLLA=R1's LLA
+<BR>
+  State: REACHABLE (for R1), NONCE (for TN)
+<BR>
+  ==== unsolicited RA ===>
+       src=TN's link-local
+       dst=all-node
+       M=0, O=0
+       RouterLifetime=600
+       ReachableTime=0
+       RetransTimer=0
+       w/ SLLA
+       Prefix Option:
+           L=1, A=1
+           ValidLifetime=2592000
+           PreferredLifetime=604800
+           Prefix=3ffe:501:ffff:100::/64
+<BR>
+  State: REACHABLE (for R1), STALE (for TN)
+<BR>
+  ==== solicited NA ===>
+        src=TN's link-local
+        dst=NUT's link-local
+        R=1, S=1, O=1
+        target=TN's link-local
+        TLLA=TN's LLA
+<BR>
+  State: REACHABLE (for R1, TN)
+<BR>
+  Wait (3 sec) for DAD NS
+</PRE>
+
+=end html
+
+=head1 TEST PROCEDURE
+
+B<hostRecvRedirect4RFlag> verifies that an entry of Destination Cache
+updated by a redirect message (ICMP Target != ICMP Destination)
+is removed by NA w/ RFlag=0.
+
+=begin html
+<P>
+<OL>
+  <LI>Send echo-request (src:H1, dst:NUT)
+  <LI>Verify that NUT send echo-reply to the default router, R1
+  <LI>Send redirect message to NUT.
+  <LI>Send echo-request (src:H1, dst:NUT) again.
+  <LI>Verify that NUT threw send echo-reply to the better router, TN.
+  <LI>Send NA whose R flag is 0.
+  <LI>Send echo-request (src:H1, dst:NUT) again.
+  <LI>Verify that NUT send echo-reply to the default router, R1
+</OL>
+<PRE>
+  TN               NUT
+  ----------------------
+<BR>
+  State: REACHABLE (for R1, TN)
+<BR>
+  ==== echo-request ===>
+       src=H1(off-link global), prefix=3ffe:501:ffff:109::/64,
+           but LLA is R1's one
+       dst=NUT's global, prefix=3ffe:501:ffff:100::/64
+<BR>
+  <=== <A HREF="#JDG1">Judgment #1</A>: echo-reply ====
+       src=NUT's global, prefix=3ffe:501:ffff:100::/64
+       dst=H1(off-link global), prefix=3ffe:501:ffff:109::/64,
+           but LLA is R1's one
+<BR>
+  ==== redirect ===>
+       src=R1's link-local
+       dst=NUT's link-local
+       icmp target=TN's link-local
+       icmp destination=H1's global
+       w/  TLLA
+       w/o Redirected header
+<BR>
+  ==== echo-request ===>
+       src=H1(off-link global), prefix=3ffe:501:ffff:109::/64,
+           but LLA is R1's one
+       dst=NUT's global, prefix=3ffe:501:ffff:100::/64
+<BR>
+  <=== <A HREF="#JDG2">Judgment #2</A>: echo-reply ====
+       src=NUT's global, prefix=3ffe:501:ffff:100::/64
+       dst=H1(off-link global), prefix=3ffe:501:ffff:109::/64,
+           but LLA is TN's one
+<BR>
+  ==== solicited NA ===>
+        src=TN's link-local
+        dst=NUT's link-local
+        R=0, S=1, O=1
+        target=TN's link-local
+        TLLA=TN's LLA
+<BR>
+  ==== echo-request ===>
+       src=H1(off-link global), prefix=3ffe:501:ffff:109::/64,
+           but LLA is R1's one
+       dst=NUT's global, prefix=3ffe:501:ffff:100::/64
+<BR>
+  <=== <A HREF="#JDG1">Judgment #1</A>: echo-reply ====
+       src=NUT's global, prefix=3ffe:501:ffff:100::/64
+       dst=H1(off-link global), prefix=3ffe:501:ffff:109::/64,
+           but LLA is R1's one
+</PRE>
+
+=end html
+
+=head1 JUDGMENT
+
+=for html <A NAME="JDG1"></A>
+
+  1. NUT must throw echo-reply whose destination is off-link global
+    to the default router (i.e. R1).
+
+=for html <A NAME="JDG2"></A>
+
+  2. NUT must throw echo-reply to the better router (i.e. TN).
+
+=head1 TERMINATION
+
+  Send RAs to clear the Default Router List:
+  - RA (src=R1) with RouterLifetime=0
+  - RA (src=TN) with RouterLifetime=0
+
+  Clear IPv6 routes by remote command. XXX
+
+=head1 NOTE
+
+  The test invokes the following command:
+  - Clear IPv6 routes
+
+=head1 SEE ALSO
+
+  perldoc V6evalTool
+  perldoc V6evalRemote
+
+=cut

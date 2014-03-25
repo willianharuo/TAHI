@@ -1,0 +1,9 @@
+RemoteMethod	ssh
+RemoteTarget	127.0.0.1
+
+#RemoteMethod	cu
+#RemoteMethod	serial
+#RemoteTarget	cuaa0
+
+Link0	fxp0
+#Link1	fxp1

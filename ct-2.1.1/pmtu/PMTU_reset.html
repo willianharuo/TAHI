@@ -1,0 +1,215 @@
+<HTML>
+<HEAD>
+<TITLE>checkPMTUincrease - Verify increasing Path MTU</TITLE>
+<LINK REV="made" HREF="mailto:hackers@FreeBSD.org">
+</HEAD>
+
+<BODY>
+
+<!-- INDEX BEGIN -->
+<!--
+
+<UL>
+
+	<LI><A HREF="#NAME">NAME</A>
+	<LI><A HREF="#TARGET">TARGET</A>
+	<LI><A HREF="#SYNOPSIS">SYNOPSIS</A>
+	<LI><A HREF="#NETWORK_CONFIGURATION">NETWORK CONFIGURATION</A>
+	<LI><A HREF="#INITIALIZATION">INITIALIZATION</A>
+	<LI><A HREF="#TEST_PROCEDURE">TEST PROCEDURE</A>
+	<LI><A HREF="#JUDGMENT">JUDGMENT</A>
+	<LI><A HREF="#SEE_ALSO">SEE ALSO</A>
+</UL>
+-->
+<!-- INDEX END -->
+
+<P>
+<H1><A NAME="NAME">NAME</A></H1>
+<P>
+<PRE>        checkPMTUincrease - Verify increasing Path MTU
+</PRE>
+<P>
+<HR>
+<H1><A NAME="TARGET">TARGET</A></H1>
+<P>
+<PRE>        Host
+</PRE>
+<P>
+<HR>
+<H1><A NAME="SYNOPSIS">SYNOPSIS</A></H1>
+<P>
+<PRE>        checkPMTUincrease.seq [-tooloption ...] -p checkPMTUincrease.def
+</PRE>
+<P>
+<HR>
+<H1><A NAME="NETWORK_CONFIGURATION">NETWORK CONFIGURATION</A></H1>
+<P>
+<PRE>        This test evaluate the behavior of NUT when 5 min and 10 min has past
+        since last Packet Too Big Message.
+        In this test, NUT is a host and TN plays a Roll of Router and
+        other host.
+</PRE>
+<P>
+<PRE>        Physical Network configuration
+        
+        --------+---------------+--------------
+                |               |
+                NUT             TN
+</PRE>
+<P>
+<PRE>        Logical Network Configuration
+</PRE>
+<P>
+<PRE>                                NUT
+                                |
+        ----------------+-------+---------
+                        |
+                        Router
+                        |
+        --------+-------+-----------------
+                | 
+              HOST
+</PRE>
+<P>
+<PRE>        NUT &lt; --- Router --- &gt; HOST
+</PRE>
+<P>
+<PRE>        In this test, NUT receives Packet Too Big Message and 
+        wait for a while. 
+        - Decrease PMTU for HOST from 1500 to 1280
+        - Confirm PMTU for HOST is changed to 1280
+        - Wait for 295 sec
+        - Confirm PMTU for HOST is still 1280
+        - Wait for 305 sec
+        - Confirm PMTU for HOST is reset to 1500
+</PRE>
+<P>
+<HR>
+<H1><A NAME="INITIALIZATION">INITIALIZATION</A></H1>
+<P>
+<PRE>        The TN send a RA to assign global address prefix.
+</PRE>
+<P>
+<PRE>        TN              NUT
+</PRE>
+<P>
+<PRE>        -------------------
+</PRE>
+<P>
+<PRE>        ===multicast RA===&gt;
+        src=TN's link-local
+        dst=LinkLocal-all-node                                                  
+        M=0, O=0,
+        Lifetime=3600, ReachableTime=60000, RetransTImer=1005
+        Prefix:
+           L=1, A=1,                       
+           ValidLifetime=3600005, PreferredLifetime=3600005
+           Prefix=3ffe:501:ffff:100::, PrefixLength=64                      
+   
+          Wait (5 sec.)
+                 Ignoring DAD packets for global address.                 
+</PRE>
+<P>
+<HR>
+<H1><A NAME="TEST_PROCEDURE">TEST PROCEDURE</A></H1>
+<P>
+<PRE>        &quot;checkPMTUincrease&quot; verifies NUT's resetting of Path MTU. 
+</PRE>
+<P>
+<PRE>        - NUT must not attempt to detect an increase less than 5 
+          minutes after a Too Big Mesg.
+</PRE>
+<P>
+<PRE>           TN                  NUT
+            |                   |
+          --+-------------------+----
+</PRE>
+<P>
+<PRE>        1.
+        TN send Echo Request. 
+        TN === echo request(1500) ===&gt; NUT
+</PRE>
+<P>
+<PRE>        2.
+        NUT send Echo Reply.
+        TN &lt;=== echo reply(1500) === NUT
+</PRE>
+<P>
+<PRE>        3.
+        TN send ICMPv6 Too Big Mesg include MTU (1280).
+        
+        TN  === ICMPv6 Too Big Mesg(1280) ===&gt; NUT
+</PRE>
+<P>
+<PRE>        4.
+        TN send Echo Request. 
+        TN  === echo request(1500) ===&gt; NUT
+</PRE>
+<P>
+<PRE>        5.
+        NUT send Echo Reply
+        &lt;&lt; JUDGMENT 1 &gt;&gt;
+        TN &lt;=== echo reply(1280 1/2) === NUT
+        TN &lt;=== echo reply( 276 2/2) === NUT
+            
+        6. 
+        TN sleep 295 seconds in perl script.
+</PRE>
+<P>
+<PRE>        7.
+        TN send Echo Request. 
+        TN  === echo request(1500) ===&gt; NUT
+</PRE>
+<P>
+<PRE>        8.
+        NUT send Echo Reply
+        &lt;&lt; JUDGMENT 2 &gt;&gt;
+        TN &lt;=== echo reply(1280 1/2) === NUT
+        TN &lt;=== echo reply( 276 2/2) === NUT
+</PRE>
+<P>
+<PRE>        9. 
+        TN sleep 305 seconds in perl script.
+</PRE>
+<P>
+<PRE>        10.
+        TN send Echo Request. 
+        TN  === echo request(1500) ===&gt; NUT
+</PRE>
+<P>
+<PRE>        11.
+        NUT send Echo Reply
+        &lt;&lt; JUDGMENT 3 &gt;&gt;
+        TN &lt;=== echo reply(1500) === NUT
+</PRE>
+<P>
+<HR>
+<H1><A NAME="JUDGMENT">JUDGMENT</A></H1>
+<P>
+<PRE>        &lt;&lt; JUDGMENT 1 -PASS- &gt;&gt;
+                NUT sends fragmented Echo Reply.
+                NUT accept ICMP Packet Too Big Message and register the 
+                MTU according to the ICMP message.
+</PRE>
+<P>
+<PRE>        &lt;&lt; JUDGMENT 2 -PASS- &gt;&gt;
+                NUT sends fragmented Echo Reply.
+                NUT does not reset MTU value in 5 min.
+</PRE>
+<P>
+<PRE>        &lt;&lt; JUDGMENT 2 -PASS- &gt;&gt;
+                NUT sends fragmented Echo Reply.
+                NUT reset MTU value after 10 min.
+                Note: The value 10 min is just recommended value, 
+                      so implementation can use other value to reset the PMTU.
+</PRE>
+<P>
+<HR>
+<H1><A NAME="SEE_ALSO">SEE ALSO</A></H1>
+<P>
+<PRE>        perldoc V6evalTool
+        perldoc V6evalRemote
+</PRE>
+</BODY>
+
+</HTML>

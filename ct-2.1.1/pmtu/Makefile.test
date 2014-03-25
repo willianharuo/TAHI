@@ -1,0 +1,58 @@
+#
+#
+# 
+#
+
+IFILES_LCNA	= INDEX_LCNA
+IFILES_ORG	= INDEX_ORG
+IFILES		= INDEX
+PERL		= /usr/bin/perl
+POD2HTML	= -$(PERL) -e 'use Pod::Html; pod2html("--noindex", @ARGV);'
+
+
+all:
+
+document:
+	$(AUTORUN) -g $(IFILES)
+	rm -f pod2html-dircache pod2html-itemcache
+
+legacy-document:
+	$(AUTORUN) -g $(IFILES_ORG)
+	rm -f pod2html-dircache pod2html-itemcache
+
+lcna_document:
+	$(AUTORUN) -g $(IFILES_LCNA)
+	rm -f pod2html-dircache pod2html-itemcache
+
+clean:
+	-/bin/rm -f *.log *.dump [0-9]*.html report.html summary.html index.html lcna_results
+
+test:
+	$(AUTORUN) $(AROPT) \
+	-title='IPv6 Conformance Test For Path MTU Discovery' \
+	$(IFILES)
+
+tahi:  document
+	/bin/rm -f index.html summary.html report.html
+	$(AUTORUN) $(AROPT) \
+	-title='IPv6 Conformance Test For Path MTU Discovery' \
+	$(IFILES)
+
+tiny:  lcna_document
+	/bin/rm -f index.html summary.html report.html
+	$(AUTORUN) $(AROPT) -tiny\
+	-title='IPv6 Conformance Test For Path MTU Discovery' \
+	$(IFILES_LCNA)
+
+legacy-test:
+	$(AUTORUN) $(AROPT) \
+	-title='IPv6 Conformance Test For Path MTU Discovery' \
+	$(IFILES_ORG)
+
+legacy-tahi:  legacy-document
+	/bin/rm -f index.html summary.html report.html
+	$(AUTORUN) $(AROPT) \
+	-title='IPv6 Conformance Test For Path MTU Discovery' \
+	$(IFILES_ORG)
+
+.include "../Makefile.inc"

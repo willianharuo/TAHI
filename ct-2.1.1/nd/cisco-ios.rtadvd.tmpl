@@ -1,0 +1,30 @@
+#
+configure terminal
+ipv6 hop-limit CHLIM
+
+#
+interface LINK0
+ipv6 mtu MTU
+ipv6 nd ns-interval RETRANS
+ipv6 nd ra-interval INTERVAL
+ipv6 nd ra-lifetime RLTIME
+ipv6 nd reachable-time RTIME
+ipv6 nd prefix-advertisement 3ffe:501:ffff:100::/64 VLTIME PLTIME onlink autoconfig
+no ipv6 nd suppress-ra
+exit
+
+#
+interface LINK1
+ipv6 mtu MTU
+ipv6 nd ns-interval RETRANS
+ipv6 nd ra-interval INTERVAL
+ipv6 nd ra-lifetime RLTIME
+ipv6 nd reachable-time RTIME
+ipv6 nd prefix-advertisement 3ffe:501:ffff:101::/64 VLTIME PLTIME onlink autoconfig
+no ipv6 nd suppress-ra
+exit
+
+#
+exit
+
+#

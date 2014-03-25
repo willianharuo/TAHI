@@ -1,0 +1,418 @@
+#!/usr/bin/perl
+#
+# Copyright (C) 1999, 2000, 2001, 2002, 2003 Yokogawa Electric Corporation,
+# IPA (Information-technology Promotion Agency, Japan).
+# All rights reserved.
+# 
+# Redistribution and use of this software in source and binary forms, with 
+# or without modification, are permitted provided that the following 
+# conditions and disclaimer are agreed and accepted by the user:
+# 
+# 1. Redistributions of source code must retain the above copyright 
+# notice, this list of conditions and the following disclaimer.
+# 
+# 2. Redistributions in binary form must reproduce the above copyright 
+# notice, this list of conditions and the following disclaimer in the 
+# documentation and/or other materials provided with the distribution.
+# 
+# 3. Neither the names of the copyrighters, the name of the project which 
+# is related to this software (hereinafter referred to as "project") nor 
+# the names of the contributors may be used to endorse or promote products 
+# derived from this software without specific prior written permission.
+# 
+# 4. No merchantable use may be permitted without prior written 
+# notification to the copyrighters. However, using this software for the 
+# purpose of testing or evaluating any products including merchantable 
+# products may be permitted without any notification to the copyrighters.
+# 
+# 
+# 
+# THIS SOFTWARE IS PROVIDED BY THE COPYRIGHTERS, THE PROJECT AND 
+# CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING 
+# BUT NOT LIMITED THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS 
+# FOR A PARTICULAR PURPOSE, ARE DISCLAIMED.  IN NO EVENT SHALL THE 
+# COPYRIGHTERS, THE PROJECT OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, 
+# INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES 
+# (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR 
+# SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) 
+# HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN 
+# CONTRACT,STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) 
+# ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF 
+# THE POSSIBILITY OF SUCH DAMAGE.
+#
+# $TAHI: ct/nd/hostRecvRaReachableTime.seq,v 1.22 2002/02/27 01:08:25 masaxmasa Exp $
+
+########################################################################
+BEGIN { $V6evalTool::TestVersion = '$Name: REL_2_1_1 $ '; }
+ 
+use V6evalTool;
+use nd;
+sub checkReachableTime($$\@\@\%\%\$);
+
+ndOptions(@ARGV);
+
+# The following generate debugging messages.
+$nd::debug=$ndOpt_v|$ndOpt_vv;
+
+# You can specifies debug options to a remote control program.
+# If you want to know more detail, please see the following:
+# - V6evalTool.pm: perldoc V6evalTool
+# - V6evalRemote.pm: perldoc V6evalRemote
+$nd::remote_debug="-o1" if $ndOpt_vv;
+
+$IF=Link0;
+@null=();
+$exit_rtn=$V6evalTool::exitPass;
+
+#
+#
+#
+$type=$V6evalTool::NutDef{Type};
+if($type eq router) {
+    vLogHTML("This test is for the host only<BR>");
+    exit $V6evalTool::exitHostOnly;
+}
+
+$type=$V6evalTool::NutDef{Type};
+if($type ne host) {
+    vLogHTML(ndErrmsg("ERROR: $V6evalTool::NutDef{Type}: ".
+		      "Unknown target type<BR>"));
+    exit $V6evalTool::exitFail;
+}
+
+#
+#
+#
+$ra_name_30='ra_x2allnode_sll_reachable30';
+$ra_msg_30='RA w/ SLL, ReachableTime=30sec';
+@before_30=((30*0.5-2));
+@after_30=((30*1.5+1));
+$pktdesc{ra_x2allnode_sll_reachable30}=
+    "Send $ra_msg_30";
+
+$ra_name_60='ra_x2allnode_sll_reachable60';
+$ra_msg_60='RA w/ SLL, ReachableTime=60sec';
+@before_60=((60*0.5-2));
+@after_60=((60*1.5+1));
+$pktdesc{ra_x2allnode_sll_reachable60}=
+    "Send $ra_msg_60";
+
+$ra_name_90='ra_x2allnode_sll_reachable90';
+$ra_msg_90='RA w/ SLL, ReachableTime=90sec';
+@before_90=((90*0.5-2));
+@after_90=((90*1.5+1));
+$pktdesc{ra_x2allnode_sll_reachable90}=
+    "Send $ra_msg_90";
+
+@ra_name=(
+	  \$ra_name_60,
+	  \$ra_name_30,
+	  \$ra_name_90,
+	  );
+@ra_msg=(
+	 \$ra_msg_60,
+	 \$ra_msg_30,
+	 \$ra_msg_90,
+	 );
+@before=(
+	 \@before_60,
+	 \@before_30,
+	 \@before_90,
+	 );
+@after=(
+	\@after_60,
+	\@after_30,
+	\@after_90,
+	);
+
+#
+#
+#
+vCapture($IF);
+
+#
+#
+#
+$idx=0;
+$i=0;
+foreach(@ra_name) {
+    my($name)=$_;
+    my($msg)=@ra_msg[$i];
+    my($b)=@before[$i];
+    my($a)=@after[$i];
+    my($r);
+
+    $r=checkReachableTime($$name, $$msg, @$b, @$a, %title, %result, $idx);
+    $exit_rtn = $r if  $r != $V6evalTool::exitPass;
+    $i++;
+}
+$idx--;
+
+#
+#
+#
+clear();
+
+#
+#
+#
+@col=('PTN', 'EXP', 'RESULT');
+ndPrintSummaryHTML("*** Test Summary: RA vs. ReachableTimer ***", @col,
+                   %title, %result, $idx);
+
+#
+#
+#
+vLogHTML("*** EOT ***<BR>");
+exit $exit_rtn;
+
+sub checkReachableTime($$\@\@\%\%\$)
+{
+    my(
+       $my_ra_ptn,
+       $my_ra_title,
+       $before_reachable,
+       $after_reachable,
+       $my_title,
+       $my_result,
+       $my_idx,
+       )=@_;
+
+    my($my_exit_rtn)=$V6evalTool::exitPass;
+    my($s, %rtn);
+    my($reachable_time)=@$after_reachable[0];
+
+    vLogHTML("<HR><FONT SIZE=\"+3\">*** $my_ra_title ***</FONT><BR>");
+    vLogHTML("<HR><FONT SIZE=\"+2\">".
+	     "*** Before RetransTimer * 0.5 sec ***</FONT><BR>");
+    my($first)=1;
+    foreach(@$before_reachable) {
+	my($wait)=$_;
+
+	vLogHTML("<HR><FONT SIZE=\"+2\">".
+		 "*** $my_ra_title, $wait sec, exp:REACHABLE ***</FONT><BR>");
+	vLogHTML("<HR><FONT SIZE=\"+1\">Initialization</FONT><BR>");
+
+	if($first) {
+	    %ret=vSend($IF, $my_ra_ptn);
+	    goto error if $ret{status} != 0;
+	}
+	if(nd2NoNceByPacket($IF, $reachable_time) != 0 ||
+	   ndNoNce2Incomplete($IF) != 0 ||
+	   ndIncomplete2Reachable($IF) != 0) {
+	    $s="ERROR";
+	} else {
+	    vClear($IF);
+	    vLogHTML("<HR><FONT SIZE=\"+1\">Test</FONT><BR>");
+	    vSleep($wait);
+	    $s=ndIsReachable($IF);
+	}
+
+	if($s eq REACHABLE) {
+	    $$my_result{$$my_idx}=$V6evalTool::exitPass;
+	    vLogHTML("<A NAME=\"T$$my_idx\">OK</A><BR>");
+	} else {
+	    $my_exit_rtn=$V6evalTool::exitFail;
+	    $$my_result{$$my_idx}=$V6evalTool::exitWarn;
+	    vLogHTML("The state should be REACHABLE<BR>");
+	    vLogHTML("<A NAME=\"T$$my_idx\">".ndErrmsg(NG)."</A><BR>");
+	}
+	$$my_title{$$my_idx}=
+	    "<TD>$my_ra_title, $wait sec</TD><TD>exp:REACHABLE</TD>".
+		"<TD>result:$s</TD>";
+    } continue {
+	$$my_idx++;
+	$first=0;
+    }
+
+    vLogHTML("<HR><FONT SIZE=\"+2\">".
+	     "*** After RetransTimer * 1.5 sec ***</FONT><BR>");
+    foreach(@$after_reachable) {
+	my($wait)=$_;
+
+	vLogHTML("<HR><FONT SIZE=\"+2\">".
+		 "*** $my_ra_title, $wait sec, exp:STALE ***</FONT><BR>");
+	vLogHTML("<HR><FONT SIZE=\"+1\">Initialization</FONT><BR>");
+
+	if(nd2NoNceByPacket($IF, $reachable_time) != 0 ||
+	   ndNoNce2Incomplete($IF) != 0 ||
+	   ndIncomplete2Reachable($IF) != 0) {
+	    $s="ERROR";
+	} else {
+	    vClear($IF);
+	    
+	    vLogHTML("<HR><FONT SIZE=\"+1\">Test</FONT><BR>");
+	    vLogHTML("wait ($wait sec)<BR>");
+	    vSleep($wait);
+	    $s=ndIsReachable($IF);
+	}
+	if($s eq STALE) {
+	    $$my_result{$$my_idx}=$V6evalTool::exitPass;
+	    vLogHTML("<A NAME=\"T$$my_idx\">OK</A><BR>");
+	} else {
+	    $my_exit_rtn=$V6evalTool::exitFail;
+	    $$my_result{$$my_idx}=$V6evalTool::exitWarn;
+	    vLogHTML("The state should be STALE<BR>");
+	    vLogHTML("<A NAME=\"T$$my_idx\">".ndErrmsg(NG)."</A><BR>");
+	}
+	$$my_title{$$my_idx}=
+	    "<TD>$my_ra_title, $wait sec</TD><TD>exp:STALE</TD>".
+		"<TD>result:$s</TD>";
+    } continue {
+	$$my_idx++;
+    }
+
+    #
+    #
+    #
+    vLogHTML("<HR><FONT SIZE=\"+1\">Termination</FONT><BR>");
+    goto error if nd2NoNceByPacket($IF, $reachable_time) != 0;
+
+    #
+    #
+    #
+    return($my_exit_rtn);
+
+error:
+    clear();
+    vLogHTML(vErrmsg(%ret)."<BR>");
+    exit $V6evalTool::exitFail;
+}
+
+sub clear()
+{
+    $pktdesc{ra_x2allnode_sll_reachable30}=
+	'Set ReachableTime to the default (30 sec)';
+    $pktdesc{ra_x2allnode_clrrtr}=
+	'Clear the Default Router List';
+    vSend($IF, ra_x2allnode_sll_reachable30);
+    vSend($IF, ra_x2allnode_clrrtr);
+}
+
+########################################################################
+__END__
+
+=head1 NAME
+
+hostRecvRaReachableTime - Verifying that NUT recognize ReachableTime
+
+=head1 TARGET
+
+Host only
+
+=head1 SYNOPSIS
+
+  hostRecvRaReachableTime.seq [-tooloption ...] -p hostRecvRaReachableTime.def
+
+=head1 INITIALIZATION
+
+=begin html
+<OL>
+  <LI>Set <A HREF="#JDG1">ReachableTime</A> by router X.
+  <LI>Create the state of neighbor cache entry for TN.
+  <LI>Set its state to REACHABLE whose IsRouter flag is FALSE. 
+</OL>
+<PRE>
+  TN                 NUT
+  ----------------------
+  State: NONCE (for all)
+<BR>
+  ==== unsolicited RA ===>
+       src=X's link-local
+       dst=all-node
+       M=0, O=0
+       RouterLifetime=600
+       <B>ReachableTime=a test condition</B>
+       RetransTimer=0
+       w/ SLLA
+<BR>
+  State: NONE (for TN), STALE(for X)
+<BR>
+  ==== echo-request ===>
+       src=TN's link-local
+       dst=NUT's link-local
+<BR>
+  <=== multicast NS ====
+       src=NUT's link-local
+       dst=solicited-node[TN's link-local]
+       w/ SLLA
+       timeout=RETRANS_TIMER * MAX_MULTICAST_SOLICIT
+<BR>
+  ==== solicited NA ===>
+       src=TN's link-local
+       dst=NUT's link-local
+       R=0, S=1, O=1
+       target=TN's link-local
+       w/ TLLA
+<BR>
+  State: REACHABLE (for TN), STALE (for X)
+</PRE>
+
+=head1 TEST PROCEDURE
+
+B<hostRecvRaReachableTime> verifies that NUT recognize ReachableTime.
+
+=begin html
+<PRE>
+  TN               NUT
+  ----------------------
+  State: REACHABLE (for TN)
+<BR>
+  Wait for <A HREF="#JDG1">some seconds</A>
+<BR>
+  <A HREF="#JDG1">Judgment</A>: <A HREF="nd.html">Examining NUT's neighbor cache state</A>
+
+=end html
+
+=head1 JUDGMENT
+
+=begin html
+<A NAME="JDG1"></A>
+<PRE>
+<HR>
+6.3.4.  Processing Received Router Advertisements
+<BR>
+   If the received Reachable Time value is non-zero the host SHOULD set
+   its BaseReachableTime variable to the received value.  <B>If the new
+   value differs from the previous value, the host SHOULD recompute a
+   new random ReachableTime value.  ReachableTime is computed as a
+   uniformly-distributed random value between MIN_RANDOM_FACTOR and
+   MAX_RANDOM_FACTOR times the BaseReachableTime.</B>  Using a random
+   component eliminates the possibility Neighbor Unreachability
+   Detection messages synchronize with each other.
+<HR>
+  ==============+===================+==================
+  RA received   | Wait Time
+  by NUT        |
+  --------------+-------------------+------------------
+  ReachableTime | t <               | t >
+                | ReachableTime *   | ReachableTime *
+                | MIN_RANDOM_FACTOR | MAX_RANDOM_FACTOR
+  ==============+===================+==================
+  60            | t < 30, REACHABLE | t > 90,  STALE
+  --------------+-------------------+------------------
+  30            | t < 15, REACHABLE | t > 45,  STALE
+  --------------+-------------------+------------------
+  90            | t < 45, REACHABLE | t > 135, STALE
+  ==============+===================+==================
+</PRE>
+
+=end html
+
+=head1 TERMINATION
+
+  1. Send RA with ReachableTime=30sec to set TN's reachable time
+     to the default value.
+
+  2. Send RA with RouterLifetime=0 to clear the Default Router List.
+
+=head1 NOTE
+
+  The test does not invoke any remote command.
+
+=head1 SEE ALSO
+
+  perldoc V6evalTool
+  perldoc V6evalRemote
+
+=cut

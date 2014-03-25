@@ -1,0 +1,350 @@
+#!/usr/bin/perl
+#
+# Copyright (C) 2004, 2005, 2006, 2007, 2008, 2009, 2010
+# NTT Advanced Technology, Yokogawa Electric Corporation.
+# All rights reserved.
+# 
+# Redistribution and use of this software in source and binary
+# forms, with or without modification, are permitted provided that
+# the following conditions and disclaimer are agreed and accepted
+# by the user:
+# 
+# 1. Redistributions of source code must retain the above copyright
+#    notice, this list of conditions and the following disclaimer.
+# 
+# 2. Redistributions in binary form must reproduce the above copyright
+#    notice, this list of conditions and the following disclaimer in
+#    the documentation and/or other materials provided with
+#    the distribution.
+# 
+# 3. Neither the names of the copyrighters, the name of the project
+#    which is related to this software (hereinafter referred to as
+#    "project") nor the names of the contributors may be used to
+#    endorse or promote products derived from this software without
+#    specific prior written permission.
+# 
+# 4. No merchantable use may be permitted without prior written
+#    notification to the copyrighters.
+# 
+# 5. The copyrighters, the project and the contributors may prohibit
+#    the use of this software at any time.
+# 
+# THIS SOFTWARE IS PROVIDED BY THE COPYRIGHTERS, THE PROJECT AND
+# CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING
+# BUT NOT LIMITED THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS
+# FOR A PARTICULAR PURPOSE, ARE DISCLAIMED.  IN NO EVENT SHALL THE
+# COPYRIGHTERS, THE PROJECT OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT,
+# INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
+# (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+# SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
+# HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT,
+# STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING
+# IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+# POSSIBILITY OF SUCH DAMAGE.
+#
+# $TAHI: koi/bin/remotes/freebsd-bind9/queryDNS.rmt,v 1.3 2007/04/19 09:29:02 akisada Exp $
+#
+# $Id: queryDNS.rmt,v 1.2 2008/06/03 07:39:52 akisada Exp $
+#
+################################################################
+
+BEGIN {
+	push(@INC, '/usr/local/koi/libdata');
+	push(@INC, '/usr/local/koi/bin/remotes/freebsd-bind9');
+	push(@INC, '.');
+}
+
+END {
+}
+
+use kRemote;
+
+################################
+# Configuration for NUT        #
+################################
+my $conf_file_name = "/etc/resolv.conf";
+my $hosts_file_name = "/etc/hosts";
+################################
+# Parameter                    #
+################################
+my $timeout = 120;
+
+################################
+# Shared                       #
+################################
+my $NET0_NODE0_IPV4_ADDR = '192.168.0.1';
+my $NET0_NODE0_IPV6_ADDR = '3ffe:501:ffff:100::1';
+################################
+# START                        #
+################################
+
+use kRemote;
+
+sub execQuery(){
+	#------------------------------#
+	# open session                 #
+	#------------------------------#
+	my $ret = undef;
+	$ret = kRemoteOpen();
+	unless (defined($ret)) {
+		print STDERR "fail to open session.\n";
+		exit(1);
+	}
+
+	#------------------------------#
+	# Login                        #
+	#------------------------------#
+	$ret = undef;
+	$ret = kRemoteLogin($timeout);
+	unless (defined($ret)) {
+		print STDERR "fail to login.\n";
+		exit(1);
+	}
+
+	#------------------------------#
+	# switch to Root               #
+	#------------------------------#
+	$ret = undef;
+	$ret = kRemoteSubstituteRoot();
+	unless ( defined($ret)) {
+		print STDERR "fail to substitute to Root.\n";
+		exit(1);
+	}
+
+	# #------------------------------#
+	# # Make hosts                   #
+	# #------------------------------#
+	# my $hosts = <<EOF;
+	# ::1                     localhost localhost.my.domain
+	# 127.0.0.1               localhost localhost.my.domain
+	# EOF
+
+	# foreach my $routeaddr ($NET0_NODE0_IPV4_ADDR,$NET0_NODE0_IPV6_ADDR) {
+	# 	$hosts .= "$routeaddr              ROUTER1\n";
+	# }
+	# $hosts .= "EOS\n";
+	# #------------------------------#
+	# # write hosts                  #
+	# #------------------------------#
+	# $ret = undef;
+	# $ret = kRemoteCommand("cat <<EOS > $hosts_file_name\n$hosts", $timeout);
+	# unless (defined($ret)) {
+	# 	print STDERR "fail to write hosts.\n";
+	# 	exit(1);
+	# }
+	
+	#------------------------------#
+	# Run query                    #
+	#------------------------------#
+	my $numQuerys = scalar grep (/Query[0-9]+Mode/,keys %kRemote::kRemoteOpt);
+	
+	my $execString = '';
+	
+	for (my $i = 0;$i < $numQuerys;$i++) {
+		
+		my $queryPath = "Query" . $i;
+
+		#------------------------------#
+		# Make resolv.conf             #
+		#------------------------------#
+		$ret = undef;
+		$ret = makeResolvConf($queryPath);
+		unless (defined($ret)) {
+			print STDERR "fail to write configuration.\n";
+			exit(1);
+		}
+		#------------------------------#
+		# make query string            #
+		#------------------------------#
+		my $queryAddr = $kRemote::kRemoteOpt{$queryPath . "Value"};	
+		
+		my $qeuryString = '';
+		my $queryMode = $kRemote::kRemoteOpt{$queryPath . "Mode"};
+		$ret = undef;
+		if($queryMode eq 'dns'){
+			$ret = makeDnsString($queryPath,\$qeuryString);
+		}elsif($queryMode eq 'icmp'){
+			$ret = makeIcmpString($queryPath,\$qeuryString);
+		}
+		
+		unless (defined($ret)) {
+			exit(1);
+		}
+
+		my $queryModeOption = $kRemote::kRemoteOpt{$queryPath . "ModeOption"};
+		if($queryModeOption eq 'syn'){
+			my $queryModeSynWait = $kRemote::kRemoteOpt{$queryPath . "SynWait"};
+			$queryModeSynWait = defined($queryModeSynWait) ? $queryModeSynWait : 0;
+			$execString .= $qeuryString . " &; sleep $queryModeSynWait; ";
+		}else{
+			$execString .= $qeuryString;
+			#------------------------------#
+			# run command                  #
+			#------------------------------#
+#			print("########execString=$execString\n");
+			$ret = undef;
+			$ret = kRemoteCommand("$execString", $timeout);
+			unless (defined($ret)) {
+				print STDERR "fail to run query.\n";
+				exit(1);
+			}
+			$execString = '';
+		}
+	}
+
+	#------------------------------#
+	# logout root                  #
+	#------------------------------#
+	$ret = undef;
+	$ret = kRemoteLogoutWait($timeout);
+	unless ( defined($ret)) {
+		print STDERR "fail to logout.\n";
+		exit(1);
+	}
+
+	#------------------------------#
+	# logout                       #
+	#------------------------------#
+	$ret = undef;
+	$ret = kRemoteLogout($timeout);
+	unless ( defined($ret)) {
+		print STDERR "fail to logout.\n";
+		exit(1);
+	}
+
+	#------------------------------#
+	# close session                #
+	#------------------------------#
+	kRemoteClose();
+	# $ret = undef;
+	# $ret = kRemoteClose();
+	# unless ( defined($ret)) {
+	# 	print STDERR "fail to close session.\n";
+	# 	exit(1);
+	# }
+	
+
+	################################
+	# END                          #
+	################################
+	return 0;
+#	exit(0);
+}
+
+sub makeResolvConf($){
+
+	my ($queryPath) = @_;
+        my $addrPath = $queryPath . "Addr[0-9]+";
+        my $numAddr = scalar grep (/$addrPath/,keys %kRemote::kRemoteOpt);
+	my $resolvconf = '';
+
+        for (my $j = 0;$j < $numAddr;$j++) {
+		my $addr = $kRemote::kRemoteOpt{$queryPath . "Addr" . $j};
+		$resolvconf .= "nameserver $addr\n";
+	}
+	$resolvconf .= "EOS\n";
+        #------------------------------#
+        # write resolv.conf            #
+        #------------------------------#
+	$ret = undef;
+	return kRemoteCommand("cat <<EOS > $conf_file_name\n$resolvconf", $timeout);
+}
+
+sub makeDnsString($$){
+
+	my ($queryPath,$string_ref) = @_;
+	my $qeuryString .= "dig ";
+
+	my $queryTries = $kRemote::kRemoteOpt{$queryPath . "Tries"};
+	my $queryRecursive = $kRemote::kRemoteOpt{$queryPath . "Recursive"};
+	my $queryProtocol = $kRemote::kRemoteOpt{$queryPath . "Protocol"};
+	my $queryType = $kRemote::kRemoteOpt{$queryPath . "Type"};
+	my $queryClass = $kRemote::kRemoteOpt{$queryPath . "Class"};
+	my $queryValue = $kRemote::kRemoteOpt{$queryPath . "Value"};
+	my $queryBufsize = $kRemote::kRemoteOpt{$queryPath . "Bufsize"};
+	
+	if(defined($queryRecursive)){
+		$qeuryString .= "+recurse ";
+	}else{
+		$qeuryString .= "+norecurse ";
+	}
+
+	if(defined($queryTries)){
+		$qeuryString .= "+tries=$queryTries ";
+	}else{
+		$qeuryString .= "+tries=1 ";
+	}
+	if(defined($queryBufsize)){
+		$qeuryString .= "+bufsize=$queryBufsize ";
+	}
+	if(defined($queryProtocol)){
+		if($queryProtocol eq 'TCP'){
+			$qeuryString .= "+tcp ";
+		}
+	}
+	if(defined($queryType)){
+		$qeuryString .= "-t $queryType ";
+	}
+	if(defined($queryClass)){
+		$qeuryString .= "-c $queryClass ";
+	}
+	if(defined($queryValue)){
+		$qeuryString .= "\'$queryValue\' ";
+	}else{
+		print STDERR "can't find ip address.\n";
+		return undef;
+	}
+
+	$$string_ref = $qeuryString;
+
+	return 1;
+}
+
+
+sub makeIcmpString($$){
+
+	my ($queryPath,$string_ref) = @_;
+
+	my $qeuryString = '';
+	my $queryAddr = $kRemote::kRemoteOpt{$queryPath . "Value"};	
+	my $queryAddrFamily = $kRemote::kRemoteOpt{$queryPath . "AddrFamily"};	
+	my $queryTries = $kRemote::kRemoteOpt{$queryPath . "Tries"};
+	my $queryInterval = $kRemote::kRemoteOpt{$queryPath . "Interval"};
+	my $queryInterface = $kRemote::kRemoteOpt{$queryPath . "Interface"};
+	my $queryBackground = $kRemote::kRemoteOpt{$queryPath . "Background"};
+
+	if($queryAddrFamily eq 'INET'){
+		$qeuryString .= "ping ";
+	}elsif($queryAddrFamily eq 'INET6'){
+		$qeuryString .= "ping6 ";
+	}else{
+		print STDERR "can't find address family.\n";
+		return undef;
+	}
+	if(defined($queryTries)){
+		$qeuryString .= "-c $queryTries ";
+	}
+	if(defined($queryInterval)){
+		$qeuryString .= "-i $queryInterval ";
+	}
+	if(defined($queryAddr)){
+		$qeuryString .= $queryAddr;
+	}
+	if(defined($queryInterface)){
+		if($queryAddrFamily eq 'INET6'){
+			$queryAddr .= $queryInterface;
+		}
+	}else{
+		print STDERR "can't find address family.\n";
+		return undef;
+	}
+
+	#should be last
+	if(defined($queryBackground)){
+		$qeuryString .= "& ";
+	}
+
+	$$string_ref=$qeuryString;
+ 
+	return 1;
+}

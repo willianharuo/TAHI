@@ -1,0 +1,96 @@
+//
+// Copyright (C) 1999, 2000, 2001, 2002, 2003 Yokogawa Electric Corporation,
+// IPA (Information-technology Promotion Agency, Japan).
+// All rights reserved.
+// 
+// Redistribution and use of this software in source and binary forms, with 
+// or without modification, are permitted provided that the following 
+// conditions and disclaimer are agreed and accepted by the user:
+// 
+// 1. Redistributions of source code must retain the above copyright 
+// notice, this list of conditions and the following disclaimer.
+// 
+// 2. Redistributions in binary form must reproduce the above copyright 
+// notice, this list of conditions and the following disclaimer in the 
+// documentation and/or other materials provided with the distribution.
+// 
+// 3. Neither the names of the copyrighters, the name of the project which 
+// is related to this software (hereinafter referred to as "project") nor 
+// the names of the contributors may be used to endorse or promote products 
+// derived from this software without specific prior written permission.
+// 
+// 4. No merchantable use may be permitted without prior written 
+// notification to the copyrighters. However, using this software for the 
+// purpose of testing or evaluating any products including merchantable 
+// products may be permitted without any notification to the copyrighters.
+// 
+// 
+// 
+// THIS SOFTWARE IS PROVIDED BY THE COPYRIGHTERS, THE PROJECT AND 
+// CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING 
+// BUT NOT LIMITED THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS 
+// FOR A PARTICULAR PURPOSE, ARE DISCLAIMED.  IN NO EVENT SHALL THE 
+// COPYRIGHTERS, THE PROJECT OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, 
+// INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES 
+// (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR 
+// SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) 
+// HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN 
+// CONTRACT,STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) 
+// ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF 
+// THE POSSIBILITY OF SUCH DAMAGE.
+//
+// $TAHI: ct/tunnel/automatic_decapsulation_host.def,v 1.6 2001/10/05 06:39:22 masaxmasa Exp $
+
+#include "tunnel.def"
+
+
+FEM_v6overv4_icmp6_echo_request(
+	v6overv4_echo_request_LINK0_tn2nut,
+	_HETHER_tn2nut,
+	V4_OFFLINK0_ADDRESS,
+	NUT_LINK0_V4_ADDRESS,
+	 	{
+		_SRC(OFFLINK_AUTOMATIC_ADDRESS);
+		_DST(NUT_LINK0_AUTOMATIC_ADDRESS);
+	},
+		{
+		payload=ping_data;
+	}
+)
+
+FEM_v6overv4_icmp6_echo_reply(
+	v6overv4_echo_reply_LINK0_nut2tn,
+	_HETHER_nut2tn,
+	NUT_LINK0_V4_ADDRESS,
+	V4_OFFLINK0_ADDRESS,
+			{
+			_SRC(oneof(NUT_LINK0_AUTOMATIC_ADDRESS,NUT_LINK0_GLOBAL_ADDRESS));
+			_DST(OFFLINK_AUTOMATIC_ADDRESS);
+	},
+			{
+			Identifier=any;
+			SequenceNumber=any;     
+			payload=any;
+        }
+)
+
+FEM_icmp6_echo_reply(
+        echo_reply_LINK0_nut2tn,
+        _HETHER_nut2tn,
+                {
+                _SRC(oneof(NUT_LINK0_AUTOMATIC_ADDRESS,NUT_LINK0_GLOBAL_ADDRESS));
+                _DST(OFFLINK_AUTOMATIC_ADDRESS);
+        },
+                {
+		Identifier=any;
+		SequenceNumber=any;     
+		payload=any;
+//                payload=ping_data_2;
+        }
+)
+
+//Payload ping_data_2
+//        {
+//        data={1,2};     
+//}
+

@@ -1,0 +1,39 @@
+#
+# $Name: REL_2_1_1 $
+#
+#<seq>:<def>:[<opt>]:[<log>]:<desc>
+#
+&print:1.  Neighbor Discovery
+&print:1.1.  Sending NS (Host/Router)
+&#./sendNsBasicLocal.seq:./sendNsBasicLocal.def:::Verify that the NUT send NSs (link-local ==> link-local)
+&#./sendNsBasicGlobGlob.seq:./sendNsBasicGlobGlob.def:::Verify that the NUT send NSs (global ==> global)
+&#./sendNsBasicGlobLink.seq:./sendNsBasicGlobLink.def:::Verify that the NUT send NSs (link-local ==> global)
+&#./sendNsBasicLinkGlob.seq:./sendNsBasicLinkGlob.def:::Verify that the NUT send NSs (global ==> link-local)
+&#./sendMcastNS.seq:./sendMcastNS.def:::Multicast NS w/ Default Config.
+&#./sendMcastNS2.seq:./sendMcastNS2.def:::Multicast NS w/ RetransTimer=3sec.
+&#./sendUcastNS.seq:./sendUcastNS.def:::Unicast NS w/ Default Config.
+&#./sendUcastNS2.seq:./sendUcastNS2.def:::Unicast NS w/ RetransTimer=3sec.
+&#./adrsolvQueuOne.seq:./adrsolvQueuOne.def:::Address Resolution Queue (one entry for an address ?)
+&#./adrsolvQueuTwo.seq:./adrsolvQueuTwo.def:::Address Resolution Queue (more then one entry for an address ?)
+&#./adrsolvQueuMulti.seq:./adrsolvQueuMulti.def:::Address Resolution Queue (one entry per an address ?)
+#
+&print:1.2.  Receiving NS (Host/Router)
+&#./recvNsBasic.seq:./recvNsBasic.def:::Receiving valid NSs
+&#./recvNsInvalid.seq:./recvNsInvalid.def:::Receiving invalid NSs
+&#./recvNsRFlag.seq:./recvNsRFlag.def:::NS vs. IsRouter flag
+./ncStateByNs4NoNce.seq:./ncStateByNs4NoNce.def:::NS vs. NONCE
+./ncStateByNs4Incomplete.seq:./ncStateByNs4Incomplete.def:::NS; NS vs. INCOMPLETE
+./ncStateByNs4Reachable.seq:./ncStateByNs4Reachable.def:::NS; NS vs. REACHABLE
+./ncStateByNs4Stale.seq:./ncStateByNs4Stale.def:::NS; NS vs. STALE
+./ncStateByNs4Probe.seq:./ncStateByNs4Probe.def:::NS; NS vs. PROBE
+#
+&print:1.3.  Sending NA (Host/Router)
+#
+&print:1.4.  Receiving NA (Host/Router)
+&#./recvNaRFlag.seq:./recvNaRFlag.def:::R flag vs. IsRouter flag
+&#./ncStateByNa4Nonce.seq:./ncStateByNa4Nonce.def:::NA vs. NONCE
+&#./ncStateByNa4Incomplete.seq:./ncStateByNa4Incomplete.def:::NA vs. INCOMPLETE
+&#./ncStateByNa4Reachable.seq:./ncStateByNa4Reachable.def:::NA vs. REACHABLE
+&#./ncStateByNa4Stale.seq:./ncStateByNa4Stale.def:::NA vs. STALE
+&#./ncStateByNa4Probe.seq:./ncStateByNa4Probe.def:::NA vs. PROBE
+# EOF

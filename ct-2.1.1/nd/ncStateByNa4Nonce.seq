@@ -1,0 +1,523 @@
+#!/usr/bin/perl
+#
+# Copyright (C) 1999, 2000, 2001, 2002, 2003 Yokogawa Electric Corporation,
+# IPA (Information-technology Promotion Agency, Japan).
+# All rights reserved.
+# 
+# Redistribution and use of this software in source and binary forms, with 
+# or without modification, are permitted provided that the following 
+# conditions and disclaimer are agreed and accepted by the user:
+# 
+# 1. Redistributions of source code must retain the above copyright 
+# notice, this list of conditions and the following disclaimer.
+# 
+# 2. Redistributions in binary form must reproduce the above copyright 
+# notice, this list of conditions and the following disclaimer in the 
+# documentation and/or other materials provided with the distribution.
+# 
+# 3. Neither the names of the copyrighters, the name of the project which 
+# is related to this software (hereinafter referred to as "project") nor 
+# the names of the contributors may be used to endorse or promote products 
+# derived from this software without specific prior written permission.
+# 
+# 4. No merchantable use may be permitted without prior written 
+# notification to the copyrighters. However, using this software for the 
+# purpose of testing or evaluating any products including merchantable 
+# products may be permitted without any notification to the copyrighters.
+# 
+# 
+# 
+# THIS SOFTWARE IS PROVIDED BY THE COPYRIGHTERS, THE PROJECT AND 
+# CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING 
+# BUT NOT LIMITED THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS 
+# FOR A PARTICULAR PURPOSE, ARE DISCLAIMED.  IN NO EVENT SHALL THE 
+# COPYRIGHTERS, THE PROJECT OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, 
+# INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES 
+# (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR 
+# SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) 
+# HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN 
+# CONTRACT,STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) 
+# ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF 
+# THE POSSIBILITY OF SUCH DAMAGE.
+#
+# $TAHI: ct/nd/ncStateByNa4Nonce.seq,v 1.28 2002/02/27 01:08:26 masaxmasa Exp $
+
+########################################################################
+BEGIN { $V6evalTool::TestVersion = '$Name: REL_2_1_1 $ '; }
+ 
+use V6evalTool;
+use nd;
+
+ndOptions(@ARGV);
+
+# The following generate debugging messages.
+$nd::debug=$ndOpt_v|$ndOpt_vv;
+
+# You can specifies debug options to a remote control program.
+# If you want to know more detail, please see the following:
+# - V6evalTool.pm: perldoc V6evalTool
+# - V6evalRemote.pm: perldoc V6evalRemote
+$nd::remote_debug="-o1" if $ndOpt_vv;
+
+$IF=Link0;
+$exit_rtn=$V6evalTool::exitPass;
+
+#
+# sub test definition:
+# - sending pattern,
+# - SLLA vs cached LLA
+# - expected state
+# - message
+#
+$idx_ptn=0;
+$idx_lla=1;
+$idx_exp=2;
+$idx_explla=3;
+$idx_msg=4;
+$idx_inc_ip=5;
+$idx_prb_ip=6;
+$idx_rpy_ip=7;
+$idx_ign_ip=8;
+$idx_non_n=9;
+$idx_rpy_n=10;
+$idx_ign_n=11;
+$idx_stl_sr=12;
+$idx_ign_sr=13;
+@null=();
+
+#
+@def_unicast_na_tn2nut_rso=
+    (
+     unicast_na_tn2nut_rso,
+     same,
+     NONCE,
+     unchanged,
+     'unicast rso NA w/o TLL',
+     \@null, \@null, \@null, \@null,
+     \@null, \@null, \@null,
+     \@null, \@null
+     );
+
+#
+@def_unicast_na_tn2nut_rsO=
+    (
+     unicast_na_tn2nut_rsO,
+     same,
+     NONCE,
+     unchanged,
+     'unicast rsO NA w/o TLL',
+     \@null, \@null, \@null, \@null,
+     \@null, \@null, \@null,
+     \@null, \@null
+     );
+
+#
+@def_unicast_na_tn2nut_rSo=
+    (
+     unicast_na_tn2nut_rSo,
+     same,
+     NONCE,
+     unchanged,
+     'unicast rSo NA w/o TLL',
+     \@null, \@null, \@null, \@null,
+     \@null, \@null, \@null,
+     \@null, \@null
+     );
+
+#
+@def_unicast_na_tn2nut_rSO=
+    (
+     unicast_na_tn2nut_rSO,
+     same,
+     NONCE,
+     unchanged,
+     'unicast rSO NA w/o TLL',
+     \@null, \@null, \@null, \@null,
+     \@null, \@null, \@null,
+     \@null, \@null
+     );
+
+#
+@def_unicast_na_tn2nut_rso_tll=
+    (
+     unicast_na_tn2nut_rso_tll,
+     same,
+     NONCE,
+     unchanged,
+     'unicast rso NA w/ TLL',
+     \@null, \@null, \@null, \@null,
+     \@null, \@null, \@null,
+     \@null, \@null
+     );
+
+#
+@def_unicast_na_tn2nut_rsO_tll=
+    (
+     unicast_na_tn2nut_rsO_tll,
+     same,
+     NONCE,
+     unchanged,
+     'unicast rsO NA w/ TLL',
+     \@null, \@null, \@null, \@null,
+     \@null, \@null, \@null,
+     \@null, \@null
+     );
+
+#
+@def_unicast_na_tn2nut_rSo_tll=
+    (
+     unicast_na_tn2nut_rSo_tll,
+     same,
+     NONCE,
+     unchanged,
+     'unicast rSo NA w/ TLL',
+     \@null, \@null, \@null, \@null,
+     \@null, \@null, \@null,
+     \@null, \@null
+     );
+
+#
+@def_unicast_na_tn2nut_rSO_tll=
+    (
+     unicast_na_tn2nut_rSO_tll,
+     same,
+     NONCE,
+     unchanged,
+     'unicast rSO NA w/ TLL',
+     \@null, \@null, \@null, \@null,
+     \@null, \@null, \@null,
+     \@null, \@null
+     );
+
+#
+@def_multicast_na_tn2allnode_rso=
+    (
+     multicast_na_tn2allnode_rso,
+     same,
+     NONCE,
+     unchanged,
+     'multicast rso NA w/o TLL (INVALID)',
+     \@null, \@null, \@null, \@null,
+     \@null, \@null, \@null,
+     \@null, \@null
+     );
+
+#
+@def_multicast_na_tn2allnode_rsO=
+    (
+     multicast_na_tn2allnode_rsO,
+     same,
+     NONCE,
+     unchanged,
+     'multicast rsO NA w/o TLL (INVALID)',
+     \@null, \@null, \@null, \@null,
+     \@null, \@null, \@null,
+     \@null, \@null
+     );
+
+#
+@def_multicast_na_tn2allnode_rSo=
+    (
+     multicast_na_tn2allnode_rSo,
+     same,
+     NONCE,
+     unchanged,
+     'multicast rSo NA w/o TLL (INVALID)',
+     \@null, \@null, \@null, \@null,
+     \@null, \@null, \@null,
+     \@null, \@null
+     );
+
+#
+@def_multicast_na_tn2allnode_rSO=
+    (
+     multicast_na_tn2allnode_rSO,
+     same,
+     NONCE,
+     unchanged,
+     'multicast rSO NA w/o TLL (INVALID)',
+     \@null, \@null, \@null, \@null,
+     \@null, \@null, \@null,
+     \@null, \@null
+     );
+
+#
+@def_multicast_na_tn2allnode_rso_tll=
+    (
+     multicast_na_tn2allnode_rso_tll,
+     same,
+     NONCE,
+     unchanged,
+     'multicast rso NA w/ TLL',
+     \@null, \@null, \@null, \@null,
+     \@null, \@null, \@null,
+     \@null, \@null
+     );
+
+#
+@def_multicast_na_tn2allnode_rsO_tll=
+    (
+     multicast_na_tn2allnode_rsO_tll,
+     same,
+     NONCE,
+     unchanged,
+     'multicast rsO NA w/ TLL',
+     \@null, \@null, \@null, \@null,
+     \@null, \@null, \@null,
+     \@null, \@null
+     );
+
+#
+@def_multicast_na_tn2allnode_rSo_tll=
+    (
+     multicast_na_tn2allnode_rSo_tll,
+     same,
+     NONCE,
+     unchanged,
+     'multicast rSo NA w/ TLL (INVALID)',
+     \@null, \@null, \@null, \@null,
+     \@null, \@null, \@null,
+     \@null, \@null
+     );
+
+#
+@def_multicast_na_tn2allnode_rSO_tll=
+    (
+     multicast_na_tn2allnode_rSO_tll,
+     same,
+     NONCE,
+     unchanged,
+     'multicast rSO NA w/ TLL (INVALID)',
+     \@null, \@null, \@null, \@null,
+     \@null, \@null, \@null,
+     \@null, \@null
+     );
+
+#
+#
+#
+@defs=
+    (
+     \@def_unicast_na_tn2nut_rso,
+     \@def_unicast_na_tn2nut_rsO,
+     \@def_unicast_na_tn2nut_rSo,
+     \@def_unicast_na_tn2nut_rSO,
+     \@def_unicast_na_tn2nut_rso_tll,
+     \@def_unicast_na_tn2nut_rsO_tll,
+     \@def_unicast_na_tn2nut_rSo_tll,
+     \@def_unicast_na_tn2nut_rSO_tll,
+     \@def_multicast_na_tn2allnode_rso,
+     \@def_multicast_na_tn2allnode_rsO,
+     \@def_multicast_na_tn2allnode_rSo,
+     \@def_multicast_na_tn2allnode_rSO,
+     \@def_multicast_na_tn2allnode_rso_tll,
+     \@def_multicast_na_tn2allnode_rsO_tll,
+     \@def_multicast_na_tn2allnode_rSo_tll,
+     \@def_multicast_na_tn2allnode_rSO_tll,
+     );
+
+#
+#
+#
+vCapture($IF);
+
+#
+#
+#
+$idx=0;
+foreach(@defs) {
+    $exp=@$_[$idx_exp];
+    $explla=@$_[$idx_explla];
+    $msg=@$_[$idx_msg];
+    vLogHTML("<HR>");
+    vLogHTML("<FONT SIZE=\"+2\">*** NONCE vs. $msg ***</FONT><BR>");
+    $s=checkState($_);
+    $c=ndCachedLLA($explla);
+    if($s eq $exp && $c eq $explla) {
+        $result{$idx}=$V6evalTool::exitPass;
+        vLogHTML("<A NAME=\"T$idx\">OK: The target was $s/$c</A><BR>");
+    } else {
+        $exit_rtn=$V6evalTool::exitFail;
+        $result{$idx}=$exit_rtn;
+        vLogHTML("<A NAME=\"T$idx\">".
+		 ndErrmsg("NG: The target was $s/$c")."</A><BR>");
+    }
+    $title{$idx}="<TD>$msg</TD><TD>exp:$exp/$explla</TD><TD>result:$s/$c</TD>";
+    $idx++;
+}
+$idx--;
+
+#
+#
+#
+@col=('PTN', 'EXP(State/Cached LLA)', 'RESULT(State/Cached LLA)');
+ndPrintSummaryHTML("*** Test Summary: NONCE vs. NA ***", @col,
+                   %title, %result, $idx);
+
+#
+#
+#
+vLogHTML("*** EOT ***<BR>");
+exit $exit_rtn;
+
+#
+#
+#
+sub checkState(\@) {
+    my($def)=@_;
+    my($ptn)=@$def[$idx_ptn];
+    my($lla)=@$def[$idx_lla];
+    my($exp)=@$def[$idx_exp];
+    my($msg)=@$def[$idx_msg];
+
+    my($inc_ip)=@$def[$idx_inc_ip];
+    my($prb_ip)=@$def[$idx_prb_ip];
+    my($rpy_ip)=@$def[$idx_rpy_ip];
+    my($ign_ip)=@$def[$idx_ign_ip];
+
+    my($non_n)=@$def[$idx_non_n];
+    my($rpy_n)=@$def[$idx_rpy_n];
+    my($ign_n)=@$def[$idx_ign_n];
+
+    my($stl_sr)=@$def[$idx_stl_sr];
+    my($ign_sr)=@$def[$idx_ign_sr];
+
+    vLogHTML("<FONT SIZE=\"+1\">Initialization</FONT><BR>");
+    goto error if nd2NoNce($IF) != 0;
+    vClear($IF);
+
+    vLogHTML("<FONT SIZE=\"+1\">Test</FONT><BR>");
+    $pktdesc{$ptn}="Send $msg";
+    my(%ret)=vSend($IF, $ptn);
+    my($s)=ndStatusNum2Str(ndStatus(
+                                    $IF, $ret{sentTime1},
+                                    @$inc_ip, @$prb_ip, @$rpy_ip, @$ign_ip,
+                                    @$non_n, @$rpy_n, @$ign_n,
+                                    @$stl_sr, @$ign_sr,
+                                    )
+                       );
+    return $s;
+
+error:
+    return("ERROR");
+}
+
+########################################################################
+__END__
+
+=head1 NAME
+
+ncStateByNa4Nonce - Verifying State Machine: NA vs. NONCE
+
+=head1 TARGET
+
+Host and Router
+
+=head1 SYNOPSIS
+
+  ncStateByNa4Nonce.seq [-tooloption ...] -p ncStateByNa4Nonce.def
+
+=head1 INITIALIZATION
+
+  Clear NC state for TN.
+
+=head1 TEST PROCEDURE
+
+B<ncStateByNa4Nonce> verifies that state transition for a NUT
+in NONCE state when receiving a NA.
+
+=begin html
+<PRE>
+  TN               NUT
+  ----------------------
+<BR>
+  State: NONCE (for TN)
+<BR>
+  ==== <A HREF="#JDG1">NA</A> ===>
+	src=TN's link-local
+	dst=NUT's  link-local or all-node
+	w/o or w/ TLLA
+	r=0, s=0/1, o=0/1
+<BR>
+  <A HREF="#JDG1">Judgment</A>: <A HREF="nd.html">Examining NUT's neighbor cache state</A>
+</PRE>
+
+=end html
+
+=head1 JUDGMENT
+
+=begin html
+<A NAME="JDG1"></A>
+<PRE>
+Any NA should be ignored if no Neighbor Cache entry exists.
+<HR>
+7.2.5.  Receipt of Neighbor Advertisements
+<BR>
+   When a valid Neighbor Advertisement is received (either solicited or
+   unsolicited), the Neighbor Cache is searched for the target's entry.
+   <B>If no entry exists, the advertisement SHOULD be silently discarded.</B>
+   There is no need to create an entry if none exists, since the
+   recipient has apparently not initiated any communication with the
+   target.
+<HR>
+  ================================+===============+=============
+  NA                              |New State      |cached LLA
+  ---------------+-+--+-+---------+               |
+  Destination    |r| s|o|TLLA     |               |
+  ===============+=+==+=+=========+===============+=============
+  Unicast         0  0 0 none      NONCE           unchanged
+  ---------------+-+--+-+---------+---------------+-------------
+  Unicast         0  0 1 none      NONCE           unchanged
+  ---------------+-+--+-+---------+---------------+-------------
+  Unicast         0  1 0 none      NONCE           unchanged
+  ---------------+-+--+-+---------+---------------+-------------
+  Unicast         0  1 1 none      NONCE           unchanged
+  ===============+=+==+=+=========+===============+=============
+  Unicast         0  0 0 exist     NONCE           unchanged
+  ---------------+-+--+-+---------+---------------+-------------
+  Unicast         0  0 1 exist     NONCE           unchanged
+  ---------------+-+--+-+---------+---------------+-------------
+  Unicast         0  1 0 exist     NONCE           unchanged
+  ---------------+-+--+-+---------+---------------+-------------
+  Unicast         0  1 1 exist     NONCE           unchanged
+  ===============+=+==+=+=========+===============+=============
+  *Multicast      0  0 0 *none     NONCE           unchanged
+                  *invalid
+  ---------------+-+--+-+---------+---------------+-------------
+  *Multicast      0  0 1 *none     NONCE           unchanged
+                  *invalid
+  ---------------+-+--+-+---------+---------------+-------------
+  *Multicast      0 *1 0 *none     NONCE           unchanged
+                  *invalid
+  ---------------+-+--+-+---------+---------------+-------------
+  *Multicast      0 *1 1 *none     NONCE           unchanged
+                  *invalid
+  ===============+=+==+=+=========+===============+=============
+  Multicast       0  0 0 exist     NONCE           unchanged
+  ---------------+-+--+-+---------+---------------+-------------
+  Multicast       0  0 1 exist     NONCE           unchanged
+  ---------------+-+--+-+---------+---------------+-------------
+  *Multicast      0 *1 0 exist     NONCE           unchanged
+                  *invalid
+  ---------------+-+--+-+---------+---------------+-------------
+  *Multicast      0 *1 1 exist     NONCE           unchanged
+                  *invalid
+  ===============+=+==+=+=========+===============+=============
+</PRE>
+
+=end html
+
+=head1 TERMINATION
+
+  N/A
+
+=head1 NOTE
+
+  The test does not invoke any remote command.
+
+=head1 SEE ALSO
+
+  perldoc V6evalTool
+  perldoc V6evalRemote
+
+=cut

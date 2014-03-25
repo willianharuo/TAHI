@@ -1,0 +1,95 @@
+#
+# $Name: REL_2_1_1 $
+#
+# Copyright (C) 2003 Yokogawa Electric Corporation, 
+# INTAP(Interoperability Technology Association
+# for Information Processing, Japan).  All rights reserved.
+# 
+# Redistribution and use of this software in source and binary forms, with 
+# or without modification, are permitted provided that the following 
+# conditions and disclaimer are agreed and accepted by the user:
+# 
+# 1. Redistributions of source code must retain the above copyright 
+# notice, this list of conditions and the following disclaimer.
+# 
+# 2. Redistributions in binary form must reproduce the above copyright 
+# notice, this list of conditions and the following disclaimer in the 
+# documentation and/or other materials provided with the distribution.
+# 
+# 3. Neither the names of the copyrighters, the name of the project which 
+# is related to this software (hereinafter referred to as "project") nor 
+# the names of the contributors may be used to endorse or promote products 
+# derived from this software without specific prior written permission.
+# 
+# 4. No merchantable use may be permitted without prior written 
+# notification to the copyrighters. However, using this software for the 
+# purpose of testing or evaluating any products including merchantable 
+# products may be permitted without any notification to the copyrighters.
+# 
+# 
+# 
+# THIS SOFTWARE IS PROVIDED BY THE COPYRIGHTERS, THE PROJECT AND 
+# CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING 
+# BUT NOT LIMITED THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS 
+# FOR A PARTICULAR PURPOSE, ARE DISCLAIMED.  IN NO EVENT SHALL THE 
+# COPYRIGHTERS, THE PROJECT OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, 
+# INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES 
+# (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR 
+# SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) 
+# HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN 
+# CONTRACT,STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) 
+# ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF 
+# THE POSSIBILITY OF SUCH DAMAGE.
+#
+# $TAHI: ct/router-select/INDEX_HOST.ORG,v 1.3 2003/04/22 04:21:23 akisada Exp $
+# $TINY: INDEX_RA,v 1.9 2002/03/05 03:04:55 masaxmasa Exp $
+#
+# INDEX_hostrouter
+#   autorun INDEX for stateless-addrconf test (Test for a Host and Router)
+#
+
+######################################################################
+&print: Test for Default route preference 
+######################################################################
+##############################################
+##############################################
+### Normal path (GA)
+####################################
+
+### Normal path
+&print: <B>NUT with One Router</B>
+./DR_1RT.seq	:ROUTE.def	:addrconf=reboot::NUT receives multiple RAs with Different Preference value
+
+&print: <B>Different Preference for Default Route</B>
+./DR_2RT_Diff.seq	:ROUTE.def	:addrconf=reboot::NUT receives RAs from 2 routers with Different Preference value
+
+&print: <B>Same Preference for Default Route</B>
+./DR_2RT_Same.seq	:ROUTE.def	:addrconf=reboot::NUT receives RAs from 2 routers with Same Preference value
+
+&print: <B>Specific Route A v.s. Specific Route B
+./DR_2RT_DiffPX_MED.seq	:RTINFO.def	:addrconf=reboot::NUT receives RAs from 2 routers with Different Prefixes and Same Preference(MED) value in RouteInformation
+./DR_2RT_DiffPX_HIGH.seq	:RTINFO.def	:addrconf=reboot::NUT receives RAs from 2 routers with Different Prefixes and Same Preference(HIGH) value in RouteInformation
+./DR_2RT_DiffPX_LOW.seq	:RTINFO.def	:addrconf=reboot::NUT receives RAs from 2 routers with Different Prefixes and Same Preference(LOW) value in RouteInformation
+./DR_2RT_DiffPX_UNSPEC.seq	:RTINFO.def	:addrconf=reboot::NUT receives RAs from 2 routers with Different Prefixes and Same Preference(UNSPEC) value in RouteInformation
+
+&print: <B>Specific Route A v.s. Specific Route A</B>
+./DR_2RT_SamePX_HIGH_LOW.seq:RTINFO.def:::NUT receives RAs from 2 routers with Route Info Option for Same Prefix. The Preference is [HIGH v.s. LOW]
+./DR_2RT_SamePX_MED_HIGH.seq:RTINFO.def:::NUT receives RAs from 2 routers with Route Info Option for Same Prefix. The Preference is [MED v.s. HIGH]
+./DR_2RT_SamePX_MED_LOW.seq:RTINFO.def:::NUT receives RAs from 2 routers with Route Info Option for Same Prefix. The Preference is [MED v.s. LOW]
+./DR_2RT_SamePX_UNSPEC_HIGH.seq:RTINFO.def:::NUT receives RAs from 2 routers with Route Info Option for Same Prefix. The Preference is [UNSPEC v.s. HIGH]
+./DR_2RT_SamePX_UNSPEC_MED.seq:RTINFO.def:::NUT receives RAs from 2 routers with Route Info Option for Same Prefix. The Preference is [UNSPEC v.s. MED]
+./DR_2RT_SamePX_UNSPEC_LOW.seq:RTINFO.def:::NUT receives RAs from 2 routers with Route Info Option for Same Prefix. The Preference is [UNSPEC v.s. LOW]
+
+&print: <B>Default Route v.s. Specific Route </B>
+./DR_2RT_raHIGH_rtinfoHIGH.seq:RTINFO.def:::[Defalut Route=HIGH v.s. Specific Route=HIGH]
+./DR_2RT_raHIGH_rtinfoMED.seq:RTINFO.def:::[Defalut Route=HIGH v.s. Specific Route=MED]
+./DR_2RT_raHIGH_rtinfoLOW.seq:RTINFO.def:::[Defalut Route=HIGH v.s. Specific Route=LOW]
+./DR_2RT_raLOW_rtinfoUNSPEC.seq:RTINFO.def:::[Defalut Route=LOW v.s. Specific Route=UNSPEC]
+./DR_2RT_raLOW_rtinfoLIFE0.seq:RTINFO.def:::[Defalut Route=LOW v.s. Specific Route=HIGH w/ Lifetime=0]
+
+&print: <B>Default Route v.s. Specific(;;/0) Route</B>
+./DR_2RT_raHIGH_rtinfoHIGH_DEFAULT.seq:RTINFO.def:::[Defalut Route=HIGH v.s. (;;/0)=HIGH]
+./DR_2RT_raHIGH_rtinfoMED_DEFAULT.seq:RTINFO.def:::[Defalut Route=HIGH v.s. (;;/0)=MED]
+./DR_2RT_raHIGH_rtinfoLOW_DEFAULT.seq:RTINFO.def:::[Defalut Route=HIGH v.s. (;;/0)=LOW]
+./DR_2RT_raLOW_rtinfoUNSPEC_DEFAULT.seq:RTINFO.def:::[Defalut Route=LOW v.s. (;;/0)=UNSPEC]
+./DR_2RT_raLOW_rtinfoLIFE0_DEFAULT.seq:RTINFO.def:::[Defalut Route=LOW v.s. (;;/0)=HIGH w/ Lifetime=0]

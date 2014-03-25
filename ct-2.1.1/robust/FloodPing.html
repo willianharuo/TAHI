@@ -1,0 +1,149 @@
+<HTML>
+<HEAD>
+<TITLE>FloodPing.seq - Flood ping</TITLE>
+<LINK REV="made" HREF="mailto:hackers@FreeBSD.org">
+</HEAD>
+
+<BODY>
+
+<!-- INDEX BEGIN -->
+<!--
+
+<UL>
+
+	<LI><A HREF="#NAME">NAME</A>
+	<LI><A HREF="#TARGET">TARGET</A>
+	<LI><A HREF="#SYNOPSIS">SYNOPSIS</A>
+	<LI><A HREF="#INITIALIZATION">INITIALIZATION</A>
+	<LI><A HREF="#TEST_PROCEDURE">TEST PROCEDURE</A>
+	<LI><A HREF="#JUDGMENT">JUDGMENT</A>
+	<LI><A HREF="#NOTES">NOTES</A>
+	<LI><A HREF="#TERMINATION">TERMINATION</A>
+	<LI><A HREF="#SEE_ALSO">SEE ALSO</A>
+</UL>
+-->
+<!-- INDEX END -->
+
+<P>
+<H1><A NAME="NAME">NAME</A></H1>
+<P>
+FloodPing.seq - Flood ping
+
+<P>
+<HR>
+<H1><A NAME="TARGET">TARGET</A></H1>
+<P>
+Host and Router
+
+<P>
+<HR>
+<H1><A NAME="SYNOPSIS">SYNOPSIS</A></H1>
+<P>
+<STRONG>FloodPing.seq</STRONG> [<EM>times=num</EM>]
+
+<P>
+<HR>
+<H1><A NAME="INITIALIZATION">INITIALIZATION</A></H1>
+<P>
+Make neighbor cache entry for TN.
+
+<P>
+<PRE>  1. Send echo request.
+  2. If TN receive NS, sends NA.
+  3. Wait echo reply.
+</PRE>
+<P>
+<PRE>  [TN]  --------------&gt; [NUT]
+        echo request
+</PRE>
+<P>
+<PRE>  [TN]  &lt;-------------  [NUT]
+            (NS)
+</PRE>
+<P>
+<PRE>  [TN]  --------------&gt; [NUT]
+            (NA)
+</PRE>
+<P>
+<PRE>  [TN]  &lt;-------------  [NUT]
+         echo reply
+</PRE>
+<P>
+<HR>
+<H1><A NAME="TEST_PROCEDURE">TEST PROCEDURE</A></H1>
+<P>
+TN and NUT is on the same link.
+
+<P>
+<PRE>    ---+--------+--- Link0
+       |        |
+     +-+-+   +--+-+
+     |NUT|   | TN |
+     +---+   +----+
+</PRE>
+<P>
+<PRE>       Figure. 1
+</PRE>
+
+<P>
+TN sends echo request packets as fast. the number of packets is specify
+times option.
+
+<P>
+<PRE>    [TN]   --------&gt;   [NUT]
+            request
+</PRE>
+<P>
+<PRE>    [TN]   --------&gt;   [NUT]
+            request
+</PRE>
+<P>
+<PRE>    [TN]   --------&gt;   [NUT]
+            request
+</PRE>
+<P>
+<PRE>               .
+               .
+               .
+</PRE>
+<P>
+<PRE>    [TN]   --------&gt;   [NUT]
+            request
+</PRE>
+<P>
+After sent the flood packet, send echo request once more.
+
+<P>
+If TN receive NS, send NA. And wait echo reply packet from NUT.
+
+<P>
+<HR>
+<H1><A NAME="JUDGMENT">JUDGMENT</A></H1>
+<P>
+<PRE>  PASS : echo reply packet received.
+</PRE>
+<P>
+<PRE>  FAIL : don't received echo reply packet.
+</PRE>
+<P>
+<HR>
+<H1><A NAME="NOTES">NOTES</A></H1>
+<P>
+<PRE>  If the judgement is PASS, you must check that NUT have not been
+crashed by your eyes. Becouse the test can't detect it.
+</PRE>
+<P>
+<HR>
+<H1><A NAME="TERMINATION">TERMINATION</A></H1>
+<P>
+NONE
+
+<P>
+<HR>
+<H1><A NAME="SEE_ALSO">SEE ALSO</A></H1>
+<P>
+perldoc V6evalTool
+
+</BODY>
+
+</HTML>

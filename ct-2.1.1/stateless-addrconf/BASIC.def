@@ -1,0 +1,164 @@
+//
+// Copyright (C) 1999, 2000, 2001, 2002, 2003 Yokogawa Electric Corporation,
+// IPA (Information-technology Promotion Agency, Japan).
+// All rights reserved.
+// 
+// Redistribution and use of this software in source and binary forms, with 
+// or without modification, are permitted provided that the following 
+// conditions and disclaimer are agreed and accepted by the user:
+// 
+// 1. Redistributions of source code must retain the above copyright 
+// notice, this list of conditions and the following disclaimer.
+// 
+// 2. Redistributions in binary form must reproduce the above copyright 
+// notice, this list of conditions and the following disclaimer in the 
+// documentation and/or other materials provided with the distribution.
+// 
+// 3. Neither the names of the copyrighters, the name of the project which 
+// is related to this software (hereinafter referred to as "project") nor 
+// the names of the contributors may be used to endorse or promote products 
+// derived from this software without specific prior written permission.
+// 
+// 4. No merchantable use may be permitted without prior written 
+// notification to the copyrighters. However, using this software for the 
+// purpose of testing or evaluating any products including merchantable 
+// products may be permitted without any notification to the copyrighters.
+// 
+// 
+// 
+// THIS SOFTWARE IS PROVIDED BY THE COPYRIGHTERS, THE PROJECT AND 
+// CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING 
+// BUT NOT LIMITED THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS 
+// FOR A PARTICULAR PURPOSE, ARE DISCLAIMED.  IN NO EVENT SHALL THE 
+// COPYRIGHTERS, THE PROJECT OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, 
+// INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES 
+// (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR 
+// SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) 
+// HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN 
+// CONTRACT,STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) 
+// ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF 
+// THE POSSIBILITY OF SUCH DAMAGE.
+//
+// BASIC.def
+//
+//  This file has some basic definition and frames for DAD test about
+//  any tentative address, and may be included from other *.def files.
+//
+// DADV6ADDR              : v6 Tentative address for DAD
+// NUT_HasNoLLOCAL        : if defined NUT has no link-local address
+// DADNA_SRC              : IPv6 src address of DAD NA
+// dadns_from_NUT         : DAD NS coming from NUT on DAD
+// chkconf_dadns_to_NUT   : DAD NS send to NUT to check if address is configured
+// chkconf_dadna_from_NUT : DAD NA coming from NUT if addrss is configured
+//
+// $TAHI: ct/stateless-addrconf/BASIC.def,v 1.16 2001/10/05 06:39:19 masaxmasa Exp $
+
+#include "DAD.def"
+
+
+//
+// DADV6ADDR
+//  Description: 
+//    v6 Tentative address for DAD
+//  Spec:
+//    default tentative address is autoconfigured Link-Local address
+
+#ifndef DADV6ADDR
+#define DADV6ADDR nutv6()
+#endif
+
+//
+// include initialization packet definition and
+// "any" fields packet definition.
+// BASIC_init.def needs DADV6ADDR definition.
+#include "BASIC_init.def"
+
+
+// DADV6ADDR_IS_ACAST     : if defined, DADV6ADDR is an anycast address
+// DADNA_OFLAG            : if anycast, DADNA.OFlag=0 else 1
+// NUT_HasNoLLOCAL        : if defined, NUT has no link-local address
+// DADNA_SRC              : IPv6 src address of DAD NA (src address must not be anycast address)
+#ifndef DADNA_SRC
+#ifdef DADV6ADDR_IS_ACAST
+#define DADNA_OFLAG 0
+#ifdef NUT_HasNoLLOCAL
+#error DADV6ADDR_IS_ACAST and NUT_HasNoLLOCAL are both defined
+#else
+#define DADNA_SRC nutv6()
+#define DADNA_SRC_ROUTER oneof(nutv6(),LINK0STATIC_ROUTER_UCAST_ADDR)
+#endif
+#else  //DADV6ADDR_IS_ACAST
+#define DADNA_OFLAG 1
+#ifdef NUT_HasNoLLOCAL
+#define DADNA_SRC DADV6ADDR
+#define DADNA_SRC_ROUTER oneof(DADV6ADDR,LINK0STATIC_ROUTER_UCAST_ADDR)
+#else
+#define DADNA_SRC oneof(DADV6ADDR,nutv6())
+#define DADNA_SRC_ROUTER oneof(DADV6ADDR,nutv6(),LINK0STATIC_ROUTER_UCAST_ADDR)
+#endif
+#endif //DADV6ADDR_IS_ACAST
+#endif //DADNA_SRC
+
+// some parts for frames
+#ifndef DADV6ADDR_SOLNODE_ETHERDST
+#define DADV6ADDR_SOLNODE_ETHERDST _ETHER_SOLNODE_MCAST(DADV6ADDR)
+#endif
+_HETHER_define(hether_nut2tentsolnode,
+	       nutether(), DADV6ADDR_SOLNODE_ETHERDST)
+_HETHER_define(hether_tn2tentsolnode,
+	       tnether(),  DADV6ADDR_SOLNODE_ETHERDST)
+
+//
+// dadns_from_NUT
+//  Description: 
+//    DAD NS coming from NUT on DAD
+//  Spec:
+//    valid DAD NS
+
+FEM_ADDRCONF_dadns(dadns_from_NUT, hether_nut2tentsolnode,
+		   DestinationAddress=_IPV6_SOLNODE_MCAST(DADV6ADDR);
+		   ,
+		   TargetAddress=DADV6ADDR; // Tentative Address
+                   )
+
+
+//
+// chkconf_dadns_to_NUT
+//  Description: 
+//    DAD NS send to NUT to check if address is configured
+//  Spec:
+//    valid DAD NS
+
+FEM_ADDRCONF_dadns(chkconf_dadns_to_NUT, hether_tn2tentsolnode,
+		   DestinationAddress=_IPV6_SOLNODE_MCAST(DADV6ADDR);
+		   ,
+		   TargetAddress=DADV6ADDR; // Tentative Address
+                   )
+
+
+//
+// chkconf_dadna_from_NUT (and plus _rf1)
+//  Description: 
+//    DAD NA coming from NUT if addrss is configured
+//  Spec:
+//    valid DAD NA
+//    NUT is a host (router if _rf1)
+
+FEM_ADDRCONF_dadna(chkconf_dadna_from_NUT, _HETHER_nut2allnodes,
+		   SourceAddress=DADNA_SRC;
+		   ,
+                   OFlag=DADNA_OFLAG;
+	           TargetAddress=DADV6ADDR;
+	           option=_TLLOPT_nut;
+		   )
+
+FEM_ADDRCONF_dadna(chkconf_dadna_from_NUT_rf1, _HETHER_nut2allnodes,
+		   SourceAddress=DADNA_SRC_ROUTER;
+		   ,
+                   OFlag=DADNA_OFLAG;
+		   RFlag=1;   // router (MUST)
+	           TargetAddress=DADV6ADDR;
+	           option=_TLLOPT_nut;
+		   )
+
+//end

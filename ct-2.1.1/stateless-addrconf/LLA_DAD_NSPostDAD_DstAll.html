@@ -1,0 +1,240 @@
+<HTML>
+<HEAD>
+<TITLE>LLA_DAD_NSPostDAD_DstAll - check the process when NUT receives invalid DAD NS with same Target address after sending DAD NS.</TITLE>
+<LINK REV="made" HREF="mailto:hackers@FreeBSD.org">
+</HEAD>
+
+<BODY>
+
+<!-- INDEX BEGIN -->
+<!--
+
+<UL>
+
+	<LI><A HREF="#NAME">NAME</A>
+	<LI><A HREF="#TARGET">TARGET</A>
+	<LI><A HREF="#SYNOPSIS">SYNOPSIS</A>
+	<LI><A HREF="#INITIALIZATION">INITIALIZATION</A>
+	<LI><A HREF="#TEST_PROCEDURE">TEST PROCEDURE</A>
+	<LI><A HREF="#JUDGEMENT">JUDGEMENT</A>
+	<LI><A HREF="#REFERENCE">REFERENCE</A>
+	<LI><A HREF="#SEE_ALSO">SEE ALSO</A>
+</UL>
+-->
+<!-- INDEX END -->
+
+<P>
+<H1><A NAME="NAME">NAME</A></H1>
+<P>
+LLA_DAD_NSPostDAD_DstAll - check the process when NUT receives invalid DAD
+<CODE>NS(Destination==Allnode)</CODE> with same Target address after
+sending DAD NS.
+
+<P>
+<HR>
+<H1><A NAME="TARGET">TARGET</A></H1>
+<P>
+All Node
+
+<P>
+<HR>
+<H1><A NAME="SYNOPSIS">SYNOPSIS</A></H1>
+<P>
+LLA_DAD_NSPostDAD_DstAll.seq [-tooloption ...] -pkt &lt;packetdef&gt;
+[addrconf=&lt;addrconfname&gt;] 
+
+<P>
+<PRE>  -tooloption   : v6eval tool option
+  &lt;packetdef&gt;   : packet definition file (v6eval tool option)
+  &lt;addrconfname&gt;: how to configure address on NUT; boot/reboot
+</PRE>
+<PRE>
+ detail of v6eval tool option: see perldoc V6evalTool.pm, perldoc V6evalRemote.pm
+</PRE>
+
+<P>
+<HR>
+<H1><A NAME="INITIALIZATION">INITIALIZATION</A></H1>
+<PRE>
+ Reboot NUT or Initialize interface of NUT or Initialize IPv6 stack of NUT.
+</PRE>
+
+<P>
+<HR>
+<H1><A NAME="TEST_PROCEDURE">TEST PROCEDURE</A></H1>
+<DL>
+<DT><STRONG><A NAME="item_Test">Test for Unicast address configuration</A></STRONG><DD>
+<P>
+The following tests are prepared in this test package. See INDEX file.
+
+<P>
+<STRONG>Test for all node</STRONG>
+
+
+
+<P>
+<PRE>   NUT assignes autoconfigured address, even though NUT receives invalid 
+   (Destination==Allnode) DAD NS for same target address as NUT, while DAD
+   Process (after transmitting DAD NS).
+</PRE>
+<P>
+<STRONG>Test sequence</STRONG>
+
+
+
+<P>
+<PRE>  TN                            NUT
+  ---------------------------------
+  Initialize NUT
+</PRE>
+<P>
+<PRE>  Configure address of NUT (reboot or interface initialization etc...)
+</PRE>
+<P>
+<PRE>  TN wait the DAD NS sent from NUT
+  &lt;=== Judgement #1: DAD NS =======
+        name: DADNS_from_NUT
+</PRE>
+<P>
+<PRE>  ==== Action #1: DAD NS =========&gt;
+        name: DADNS_from_TN_DstAll
+</PRE>
+<P>
+<PRE>  Wait for DupAddrDetectTransmits*RetransTimer
+</PRE>
+<P>
+<PRE>  Check if NUT's address is configured
+  ==== Action #2: DAD NS =========&gt;
+        name: SOLNS_from_TN_SameTgt
+</PRE>
+<P>
+<PRE>  &lt;=== Judgement #2: DAD NA =======
+        name: NA_from_NUT, NA_from_NUT_woTLL
+</PRE>
+</DL>
+<P>
+<HR>
+<H1><A NAME="JUDGEMENT">JUDGEMENT</A></H1>
+<DL>
+<DT><STRONG>Test for Link-local Unicast address autoconfiguration</STRONG><DD>
+<P>
+<STRONG>Test for all NODE</STRONG>
+
+
+
+<P>
+<STRONG>NUT performs Stateless Address Autoconfiguration(Link-local) on its interface</STRONG>
+
+
+
+<P>
+<PRE>   Judgement #1. NUT MUST transmit DAD NS for its autoconfigured Link-local address.
+        name: DADNS_from_NUT
+        src: ::0
+        dst: solnode[NUT's tentative Link-local]
+        TargetAddress: NUT's tentative Link-local
+</PRE>
+<P>
+<PRE>   Action #1. TN transmits invalid DAD NS which destined for allnode
+        name: DADNS_from_TN_DstAll
+        src: ::0
+        dst: allnode
+        TargetAddress: NUT's Link-local
+</PRE>
+<P>
+<PRE>   Action #2. TN transmits SOL NS to check if NUT's address is configured
+        name: SOLNS_from_TN_SameTgt
+        src: TN's Link-local
+        dst: solnode[NUT's Link-local]
+        TargetAddress: NUT's Link-local
+</PRE>
+<P>
+<PRE>   Judgement #2. NUT MUST transmit SOL NA for its autoconfigured  Link-local address.
+        name: NA_from_NUT, NA_from_NUT_woTLL
+        src: NUT's Link-local
+        dst: TN's Link-local
+        TargetAddress: NUT's Link-local
+        RFlag: 0 ( if NUT is a Router then 1)
+        SFlag: 1
+        OFlag: 1
+        TLLOPT: NUT's MAC address
+</PRE>
+</DL>
+<P>
+<HR>
+<H1><A NAME="REFERENCE">REFERENCE</A></H1>
+<PRE>
+RFC2462
+<HR>
+   (omit)
+<BR>
+5.4.1.  Message Validation
+<BR>
+<A NAME=REF>
+   <B>A node MUST silently discard any Neighbor Solicitation or
+   Advertisement message that does not pass the validity checks
+   specified in [DISCOVERY]</B>. A solicitation that passes these validity
+   checks is called a valid solicitation or valid advertisement.
+<BR>
+   (omit)
+</PRE>
+<HR>
+<PRE>
+RFC2461
+<HR>
+   (omit)
+<BR>
+4.3.  Neighbor Solicitation Message Format
+<BR>
+   Nodes send Neighbor Solicitations to request the link-layer address
+   of a target node while also providing their own link-layer address to
+   the target.  Neighbor Solicitations are multicast when the node needs
+   to resolve an address and unicast when the node seeks to verify the
+   reachability of a neighbor.
+<BR>
+         0                   1                   2                   3
+         0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
+        +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+        |     Type      |     Code      |          Checksum             |
+        +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+        |                           Reserved                            |
+        +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+        |                                                               |
+        +                                                               +
+        |                                                               |
+        +                       Target Address                          +
+        |                                                               |
+        +                                                               +
+        |                                                               |
+        +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+        |   Options ...
+        +-+-+-+-+-+-+-+-+-+-+-+-
+<BR>
+   IP Fields:
+<BR>
+      Source Address
+                     Either an address assigned to the interface from
+                     which this message is sent or (if Duplicate Address
+                     Detection is in progress [ADDRCONF]) the
+                     unspecified address.
+<BR>
+      <B>Destination Address
+                     Either the solicited-node multicast address
+                     corresponding to the target address, or the target
+                     address.</B>
+<BR>
+      Hop Limit      255
+<BR>
+   (omit)
+</PRE>
+
+<P>
+<HR>
+<H1><A NAME="SEE_ALSO">SEE ALSO</A></H1>
+<PRE>
+ detail of v6eval tool option: see perldoc V6evalTool.pm, perldoc V6evalRemote.pm
+</PRE>
+
+</BODY>
+
+</HTML>

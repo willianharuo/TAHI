@@ -1,0 +1,417 @@
+#!/usr/bin/perl
+#
+# Copyright (C) 1999, 2000, 2001, 2002, 2003 Yokogawa Electric Corporation,
+# IPA (Information-technology Promotion Agency, Japan).
+# All rights reserved.
+# 
+# Redistribution and use of this software in source and binary forms, with 
+# or without modification, are permitted provided that the following 
+# conditions and disclaimer are agreed and accepted by the user:
+# 
+# 1. Redistributions of source code must retain the above copyright 
+# notice, this list of conditions and the following disclaimer.
+# 
+# 2. Redistributions in binary form must reproduce the above copyright 
+# notice, this list of conditions and the following disclaimer in the 
+# documentation and/or other materials provided with the distribution.
+# 
+# 3. Neither the names of the copyrighters, the name of the project which 
+# is related to this software (hereinafter referred to as "project") nor 
+# the names of the contributors may be used to endorse or promote products 
+# derived from this software without specific prior written permission.
+# 
+# 4. No merchantable use may be permitted without prior written 
+# notification to the copyrighters. However, using this software for the 
+# purpose of testing or evaluating any products including merchantable 
+# products may be permitted without any notification to the copyrighters.
+# 
+# 
+# 
+# THIS SOFTWARE IS PROVIDED BY THE COPYRIGHTERS, THE PROJECT AND 
+# CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING 
+# BUT NOT LIMITED THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS 
+# FOR A PARTICULAR PURPOSE, ARE DISCLAIMED.  IN NO EVENT SHALL THE 
+# COPYRIGHTERS, THE PROJECT OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, 
+# INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES 
+# (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR 
+# SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) 
+# HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN 
+# CONTRACT,STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) 
+# ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF 
+# THE POSSIBILITY OF SUCH DAMAGE.
+#
+# $TAHI: ct/nd/hostRecvRaNHD.seq,v 1.24 2002/02/27 01:08:25 masaxmasa Exp $
+
+########################################################################
+BEGIN { $V6evalTool::TestVersion = '$Name: REL_2_1_1 $ '; }
+ 
+use V6evalTool;
+use nd;
+sub checkNHD($);
+
+ndOptions(@ARGV);
+
+# The following generate debugging messages.
+$nd::debug=$ndOpt_v|$ndOpt_vv;
+
+# You can specifies debug options to a remote control program.
+# If you want to know more detail, please see the following:
+# - V6evalTool.pm: perldoc V6evalTool
+# - V6evalRemote.pm: perldoc V6evalRemote
+$nd::remote_debug="-o1" if $ndOpt_vv;
+
+$IF=Link0;
+
+$wait_dad=3;
+$wait_echo=2;
+
+#
+#
+#
+%pktdesc=(
+	  ra_tn2allnode_sll_lp => 'Send RA w/ RL=0, w/o Prefix',
+	  ra_tn2allnode_sll_Lp => 'Send RA w/ RL=600, w/o Prefix',
+	  ra_tn2allnode_sll_lP => 'Send RA w/ RL=0, w/ Prefix',
+	  );
+
+@ra_name=(
+	  ra_tn2allnode_sll_lp,
+	  ra_tn2allnode_sll_Lp,
+	  ra_tn2allnode_sll_lP,
+	  );
+@ra_title=(
+	   "Prefix List: empty     / Default Router List: empty",
+	   "Prefix List: empty     / Default Router List: NOT empty",
+	   "Prefix List: NOT empty / Default Router List: empty",
+	   );
+@ra_expect=(
+	    "on-link",
+	    "off-link",
+	    "on-link",
+	    );
+
+@ra_bin=(
+	 $V6evalTool::exitWarn,
+	 $V6evalTool::exitWarn,
+	 $V6evalTool::exitWarn,
+	 );
+
+#
+#
+#
+$type=$V6evalTool::NutDef{Type};
+if($type eq router) {
+    vLogHTML("This test is for the host only<BR>");
+    exit $V6evalTool::exitHostOnly;
+}
+
+$type=$V6evalTool::NutDef{Type};
+if($type ne host) {
+    vLogHTML(ndErrmsg("ERROR: $V6evalTool::NutDef{Type}: ".
+		      "Unknown target type<BR>"));
+    exit $V6evalTool::exitFail;
+}
+
+#
+#
+#
+vCapture($IF);
+
+#
+#
+#
+$exit_rtn=$V6evalTool::exitPass;
+$idx=0;
+foreach(@ra_name) {
+    vLogHTML("<HR>");
+    vLogHTML("<FONT SIZE=\"+2\">*** @ra_title[$idx] ***</FONT><BR>");
+    my($r)=checkNHD($_);
+    $title{$idx}="<TD>$ra_title[$idx]</TD>".
+	"<TD>exp:$ra_expect[$idx]</TD><TD>result:$r</TD>";
+    vLogHTML("Expect: $ra_expect[$idx], Result: $r<BR>");
+    if($r eq $ra_expect[$idx]) {
+	vLogHTML("<A NAME=\"T$idx\">*** OK ***</A><BR>");
+	$result{$idx}=$V6evalTool::exitPass;
+    } else {
+	vLogHTML("<A NAME=\"T$idx\">".ndErrmsg("*** NG ***")."</A><BR>");
+	$exit_rtn=$exit_rtn < $ra_bin[$idx] ? $ra_bin[$idx] : $exit_rtn;
+	$result{$idx}=$ra_bin[$idx];
+    }
+    $idx++;
+}
+$idx--;
+
+#
+#
+#
+clear();
+
+#
+#
+#
+@col=('PTN', 'EXP', 'RESULT');
+ndPrintSummaryHTML("*** Test Summary: Next-hop Determination ***", @col,
+                   %title, %result, $idx);
+
+#
+#
+#
+vLogHTML("*** EOT ***<BR>");
+exit $exit_rtn;
+
+error:
+    clear();
+    vLogHTML(vErrmsg(%ret)."<BR>");
+    vLogHTML(ndErrmsg("*** NG ***<BR>"));
+    exit $V6evalTool::exitFail;
+
+sub checkNHD($)
+{
+    my($ra)=@_;
+    my($s, %ret);
+
+    vLogHTML("<FONT SIZE=\"+1\">Initialization</FONT><BR>");
+
+    goto error if ndClearPrefix() != 0;
+    goto error if ndClearDefr() != 0;
+#    goto error if nd2NoNce($IF) != 0;
+    vClear($IF);
+
+    vSend($IF, $ra);
+
+    vLogHTML("Wait for DAD NSs<BR>");
+    vRecv($IF, $wait_dad, 0, 0);
+
+    $pktdesc{unicast_na_tn2nut_RSO_tll}='Send NA to force TN to be REACHABLE';
+    vSend($IF, unicast_na_tn2nut_RSO_tll);
+
+    vLogHTML("<FONT SIZE=\"+1\">Test</FONT><BR>");
+
+    $pktdesc{echo_request_x2nut}='Send echo-request';
+    %ret=vSend($IF, echo_request_x2nut);
+    goto error if $ret{status} != 0;
+
+    $pktdesc{multicast_ns_nut2xsolnode}='Got multicast NS for the address';
+    $pktdesc{echo_reply_nut2x}='Got an echo-reply that was forwarded to TN';
+    %ret=vRecv($IF, $wait_echo, 0, 1,
+	       multicast_ns_nut2xsolnode,
+	       echo_reply_nut2x,
+	       );
+    if($ret{status} == 1) {
+	vLogHTML("Not received any packet<BR>");
+	$s="Discarded";
+    } elsif($ret{status} != 0) {
+	goto error;
+    } elsif($ret{recvFrame} eq multicast_ns_nut2xsolnode) {
+	$s="on-link";
+    } elsif($ret{recvFrame} eq echo_reply_nut2x) {
+	$s="off-link";
+    }
+    return($s);
+
+error:
+    clear();
+    vLogHTML(vErrmsg(%ret)."<BR>");
+    vLogHTML(ndErrmsg("*** NG ***<BR>"));
+    exit $V6evalTool::exitFail;
+}
+
+sub clear()
+{
+    vLogHTML("<HR><FONT SIZE=\"+1\">Termination</FONT><BR>");
+    $pktdesc{ra_tn2allnode_sll_lp}='Clear the Default Router List';
+    vSend($IF, ra_tn2allnode_sll_lp);
+}
+########################################################################
+__END__
+
+=head1 NAME
+
+hostRecvRaNHD - Verifying net-hop determination
+
+=head1 TARGET
+
+Host only
+
+=head1 SYNOPSIS
+
+  hostRecvRaNHD.seq [-tooloption ...] -p hostRecvRaNHD.def
+
+=head1 INITIALIZATION
+
+=begin html
+<OL>
+  <LI>Clear the Prefix List that was learned by RAs.
+  <LI>Clear the Default Router List.
+  <LI>Set its state to REACHABLE.
+  <LI><A HREF="#JDG1">The Router Lifetime of a RA is ether 0 or 600.</A>
+  <LI><A HREF="#JDG1">A RA includes or excludes a prefix option.</A>
+</OL>
+<PRE>
+  TN                 NUT
+  ----------------------
+<BR>
+  State: NONCE (for TN)
+<BR>
+  ==== unsolicited RA ===>
+       src=TN's link-local
+       dst=all-node
+       M=0, O=0
+       <B>RouterLifetime=0 or 600</B>
+       ReachableTime=0
+       RetransTimer=0
+       w/ SLLA
+       <B>w/o Prefix option or Prefix Option:
+           L=1, A=1
+           ValidLifetime=2592000
+           PreferredLifetime=604800
+           Prefix=3ffe:501:ffff:100::/64</B>
+<BR>
+  State: STALE (for TN)
+<BR>
+  <=== Ns for DAD (if any) ====
+       src=unspecified
+       dst=solicited-node[NUT's global, prefix=3ffe:501:ffff:100::/64]
+       target=NUT's global
+<BR>
+  Wait (3 sec)
+<BR>
+  ==== solicited NA ===>
+        src=TN's link-local
+        dst=NUT's link-local
+        R=1, S=1, O=1
+        target=TN's link-local
+        TLLA=TN's LLA
+<BR>
+  State: REACHABLE (for TN)
+</PRE>
+
+=head1 TEST PROCEDURE
+
+=begin html
+<B>hostRecvRaNHD</B> verifies next-hop determination for an unicast address:
+<UL>
+  <LI><A HREF="#Off_link">A case where a given address should be off-link</A>
+  <LI><A HREF="#On_link">A cast where a given address should be on-link</A>
+</UL>
+
+=head2 Off-link
+
+=begin html
+<PRE>
+  TN               NUT
+  ----------------------
+<BR>
+  State: REACHABLE (for TN)
+<BR>
+  ==== echo-request ===>
+       src=off-link global, but LLA is TN's one
+       dst=NUT's global
+<BR>
+  <=== <A HREF="#JDG2">Judgment #2</A>: echo-reply ====
+       src=NUT's global
+       dst=off-link global, but LLA is TN's one
+<BR>
+</PER>
+
+=end html
+
+=head2 On-link
+
+=begin html
+<PRE>
+  TN               NUT
+  ----------------------
+<BR>
+  State: REACHABLE (for TN)
+<BR>
+  ==== echo-request ===>
+       src=off-link global, but LLA is TN's one
+       dst=NUT's global
+<BR>
+  <=== <A HREF="#JDG3">Judgment #3</A>: multicast NS ====
+        src=NUT's link-local
+        dst=solicited-node[off-link global]
+        target=off-link global
+        w/ SLLA
+</PER>
+
+=end html
+
+=head1 JUDGMENT
+
+=begin html
+<PRE>
+1. Next-hop determination
+<A NAME="JDG1"></A>
+<HR>
+5.2.  Conceptual Sending Algorithm
+<BR>
+     Next-hop determination for a given unicast destination operates as
+     follows.  NUT performs a longest prefix match against the
+     Prefix List to determine whether the packet's destination is on- or
+     off-link.  If the destination is on-link, the next-hop address is the
+     same as the packet's destination address.  Otherwise, NUT
+     selects a router from the Default Router List.  <B>If the Default Router
+     List is empty, NUT assumes that the destination is on-link.</B>
+<HR>
+  =========+========+==========================================
+  RA received       | NUT
+  by NUT            |
+  ---------+--------+-----------------+-------------+---------
+  Prefix   |Router  | The Prefix List | The Default | Next Hop
+  Option   |Lifetime|                 | Router List |
+  =========+========+=================+=============+==========
+  none     | 0      | empty           | empty       | <A HREF="#NOTE1">on-link</A>
+  ---------+--------+-----------------+-------------+----------
+  none     | 600    | empty           | NOT empty   | <A HREF="#NOTE2">off-link</A>
+  ---------+--------+-----------------+-------------+----------
+  exist    | 0      | NOT empty       | empty       | <A HREF="#NOTE1">on-link</A>
+  =========+========+=================+=============+==========
+<BR>
+<A NAME="JDG2"></A>
+  2. NUT throws an echo-reply to the default router (i.e. TN)
+     because the given address should be off-link.
+<BR>
+<A NAME="JDG3"></A>
+  3. NUT sends multicast NSs for the given address
+     because <A HREF="#NOTE1">it should be on-link</A>.
+</PRE>
+
+=end html
+
+=head1 TERMINATION
+
+  Send RA with RouterLifetime=0 to clear the Default Router List.
+
+  Clear the Prefix List and the Default Router List by remote commands. XXX
+
+=head1 NOTE
+
+=for html <A NAME="NOTE1"></A>
+
+  1. RFC2461 describes that a host assumes the destination is on-link
+     if the Default Router List is empty. However, it also describes
+     that multihomed related issues are not concerned.
+     It is also one of the issues that a host assumes an address is
+     on-link if the Default Router List is empty. This test judges
+     NUT "WARN" instead of "FAIL" in such case.
+
+=for html <A NAME="NOTE2"></A>
+
+  2. The echo request that NUT captures has an off-link source address
+     and a link-local source address. It is reasonable for NUT not to
+     throw the echo-reply to the default router because its source
+     address is a link-local. This test judges NUT "WARN" instead of "FAIL"
+     in such case.
+
+  3. The test invokes the following command:
+     - Clear the Prefix List
+     - Clear the Default Router List
+
+=head1 SEE ALSO
+
+  perldoc V6evalTool
+  perldoc V6evalRemote
+
+=cut

@@ -1,0 +1,555 @@
+#!/usr/bin/perl
+#
+# Copyright (C) 1999, 2000, 2001, 2002, 2003 Yokogawa Electric Corporation,
+# IPA (Information-technology Promotion Agency, Japan).
+# All rights reserved.
+# 
+# Redistribution and use of this software in source and binary forms, with 
+# or without modification, are permitted provided that the following 
+# conditions and disclaimer are agreed and accepted by the user:
+# 
+# 1. Redistributions of source code must retain the above copyright 
+# notice, this list of conditions and the following disclaimer.
+# 
+# 2. Redistributions in binary form must reproduce the above copyright 
+# notice, this list of conditions and the following disclaimer in the 
+# documentation and/or other materials provided with the distribution.
+# 
+# 3. Neither the names of the copyrighters, the name of the project which 
+# is related to this software (hereinafter referred to as "project") nor 
+# the names of the contributors may be used to endorse or promote products 
+# derived from this software without specific prior written permission.
+# 
+# 4. No merchantable use may be permitted without prior written 
+# notification to the copyrighters. However, using this software for the 
+# purpose of testing or evaluating any products including merchantable 
+# products may be permitted without any notification to the copyrighters.
+# 
+# 
+# 
+# THIS SOFTWARE IS PROVIDED BY THE COPYRIGHTERS, THE PROJECT AND 
+# CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING 
+# BUT NOT LIMITED THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS 
+# FOR A PARTICULAR PURPOSE, ARE DISCLAIMED.  IN NO EVENT SHALL THE 
+# COPYRIGHTERS, THE PROJECT OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, 
+# INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES 
+# (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR 
+# SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) 
+# HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN 
+# CONTRACT,STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) 
+# ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF 
+# THE POSSIBILITY OF SUCH DAMAGE.
+#
+# $TAHI: ct/nd/ncStateByRedirect4Stale.seq,v 1.28 2002/02/27 01:08:27 masaxmasa Exp $
+
+########################################################################
+BEGIN { $V6evalTool::TestVersion = '$Name: REL_2_1_1 $ '; }
+ 
+use V6evalTool;
+use nd;
+use hostRedirect;
+
+ndOptions(@ARGV);
+
+# The following generate debugging messages.
+$nd::debug=$ndOpt_v|$ndOpt_vv;
+
+# You can specifies debug options to a remote control program.
+# If you want to know more detail, please see the following:
+# - V6evalTool.pm: perldoc V6evalTool
+# - V6evalRemote.pm: perldoc V6evalRemote
+$nd::remote_debug="-o1" if $ndOpt_vv;
+
+$IF=Link0;
+$exit_rtn=$V6evalTool::exitPass;
+
+#
+#
+#
+$type=$V6evalTool::NutDef{Type};
+if($type eq router) {
+    vLogHTML("This test is for the host only<BR>");
+    exit $V6evalTool::exitHostOnly;
+}
+
+$type=$V6evalTool::NutDef{Type};
+if($type ne host) {
+    vLogHTML(ndErrmsg("ERROR: $V6evalTool::NutDef{Type}: ".
+		      "Unknown target type<BR>"));
+    exit $V6evalTool::exitFail;
+}
+
+#
+# sub test definition:
+# - sending pattern,
+# - SLLA vs cached LLA
+# - expected state
+# - message
+#
+$idx_ptn=0;
+$idx_lla=1;
+$idx_exp=2;
+$idx_explla=3;
+$idx_msg=4;
+$idx_inc_ip=5;
+$idx_prb_ip=6;
+$idx_rpy_ip=7;
+$idx_ign_ip=8;
+$idx_non_n=9;
+$idx_rpy_n=10;
+$idx_ign_n=11;
+$idx_stl_sr=12;
+$idx_ign_sr=13;
+@null=();
+
+#
+@def_RDredirect_rone2nut=
+    (
+     RDredirect_rone2nut,
+     same,
+     STALE,
+     unchanged,
+     'Redirect w/o TLL',
+     \@null, \@null, \@null, \@null,
+     \@null, \@null, \@null,
+     \@null, \@null
+     );
+
+#
+@def_RDredirect_rone2nut_tll=
+    (
+     RDredirect_rone2nut_tll,
+     same,
+     STALE,
+     unchanged,
+     'Redirect w/ TLL',
+     \@null, \@null, \@null, \@null,
+     \@null, \@null, \@null,
+     \@null, \@null
+     );
+
+#
+@def_RDredirect_rone2nut_tll_diff=
+    (
+     RDredirect_rone2nut_tll,
+     diff,
+     STALE,
+     updated,
+     'Redirect w/ TLL(diff. LLA)',
+     \@null, \@null, \@null, \@null,
+     \@null, \@null, \@null,
+     \@null, \@null
+     );
+
+#
+@def_RDredirect_rone2nut_tll_rd1280_diff=
+    (
+     RDredirect_rone2nut_tll_rd1280,
+     diff,
+     STALE,
+     updated,
+     'Redirect w/ TLL(diff. LLA), w/ RDed(1280)',
+     \@null, \@null, \@null, \@null,
+     \@null, \@null, \@null,
+     \@null, \@null
+     );
+
+#
+@def_RDredirect_rone2nut_tll_rd1288_diff=
+    (
+     RDredirect_rone2nut_tll_rd1288,
+     diff,
+     STALE,
+     updated,
+     'Redirect w/ TLL(diff. LLA), RDed(>1280)',
+     \@null, \@null, \@null, \@null,
+     \@null, \@null, \@null,
+     \@null, \@null
+     );
+
+#
+@defs=
+    (
+     \@def_RDredirect_rone2nut,
+     \@def_RDredirect_rone2nut_tll,
+     \@def_RDredirect_rone2nut_tll_diff,
+     \@def_RDredirect_rone2nut_tll_rd1280_diff,
+     \@def_RDredirect_rone2nut_tll_rd1288_diff,
+     );
+
+#
+#
+#
+vCapture($IF);
+
+#
+#
+#
+$idx=0;
+foreach(@defs) {
+    $exp=@$_[$idx_exp];
+    $explla=@$_[$idx_explla];
+    $msg=@$_[$idx_msg];
+    vLogHTML("<HR>");
+    vLogHTML("<FONT SIZE=\"+2\">*** STALE vs. $msg ***</FONT><BR>");
+    $s=checkState($_);
+    $c=ndCachedLLA($explla);
+    if($s eq $exp && $c eq $explla) {
+        $result{$idx}=$V6evalTool::exitPass;
+        vLogHTML("<A NAME=\"T$idx\">OK: The target was $s/$c</A><BR>");
+    } else {
+        $exit_rtn=$V6evalTool::exitFail;
+        $result{$idx}=$exit_rtn;
+        vLogHTML("<A NAME=\"T$idx\">".
+		 ndErrmsg("NG: The target was $s/$c")."</A><BR>");
+    }
+    $title{$idx}="<TD>$msg</TD><TD>exp:$exp/$explla</TD><TD>result:$s/$c</TD>";
+    $idx++;
+
+    vLogHTML("<HR><FONT SIZE=\"+1\">Termination</FONT><BR>");
+    $pktdesc{RDredirect_tn2nut}=
+	"Reset the Destination Cache entry for TN to router R1<BR>";
+    vSend($IF, RDredirect_tn2nut);
+    clear();
+}
+$idx--;
+
+#
+#
+#
+#clear();
+
+#
+#
+#
+@col=('PTN', 'EXP(State/Cached LLA)', 'RESULT(State/Cached LLA)');
+ndPrintSummaryHTML("*** Test Summary: STALE vs. Redirect ***", @col,
+                   %title, %result, $idx);
+
+#
+#
+#
+vLogHTML("*** EOT ***<BR>");
+exit $exit_rtn;
+
+#
+#
+#
+sub clear()
+{
+    vLogHTML("<HR><FONT SIZE=\"+1\">Termination</FONT><BR>");
+    rdClear($IF);
+}
+
+#
+#
+#
+sub checkState(\@) {
+    my($def)=@_;
+    my($ptn)=@$def[$idx_ptn];
+    my($lla)=@$def[$idx_lla];
+    my($exp)=@$def[$idx_exp];
+    my($msg)=@$def[$idx_msg];
+
+    my($inc_ip)=@$def[$idx_inc_ip];
+    my($prb_ip)=@$def[$idx_prb_ip];
+    my($rpy_ip)=@$def[$idx_rpy_ip];
+    my($ign_ip)=@$def[$idx_ign_ip];
+
+    my($non_n)=@$def[$idx_non_n];
+    my($rpy_n)=@$def[$idx_rpy_n];
+    my($ign_n)=@$def[$idx_ign_n];
+
+    my($stl_sr)=@$def[$idx_stl_sr];
+    my($ign_sr)=@$def[$idx_ign_sr];
+
+    vLogHTML("<FONT SIZE=\"+1\">Initialization</FONT><BR>");
+    if($lla eq same) {
+        goto error if rd2Stale($IF) != 0;
+    } else {
+        goto error if rd2StaleZ($IF) != 0;
+    }
+    vClear($IF);
+ 
+    vLogHTML("<FONT SIZE=\"+1\">Test</FONT><BR>");
+    my(%ret)=$pktdesc{$ptn}="Send $msg";
+    vSend($IF, $ptn);
+    my($s)=ndStatusNum2Str(ndStatus(
+                                    $IF, $ret{sentTime1},
+                                    @$inc_ip, @$prb_ip, @$rpy_ip, @$ign_ip,
+                                    @$non_n, @$rpy_n, @$ign_n,
+                                    @$stl_sr, @$ign_sr,
+                                    )
+                       );
+    return $s;
+
+error:
+    return("ERROR");
+}
+
+########################################################################
+__END__
+
+=head1 NAME
+
+ncStateByRedirect4Stale - Verifying State Machine: Redirect vs. STALE
+
+=head1 TARGET
+
+Host only
+
+=head1 SYNOPSIS
+
+  ncStateByRedirect4Stale.seq [-tooloption ...] -p ncStateByRedirect4Stale.def
+
+=head1 INITIALIZATION
+
+=begin html
+<OL>
+  <LI>Set R1 as the default router by sending RA and NA.
+  <LI>Set TN's Neighbor Cache State to STALE.
+  <LI>Cache either <A HREF="#Cache_a_LLA_of_TN">TN's LLA</A>, or
+      <A HREF="#Cache_a_bogus_LLA">a bogus LLA</A>
+</OL>
+<BR>
+
+=end html
+
+=head2 Cache a LLA of TN
+
+=begin html
+<PRE>
+  TN                 NUT
+  ----------------------
+<BR>
+  State: NONCE (for all)
+<BR>
+  ==== unsolicited RA ===>
+       src=R1's link-local
+       dst=all-node
+       M=0, O=0
+       RouterLifetime=600
+       ReachableTime=0
+       RetransTimer=0
+       w/ SLLA
+       Prefix Option:
+           L=1, A=1
+           ValidLifetime=2592000
+           PreferredLifetime=604800
+           Prefix=3ffe:501:ffff:100::/64
+<BR>
+  State: STALE (for R1), NONCE (for TN)
+<BR>
+  ==== solicited NA ===>
+        src=R1's link-local
+        dst=NUT's link-local
+        R=1, S=1, O=1
+        target=R1's link-local
+        TLLA=R1's LLA
+<BR>
+  State: REACHABLE (for R1), NONCE (for TN)
+<BR>
+  Wait (3 sec) for DAD NS
+<BR>
+  ==== unsolicited RA ===>
+       src=TN's link-local
+       dst=all-node
+       M=0, O=0
+       RouterLifetime=600
+       ReachableTime=0
+       RetransTimer=0
+       w/ SLLA
+       Prefix Option:
+           L=1, A=1
+           ValidLifetime=2592000
+           PreferredLifetime=604800
+           Prefix=3ffe:501:ffff:100::/64
+<BR>
+  State: REACHABLE (for R1), STALE (for TN)
+<BR>
+  ==== solicited NA ===>
+        src=TN's link-local
+        dst=NUT's link-local
+        R=1, S=1, O=1
+        target=R1's link-local
+        <B>TLLA=TN's LLA</B>
+<BR>
+  State: REACHABLE (for R1), REACHABLE (for TN)
+<BR>
+  Wait (REACHABLE_TIME * MAX_RANDOM_FACTOR)
+<BR>
+  State: REACHABLE (for R1), STALE (for TN)
+</PRE>
+
+=end html
+
+=head2 Cache a bogus LLA
+
+=begin html
+<PRE>
+  TN                 NUT
+  ----------------------
+<BR>
+  State: NONCE (for all)
+<BR>
+  ==== unsolicited RA ===>
+       src=R1's link-local
+       dst=all-node
+       M=0, O=0
+       RouterLifetime=600
+       ReachableTime=0
+       RetransTimer=0
+       w/ SLLA
+       Prefix Option:
+           L=1, A=1
+           ValidLifetime=2592000
+           PreferredLifetime=604800
+           Prefix=3ffe:501:ffff:100::/64
+<BR>
+  State: STALE (for R1), NONCE (for TN)
+<BR>
+  ==== solicited NA ===>
+        src=R1's link-local
+        dst=NUT's link-local
+        R=1, S=1, O=1
+        target=R1's link-local
+        TLLA=R1's LLA
+<BR>
+  State: REACHABLE (for R1), NONCE (for TN)
+<BR>
+  Wait (3 sec) for DAD NS
+<BR>
+  ==== unsolicited RA ===>
+       src=TN's link-local
+       dst=all-node
+       M=0, O=0
+       RouterLifetime=600
+       ReachableTime=0
+       RetransTimer=0
+       w/ SLLA
+       Prefix Option:
+           L=1, A=1
+           ValidLifetime=2592000
+           PreferredLifetime=604800
+           Prefix=3ffe:501:ffff:100::/64
+<BR>
+  State: REACHABLE (for R1), STALE (for TN)
+<BR>
+  ==== solicited NA ===>
+        src=TN's link-local
+        dst=NUT's link-local
+        R=1, S=1, O=1
+        target=R1's link-local
+        <B>TLLA=bogus LLA</B>
+<BR>
+  State: REACHABLE (for R1), REACHABLE (for TN)
+<BR>
+  Wait (REACHABLE_TIME * MAX_RANDOM_FACTOR)
+<BR>
+  State: REACHABLE (for R1), STALE (for TN)
+</PRE>
+
+=end html
+
+=head1 TEST PROCEDURE
+
+B<ncStateByRedirect4Stale> verifies that state transition for a NUT
+in STALE state when receiving a Redirect.
+
+=begin html
+<PRE>
+  TN               NUT
+  ----------------------
+<BR>
+  State: REACHABLE (for R1), STALE (for TN)
+<BR>
+  ==== <A HREF="#JDG1">Redirect</A> ===>
+      src=R1's link-local
+      dst=NUT's link-local
+      icmp target=TN's link-local
+      icmp dst=H1's global
+      w/ or w/o TLL option (i.e. TN's LLA)
+      w/ or w/o Redirected header option
+<BR>
+  <A HREF="#JDG1">Judgment</A>: <A HREF="nd.html">Examining NUT's neighbor cache state</A>
+</PRE>
+
+=end html
+
+=head1 JUDGMENT
+
+=begin html
+<A NAME="JDG1"></A>
+<PRE>
+<HR>
+8.3.  Host Specification
+<BR>
+   <A NAME="NO_TLL"><B>If the redirect contains a Target Link-Layer Address option the host
+   either creates or updates the Neighbor Cache entry for the target.</A></B>
+   In both cases the cached link-layer address is copied from the Target
+   Link-Layer Address option.  If a Neighbor Cache entry is created for
+   the target its reachability state MUST be set to STALE as specified
+   in Section 7.3.3.  <A NAME="STATE_A"><B>If a cache entry already existed and it is updated
+   with a different link-layer address, its reachability state MUST also
+   be set to STALE.</A></B>  <A NAME="STATE_B"><B>If the link-layer address is the same as that
+   already in the cache, the cache entry's state remains unchanged.</A></B>
+<HR>
+  =====================+=====================+===========+=============================
+  IP                   |ICMP                 |Option     |NC state
+  ----------+----------+----------+----------+-----+-----+---------+---------+---------
+  Src       |Dst       |Target    |Dst       |TLLA |R'ed |Current   |New      |LLA
+  ==========+==========+==========+==========+=====+=====+=========+=========+=========
+  R1's      |NUT's     |TN's      |H1's      |none |none |STALE    |<A HREF="#NO_TLL">STALE    |unchanged</A>
+  link-local|link-local|link-local|global    |     |     |         |         |
+  ----------+----------+----------+----------+-----+-----+---------+---------+---------
+  R1's      |NUT's     |TN's      |H1's      |same |none |STALE    |<A HREF="#STATE_B">STALE    |unchanged</A>
+  link-local|link-local|link-local|global    |     |     |         |         |
+  ----------+----------+----------+----------+-----+-----+---------+---------+---------
+  R1's      |NUT's     |TN's      |H1's      |diff.|none |STALE    |<A HREF="#STATE_A">STALE    |updated</A>
+  link-local|link-local|link-local|global    |     |     |         |         |
+  ----------+----------+----------+----------+-----+-----+---------+---------+---------
+  R1's      |NUT's     |TN's      |H1's      |diff.|exist|STALE    |<A HREF="#STATE_A">STALE    |updated</A>
+  link-local|link-local|link-local|global    |     |     |         |         |
+  ----------+----------+----------+----------+-----+-----+---------+---------+---------
+  R1's      |NUT's     |TN's      |H1's      |diff.|exist|STALE    |<A HREF="#STATE_A">STALE    |updated</A>
+  link-local|link-local|link-local|global    |     |>1280|         |         |
+  ==========+==========+==========+==========+=====+=====+=========+=========+=========
+</PRE>
+
+=end html
+
+=head1 TERMINATION
+
+=begin html
+<PRE>
+  TN               NUT
+  ----------------------
+<BR>
+  State: any (for TN)
+<BR>
+  ==== Redirect ===>
+      src=TN's link-local
+      dst=NUT's link-local
+      icmp target=R1's link-local
+      icmp dst=H1's global
+      w/o TLL option
+      w/o Redirected header option
+<BR>
+  ==== RA (at the end of the test) ===>
+      src=R1's link-local
+      dst=allnode
+      RouterLifetime=0
+</PRE>
+
+=end html
+
+=head1 NOTE
+
+  The test does not invoke any remote command.
+
+=head1 SEE ALSO
+
+  perldoc V6evalTool
+  perldoc V6evalRemote
+
+=cut

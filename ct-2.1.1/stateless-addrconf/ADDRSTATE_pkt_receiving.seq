@@ -1,0 +1,391 @@
+#!/usr/bin/perl
+#
+# Copyright (C) 1999, 2000, 2001, 2002, 2003 Yokogawa Electric Corporation,
+# IPA (Information-technology Promotion Agency, Japan).
+# All rights reserved.
+# 
+# Redistribution and use of this software in source and binary forms, with 
+# or without modification, are permitted provided that the following 
+# conditions and disclaimer are agreed and accepted by the user:
+# 
+# 1. Redistributions of source code must retain the above copyright 
+# notice, this list of conditions and the following disclaimer.
+# 
+# 2. Redistributions in binary form must reproduce the above copyright 
+# notice, this list of conditions and the following disclaimer in the 
+# documentation and/or other materials provided with the distribution.
+# 
+# 3. Neither the names of the copyrighters, the name of the project which 
+# is related to this software (hereinafter referred to as "project") nor 
+# the names of the contributors may be used to endorse or promote products 
+# derived from this software without specific prior written permission.
+# 
+# 4. No merchantable use may be permitted without prior written 
+# notification to the copyrighters. However, using this software for the 
+# purpose of testing or evaluating any products including merchantable 
+# products may be permitted without any notification to the copyrighters.
+# 
+# 
+# 
+# THIS SOFTWARE IS PROVIDED BY THE COPYRIGHTERS, THE PROJECT AND 
+# CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING 
+# BUT NOT LIMITED THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS 
+# FOR A PARTICULAR PURPOSE, ARE DISCLAIMED.  IN NO EVENT SHALL THE 
+# COPYRIGHTERS, THE PROJECT OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, 
+# INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES 
+# (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR 
+# SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) 
+# HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN 
+# CONTRACT,STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) 
+# ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF 
+# THE POSSIBILITY OF SUCH DAMAGE.
+#
+# $TAHI: ct/stateless-addrconf/ADDRSTATE_pkt_receiving.seq,v 1.24 2003/04/21 05:30:39 akisada Exp $
+
+########################################################################
+BEGIN { $V6evalTool::TestVersion = '$Name: REL_2_1_1 $ '; }
+use V6evalTool;
+use DAD;
+
+#----- get sequence arguments
+$howto_initNUT="none";
+$send = "ok";
+foreach (@ARGV) {
+    /^addrconf=(\S+)/ && do {$DAD::howto_addrconf=$1; # How to configure address of NUT?
+                             next; };                 #    sample: boot, ra, manual+_GLOBAL0A0N_UCAST
+    /^init=(\S+)/     && do {$howto_initNUT=$1;       # How to initialize NUT?
+                             next; };                 #    sample: none, DADSuccess_boot, DADFail_boot
+    /^sd=(\S+)/       && do {$seqdebugopt=$1;         # sequence debug options
+                             next; };                 #    sample: qR
+    seqERROR("Unknown sequence option '$_'");
+}
+
+#----- test condition
+$IF=Link0;                 # network interface
+seqSetDADParam($seqdebugopt);
+
+#----- set %pktdesc
+seqSetPktdesc();
+
+#----- initialize NUT
+vLog("*** Target initialization phase ***");
+seqInitNUT($IF, $howto_initNUT);
+
+#----- start Capturing
+vLog("*** Target testing phase ***");
+vCapture($IF);
+
+#----- Configure Address on NUT
+seqConfAddrNUT($IF);
+
+
+#----- wait a DAD NS comming from NUT
+%ret=seqWaitDADNSfromNUT($IF);
+
+
+#----- if received frame is a DAD NS
+if( $ret{status} == 0) {
+    vLog("TN received the DAD NS sends from NUT.");
+    #----- wait for NUT to finish DAD
+    vSleep($DAD::RetransTimerSec, 
+	   "Wait for NUT to finish DAD. ($DAD::RetransTimerSec [sec])");
+
+}elsif( $ret{status} == 1 ) {
+    #----- timeout
+    vLog("TN received no DAD NS sends from NUT. It seems that NUT doesn't perform DAD process.");
+}else{
+    #----- error
+    seqERROR(vErrmsg(%ret)); #exit
+}
+
+#----- check if NUT's address is configured
+#seqWaitNUTbeReady();
+vSleep($DAD::RetransTimerSec);
+
+if (seqCheckNUTAddrConfigured($IF) eq TRUE) {
+    vLog("The address is configured (valid preferred).");
+}else{
+    vLog("The address is not configured although address must be valid preferred.");
+    seqNG();
+}
+
+vSleep(35, "Wait for NUT's address state becomes valid deprecated.");
+
+if (seqCheckNUTAddrConfigured($IF) eq TRUE) {
+    vLog("The address is configured (valid deprecated).");
+}else{
+    vLog("The address is not configured although address must be valid deprecated.");
+    seqNG();
+}
+
+vSleep(35, "Wait for NUT's address state becomes invalid.");
+
+if (seqCheckNUTAddrConfigured($IF) eq FALSE) {
+    vLog("The address is not configured (invalid).");
+    seqOK();
+}else{
+    vLog("The address is configured although address must be invalid.");
+    seqNG();
+}
+
+#end
+########################################################################
+__END__
+
+=head1 NAME
+
+ADDRSTATE_pkt_receiving - check packet receiving and address lifetime expiry
+
+=head1 TARGET
+
+Host
+
+=head1 SYNOPSIS
+
+ADDRSTATE_pkt_receiving.seq [-tooloption ...] -pkt <packetdef>
+ [addrconf=<addrconfname>] [init=<initname>,<initname>...] [sd=<sdopt>]
+
+  -tooloption   : v6eval tool option
+  <packetdef>   : packet definition file (v6eval tool option)
+  <addrconfname>: how to configure address on NUT; boot/manual+/ra
+  <initname>    : how to initialize NUT; DADSuccess_boot/DADFail_boot/ra
+  <sdopt>       : debug options
+
+=begin html
+<PRE>
+ detail of v6eval tool option: see perldoc V6evalTool.pm, perldoc V6evalRemote.pm
+ detail of parameters: see <A HREF="DAD.html">Test sequence for IPv6 Stateless Address Autoconfiguration</A>.
+</PRE>
+
+=end html
+
+
+=head1 INITIALIZATION
+
+=begin html
+<PRE>
+ detail of Initialization: see <A HREF="DAD.html">Test sequence for IPv6 Stateless Address Autoconfiguration</A>.
+</PRE>
+
+=end html
+
+=head1 TEST PROCEDURE
+
+ The following test is prepared in this test package. See INDEX file.
+
+B<Test for a Host>
+    Packet receiving and Global address lifetime expiry (valid preferred, valid deprecated, invalid)
+    Packet receiving and Site-local address lifetime expiry (valid preferred, valid deprecated, invalid)
+
+B<Test sequence>
+
+  TN(or X)	             NUT
+  ------------------------------
+  Initialize NUT (see ...)
+
+  Send Unsolicited RA to configure address of NUT (sequence parameter addrconf=ra)
+  ==== Action #1: Unsolicited RA ===>
+        name: usolra
+        src: TN's Link-local address
+        dst: allnodes multicast
+        SLL option exists
+        Prefix option
+              PrefixLength: 64
+	      LFlag: 1
+	      AFlag: 1
+	      ValidLifetime: 60
+	      PreferredLifetime: 30
+	      Prefix: <Prefix>
+
+  TN waits a DAD NS sent from NUT. (This judgement is informational only.)
+  <=== Judgement #1: DAD NS ====
+        name: dadns_from_NUT
+	src: ::0
+	dst: solnode[TargetAddress]
+        TargetAddress: NUT's tentative <Prefix> + interface-id
+
+  Wait for NUT to finish DAD. (sleep $RetransTimerSec=1 [sec])
+
+  Check if NUT's address is configured.
+  ==== Action #2: DAD NS ====>
+        name: chkconf_dadns_to_NUT
+	src: ::0
+	dst: solnode[TargetAddress]
+        TargetAddress: NUT's <Prefix> + interface-id
+
+  DAD NA come from NUT because NUT's address is configured (valid preferred).
+  <=== Judgement #2: DAD NA come====
+        name: chkconf_dadna_from_NUT (or chkconf_dadna_from_NUT_rf1 if NUT is a Router)
+	src: NUT's Link-local address or TargetAddress
+	dst: allnodes multicast
+        TargetAddress: NUT's <Prefix> + interface-id
+        OFlag: 1
+	RFlag: 0 ( if NUT is a Router then 1)
+
+  Wait for NUT's address state becomes valid deprecated. (sleep 35[sec])
+
+  Check if NUT's address is configured.
+  ==== Action #3: DAD NS ====>
+        name: chkconf_dadns_to_NUT
+	src: ::0
+	dst: solnode[TargetAddress]
+        TargetAddress: NUT's <Prefix> + interface-id
+
+  DAD NA come from NUT because NUT's address is configured (valid deprecated).
+  <=== Judgement #3: DAD NA come====
+        name: chkconf_dadna_from_NUT (or chkconf_dadna_from_NUT_rf1 if NUT is a Router)
+	src: NUT's Link-local address or TargetAddress
+	dst: allnodes multicast
+        TargetAddress: NUT's <Prefix> + interface-id
+        OFlag: 1
+	RFlag: 0 ( if NUT is a Router then 1)
+
+  Wait for NUT's address state becomes invalid. (sleep 35[sec])
+
+  Check if NUT's address is configured.
+  ==== Action #4: DAD NS ====>
+        name: chkconf_dadns_to_NUT
+	src: ::0
+	dst: solnode[TargetAddress]
+        TargetAddress: NUT's <Prefix> + interface-id
+
+  DAD NA does not come from NUT because NUT's address is not configured (invalid).
+  <=== Judgement #4: DAD NA does not come====
+        name: chkconf_dadna_from_NUT (or chkconf_dadna_from_NUT_rf1 if NUT is a Router)
+	src: NUT's Link-local address or TargetAddress
+	dst: allnodes multicast
+        TargetAddress: NUT's <Prefix> + interface-id
+        OFlag: 1
+	RFlag: 0 ( if NUT is a Router then 1)
+
+
+=head1 JUDGEMENT
+
+B<Test for a Host>
+
+B< Packet receiving and Global address lifetime expiry (valid preferred, valid deprecated, invalid)
+      -pkt GLOBAL0_valRA_vlt60plt30.def  addrconf=ra init=DADSuccess_boot>
+
+  TN(or X)	             NUT
+  ------------------------------
+  Send Unsolicited RA to configure address of NUT (sequence parameter addrconf=ra)
+  ==== Action #1: Unsolicited RA ===>
+        name: usolra
+        Prefix option
+	      ValidLifetime: 60
+	      PreferredLifetime: 30
+	      Prefix: _GLOBAL0_UCAST_PRFX
+
+  TN waits a DAD NS sent from NUT. (This judgement is informational only.)
+  <=== Judgement #1: DAD NS ====
+        name: dadns_from_NUT
+        TargetAddress: NUT's tentative _GLOBAL0_UCAST_PRFX + interface-id
+
+  Wait for NUT to finish DAD. (sleep $RetransTimerSec=1 [sec])
+
+  Check if NUT's address is configured.
+  ==== Action #2: DAD NS ====>
+        name: chkconf_dadns_to_NUT
+        TargetAddress: NUT's _GLOBAL0_UCAST_PRFX + interface-id
+
+  DAD NA come from NUT because NUT's address is configured (valid preferred).
+  <=== Judgement #2: DAD NA come====
+        name: chkconf_dadna_from_NUT (or chkconf_dadna_from_NUT_rf1 if NUT is a Router)
+        TargetAddress: NUT's _GLOBAL0_UCAST_PRFX + interface-id
+
+  Wait for NUT's address state becomes valid deprecated. (sleep 35[sec])
+
+  Check if NUT's address is configured.
+  ==== Action #3: DAD NS ====>
+        name: chkconf_dadns_to_NUT
+        TargetAddress: NUT's _GLOBAL0_UCAST_PRFX + interface-id
+
+  DAD NA come from NUT because NUT's address is configured (valid deprecated).
+  <=== Judgement #3: DAD NA come====
+        name: chkconf_dadna_from_NUT (or chkconf_dadna_from_NUT_rf1 if NUT is a Router)
+        TargetAddress: NUT's _GLOBAL0_UCAST_PRFX + interface-id
+
+  Wait for NUT's address state becomes invalid.
+
+  Check if NUT's address is configured.
+  ==== Action #4: DAD NS ====>
+        name: chkconf_dadns_to_NUT
+        TargetAddress: NUT's _GLOBAL0_UCAST_PRFX + interface-id
+
+  DAD NA does not come from NUT because NUT's address is not configured (invalid).
+  <=== Judgement #4: DAD NA does not come====
+        name: chkconf_dadna_from_NUT (or chkconf_dadna_from_NUT_rf1 if NUT is a Router)
+        TargetAddress: NUT's _GLOBAL0_UCAST_PRFX + interface-id
+
+
+
+B< Packet receiving and Site-local address lifetime expiry (valid preferred, valid deprecated, invalid)
+      -pkt SLOCAL0_valRA_vlt60plt30.def  addrconf=ra init=DADSuccess_boot>
+
+  TN(or X)	             NUT
+  ------------------------------
+  Send Unsolicited RA to configure address of NUT (sequence parameter addrconf=ra)
+  ==== Action #1: Unsolicited RA ===>
+        name: usolra
+        Prefix option
+	      ValidLifetime: 60
+	      PreferredLifetime: 30
+	      Prefix: _SLOCAL0_UCAST_PRFX
+
+  TN waits a DAD NS sent from NUT. (This judgement is informational only.)
+  <=== Judgement #1: DAD NS ====
+        name: dadns_from_NUT
+        TargetAddress: NUT's tentative _SLOCAL0_UCAST_PRFX + interface-id
+
+  Wait for NUT to finish DAD. (sleep $RetransTimerSec=1 [sec])
+
+  Check if NUT's address is configured.
+  ==== Action #2: DAD NS ====>
+        name: chkconf_dadns_to_NUT
+        TargetAddress: NUT's _SLOCAL0_UCAST_PRFX + interface-id
+
+  DAD NA come from NUT because NUT's address is configured (valid preferred).
+  <=== Judgement #2: DAD NA come====
+        name: chkconf_dadna_from_NUT (or chkconf_dadna_from_NUT_rf1 if NUT is a Router)
+        TargetAddress: NUT's _SLOCAL0_UCAST_PRFX + interface-id
+
+  Wait for NUT's address state becomes valid deprecated. (sleep 35[sec])
+
+  Check if NUT's address is configured.
+  ==== Action #3: DAD NS ====>
+        name: chkconf_dadns_to_NUT
+        TargetAddress: NUT's _SLOCAL0_UCAST_PRFX + interface-id
+
+  DAD NA come from NUT because NUT's address is configured (valid deprecated).
+  <=== Judgement #3: DAD NA come====
+        name: chkconf_dadna_from_NUT (or chkconf_dadna_from_NUT_rf1 if NUT is a Router)
+        TargetAddress: NUT's _SLOCAL0_UCAST_PRFX + interface-id
+
+  Wait for NUT's address state becomes invalid.
+
+  Check if NUT's address is configured.
+  ==== Action #4: DAD NS ====>
+        name: chkconf_dadns_to_NUT
+        TargetAddress: NUT's _SLOCAL0_UCAST_PRFX + interface-id
+
+  DAD NA does not come from NUT because NUT's address is not configured (invalid).
+  <=== Judgement #4: DAD NA does not come====
+        name: chkconf_dadna_from_NUT (or chkconf_dadna_from_NUT_rf1 if NUT is a Router)
+        TargetAddress: NUT's _SLOCAL0_UCAST_PRFX + interface-id
+
+
+=head1 SEE ALSO
+
+=begin html
+<PRE>
+ detail of v6eval tool option: see perldoc V6evalTool.pm, perldoc V6evalRemote.pm
+ detail of parameters: see <A HREF="DAD.html">Test sequence for IPv6 Stateless Address Autoconfiguration</A>.
+</PRE>
+
+=end html
+
+=cut
+
+
+
+

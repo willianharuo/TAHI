@@ -1,0 +1,227 @@
+<HTML>
+<HEAD>
+<TITLE>hostRecvRedirect4RouterLifetime0 - Verifying Redirect vs. RA w/ RouterLifetime=0</TITLE>
+<LINK REV="made" HREF="mailto:hackers@FreeBSD.org">
+</HEAD>
+
+<BODY>
+
+<!-- INDEX BEGIN -->
+<!--
+
+<UL>
+
+	<LI><A HREF="#NAME">NAME</A>
+	<LI><A HREF="#TARGET">TARGET</A>
+	<LI><A HREF="#SYNOPSIS">SYNOPSIS</A>
+	<LI><A HREF="#INITIALIZATION">INITIALIZATION</A>
+	<LI><A HREF="#TEST_PROCEDURE">TEST PROCEDURE</A>
+	<LI><A HREF="#JUDGMENT">JUDGMENT</A>
+	<LI><A HREF="#TERMINATION">TERMINATION</A>
+	<LI><A HREF="#NOTE">NOTE</A>
+	<LI><A HREF="#SEE_ALSO">SEE ALSO</A>
+</UL>
+-->
+<!-- INDEX END -->
+
+<P>
+<H1><A NAME="NAME">NAME</A></H1>
+<P>
+hostRecvRedirect4RouterLifetime0 - Verifying Redirect (to a better router)
+vs. RA w/ RouterLifetime=0
+
+<P>
+<HR>
+<H1><A NAME="TARGET">TARGET</A></H1>
+<P>
+Host only
+
+<P>
+<HR>
+<H1><A NAME="SYNOPSIS">SYNOPSIS</A></H1>
+<P>
+<PRE>  hostRecvRedirect4RouterLifetime0.seq [-tooloption ...]
+                                        -p hostRecvRedirect4RouterLifetime0.def
+</PRE>
+<P>
+<HR>
+<H1><A NAME="INITIALIZATION">INITIALIZATION</A></H1>
+<OL>
+  <LI>Clear IPv6 routes.
+  <LI>Set R1 as the default router by sending RA and NA.
+  <LI>Set TN as the second router by sending RA and NA.
+</OL>
+<BR>
+<PRE>
+  TN                 NUT
+  ----------------------
+<BR>
+  State: NONCE (for all)
+<BR>
+  ==== unsolicited RA ===>
+       src=R1's link-local
+       dst=all-node
+       M=0, O=0
+       RouterLifetime=600
+       ReachableTime=0
+       RetransTimer=0
+       w/ SLLA
+       Prefix Option:
+           L=1, A=1
+           ValidLifetime=2592000
+           PreferredLifetime=604800
+           Prefix=3ffe:501:ffff:100::/64
+<BR>
+  State: STALE (for R1), NONCE (for TN)
+<BR>
+  ==== solicited NA ===>
+        src=R1's link-local
+        dst=NUT's link-local
+        R=1, S=1, O=1
+        target=R1's link-local
+        TLLA=R1's LLA
+<BR>
+  State: REACHABLE (for R1), NONCE (for TN)
+<BR>
+  ==== unsolicited RA ===>
+       src=TN's link-local
+       dst=all-node
+       M=0, O=0
+       RouterLifetime=600
+       ReachableTime=0
+       RetransTimer=0
+       w/ SLLA
+       Prefix Option:
+           L=1, A=1
+           ValidLifetime=2592000
+           PreferredLifetime=604800
+           Prefix=3ffe:501:ffff:100::/64
+<BR>
+  State: REACHABLE (for R1), STALE (for TN)
+<BR>
+  ==== solicited NA ===>
+        src=TN's link-local
+        dst=NUT's link-local
+        R=1, S=1, O=1
+        target=TN's link-local
+        TLLA=TN's LLA
+<BR>
+  State: REACHABLE (for all)
+<BR>
+  Wait (3 sec) for DAD NS
+</PRE>
+
+<P>
+<HR>
+<H1><A NAME="TEST_PROCEDURE">TEST PROCEDURE</A></H1>
+<P>
+<STRONG>hostRecvRedirect4RouterLifetime0</STRONG> verifies that an entry of Destination Cache updated by a redirect message
+(ICMP Target != ICMP Destination) is removed by NA w/ RFlag=0.
+
+<P>
+<OL>
+  <LI>Send echo-request (src:H1, dst:NUT)
+  <LI>Verify that NUT send echo-reply to the default router, R1
+  <LI>Send redirect message to NUT.
+  <LI>Send echo-request (src:H1, dst:NUT) again.
+  <LI>Verify that NUT threw send echo-reply to the better router, TN.
+  <LI>Send RA whose RouterLifetime is 0.
+  <LI>Send echo-request (src:H1, dst:NUT) again.
+  <LI>Verify that NUT send echo-reply to the default router, R1
+</OL>
+<PRE>
+  TN               NUT
+  ----------------------
+<BR>
+  State: REACHABLE (for all)
+<BR>
+  ==== echo-request ===>
+       src=H1(off-link global), prefix=3ffe:501:ffff:109::/64,
+           but LLA is R1's one
+       dst=NUT's global, prefix=3ffe:501:ffff:100::/64
+<BR>
+  <=== <A HREF="#JDG1">Judgment #1</A>: echo-reply ====
+       src=NUT's global, prefix=3ffe:501:ffff:100::/64
+       dst=H1(off-link global), prefix=3ffe:501:ffff:109::/64,
+           but LLA is R1's one
+<BR>
+  ==== redirect ===>
+       src=R1's link-local
+       dst=NUT's link-local
+       icmp target=TN's link-local
+       icmp destination=H1's global
+       w/  TLLA
+       w/o Redirected header
+<BR>
+  ==== echo-request ===>
+       src=H1(off-link global), prefix=3ffe:501:ffff:109::/64,
+           but LLA is R1's one
+       dst=NUT's global, prefix=3ffe:501:ffff:100::/64
+<BR>
+  <=== <A HREF="#JDG2">Judgment #2</A>: echo-reply ====
+       src=NUT's global, prefix=3ffe:501:ffff:100::/64
+       dst=H1(off-link global), prefix=3ffe:501:ffff:109::/64,
+           but LLA is TN's one
+<BR>
+  ==== unsolicited RA ===>
+       src=TN's link-local
+       dst=all-node
+       M=0, O=0
+       RouterLifetime=0
+       ReachableTime=0
+       RetransTimer=0
+       w/ SLLA
+<BR>
+  ==== echo-request ===>
+       src=H1(off-link global), prefix=3ffe:501:ffff:109::/64,
+           but LLA is R1's one
+       dst=NUT's global, prefix=3ffe:501:ffff:100::/64
+<BR>
+  <=== <A HREF="#JDG1">Judgment #1</A>: echo-reply ====
+       src=NUT's global, prefix=3ffe:501:ffff:100::/64
+       dst=H1(off-link global), prefix=3ffe:501:ffff:109::/64,
+           but LLA is R1's one
+</PRE>
+
+<P>
+<HR>
+<H1><A NAME="JUDGMENT">JUDGMENT</A></H1>
+<A NAME="JDG1"></A>
+
+<P>
+<PRE>  1. NUT must throw echo-reply whose destination is off-link global
+    to the default router (i.e. R1).
+</PRE>
+<A NAME="JDG2"></A>
+
+<P>
+<PRE>  2. NUT must throw echo-reply to the better router (i.e. TN).
+</PRE>
+<P>
+<HR>
+<H1><A NAME="TERMINATION">TERMINATION</A></H1>
+<P>
+<PRE>  Send RAs to clear the Default Router List.
+  - RA (src=R1) with RouterLifetime=0
+  - RA (src=TN) with RouterLifetime=0
+</PRE>
+<P>
+<PRE>  Clear IPv6 routes by remote command. XXX
+</PRE>
+<P>
+<HR>
+<H1><A NAME="NOTE">NOTE</A></H1>
+<P>
+<PRE>  The test invokes the following command:
+  - Clear IPv6 routes.
+</PRE>
+<P>
+<HR>
+<H1><A NAME="SEE_ALSO">SEE ALSO</A></H1>
+<P>
+<PRE>  perldoc V6evalTool
+  perldoc V6evalRemote
+</PRE>
+</BODY>
+
+</HTML>

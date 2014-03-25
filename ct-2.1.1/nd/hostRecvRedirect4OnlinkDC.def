@@ -1,0 +1,705 @@
+// Copyright (C) 1999, 2000, 2001, 2002, 2003 Yokogawa Electric Corporation,
+// IPA (Information-technology Promotion Agency, Japan).
+// All rights reserved.
+// 
+// Redistribution and use of this software in source and binary forms, with 
+// or without modification, are permitted provided that the following 
+// conditions and disclaimer are agreed and accepted by the user:
+// 
+// 1. Redistributions of source code must retain the above copyright 
+// notice, this list of conditions and the following disclaimer.
+// 
+// 2. Redistributions in binary form must reproduce the above copyright 
+// notice, this list of conditions and the following disclaimer in the 
+// documentation and/or other materials provided with the distribution.
+// 
+// 3. Neither the names of the copyrighters, the name of the project which 
+// is related to this software (hereinafter referred to as "project") nor 
+// the names of the contributors may be used to endorse or promote products 
+// derived from this software without specific prior written permission.
+// 
+// 4. No merchantable use may be permitted without prior written 
+// notification to the copyrighters. However, using this software for the 
+// purpose of testing or evaluating any products including merchantable 
+// products may be permitted without any notification to the copyrighters.
+// 
+// 
+// 
+// THIS SOFTWARE IS PROVIDED BY THE COPYRIGHTERS, THE PROJECT AND 
+// CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING 
+// BUT NOT LIMITED THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS 
+// FOR A PARTICULAR PURPOSE, ARE DISCLAIMED.  IN NO EVENT SHALL THE 
+// COPYRIGHTERS, THE PROJECT OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, 
+// INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES 
+// (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR 
+// SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) 
+// HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN 
+// CONTRACT,STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) 
+// ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF 
+// THE POSSIBILITY OF SUCH DAMAGE.
+//
+// $TAHI: ct/nd/hostRecvRedirect4OnlinkDC.def,v 1.7 2002/02/27 06:11:40 masaxmasa Exp $
+
+#include "nd.def"
+
+//----------------------------------------------------------------------
+_HETHER_define(hether_rone2nut, ether(A0N_MAC_ADDR), nutether())
+_HETHER_define(hether_nut2rone, nutether(), ether(A0N_MAC_ADDR))
+
+_HETHER_define(hether_nut2hone, nutether(), ether(A9N_MAC_ADDR))
+
+_HETHER_define(hether_rone2allnodes, ether(A0N_MAC_ADDR),
+        v62ethermulti(v6(_ALLNODES_MCAST_ADDR)))
+
+_HETHER_define(hether_nut2hone_solnode, nutether(),
+        _ETHER_SOLNODE_MCAST(v6ether(A9N_MAC_ADDR)))
+
+_SLLOPT_define(sllopt_rone, ether(A0N_MAC_ADDR))
+_TLLOPT_define(tllopt_rone, ether(A0N_MAC_ADDR))
+
+_TLLOPT_define(tllopt_hone, ether(A9N_MAC_ADDR))
+
+#define SIZE_ETHER_HEADER	14
+
+//----------------------------------------------------------------------
+// multicast RA
+//      R1(link-local) ==> all-node
+//      M=0, O=0
+//      lifetime=600 sec
+//      ReachableTime=0 msec (not specified)
+//      RetransTimer=0 msec (not specified)
+//      w/ SLLA
+//      w/ prefix
+//              l=1, a=1
+//              ValidLifetime=2592000
+//              PreferredLifetime=604800;
+//----------------------------------------------------------------------
+FEM_icmp6_ra(ra_rone2allnode_sll, hether_rone2allnodes,
+        {
+         _SRC(v6ether(A0N_MAC_ADDR));
+         _DST(v6(_ALLNODES_MCAST_ADDR));
+         HopLimit=255;
+        },
+        {
+         CurHopLimit=0;
+         MFlag=0;
+         OFlag=0;
+         LifeTime=600;
+         ReachableTime=0;
+         RetransTimer=0;
+         option=sllopt_rone;
+         option=prefixopt;
+        }
+)
+
+//----------------------------------------------------------------------
+// multicast RA
+//      R1(link-local) ==> all-node
+//      M=0, O=0
+//      lifetime=0 sec
+//      ReachableTime=0 msec (not specified)
+//      RetransTimer=0 msec (not specified)
+//      w/o SLLA
+//      w/o prefix
+//----------------------------------------------------------------------
+FEM_icmp6_ra(ra_rone2allnode_clrrtr, hether_rone2allnodes,
+        {
+         _SRC(v6ether(A0N_MAC_ADDR));
+         _DST(v6(_ALLNODES_MCAST_ADDR));
+         HopLimit=255;
+        },
+        {
+         CurHopLimit=0;
+         MFlag=0;
+         OFlag=0;
+         LifeTime=0;
+         ReachableTime=0;
+         RetransTimer=0;
+        }
+)
+
+//----------------------------------------------------------------------
+Opt_ICMPv6_Prefix prefixopt {
+//      Type=3;
+//      Length=4;
+//      PrefixLength=_GLOBAL0_UCAST_PRFXLEN;
+        LFlag=1;
+        AFlag=1;        
+//      Reserved1=ZERO; 
+        ValidLifetime=2592000;
+        PreferredLifetime=604800;
+//      Reserved2=ZERO; 
+        Prefix=v6(_GLOBAL0_UCAST_PRFX);
+}
+
+//----------------------------------------------------------------------
+// unicast NA
+//      R1(link-local) ==> NUT(link-local)
+//      R=1, S=1, O=1
+//	target=R1(link-local)
+//      w/ TLLA
+//----------------------------------------------------------------------
+FEM_icmp6_na(unicast_na_rone2nut_RSO_tll, hether_rone2nut,
+        {
+         _SRC(v6ether(A0N_MAC_ADDR));
+         _DST(nutv6());
+         HopLimit=255;
+        },
+        {
+         RFlag=1;
+         SFlag=1;
+         OFlag=1;
+         TargetAddress=v6ether(A0N_MAC_ADDR);
+         option=tllopt_rone;
+        }
+)
+
+//----------------------------------------------------------------------
+// unicast NA
+//      TN(link-local) ==> NUT(link-local)
+//      R=1, S=1, O=1
+//	target=TN(link-local)
+//      w/ TLLA
+//----------------------------------------------------------------------
+FEM_icmp6_na(unicast_na_tn2nut_RSO_tll, _HETHER_tn2nut,
+        {
+	 _SRC(tnv6());
+         _DST(nutv6());
+         HopLimit=255;
+        },
+        {
+         RFlag=1;
+         SFlag=1;
+         OFlag=1;
+         TargetAddress=tnv6();
+         option=_TLLOPT_tn;
+        }
+)
+
+//----------------------------------------------------------------------
+// echo-request A
+//----------------------------------------------------------------------
+FEM_icmp6_echo_request(echo_request_a, hether_rone2nut,
+	{
+         _SRC(v6merge(_GLOBAL9_UCAST_PRFX, _GLOBAL9_UCAST_PRFXLEN,
+                        tnv6()));
+	 _DST(nut2v6(_GLOBAL0_UCAST_PRFX, _GLOBAL0_UCAST_PRFXLEN));
+	},
+	{
+	 payload=echo_data_a;
+	}
+)
+
+//----------------------------------------------------------------------
+// echo-reply A
+//----------------------------------------------------------------------
+FEM_icmp6_echo_reply(echo_reply_a, hether_nut2rone,
+	{
+	 _SRC(nut2v6(_GLOBAL0_UCAST_PRFX, _GLOBAL0_UCAST_PRFXLEN));
+         _DST(v6merge(_GLOBAL9_UCAST_PRFX, _GLOBAL9_UCAST_PRFXLEN,
+                        tnv6()));
+	},
+	{
+	 payload=echo_data_a;
+	}
+)
+
+//----------------------------------------------------------------------
+Payload echo_data_a {
+        data=repeat(0xff, 0x10);
+}
+
+//----------------------------------------------------------------------
+Opt_ICMPv6_Redirected redirected_header {
+        payload=rd;
+}
+
+//----------------------------------------------------------------------
+Payload rd {
+//        data=substr(echo_request_a, SIZE_ETHER_HEADER, 1288);
+        data=right(echo_request_a, SIZE_ETHER_HEADER);
+}
+
+//----------------------------------------------------------------------
+// echo-request B
+//	that is forwarded from R1
+//----------------------------------------------------------------------
+FEM_icmp6_echo_request(echo_request_b, hether_rone2nut,
+	{
+         _SRC(v6merge(_GLOBAL9_UCAST_PRFX, _GLOBAL9_UCAST_PRFXLEN,
+                        tnv6()));
+	 _DST(nut2v6(_GLOBAL0_UCAST_PRFX, _GLOBAL0_UCAST_PRFXLEN));
+	},
+	{
+	 payload=echo_data_b;
+	}
+)
+
+//----------------------------------------------------------------------
+// echo-reply B
+//	that is thrown to the R1
+//----------------------------------------------------------------------
+FEM_icmp6_echo_reply(echo_reply_b, hether_nut2rone,
+	{
+	 _SRC(nut2v6(_GLOBAL0_UCAST_PRFX, _GLOBAL0_UCAST_PRFXLEN));
+         _DST(v6merge(_GLOBAL9_UCAST_PRFX, _GLOBAL9_UCAST_PRFXLEN,
+                        tnv6()));
+	},
+	{
+	 payload=echo_data_b;
+	}
+)
+
+//----------------------------------------------------------------------
+// echo-reply B
+//	whose destination is on-link
+//----------------------------------------------------------------------
+FEM_icmp6_echo_reply(echo_reply_b_onlink, hether_nut2hone,
+	{
+	 _SRC(nut2v6(_GLOBAL0_UCAST_PRFX, _GLOBAL0_UCAST_PRFXLEN));
+         _DST(v6merge(_GLOBAL9_UCAST_PRFX, _GLOBAL9_UCAST_PRFXLEN,
+                        tnv6()));
+	},
+	{
+	 payload=echo_data_b;
+	}
+)
+
+//----------------------------------------------------------------------
+Payload echo_data_b {
+        data=repeat(0xcc, 0x10);
+}
+
+//----------------------------------------------------------------------
+// echo-request Dummy
+//----------------------------------------------------------------------
+FEM_icmp6_echo_request(echo_request_dummy, _HETHER_tn2nut,
+	{
+	 _SRC(tnv6());
+         _DST(nutv6());
+	},
+	{
+	 payload=echo_data_dummy;
+	}
+)
+
+//----------------------------------------------------------------------
+Payload echo_data_dummy {
+        data=repeat(0xee, 1300);
+}
+
+//----------------------------------------------------------------------
+Opt_ICMPv6_Redirected redirected_header_bogus {
+        payload=rd_bogus;
+}
+
+//----------------------------------------------------------------------
+Payload rd_bogus {
+        data=substr(echo_request_dummy, SIZE_ETHER_HEADER, 1288);
+}
+
+//----------------------------------------------------------------------
+// multicast NS
+//      NUT(global) ==> H1(solicited-node[global])
+//      target=H1(global)
+//      w/o SLLA
+//----------------------------------------------------------------------
+FEM_icmp6_ns(multicast_ns_nut2tn, _HETHER_nut2tnsolnode,
+        {
+         _SRC(nut2v6(_GLOBAL0_UCAST_PRFX, _GLOBAL0_UCAST_PRFXLEN));
+         _DST(_IPV6_SOLNODE_MCAST(
+         	v6merge(_GLOBAL9_UCAST_PRFX, _GLOBAL9_UCAST_PRFXLEN,
+                        tnv6()))
+	     );
+         HopLimit=255;
+        },
+        {
+         TargetAddress=v6merge(_GLOBAL9_UCAST_PRFX, _GLOBAL9_UCAST_PRFXLEN,
+                       tnv6());
+        }
+)
+
+//----------------------------------------------------------------------
+// multicast NS
+//      NUT(global) ==> H1(solicited-node[global])
+//      target=H1(global)
+//      w/ SLLA
+//----------------------------------------------------------------------
+FEM_icmp6_ns(multicast_ns_nut2tn_sll, _HETHER_nut2tnsolnode,
+        {
+         _SRC(nut2v6(_GLOBAL0_UCAST_PRFX, _GLOBAL0_UCAST_PRFXLEN));
+         _DST(_IPV6_SOLNODE_MCAST(
+         	v6merge(_GLOBAL9_UCAST_PRFX, _GLOBAL9_UCAST_PRFXLEN,
+                        tnv6()))
+	     );
+         HopLimit=255;
+        },
+        {
+         TargetAddress=v6merge(_GLOBAL9_UCAST_PRFX, _GLOBAL9_UCAST_PRFXLEN,
+                       tnv6());
+         option=_SLLOPT_nut;
+        }
+)
+
+//----------------------------------------------------------------------
+// Redirect
+//      R1(link-local) ==> NUT(link-local)
+//      icmp target=H1(global)
+//      icmp destination=H1(global)
+//      w/o TLL
+//      w/o redirect header
+//----------------------------------------------------------------------
+FEM_icmp6_redirect(redirect_rone2nut, hether_rone2nut,
+        {
+         _SRC(v6ether(A0N_MAC_ADDR));
+         _DST(nutv6());
+         HopLimit=255;
+        },
+        {
+         TargetAddress=v6merge(_GLOBAL9_UCAST_PRFX,
+                        _GLOBAL9_UCAST_PRFXLEN, tnv6());
+         DestinationAddress=v6merge(_GLOBAL9_UCAST_PRFX,
+                        _GLOBAL9_UCAST_PRFXLEN, tnv6());
+        }
+)
+
+//----------------------------------------------------------------------
+// Redirect
+//      R1(link-local) ==> NUT(link-local)
+//      icmp target=H1(global)
+//      icmp destination=H1(global)
+//      w/  TLL
+//      w/o redirect header
+//----------------------------------------------------------------------
+FEM_icmp6_redirect(redirect_rone2nut_tll, hether_rone2nut,
+        {
+         _SRC(v6ether(A0N_MAC_ADDR));
+         _DST(nutv6());
+         HopLimit=255;
+        },
+        {
+         TargetAddress=v6merge(_GLOBAL9_UCAST_PRFX,
+                        _GLOBAL9_UCAST_PRFXLEN, tnv6());
+         DestinationAddress=v6merge(_GLOBAL9_UCAST_PRFX,
+                        _GLOBAL9_UCAST_PRFXLEN, tnv6());
+	 option=tllopt_hone;
+        }
+)
+
+//----------------------------------------------------------------------
+// Redirect
+//      R1(link-local) ==> NUT(link-local)
+//      icmp target=H1(global)
+//      icmp destination=H1(global)
+//      w/o TLL
+//      w/  redirect header
+//----------------------------------------------------------------------
+FEM_icmp6_redirect(redirect_rone2nut_rd, hether_rone2nut,
+        {
+         _SRC(v6ether(A0N_MAC_ADDR));
+         _DST(nutv6());
+         HopLimit=255;
+        },
+        {
+         TargetAddress=v6merge(_GLOBAL9_UCAST_PRFX,
+                        _GLOBAL9_UCAST_PRFXLEN, tnv6());
+         DestinationAddress=v6merge(_GLOBAL9_UCAST_PRFX,
+                        _GLOBAL9_UCAST_PRFXLEN, tnv6());
+	 option=redirected_header;
+        }
+)
+
+//----------------------------------------------------------------------
+// Redirect
+//      R1(link-local) ==> NUT(link-local)
+//      icmp target=H1(global)
+//      icmp destination=H1(global)
+//      w/  TLL
+//      w/  redirect header
+//----------------------------------------------------------------------
+FEM_icmp6_redirect(redirect_rone2nut_tll_rd, hether_rone2nut,
+        {
+         _SRC(v6ether(A0N_MAC_ADDR));
+         _DST(nutv6());
+         HopLimit=255;
+        },
+        {
+         TargetAddress=v6merge(_GLOBAL9_UCAST_PRFX,
+                        _GLOBAL9_UCAST_PRFXLEN, tnv6());
+         DestinationAddress=v6merge(_GLOBAL9_UCAST_PRFX,
+                        _GLOBAL9_UCAST_PRFXLEN, tnv6());
+	 option=tllopt_hone;
+	 option=redirected_header;
+        }
+)
+
+//----------------------------------------------------------------------
+// Redirect
+//      R1(link-local) ==> NUT(global)
+//      icmp target=H1(global)
+//      icmp destination=H1(global)
+//      w/o TLL
+//      w/o redirect header
+//----------------------------------------------------------------------
+FEM_icmp6_redirect(redirect_rone2nutg, hether_rone2nut,
+        {
+         _SRC(v6ether(A0N_MAC_ADDR));
+         _DST(v6merge(_GLOBAL0_UCAST_PRFX,
+		_GLOBAL0_UCAST_PRFXLEN, nutv6()));
+         HopLimit=255;
+        },
+        {
+         TargetAddress=v6merge(_GLOBAL9_UCAST_PRFX,
+                        _GLOBAL9_UCAST_PRFXLEN, tnv6());
+         DestinationAddress=v6merge(_GLOBAL9_UCAST_PRFX,
+                        _GLOBAL9_UCAST_PRFXLEN, tnv6());
+        }
+)
+
+//----------------------------------------------------------------------
+// Redirect
+//      R1(link-local) ==> NUT(global)
+//      icmp target=H1(global)
+//      icmp destination=H1(global)
+//      w/  TLL
+//      w/o redirect header
+//----------------------------------------------------------------------
+FEM_icmp6_redirect(redirect_rone2nutg_tll, hether_rone2nut,
+        {
+         _SRC(v6ether(A0N_MAC_ADDR));
+         _DST(v6merge(_GLOBAL0_UCAST_PRFX,
+		_GLOBAL0_UCAST_PRFXLEN, nutv6()));
+         HopLimit=255;
+        },
+        {
+         TargetAddress=v6merge(_GLOBAL9_UCAST_PRFX,
+                        _GLOBAL9_UCAST_PRFXLEN, tnv6());
+         DestinationAddress=v6merge(_GLOBAL9_UCAST_PRFX,
+                        _GLOBAL9_UCAST_PRFXLEN, tnv6());
+	 option=tllopt_hone;
+        }
+)
+
+//----------------------------------------------------------------------
+// Redirect
+//      R1(link-local) ==> NUT(global)
+//      icmp target=H1(global)
+//      icmp destination=H1(global)
+//      w/o TLL
+//      w/  redirect header
+//----------------------------------------------------------------------
+FEM_icmp6_redirect(redirect_rone2nutg_rd, hether_rone2nut,
+        {
+         _SRC(v6ether(A0N_MAC_ADDR));
+         _DST(v6merge(_GLOBAL0_UCAST_PRFX,
+		_GLOBAL0_UCAST_PRFXLEN, nutv6()));
+         HopLimit=255;
+        },
+        {
+         TargetAddress=v6merge(_GLOBAL9_UCAST_PRFX,
+                        _GLOBAL9_UCAST_PRFXLEN, tnv6());
+         DestinationAddress=v6merge(_GLOBAL9_UCAST_PRFX,
+                        _GLOBAL9_UCAST_PRFXLEN, tnv6());
+	 option=redirected_header;
+        }
+)
+
+//----------------------------------------------------------------------
+// Redirect
+//      R1(link-local) ==> NUT(global)
+//      icmp target=H1(global)
+//      icmp destination=H1(global)
+//      w/  TLL
+//      w/  redirect header
+//----------------------------------------------------------------------
+FEM_icmp6_redirect(redirect_rone2nutg_tll_rd, hether_rone2nut,
+        {
+         _SRC(v6ether(A0N_MAC_ADDR));
+         _DST(v6merge(_GLOBAL0_UCAST_PRFX,
+		_GLOBAL0_UCAST_PRFXLEN, nutv6()));
+         HopLimit=255;
+        },
+        {
+         TargetAddress=v6merge(_GLOBAL9_UCAST_PRFX,
+                        _GLOBAL9_UCAST_PRFXLEN, tnv6());
+         DestinationAddress=v6merge(_GLOBAL9_UCAST_PRFX,
+                        _GLOBAL9_UCAST_PRFXLEN, tnv6());
+	 option=tllopt_hone;
+	 option=redirected_header;
+        }
+)
+
+//----------------------------------------------------------------------
+// Redirect (suspicious, but valid)
+//      R1(link-local) ==> NUT(link-local)
+//      icmp target=H1(global)
+//      icmp destination=H1(global)
+//      w/  TLL
+//      w/  redirect header, but bogus
+//----------------------------------------------------------------------
+FEM_icmp6_redirect(redirect_rone2nut_tll_rdbogus, hether_rone2nut,
+        {
+         _SRC(v6ether(A0N_MAC_ADDR));
+         _DST(nutv6());
+         HopLimit=255;
+        },
+        {
+         TargetAddress=v6merge(_GLOBAL9_UCAST_PRFX,
+                        _GLOBAL9_UCAST_PRFXLEN, tnv6());
+         DestinationAddress=v6merge(_GLOBAL9_UCAST_PRFX,
+                        _GLOBAL9_UCAST_PRFXLEN, tnv6());
+	 option=tllopt_hone;
+	 option=redirected_header_bogus;
+        }
+)
+
+//----------------------------------------------------------------------
+// Redirect
+//      R1(link-local) ==> NUT(all-node)
+//      icmp target=H1(global)
+//      icmp destination=H1(global)
+//      w/  TLL
+//      w/  redirect header
+//----------------------------------------------------------------------
+FEM_icmp6_redirect(redirect_rone2nut_tll_rd_multidst, hether_rone2nut,
+        {
+         _SRC(v6ether(A0N_MAC_ADDR));
+         _DST(v6(_ALLNODES_MCAST_ADDR));
+         HopLimit=255;
+        },
+        {
+         TargetAddress=v6merge(_GLOBAL9_UCAST_PRFX,
+                        _GLOBAL9_UCAST_PRFXLEN, tnv6());
+         DestinationAddress=v6merge(_GLOBAL9_UCAST_PRFX,
+                        _GLOBAL9_UCAST_PRFXLEN, tnv6());
+	 option=tllopt_hone;
+	 option=redirected_header;
+        }
+)
+
+//----------------------------------------------------------------------
+// Redirect (INVALID)
+//      R1(*global) ==> NUT(link-local)
+//      icmp target=H1(global)
+//      icmp destination=H1(global)
+//      w/  TLL
+//      w/  redirect header
+//----------------------------------------------------------------------
+FEM_icmp6_redirect(redirect_rone2nut_tll_rd_invalid_globalsrc, hether_rone2nut,
+        {
+         _SRC(v6merge(_GLOBAL0_UCAST_PRFX,
+                _GLOBAL0_UCAST_PRFXLEN, v6ether(A0N_MAC_ADDR)));
+         _DST(nutv6());
+         HopLimit=255;
+        },
+        {
+         TargetAddress=v6merge(_GLOBAL9_UCAST_PRFX,
+                        _GLOBAL9_UCAST_PRFXLEN, tnv6());
+         DestinationAddress=v6merge(_GLOBAL9_UCAST_PRFX,
+                        _GLOBAL9_UCAST_PRFXLEN, tnv6());
+	 option=tllopt_hone;
+	 option=redirected_header;
+        }
+)
+
+//----------------------------------------------------------------------
+// Redirect (INVALID)
+//      R1(link-local) ==> NUT(link-local)
+//	*hop limit!=255
+//      icmp target=H1(global)
+//      icmp destination=H1(global)
+//      w/  TLL
+//      w/  redirect header
+//----------------------------------------------------------------------
+FEM_icmp6_redirect(redirect_rone2nut_tll_rd_invalid_hoplimit, hether_rone2nut,
+        {
+         _SRC(v6ether(A0N_MAC_ADDR));
+         _DST(nutv6());
+         HopLimit=2;
+        },
+        {
+         TargetAddress=v6merge(_GLOBAL9_UCAST_PRFX,
+                        _GLOBAL9_UCAST_PRFXLEN, tnv6());
+         DestinationAddress=v6merge(_GLOBAL9_UCAST_PRFX,
+                        _GLOBAL9_UCAST_PRFXLEN, tnv6());
+	 option=tllopt_hone;
+	 option=redirected_header;
+        }
+)
+
+//----------------------------------------------------------------------
+// Redirect (INVALID)
+//      R1(link-local) ==> NUT(link-local)
+//	*icmp code!=0
+//      icmp target=H1(global)
+//      icmp destination=H1(global)
+//      w/  TLL
+//      w/  redirect header
+//----------------------------------------------------------------------
+FEM_icmp6_redirect(redirect_rone2nut_tll_rd_invalid_icmpcode, hether_rone2nut,
+        {
+         _SRC(v6ether(A0N_MAC_ADDR));
+         _DST(nutv6());
+         HopLimit=255;
+        },
+        {
+         Code=1;
+         TargetAddress=v6merge(_GLOBAL9_UCAST_PRFX,
+                        _GLOBAL9_UCAST_PRFXLEN, tnv6());
+         DestinationAddress=v6merge(_GLOBAL9_UCAST_PRFX,
+                        _GLOBAL9_UCAST_PRFXLEN, tnv6());
+	 option=tllopt_hone;
+	 option=redirected_header;
+        }
+)
+
+//----------------------------------------------------------------------
+// Redirect (INVALID)
+//      R1(link-local) ==> NUT(link-local)
+//	*invalid icmp checksum
+//      icmp target=H1(global)
+//      icmp destination=H1(global)
+//      w/  TLL
+//      w/  redirect header
+//----------------------------------------------------------------------
+FEM_icmp6_redirect(redirect_rone2nut_tll_rd_invalid_chksum, hether_rone2nut,
+        {
+         _SRC(v6ether(A0N_MAC_ADDR));
+         _DST(nutv6());
+         HopLimit=255;
+        },
+        {
+         Checksum=0xaaaa;
+         TargetAddress=v6merge(_GLOBAL9_UCAST_PRFX,
+                        _GLOBAL9_UCAST_PRFXLEN, tnv6());
+         DestinationAddress=v6merge(_GLOBAL9_UCAST_PRFX,
+                        _GLOBAL9_UCAST_PRFXLEN, tnv6());
+	 option=tllopt_hone;
+	 option=redirected_header;
+        }
+)
+
+//----------------------------------------------------------------------
+// Redirect (INVALID)
+//      *R2(link-local) ==> NUT(link-local)
+//      icmp target=H1(global)
+//      *icmp destination=multicast
+//      w/  TLL
+//      w/  redirect header
+//----------------------------------------------------------------------
+FEM_icmp6_redirect(redirect_rone2nut_tll_rd_invalid_router, hether_rone2nut,
+        {
+         _SRC(v6ether(A1N_MAC_ADDR));
+         _DST(nutv6());
+         HopLimit=255;
+        },
+        {
+         TargetAddress=v6merge(_GLOBAL9_UCAST_PRFX,
+                        _GLOBAL9_UCAST_PRFXLEN, tnv6());
+         DestinationAddress=v6(_ALLNODES_MCAST_ADDR);
+	 option=tllopt_hone;
+	 option=redirected_header;
+        }
+)
+
+//----------------------------------------------------------------------

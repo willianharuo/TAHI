@@ -1,0 +1,250 @@
+<HTML>
+<HEAD>
+<TITLE>ncStateByRs4Probe - Verifying State Machine: RS vs. PROBE</TITLE>
+<LINK REV="made" HREF="mailto:hackers@FreeBSD.org">
+</HEAD>
+
+<BODY>
+
+<!-- INDEX BEGIN -->
+<!--
+
+<UL>
+
+	<LI><A HREF="#NAME">NAME</A>
+	<LI><A HREF="#TARGET">TARGET</A>
+	<LI><A HREF="#SYNOPSIS">SYNOPSIS</A>
+	<LI><A HREF="#INITIALIZATION">INITIALIZATION</A>
+	<UL>
+
+		<LI><A HREF="#Cache_a_LLA_of_TN">Cache a LLA of TN</A>
+		<LI><A HREF="#Cache_a_bogus_LLA">Cache a bogus LLA</A>
+	</UL>
+
+	<LI><A HREF="#TEST_PROCEDURE">TEST PROCEDURE</A>
+	<LI><A HREF="#JUDGMENT">JUDGMENT</A>
+	<LI><A HREF="#TERMINATION">TERMINATION</A>
+	<LI><A HREF="#NOTE">NOTE</A>
+	<LI><A HREF="#REFERENCE">REFERENCE</A>
+	<LI><A HREF="#SEE_ALSO">SEE ALSO</A>
+</UL>
+-->
+<!-- INDEX END -->
+
+<P>
+<H1><A NAME="NAME">NAME</A></H1>
+<P>
+ncStateByRs4Probe - Verifying State Machine: RS vs. PROBE
+
+<P>
+<HR>
+<H1><A NAME="TARGET">TARGET</A></H1>
+<P>
+<PRE>  Router Only
+</PRE>
+<P>
+<HR>
+<H1><A NAME="SYNOPSIS">SYNOPSIS</A></H1>
+<P>
+<PRE>  ncStateByRs4Probe.seq [-tooloption ...] -p ncStateByRs4Probe.def
+</PRE>
+<P>
+<HR>
+<H1><A NAME="INITIALIZATION">INITIALIZATION</A></H1>
+<OL>
+  <LI>Set the state of neighbor cache entry to REACHABLE.
+  <LI>Cache either <A HREF="#Cache_a_LLA_of_TN">TN's LLA</A>, or
+      <A HREF="#Cache_a_bogus_LLA">a bogus LLA</A>
+</OL>
+
+<P>
+<HR>
+<H2><A NAME="Cache_a_LLA_of_TN">Cache a LLA of TN</A></H2>
+<PRE>
+  TN                 NUT
+  ----------------------
+  State: NONCE (for TN)
+<BR>
+  ==== echo-request ===>
+        src=TN's link-local
+        dst=NUT's link-local
+<BR>
+  State: INCOMPLETE (for TN)
+<BR>
+  <=== multicast NS ====
+        src=NUT's link-local
+        dst=solicited-node[TN's link-local]
+        target=TN's link-local
+        w/ SLLA
+        timeout: RETRANS_TIMER * MAX_MULTICAST_SOLICIT
+<BR>
+  ==== solicited NA ===>
+        src=TN's link-local
+        dst=NUT's link-local
+        target=TN's link-local
+        <B>TLLA=TN's LLA</B>
+<BR>
+  State: REACHABLE (for TN)
+<BR>
+  <=== echo-reply ====
+        src=NUT's link-local
+        dst=TN's link-local
+        timeout: 2 sec
+<BR>
+  Wait (REACHABLE_TIME * MAX_RANDOM_FACTOR)
+<BR>
+  State: STALE (for TN)
+<BR>
+  ==== echo-request ===>
+        src=TN's link-local
+        dst=NUT's link-local
+<BR>
+  <=== echo-reply ====
+        src=NUT's link-local
+        dst=TN's link-local
+        timeout: 2 sec
+<BR>
+  State: DELAY (for TN)
+<BR>
+  Wait (DELAY_FIRST_PROBE_TIME)
+<BR>
+  State: PROBE (for TN)
+</PRE>
+
+<P>
+<HR>
+<H2><A NAME="Cache_a_bogus_LLA">Cache a bogus LLA</A></H2>
+<PRE>
+  TN                 NUT
+  ----------------------
+  State: NONCE (for TN)
+<BR>
+  ==== echo-request ===>
+        src=TN's link-local
+        dst=NUT's link-local
+<BR>
+  State: INCOMPLETE (for TN)
+<BR>
+  <=== multicast NS ====
+        src=NUT's link-local
+        dst=solicited-node[TN's link-local]
+        target=TN's link-local
+        w/ SLLA
+        timeout: RETRANS_TIMER * MAX_MULTICAST_SOLICIT
+<BR>
+  ==== solicited NA ===>
+        src=TN's link-local
+        dst=NUT's link-local
+        target=TN's link-local
+        <B>TLLA=a bogus LLA</B>
+<BR>
+  State: REACHABLE (for TN)
+<BR>
+  <=== echo-reply ====
+        src=NUT's link-local
+        dst=TN's link-local
+        timeout: 2 sec
+<BR>
+  Wait (REACHABLE_TIME * MAX_RANDOM_FACTOR)
+<BR>
+  State: STALE (for TN)
+<BR>
+  ==== echo-request ===>
+        src=TN's link-local
+        dst=NUT's link-local
+<BR>
+  <=== echo-reply ====
+        src=NUT's link-local
+        dst=TN's link-local
+        timeout: 2 sec
+<BR>
+  State: DELAY (for TN)
+<BR>
+  Wait (DELAY_FIRST_PROBE_TIME)
+<BR>
+  State: PROBE (for TN)
+</PRE>
+
+<P>
+<HR>
+<H1><A NAME="TEST_PROCEDURE">TEST PROCEDURE</A></H1>
+<P>
+<STRONG>ncStateByRs4Probe</STRONG> verifies that state transition for a NUT in PROBE state when receiving an
+RS.
+
+<PRE>
+  TN                 NUT
+  ----------------------
+<BR>
+  State: PROBE (for TN)
+<BR>
+  ==== <A HREF="#JDG1">RS</A> ===>
+<BR>
+  <A HREF="#JDG1">Judgment</A>: <A HREF="nd.html">Examining NUT's neighbor cache state</A>
+</PRE>
+
+<P>
+<HR>
+<H1><A NAME="JUDGMENT">JUDGMENT</A></H1>
+<A NAME="JDG1"></A>
+<PRE>
+  ===============================+==========+=========+=================
+  RS                             |New State |LLA       Comments
+  ---------+-----------+---------+          |
+  Source IP|Destination|SLLA     |          |
+           |IP         |         |          |
+  =========+===========+=========+==========+=========*=================
+  TN's link all-router  none      PROBE      unchanged Not mentioned
+                                                       in RFC2461
+  ---------+-----------+---------+----------+---------+-----------------
+  TN's link all-router  same      PROBE      unchanged
+  ---------+-----------+---------+----------+---------+-----------------
+  TN's link all-router  different STALE      updated
+  =========+===========+=========+==========+=========+=================
+</PRE>
+
+<P>
+<HR>
+<H1><A NAME="TERMINATION">TERMINATION</A></H1>
+<P>
+<PRE>  N/A
+</PRE>
+<P>
+<HR>
+<H1><A NAME="NOTE">NOTE</A></H1>
+<P>
+<PRE>  TBD
+</PRE>
+<P>
+<HR>
+<H1><A NAME="REFERENCE">REFERENCE</A></H1>
+<PRE>
+6.2.6.  Processing Router Solicitations
+<BR>
+   Router Solicitations in which the Source Address is the unspecified
+   address MUST NOT update the router's Neighbor Cache; solicitations
+   with a proper source address update the Neighbor Cache as follows. <B>If
+   the router already has a Neighbor Cache entry for the solicitation's
+   sender, the solicitation contains a Source Link-Layer Address option,
+   and the received link-layer address differs from that already in the
+   cache, the link-layer address SHOULD be updated in the appropriate
+   Neighbor Cache entry, and its reachability state MUST also be set to
+   STALE.</B>  If there is no existing Neighbor Cache entry for the
+   solicitation's sender, the router creates one, installs the link-
+   layer address and sets its reachability state to STALE as specified
+   in Section 7.3.3.  Whether or not a Source Link-Layer Address option
+   is provided, if a Neighbor Cache entry for the solicitation's sender
+   exists (or is created) the entry's IsRouter flag MUST be set to
+   FALSE.
+</PRE>
+
+<P>
+<HR>
+<H1><A NAME="SEE_ALSO">SEE ALSO</A></H1>
+<P>
+<PRE>  perldoc V6evalTool
+  perldoc V6evalRemote
+</PRE>
+</BODY>
+
+</HTML>

@@ -1,0 +1,224 @@
+<HTML>
+<HEAD>
+<TITLE>ncStateByRa4Reachable - Verifying State Machine: RA vs. REACHABLE</TITLE>
+<LINK REV="made" HREF="mailto:hackers@FreeBSD.org">
+</HEAD>
+
+<BODY>
+
+<!-- INDEX BEGIN -->
+<!--
+
+<UL>
+
+	<LI><A HREF="#NAME">NAME</A>
+	<LI><A HREF="#TARGET">TARGET</A>
+	<LI><A HREF="#SYNOPSIS">SYNOPSIS</A>
+	<LI><A HREF="#INITIALIZATION">INITIALIZATION</A>
+	<UL>
+
+		<LI><A HREF="#Cache_a_LLA_of_TN">Cache a LLA of TN</A>
+		<LI><A HREF="#Cache_a_bogus_LLA">Cache a bogus LLA</A>
+	</UL>
+
+	<LI><A HREF="#TEST_PROCEDURE">TEST PROCEDURE</A>
+	<LI><A HREF="#JUDGMENT">JUDGMENT</A>
+	<LI><A HREF="#TERMINATION">TERMINATION</A>
+	<LI><A HREF="#NOTE">NOTE</A>
+	<LI><A HREF="#SEE_ALSO">SEE ALSO</A>
+</UL>
+-->
+<!-- INDEX END -->
+
+<P>
+<H1><A NAME="NAME">NAME</A></H1>
+<P>
+ncStateByRa4Reachable - Verifying State Machine: RA vs. REACHABLE
+
+<P>
+<HR>
+<H1><A NAME="TARGET">TARGET</A></H1>
+<P>
+Host only
+
+<P>
+<HR>
+<H1><A NAME="SYNOPSIS">SYNOPSIS</A></H1>
+<P>
+<PRE>  ncStateByRa4Reachable.seq [-tooloption ...] -p ncStateByRa4Reachable.def
+</PRE>
+<P>
+<HR>
+<H1><A NAME="INITIALIZATION">INITIALIZATION</A></H1>
+<OL>
+  <LI>Set the state of neighbor cache entry to REACHABLE.
+  <LI>Cache either <A HREF="#Cache_a_LLA_of_TN">TN's LLA</A>, or
+      <A HREF="#Cache_a_bogus_LLA">a bogus LLA</A>
+</OL>
+
+<P>
+<HR>
+<H2><A NAME="Cache_a_LLA_of_TN">Cache a LLA of TN</A></H2>
+<PRE>
+  TN                 NUT
+  ----------------------
+<BR>
+  State: NONCE (for TN)
+<BR>
+  ==== echo-request ===>
+      src=TN's link-local
+      dst=NUT's link-local
+<BR>
+  State: INCOMPLETE (for TN)
+<BR>
+  <=== multicast NS ====
+      src=NUT's link-local
+      dst=solicited-node[TN's link-local]
+      target=TN's link-local
+      SLLA=NUT's LLA
+      timeout: RETRANS_TIMER * MAX_MULTICAST_SOLICIT
+<BR>
+  ==== solicited NA ===>
+      src=TN's link-local
+      dst=NUT's link-local
+      R=0, S=1, O=1
+      target=TN's link-local
+      <B>TLLA=TN's LLA</B>
+<BR>
+  State: REACHABLE (for TN)
+</PRE>
+
+<P>
+<HR>
+<H2><A NAME="Cache_a_bogus_LLA">Cache a bogus LLA</A></H2>
+<PRE>
+  TN                 NUT
+  ----------------------
+<BR>
+  State: NONCE (for TN)
+<BR>
+  ==== echo-request ===>
+      src=TN's link-local
+      dst=NUT's link-local
+<BR>
+  State: INCOMPLETE (for TN)
+<BR>
+  <=== multicast NS ====
+      src=NUT's link-local
+      dst=solicited-node[TN's link-local]
+      target=TN's link-local
+      SLLA=NUT's LLA
+      timeout: RETRANS_TIMER * MAX_MULTICAST_SOLICIT
+<BR>
+  ==== solicited NA ===>
+      src=TN's link-local
+      dst=NUT's link-local
+      R=0, S=1, O=1
+      target=TN's link-local
+      <B>TLLA=bogus LLA</B>
+<BR>
+  State: REACHABLE (for TN)
+</PRE>
+
+<P>
+<HR>
+<H1><A NAME="TEST_PROCEDURE">TEST PROCEDURE</A></H1>
+<P>
+<STRONG>ncStateByRa4Reachable</STRONG> verifies that state transition for a NUT in REACHABLE state when receiving
+a RA.
+
+<PRE>
+  TN               NUT
+  ----------------------
+<BR>
+  State: REACHABLE (for TN)
+<BR>
+  ==== <A HREF="#JDG1">RA</A> ===>
+      src=TN's link
+      dst=all-node
+      RouterLifetime=600
+      ReachableTime=0
+      RetransTimer=0
+      M=0, O=0
+      <B>w/o or w/ TLLA</B>
+<BR>
+  <A HREF="#JDG1">Judgment</A>: <A HREF="nd.html">Examining NUT's neighbor cache state</A>
+</PRE>
+
+<P>
+<HR>
+<H1><A NAME="JUDGMENT">JUDGMENT</A></H1>
+<A NAME="JDG1"></A>
+<PRE>
+<HR>
+6.3.4.  Processing Received Router Advertisements
+<BR>
+   After extracting information from the fixed part of the Router
+   Advertisement message, the advertisement is scanned for valid
+   options.  If the advertisement contains a Source Link-Layer Address
+   option the link-layer address SHOULD be recorded in the Neighbor
+   Cache entry for the router (creating an entry if necessary) and the
+   IsRouter flag in the Neighbor Cache entry MUST be set to TRUE.  If no
+   Source Link-Layer Address is included, but a corresponding Neighbor
+   Cache entry exists, its IsRouter flag MUST be set to TRUE.  The
+   IsRouter flag is used by Neighbor Unreachability Detection to
+   determine when a router changes to being a host (i.e., no longer
+   capable of forwarding packets).  If a Neighbor Cache entry is created
+   for the router its reachability state MUST be set to STALE as
+   specified in Section 7.3.3.  <A NAME="STATE_A"><B>If a cache entry already exists and is
+   updated with a different link-layer address the reachability state
+   MUST also be set to STALE.</A></B>
+<BR>
+APPENDIX C: STATE MACHINE FOR THE REACHABILITY STATE
+<BR>
+State           Event                   Action                New state
+<BR>
+-               NS, RS, RA, Redirect    Create entry.         STALE
+<BR>
+INCOMPLETE      NS, RS, RA, Redirect    Record link-layer     STALE
+                                        address.  Send queued
+                                        packets.
+<BR>
+!INCOMPLETE     NS, RS, RA, Redirect    Update link-layer     STALE
+                Different link-layer    address
+                address than cached.
+<BR>
+<A NAME="STATE_B"><B>!INCOMPLETE     NS, RS, RA, Redirect    -                     unchanged
+                Same link-layer
+                address as cached.</A></B>
+<HR>
+  ========================+===================================+==============
+  RA                      | Neighbor Cache                    | Comment
+  ------------+-----------+-----------+-----------------------+
+  Destination | TLLA      | Current   | New       | LLA       |
+  ============+===========+===========+===========+===========+==============
+  all-node    | none      | REACHABLE | unchanged | unchanged | Not mentioned
+              |           |           |           |           | in RFC2461
+  ------------+-----------+-----------+-----------+-----------+--------------
+  all-node    | same      | REACHABLE | <A HREF="#STATE_B">unchanged | unchanged</A> |
+  ------------+-----------+-----------+-----------+-----------+--------------
+  all-node    | different | REACHABLE | <A HREF="#STATE_A">STALE     | updated</A>   |
+  ============+===========+===========+===========+===========+==============
+
+<P>
+<HR>
+<H1><A NAME="TERMINATION">TERMINATION</A></H1>
+<P>
+<PRE>  N/A
+</PRE>
+<P>
+<HR>
+<H1><A NAME="NOTE">NOTE</A></H1>
+<P>
+<PRE>  The test does not invoke any remote command.
+</PRE>
+<P>
+<HR>
+<H1><A NAME="SEE_ALSO">SEE ALSO</A></H1>
+<P>
+<PRE>  perldoc V6evalTool
+  perldoc V6evalRemote
+</PRE>
+</BODY>
+
+</HTML>

@@ -1,0 +1,324 @@
+#!/usr/bin/perl
+#
+# Copyright (C) 1999, 2000, 2001, 2002, 2003 Yokogawa Electric Corporation,
+# IPA (Information-technology Promotion Agency, Japan).
+# All rights reserved.
+# 
+# Redistribution and use of this software in source and binary forms, with 
+# or without modification, are permitted provided that the following 
+# conditions and disclaimer are agreed and accepted by the user:
+# 
+# 1. Redistributions of source code must retain the above copyright 
+# notice, this list of conditions and the following disclaimer.
+# 
+# 2. Redistributions in binary form must reproduce the above copyright 
+# notice, this list of conditions and the following disclaimer in the 
+# documentation and/or other materials provided with the distribution.
+# 
+# 3. Neither the names of the copyrighters, the name of the project which 
+# is related to this software (hereinafter referred to as "project") nor 
+# the names of the contributors may be used to endorse or promote products 
+# derived from this software without specific prior written permission.
+# 
+# 4. No merchantable use may be permitted without prior written 
+# notification to the copyrighters. However, using this software for the 
+# purpose of testing or evaluating any products including merchantable 
+# products may be permitted without any notification to the copyrighters.
+# 
+# 
+# 
+# THIS SOFTWARE IS PROVIDED BY THE COPYRIGHTERS, THE PROJECT AND 
+# CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING 
+# BUT NOT LIMITED THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS 
+# FOR A PARTICULAR PURPOSE, ARE DISCLAIMED.  IN NO EVENT SHALL THE 
+# COPYRIGHTERS, THE PROJECT OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, 
+# INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES 
+# (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR 
+# SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) 
+# HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN 
+# CONTRACT,STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) 
+# ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF 
+# THE POSSIBILITY OF SUCH DAMAGE.
+#
+# $TAHI: ct/mip6-cn-20/Delete_LT0_HOME.seq,v 1.3 2003/02/21 04:25:59 akisada Exp $
+#
+################################################################
+
+BEGIN {$V6evalTool::TestVersion = '$Name: REL_2_1_1 $';}
+
+use V6evalTool;
+use MIP6;
+
+my $IF0 = 'Link0';
+my $NutType = $V6evalTool::NutDef{'Type'};
+
+vCapture($IF0);
+
+#--------------------------------------------------------------#
+vLogHTML('<FONT COLOR="#FF0000" SIZE="5"><U><B>INITIALIZATION</B></U></FONT><BR>');
+vClear($IF0);
+
+vLogHTML('<FONT SIZE="4"><U><B>Check Reachability</B></U></FONT><BR>');
+if(MIP6_CheckReachability($IF0) < 0) {
+	vLogHTML('<FONT COLOR="#FF0000">Can\'t get Echo Reply</FONT><BR>');
+	exit($V6evalTool::exitFail);
+}
+
+vClear($IF0);
+vLogHTML('<FONT SIZE="4"><U><B>Return Routability Procedure</B></U></FONT><BR>');
+
+my %rr = MIP6_ReturnRoutability($IF0);
+if($rr{'status'} < 0) {
+	vLogHTML('<FONT COLOR="#FF0000">Can\'t complete RR</FONT><BR>');
+	exit($V6evalTool::exitFail);
+}
+
+vClear($IF0);
+vLogHTML('<FONT SIZE="4"><U><B>Requests to Cache a Binding</B></U></FONT><BR>');
+my $sn = 0;
+my $a = 0;
+my $lt = 0xffff;
+if(MIP6_ProcessingBindingsNoAck($IF0, $sn, $a, $lt, %rr) < 0) {
+	vLogHTML('<FONT COLOR="#00FF00">BA SHOULD NOT be sent.</FONT><BR>');
+	exit($V6evalTool::exitWarn);
+}
+
+vClear($IF0);
+vLogHTML('<FONT SIZE="4"><U><B>Check Binding Cache</B></U></FONT><BR>');
+if(MIP6_CheckBindingCache($IF0) < 0) {
+	vLogHTML('<FONT COLOR="#FF0000">Can\'t get Echo Reply</FONT><BR>');
+	exit($V6evalTool::exitFail);
+}
+
+#--------------------------------------------------------------#
+vLogHTML('<FONT COLOR="#FF0000" SIZE="5"><U><B>TEST PROCEDURE</B></U></FONT><BR>');
+vClear($IF0);
+vLogHTML('<FONT SIZE="4"><U><B>Return Routability Procedure</B></U></FONT><BR>');
+
+my %rr = MIP6_RR_Home($IF0);
+if($rr{'status'} < 0) {
+	vLogHTML('<FONT COLOR="#FF0000">Can\'t complete RR</FONT><BR>');
+	exit($V6evalTool::exitFail);
+}
+
+vClear($IF0);
+vLogHTML('<FONT SIZE="4"><U><B>Requests to Delete a Binding</B></U></FONT><BR>');
+$sn = 1;
+$a = 1;
+$lt = 0;
+if(MIP6_DeleteBindingHome($IF0, $sn, $a, $lt, %rr) < 0) {
+	vLogHTML('<FONT COLOR="#FF0000">Can\'t get BA</FONT><BR>');
+	exit($V6evalTool::exitFail);
+}
+
+vClear($IF0);
+vLogHTML('<FONT SIZE="4"><U><B>Check Binding Cache</B></U></FONT><BR>');
+if(MIP6_CheckNoBindingCache($IF0) < 0) {
+	vLogHTML('<FONT COLOR="#00FF00">Can\'t get BE</FONT><BR>');
+	exit($V6evalTool::exitWarn);
+}
+
+vStop($IF0);
+
+vLogHTML('<B>PASS</B><BR>');
+exit($V6evalTool::exitPass);
+
+#
+# perldoc
+#
+################################################################
+__END__
+
+=head1 NAME
+
+Delete_LT0_HOME - Delete a Binding A=1 (Lifetime=0 & CoA=HoA) w/ HaO
+
+=head1 TARGET
+
+=begin html
+<PRE>
+Host/Router
+</PRE>
+
+=end html
+
+=head1 SYNOPSIS
+
+=begin html
+<PRE>
+<A HREF="./Delete_LT0_HOME.seq">Delete_LT0_HOME.seq</A> [-tooloption ...] -pkt <A HREF="./Delete_LT0_HOME.def">Delete_LT0_HOME.def</A>
+</PRE>
+<BLOCKQUOTE>
+<PRE>
+-tooloption: v6eval tool option
+</PRE>
+</BLOCKQUOTE>
+
+=end html
+
+=head1 TOPOLOGY
+
+=begin html
+<BLOCKQUOTE>
+<PRE>
+                                MN'
+                                |
+                --------+-------+------- LinkY
+                        |
+                        R1      MN
+                        |       |
+        --------+-------+-------+------- LinkX
+                |
+       NUT      R0
+        |       |
+--------+-------+----------------------- Link0
+</PRE>
+</BLOCKQUOTE>
+<BLOCKQUOTE>
+<TABLE BORDER>
+<TR>
+<TD><TT>Link0</TT></TD>
+<TD><TT>global</TT></TD>
+<TD><TT>3ffe:501:ffff:100::/64</TT></TD>
+<TD><TT>&nbsp;</TT></TD>
+</TR>
+<TR>
+<TD><TT>LinkX</TT></TD>
+<TD><TT>global</TT></TD>
+<TD><TT>3ffe:501:ffff:102::/64</TT></TD>
+<TD><TT>home link</TT></TD>
+</TR>
+<TR>
+<TD><TT>LinkY</TT></TD>
+<TD><TT>global</TT></TD>
+<TD><TT>3ffe:501:ffff:103::/64</TT></TD>
+<TD><TT>foreign link</TT></TD>
+</TR>
+<TR>
+<TD ROWSPAN="3"><TT>R0(Link0)</TT></TD>
+<TD><TT>global</TT></TD>
+<TD><TT>3ffe:501:ffff:100::a0a0</TT></TD>
+<TD ROWSPAN="3"><TT>&nbsp;</TT></TD>
+</TR>
+<TR>
+<TD><TT>link-local</TT></TD>
+<TD><TT>fe80::200:ff:fe00:a0a0</TT></TD>
+</TR>
+<TR>
+<TD><TT>ether</TT></TD>
+<TD><TT>00:00:00:00:a0:a0</TT></TD>
+</TR>
+<TR>
+<TD><TT>MN</TT></TD>
+<TD><TT>global</TT></TD>
+<TD><TT>3ffe:501:ffff:102:200:ff:fe00:31</TT></TD>
+<TD><TT>home address</TT></TD>
+</TR>
+<TR>
+<TD><TT>MN'</TT></TD>
+<TD><TT>global</TT></TD>
+<TD><TT>3ffe:501:ffff:103:200:ff:fe00:31</TT></TD>
+<TD><TT>care-of address</TT></TD>
+</TR>
+</TABLE>
+</BLOCKQUOTE>
+
+=end html
+
+=head1 INITIALIZATION
+
+=begin html
+<BLOCKQUOTE>
+<PRE>
+NUT      MN      MN'
+ |       |       |
+ | <---- |       | Echo Request
+ | ----> |       | Echo Reply
+ |       |       |
+ | <---- |       | HoTI
+ | <------------ | CoTI
+ | ----> |       | HoT
+ | ------------> | CoT
+ |       |       |
+ | <------------ | BU
+ | --X   |       | no response
+ |       |       |
+ | <------------ | Echo Request w/ HaO
+ | ------------> | Echo Reply w/ RH
+ |       |       |
+</PRE>
+</BLOCKQUOTE>
+<P>
+<PRE>
+ 1. Send Echo Request
+ 2. Wait Echo Reply
+ 3. Receive Echo Reply
+ 4. Send HoTI & CoTI
+ 5. Wait HoT & CoT
+ 6. Receive HoT & CoT
+ 7. Send BU
+ 8. No response
+ 9. Send Echo Request w/ HaO
+10. Wait Echo Reply w/ RH
+11. Receive Echo Reply w/ RH
+</PRE>
+
+=end html
+
+=head1 TEST PROCEDURE
+
+=begin html
+<BLOCKQUOTE>
+<PRE>
+NUT      MN      MN'
+ |       |       |
+ | <---- |       | HoTI
+ | ----> |       | HoT (*1)
+ |       |       |
+ | <---- |       | BU
+ | ----> |       | BA (*2)
+ |       |       |
+ | <------------ | Echo Request w/ HaO
+ | ------------> | BE (*3)
+ |       |       |
+</PRE>
+</BLOCKQUOTE>
+<P>
+<PRE>
+1. Send HoTI
+2. Wait HoT
+3. Receive HoT (*1)
+4. Send BU
+5. Wait BA
+6. Receive BA (*2)
+7. Send Echo Request w/ HaO
+8. Wait BE
+9. Receive BE (*3)
+</PRE>
+
+=end html
+
+=head1 JUDGEMENT
+
+=begin html
+<PRE>
+(*1) PASS: MN receives HoT
+(*3) PASS: MN receives BA
+(*4) PASS: MN' receives BE
+     <FONT COLOR="#00FF00">WARN</FONT>: no response
+     <FONT COLOR="#FF0000">FAIL</FONT>: Recv unexpect packets
+</PRE>
+
+=end html
+
+=head1 SEE ALSO
+
+=begin html
+<PRE>
+<A HREF="./MIP6.pm">MIP6.pm</A>
+<A HREF="./MIP6.def">MIP6.def</A>
+</PRE>
+
+=end html
+
+=cut

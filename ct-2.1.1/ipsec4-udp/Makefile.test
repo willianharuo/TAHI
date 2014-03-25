@@ -1,0 +1,114 @@
+#
+# $Name: REL_2_1_1 $
+#
+# $TAHI: ct/ipsec4-udp/Makefile.test,v 1.10 2002/07/16 04:33:06 akisada Exp $
+#
+
+PERL	= /usr/bin/perl
+POD2HTML= -$(PERL) -e 'use Pod::Html; pod2html("--noindex", @ARGV);'
+
+check:
+	$(AUTORUN) -t INDEX_host INDEX_router
+
+document:
+	$(AUTORUN) -g \
+	INDEX_host INDEX_host_ah INDEX_host_esp INDEX_host_common \
+	INDEX_router INDEX_router_ah INDEX_router_esp INDEX_router_common
+	$(POD2HTML) ../ipsec/IPSEC.pm > ../ipsec/IPSEC.html
+	rm -f pod2html-dircache pod2html-itemcache
+
+document2:
+	$(AUTORUN) -G \
+	INDEX_host INDEX_host_ah INDEX_host_esp INDEX_host_common \
+	INDEX_router INDEX_router_ah INDEX_router_esp INDEX_router_common
+	$(POD2HTML) ../ipsec/IPSEC.pm > ../ipsec/IPSEC.html
+	rm -f pod2html-dircache pod2html-itemcache
+
+tiny:
+	$(AUTORUN) -tiny -nolcna \
+	INDEX_host INDEX_host_ah INDEX_host_esp INDEX_host_common \
+	INDEX_router INDEX_router_ah INDEX_router_esp INDEX_router_common
+	$(POD2HTML) ../ipsec/IPSEC.pm > ../ipsec/IPSEC.html
+	rm -f pod2html-dircache pod2html-itemcache
+
+clean:
+	-/bin/rm -f *.log *.dump [0-9]*.html index.html summary.html report.html
+
+test:
+	$(AUTORUN) $(AROPT)\
+	-title='Conformance Test For IPv4(UDP) IPsec' \
+	INDEX_host INDEX_host_ah INDEX_host_esp INDEX_host_common \
+	INDEX_router INDEX_router_ah INDEX_router_esp INDEX_router_common
+
+test-host:
+	$(AUTORUN) $(AROPT)\
+	-title='Conformance Test For IPv4(UDP) IPsec (Host)' \
+	INDEX_host INDEX_host_ah INDEX_host_esp INDEX_host_common
+
+test-router:
+	$(AUTORUN) $(AROPT)\
+	-title='Conformance Test For IPv4(UDP) IPsec (Router)' \
+	INDEX_router INDEX_router_ah INDEX_router_esp INDEX_router_common
+
+tahi:	document
+	/bin/rm -f index.html summary.html report.html
+	$(AUTORUN) $(AROPT) -dump2txt \
+	-title='Conformance Test For IPv4(UDP) IPsec' \
+	INDEX_host INDEX_host_ah INDEX_host_esp INDEX_host_common \
+	INDEX_router INDEX_router_ah INDEX_router_esp INDEX_router_common
+
+test-ah:
+	$(AUTORUN) $(AROPT)\
+	-title='Conformance Test For IPv4(UDP) IPsec (AH)' \
+	INDEX_host INDEX_host_ah \
+	INDEX_router INDEX_router_ah
+
+test-host-ah:
+	$(AUTORUN) $(AROPT)\
+	-title='Conformance Test For IPv4(UDP) IPsec (Host AH)' \
+	INDEX_host INDEX_host_ah
+
+test-router-ah:
+	$(AUTORUN) $(AROPT)\
+	-title='Conformance Test For IPv4(UDP) IPsec (Router AH)' \
+	INDEX_router INDEX_router_ah
+
+test-esp:
+	$(AUTORUN) $(AROPT)\
+	-title='Conformance Test For IPv4(UDP) IPsec (ESP)' \
+	INDEX_host INDEX_host_esp \
+	INDEX_router INDEX_router_esp
+
+test-host-esp:
+	$(AUTORUN) $(AROPT)\
+	-title='Conformance Test For IPv4(UDP) IPsec (Host ESP)' \
+	INDEX_host INDEX_host_esp
+
+test-router-esp:
+	$(AUTORUN) $(AROPT)\
+	-title='Conformance Test For IPv4(UDP) IPsec (Router ESP)' \
+	INDEX_router INDEX_router_esp
+
+test-common:
+	$(AUTORUN) $(AROPT)\
+	-title='Conformance Test For IPv4(UDP) IPsec (Common)' \
+	INDEX_host INDEX_host_common \
+	INDEX_router INDEX_router_common
+
+test-host-common:
+	$(AUTORUN) $(AROPT)\
+	-title='Conformance Test For IPv4(UDP) IPsec (Host Common)' \
+	INDEX_host INDEX_host_common
+
+test-router-common:
+	$(AUTORUN) $(AROPT)\
+	-title='Conformance Test For IPv4(UDP) IPsec (Router Common)' \
+	INDEX_router INDEX_router_common
+
+demo:
+	$(AUTORUN) $(AROPT)\
+	-title='Conformance Test For IPv4(UDP) IPsec demonstration ' \
+	INDEX_demo
+
+.include "../Makefile.inc"
+

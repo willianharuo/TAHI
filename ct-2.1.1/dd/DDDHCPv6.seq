@@ -1,0 +1,784 @@
+#!/usr/bin/perl
+#
+# Copyright (C) 2003 Yokogawa Electric Corporation, 
+# INTAP(Interoperability Technology Association
+# for Information Processing, Japan).  All rights reserved.
+# 
+# Redistribution and use of this software in source and binary forms, with 
+# or without modification, are permitted provided that the following 
+# conditions and disclaimer are agreed and accepted by the user:
+# 
+# 1. Redistributions of source code must retain the above copyright 
+# notice, this list of conditions and the following disclaimer.
+# 
+# 2. Redistributions in binary form must reproduce the above copyright 
+# notice, this list of conditions and the following disclaimer in the 
+# documentation and/or other materials provided with the distribution.
+# 
+# 3. Neither the names of the copyrighters, the name of the project which 
+# is related to this software (hereinafter referred to as "project") nor 
+# the names of the contributors may be used to endorse or promote products 
+# derived from this software without specific prior written permission.
+# 
+# 4. No merchantable use may be permitted without prior written 
+# notification to the copyrighters. However, using this software for the 
+# purpose of testing or evaluating any products including merchantable 
+# products may be permitted without any notification to the copyrighters.
+# 
+# 
+# 
+# THIS SOFTWARE IS PROVIDED BY THE COPYRIGHTERS, THE PROJECT AND 
+# CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING 
+# BUT NOT LIMITED THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS 
+# FOR A PARTICULAR PURPOSE, ARE DISCLAIMED.  IN NO EVENT SHALL THE 
+# COPYRIGHTERS, THE PROJECT OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, 
+# INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES 
+# (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR 
+# SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) 
+# HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN 
+# CONTRACT,STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) 
+# ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF 
+# THE POSSIBILITY OF SUCH DAMAGE.
+#
+# $TAHI: ct/dd/DDDHCPv6.seq,v 1.3 2003/04/22 04:04:44 akisada Exp $
+#
+########################################################################
+BEGIN { $V6evalTool::TestVersion = '$Name: REL_2_1_1 $ '; }
+
+use V6evalTool;
+use dd;
+
+# Packet description
+%pktdesc = (
+        dadns_from_nut        => 'Recv DAD Neighbor Solicitation',
+        dadns_from_nut_GA0Tgt => 'Recv DAD Neighbor Solicitation whose target address is global address',
+        ns_from_nut_solnode   => 'Recv Neighbor Solicitation for address resolution',
+        ns_from_nut           => 'Recv Neighbor Solicitation for neighbor unreachability detection',
+        na_to_nut_solnode => 'Send Neighbor Advertisement for address resolution',
+        na_to_nut         => 'Send Neighbor Advertisement for neighbor unreachability detection',
+        rs_from_nut       => 'Recv Router Solicitation',
+        rs_from_nut_wSLL  => 'Recv Router Solicitation with Source link-layer address option',
+        ra_to_nut         => 'Send Router Advertisement',
+        dhcp_inforeq      => 'Recv DHCP Information-Request message w/ Domain Name Server option',
+        dhcp_inforeq_comb => 'Recv DHCP Information-Request message w/ Domain Name Server and Search List option',
+        dhcp_rep          => 'Send DHCP Reply message w/ Domain Name Server option',
+        dhcp_rep_comb     => 'Send DHCP Reply message w/ Domain Name Server and Search List option',
+        dns_squery        => 'Recv DNS source query message',
+        dns_response      => 'Send DNS response message',
+        echo_request_from_nut  => 'Recv Echo Request (Global Address)',
+        echo_reply_to_nut      => 'Send Echo Reply (Global Address)',
+);
+
+# The following generate debugging messages.
+$dd::debug=$ddOpt_v|$ddOpt_vv;
+
+# You can specifies debug options to a remote control program.
+# If you want to know more detail, please see the following:
+# - V6evalTool.pm: perldoc V6evalTool
+# - V6evalRemote.pm: perldoc V6evalRemote
+$dd::remote_debug="-o1" if $ndOpt_vv;
+
+#
+#
+$IF=Link0;
+$idx=0;
+
+#
+#
+$ping_dst_addr = "test.tahi.org";  #ping6 from NUT to the host test.tahi.org.
+#
+#
+##############################################
+#If wait dhcp information-request message
+#interave is short, please edit this parametor 
+$wait_time=10;  
+##############################################
+$maxcount = 1;
+# time is Jan 1, 2000 (UTC), modulo 2^32
+$t64 = time() - 946684800;
+foreach($count = 0; $count < $maxcount; $count++){
+    $sid_duid_time[$count] = ($t64 & 0xffffffff);
+    $t64 = $t64 + 86400; #1 day after
+}
+
+@sid_link_addr = (
+    "00:00:00:00:a0:a0",
+);
+
+#
+# Type check
+#
+$type=$V6evalTool::NutDef{Type};
+if($type eq router) {
+    vLogHTML("This test is for the host only<BR>");
+    exit $V6evalTool::exitHostOnly;
+}
+
+if($type ne host) {
+    vLogHTML(ddErrmsg("ERROR: $V6evalTool::NutDef{Type}: ".
+                      "Unknown target type<BR>"));
+    exit $V6evalTool::exitFail;
+}
+
+#
+# Initialize NUT
+#
+vLogHTML("<FONT SIZE=\"+1\">Target initialization</FONT><BR>");
+vLogHTML("Trying to setup NUT<BR>");
+ddSetInfoReqDHCP6Client() || exit $V6evalTool::exitFail;
+$ret = ddRebootAsync();
+if ($ret) {
+    vLogHTML('<FONT COLOR="#FF0000">NG</FONT>');
+    exit $V6evalTool::exitFatal;
+}
+
+#
+# Start capture buffer
+#
+vCapture($IF);
+
+#
+# LLA PHASE
+# Wait DAD NS from NUT or timeout
+#
+vLogHTML("TN wait DAD NS from NUT for $dd::wait_dadns [sec]<BR>");
+
+%ret1=vRecv($IF,$dd::wait_dadns,0,0,dadns_from_nut);
+
+if ($ret1{status} != 0){
+    vLogHTML("TN wait DAD NS from NUT for $dd::wait_dadns, but NUT had not transmit DAD NS<BR>");
+}
+else{
+#
+# RA PHASE
+#
+    vLogHTML("TN received DAD NS from NUT<BR>");
+    vLogHTML("OK<BR>");
+}
+%ret2=vRecv($IF,$dd::wait_rs,0,0,rs_from_nut,rs_from_nut_wSLL);
+
+if ($ret2{status} != 0){
+    vLogHTML("Though TN had waited RS from NUT for $dd::wait_rs,<BR>");
+    vLogHTML("NUT seems not to send RS<BR>");
+    ddErrmsg(NG);
+}else{
+    vLogHTML("TN received RS from NUT<BR>");
+    vLogHTML("OK<BR>");
+}
+
+vSend($IF, ra_to_nut);
+vLogHTML("TN sent RA (Prefix=Global)<BR>");
+
+#
+# Wait DAD NS from NUT or timeout
+#
+vLogHTML("TN wait DAD NS for Global address from NUT for $dd::wait_dadns_ra [sec]<BR>");
+
+%ret3=vRecv($IF,$dd::wait_dadns_ra,0,0,dadns_from_nut_GA0Tgt);
+
+if ($ret3{status} == 0){
+    vSleep($dd::RetransTimerSec);
+    vLogHTML("NUT had not transmitted DAD NS for Global address.<BR>");
+    vLogHTML("NUT assigned Global address to the interface.<BR>");
+    vLogHTML("OK<BR>");
+} elsif ($ret3{status} != 0){
+    vLogHTML("NUT did not assign Global address.<BR>");
+    ddErrmsg(NG);
+}
+
+#
+# Start test 
+# 
+vLogHTML("<FONT SIZE=\"+1\">Test</FONT><BR>");
+
+#
+# Wait Information-Request from NUT
+#
+$title{$idx}="<TD>$pktdesc{'dhcp_inforeq'}</TD><TD>exp:sending DHCP Information-request message</TD>";
+vLogHTML("Wait DHCP Information-request Messages.<BR>");
+
+$vcpp = ddSetVCPP($dd::INITIAL, $dnsserver, $domainserchlist,
+        $maxcount, @sid_duid_time, @sid_link_addr, %ret);
+vCPP($vcpp);
+
+%ret = vRecv($IF, $wait_time, 0, 0, dhcp_inforeq, dhcp_inforeq_comb);
+
+if($ret{status} == 0) {
+        vLogHTML("TN received DHCP Information-request message<BR>");
+        vLogHTML("<A NAME=\"T$idx\">OK</A><BR>");
+
+        $vcpp = ddSetVCPP($dd::INFORMATIONREQUEST, $dnsserver, $domainserchlist,
+                $maxcount, @sid_duid_time, @sid_link_addr, %ret);
+        vCPP($vcpp);
+
+        if ($ret{recvFrame} eq 'dhcp_inforeq'){
+                vSend($IF, dhcp_rep);
+        }
+        else{
+                vSend($IF, dhcp_rep_comb);
+        }
+
+        vLogHTML("TN sent DHCP Reply message<BR>");
+        $title{$idx}.="<TD>result:sent DHCP Information-request message</TD>";
+        $result{$idx}=$V6evalTool::exitPass;
+        $idx++;
+}
+else{
+        vLogHTML("Can't receive DHCP Information-request message<BR>");
+        vLogHTML("<FONT COLOR=\"#FF0000\">NG</FONT>");
+        exit $V6evalTool::exitFail;
+}
+
+vSleep($wait_time*2);
+
+#
+# ping6 from NUT to the host test.tahi.org
+#
+vLogHTML("NUT is sending ICMP Echo request message to host $ping_dst_addr<BR>");
+ddPing($ping_dst_addr) || exit $V6evalTool::exitFail;
+
+#
+# Receive standard query from NUT
+#
+$title{$idx}="<TD>$pktdesc{'dns_squery'}</TD><TD>exp:sending DNS source query message</TD>";
+vLogHTML("Wait standard query from NUT<BR>");
+%ret=vRecv($IF, $wait_time+5, 0, 1, ns_from_nut_solnode, ns_from_nut, dns_squery);
+if($ret{status}==0) {
+        if($ret{recvFrame} eq 'ns_from_nut_solnode') {
+            $NUT_ADDR = $ret{$dd::FEM_SRC_ADDR};
+            $TGT_ADDR = $ret{$dd::FEM_NS_TGTADDR};
+            vCPP("-DNUT_ADDR=\\\"$NUT_ADDR\\\" -DTGT_ADDR=\\\"$TGT_ADDR\\\"");
+            vSend($IF, na_to_nut_solnode);
+            %ret=vRecv($IF, $wait_time, 0, 1, dns_squery);
+        }
+        elsif($ret{recvFrame} eq 'ns_from_nut') {
+            vSend($IF, na_to_nut);
+            %ret=vRecv($IF, $wait_time, 0, 1, dns_squery);
+        }
+        if($ret{status}==0) {
+            vLogHTML("TN received DNS standard query message<BR>");
+            vLogHTML("<A NAME=\"T$idx\">OK</A><BR>");
+
+            $DNS_PORT = $ret{$dd::FEM_UDP . '.Hdr_UDP.SourcePort'};
+            $DNS_ID      = $ret{$dd::FEM_UDP . '.Udp_DNS.Identifier'};
+            $RD_BIT      = $ret{$dd::FEM_UDP . '.Udp_DNS.RD'};
+            print "PORT: $DNS_PORT, ID: $DNS_ID, RD: $RD_BIT\n" if $debug;
+            vCPP("-DDNS_PORT=$DNS_PORT -DDNS_ID=$DNS_ID -DRD_BIT=$RD_BIT");
+            %ret=vSend($IF, dns_response);
+
+            vLogHTML("TN sent DNS response message<BR>");
+            $title{$idx}.="<TD>result:sent DNS source query message</TD>";
+            $result{$idx}=$V6evalTool::exitPass;
+            $idx++;
+        }
+        else{
+            vLogHTML("TN doesn't receive standard query<BR>");
+            vLogHTML("<FONT COLOR=\"#FF0000\">NG</FONT>");
+            ddAsyncWait() || exit $V6evalTool::exitFatal;
+            exit $V6evalTool::exitFail;
+        }
+}
+else{
+        vLogHTML("TN doesn't receive standard query<BR>");
+        ddAsyncWait() || exit $V6evalTool::exitFatal;
+        exit $V6evalTool::exitFail;
+}
+
+#
+# Receive ICMP echo request from NUT
+#
+$title{$idx}="<TD>$pktdesc{'echo_request_from_nut'}</TD><TD>exp:sending ICMP Echo request message</TD>";
+%ret=vRecv($IF, $wait_time/2, 0, 1, ns_from_nut_solnode, ns_from_nut, echo_request_from_nut);
+if($ret{status}==0) {
+        if($ret{recvFrame} eq 'ns_from_nut_solnode'){
+            $NUT_ADDR = $ret{$dd::FEM_SRC_ADDR};
+            $TGT_ADDR = $ret{$dd::FEM_NS_TGTADDR};
+            vCPP("-DNUT_ADDR=\\\"$NUT_ADDR\\\" -DTGT_ADDR=\\\"$TGT_ADDR\\\"");
+            vSend($IF, na_to_nut_solnode);
+            %ret=vRecv($IF, $wait_time/2, 0, 1, echo_request_from_nut);
+        }
+        elsif($ret{recvFrame} eq 'ns_from_nut') {
+            vSend($IF, na_to_nut);
+            %ret=vRecv($IF, $wait_time/2, 0, 1, echo_request_from_nut);
+        }
+        if($ret{status}==0) {
+            vLogHTML("TN received ICMP Echo request message<BR>");
+            vLogHTML("<A NAME=\"T$idx\">OK</A><BR>");
+
+            $PING_ID = $ret{$dd::FEM_ICMP . '.Identifier'};
+            $PING_SN = $ret{$dd::FEM_ICMP . '.SequenceNumber'};
+            $PING_DATA = $ret{$dd::FEM_ICMP . '.Payload.data'};
+            print "PING_ID: $PING_ID, PING_SN: $PING_SN, PING_DATA: $PING_DATA\n" if $debug;
+            vCPP("-DPING_ID=$PING_ID -DPING_SN=$PING_SN -DPING_DATA=$PING_DATA");
+            vSend($IF, echo_reply_to_nut);
+            %ret=vRecv($IF, $wait_time/2, 0, 1, ns_from_nut);
+            if($ret{status}==0) {
+                vSend($IF, na_to_nut);
+            }
+
+            vLogHTML("TN sent ICMP Echo reply message<BR>");
+            $title{$idx}.="<TD>result:sent ICMP Echo request message</TD>";
+            $result{$idx}=$V6evalTool::exitPass;
+        }
+        else{
+            vLogHTML("TN doesn't receive echo request<BR>");
+            vLogHTML("<FONT COLOR=\"#FF0000\">NG</FONT>");
+            ddAsyncWait() || exit $V6evalTool::exitFatal;
+            exit $V6evalTool::exitFail;
+        }
+}
+else{
+        vLogHTML("TN doesn't receive echo request<BR>");
+        vLogHTML("<FONT COLOR=\"#FF0000\">NG</FONT>");
+        ddAsyncWait() || exit $V6evalTool::exitFatal;
+        exit $V6evalTool::exitFail;
+}
+
+ddAsyncWait() || exit $V6evalTool::exitFatal;
+
+#
+# Log
+#
+@col=('PTN', 'EXP', 'RESULT');
+ddPrintSummaryHTML("*** Test Summary: PE vs CPE ***", @col,
+                   %title, %result, $idx);
+
+#
+#
+#
+exit $exit_rtn;
+
+########################################################################
+__END__
+
+=head1 NAME
+
+  DDDHCPv6.seq - Host requests DNS configuration using DHCPv6
+
+=head1 TARGET
+
+  Host
+
+=head1 SYNOPSIS
+
+=begin html
+  &nbsp;&nbsp;<A HREF="./DDDHCPv6.seq">DDDHCPv6.seq</A> [-tooloption ...] -pkt <A HREF="./DDDHCPv6.def">DDDHCPv6.def</A> -tooloption : v6eval tool option
+
+=end html
+
+=head1 TOPOLOGY
+
+=begin html
+<PRE>
+   Host1
+    |                     ISP site
+  --+----+--------------- Link1 3ffe:501:ffff:101::/64
+         |
+        TN      NUT
+         |       |        Customer site
+  -------+-------+------- Link0 3ffe:501:ffff:100::/64
+</PRE>
+<BLOCKQUOTE>
+<TABLE border=1>
+    <TBODY>
+    <tr>
+      <TD><TT>Host1</TT></TD>
+      <TD colspan="2"><TT>Global address</TT></TD>
+      <TD><TT>3ffe:501:ffff:101:200:ff:fe00:a1a1</TT></TD>
+    </tr>
+    <TR>
+      <TD rowspan=3><TT>TN<BR>DHCP and DNS Server</TT></TD>
+      <TD rowspan="3">Link0</TD>
+      <TD><TT>Link-local</TT></TD>
+      <TD><TT>fe80::200:ff:fe00:a0a0</TT></TD>
+    </TR>
+    <TR>
+      <TD><tt>Global address</tt></TD>
+      <TD><tt>3ffe:501:ffff:100:200:ff:fe00:a0a0</tt></TD>
+    </TR>
+    <TR>
+      <TD><TT>Ether</TT></TD>
+      <TD><TT>00:00:00:00:a0:a0</TT></TD>
+    </TR>
+    <TR>
+      <TD rowspan="2"><TT>NUT</TT></TD>
+      <TD colspan="2"><TT>Link-local</TT></TD>
+      <TD><TT>NUT link-local address</TT></TD>
+    </TR>
+    <TR>
+      <TD colspan="2"><tt>Global address</tt></TD>
+      <TD><tt>NUT 3ffe:501:ffff:100: + NUT's MAC Addr</tt></TD></TR></TBODY>
+  </TABLE>
+</BLOCKQUOTE>
+
+=end html
+
+=head1 INITIALIZATION
+
+=begin html
+<OL>
+  <LI>NUT sets up as DHCPv6 client Host 
+</OL>
+<PRE>
+Tester as Server        Target as Client
+    |                           |
+    |<--------------------------|
+    |   Router Solicitation     |
+    |                           |
+    |-------------------------->|
+    |   Router Advertisement    |
+    |                           |
+<BR>
+  1. Wait Router Solicitation
+  2. Send Router Advertisement
+</PRE>
+
+=end html
+
+=head1 TEST PROCEDURE
+
+=begin html
+<PRE>
+Tester as Server        Target as Client
+    |                           |
+    |<--------------------------|
+    |   <A HREF="#JDG1">Judgment #1</A>             |
+    |  DHCP Information-request |
+    |                           |
+    |-------------------------->|
+    |   DHCP Reply message      |
+    |  w/ Domain list option    |
+    |                           |
+    |           <---------------|
+    |          ICMP Echo request|
+    |          to test.tahi.org |
+    |                           |
+    |<--------------------------|
+    |   <A HREF="#JDG2">Judgment #2</A>             |
+    |  NUT send standard query  |
+    | to distributed address by | 
+    |the DHCP for AAAA record of|
+    |  "test.tahi.org"          |
+    |                           |
+    |-------------------------->|
+    |   DNS response            |
+    |  for AAAA record of       |
+    |  "test.tahi.org           |
+    |                           |
+    |<--------------------------|
+    |   <A HREF="#JDG3">Judgment #3</A>             |
+    |   ICMP Echo request       |
+    |   to test.tahi.org        |
+    |                           |
+    |-------------------------->|
+    |   ICMP Echo reply         |
+    |   from test.tahi.org      |
+    |                           |
+    v                           v
+<BR>
+  1. Wait DHCP Information-request message
+  2. Send DHCP Reply message
+  3. Wait DNS query to distributed address by the DHCP server for AAAA record of "test.tahi.org"
+  4. Send DNS response for AAAA record of "test.tahi.org"
+  5. Wait Echo request to test.tahi.org
+  6. Send Echo reply from test.tahi.org
+<BR>
+</PRE>
+<BLOCKQUOTE>
+DHCP Information-Request message</p>
+<TABLE border=1>
+    <TR>
+      <TD colspan="2">msg-type</TD>
+      <TD>INFORMATION-REQUEST (11)</TD>
+    </TR>
+    <TR>
+      <TD colspan="3">option</TD>
+    </TR>
+    <TR>
+      <TD colspan="3">Client Identifier Option</TD>
+    </TR>
+    <tr>
+      <TD colspan="3">Elapsed Time Option (MUST)</TD>
+    </tr>
+    <tr>
+      <TD>&nbsp;</TD>
+      <TD>elapsed-time</TD>
+      <TD>ANY</TD>
+    </tr>
+    <TR>
+      <TD colspan="3">Option Request Option</TD>
+    </TR>
+    <TR>
+      <TD>&nbsp;</TD>
+      <TD>option-code</TD>
+      <TD>OPTION_DNS_SERVERS (tbd)</TD>
+    </TR>
+</TABLE>
+<BR>
+DHCP Reply message<BR>
+<TABLE border=1>
+    <TR>
+      <TD colspan="2">msg-type</TD>
+      <TD>REPLY(7)</TD>
+    </TR>
+    <TR>
+      <TD colspan="3">options</TD>
+    </TR>
+    <TR>
+      <TD colspan="3">Client Identifier Option</TD>
+    </TR>
+    <TR>
+      <TD colspan="3">Server Identifier Option</TD>
+    </TR>
+    <TR>
+      <TD colspan="3">Domain Name Server option</TD>
+    </TR>
+    <TR>
+      <TD>&nbsp;</TD>
+      <TD>Code</TD>
+      <TD>OPTION_DNS_SERVERS (tbd)</TD></TR>
+    <TR>
+      <TD>&nbsp;</TD>
+      <TD>DNS-server</TD>
+      <TD><tt>3ffe:501:ffff:100:200:ff:fe00:a0a0</tt></TD></TR>
+</TABLE>
+<BR>
+DNS query message<BR>
+Destination address is <B>3ffe:501:ffff:100:200:ff:fe00:a0a0</B> <BR>
+<TABLE border=1>
+    <TR>
+      <TD colspan="3">Header</TD>
+    </TR>
+    <tr>
+      <TD>&nbsp;</TD>
+      <TD>QR</TD>
+      <TD>0 (SQUERY)</TD>
+    </tr>
+    <tr>
+      <TD>&nbsp;</TD>
+      <TD>OPCODE</TD>
+      <TD>0 (SQUERY)</TD>
+    </tr>
+    <TR>
+      <TD colspan="3">Question section</TD>
+    </TR>
+    <TR>
+      <TD>&nbsp;</TD>
+      <TD>QNAME</TD>
+      <TD>test.tahi.org</TD>
+    </TR>
+    <TR>
+      <TD>&nbsp;</TD>
+      <TD>QTYPE</TD>
+      <TD>28 (IPv6 address)</TD></TR>
+    <TR>
+      <TD>&nbsp;</TD>
+      <TD>QCLASS</TD>
+      <TD>1 (Internet)</TD>
+    </TR>
+</TABLE>
+<BR>
+DNS standard query response message<BR>
+<TABLE border=1>
+    <TR>
+      <TD colspan="4">Header</TD>
+    </TR>
+    <tr>
+      <TD>&nbsp;</TD>
+      <TD colspan="2">QR</TD>
+      <TD>1 (RESPONSE)</TD>
+    </tr>
+    <tr>
+      <TD>&nbsp;</TD>
+      <TD colspan="2">OPCODE</TD>
+      <TD>0 (SQUERY)</TD>
+    </tr>
+    <tr>
+      <TD>&nbsp;</TD>
+      <TD colspan="2">AA</TD>
+      <TD>1 (Authoritative Answer)</TD>
+    </tr>
+    <TR>
+      <TD colspan="4">Question section</TD>
+    </TR>
+    <TR>
+      <TD>&nbsp;</TD>
+      <TD colspan="2">QNAME</TD>
+      <TD>test.tahi.org</TD>
+    </TR>
+    <TR>
+      <TD>&nbsp;</TD>
+      <TD colspan="2">QTYPE</TD>
+      <TD>28 (IPv6 address)</TD></TR>
+    <TR>
+      <TD>&nbsp;</TD>
+      <TD colspan="2">QCLASS</TD>
+      <TD>1 (Internet)</TD>
+    </TR>
+    <TR>
+      <TD colspan="4">Answer section</TD>
+    </TR>
+    <TR>
+      <TD>&nbsp;</TD>
+      <TD colspan="2">RRs</TD>
+      <TD>&nbsp;</TD>
+    </TR>
+    <TR>
+      <TD>&nbsp;</TD>
+      <TD>&nbsp;</TD>
+      <TD>NAME</TD>
+      <TD>test.tahi.org</TD>
+    </TR>
+    <TR>
+      <TD>&nbsp;</TD>
+      <TD>&nbsp;</TD>
+      <TD>TYPE</TD>
+      <TD>28 (IPv6 address)</TD>
+    </TR>
+    <TR>
+      <TD>&nbsp;</TD>
+      <TD>&nbsp;</TD>
+      <TD>CLASS</TD>
+      <TD>1 (Internet)</TD>
+    </TR>
+    <TR>
+      <TD>&nbsp;</TD>
+      <TD>&nbsp;</TD>
+      <TD>TTL</TD>
+      <TD>1800 (second)</TD>
+    </TR>
+    <TR>
+      <TD>&nbsp;</TD>
+      <TD>&nbsp;</TD>
+      <TD>RDLENGTH</TD>
+      <TD>16</TD>
+    </TR>
+    <TR>
+      <TD>&nbsp;</TD>
+      <TD>&nbsp;</TD>
+      <TD>RDATA</TD>
+      <TD>3ffe:501:ffff:101:200:ff:fe00:a2a2</TD>
+    </TR>
+</TABLE>
+</BLOCKQUOTE>
+
+=end html
+
+=head1 JUDGEMENT
+
+=begin html
+<PRE>
+<A NAME="JDG1"></A>
+  1. DHCP Information-request is recieved
+<A NAME="JDG2"></A>
+  2. DNS query message is recieved
+<A NAME="JDG3"></A>
+  3. ICMP Echo Request is recieved
+</PRE>
+
+=end html
+
+=head1 TERMINATION
+
+  N/A
+
+=head1 REFERENCE
+
+=begin html
+<PRE>
+draft-ietf-ipv6-dns-discovery-07.txt
+6.4 DNS forwarder with DHCPv6 interactions
+<BR>
+   In this variant scenario, DHCPv6 is be used between the PE and CPE to
+   do prefix delegation [DELEG] and recursive DNS server discovery.
+<BR>
+                                                     -------------
+                                                    /            |
+            --------           --------------      /             |
+            |ISP   |           |customer CPE|     /    Customer  |
+            |DHCPv6|===========|      DHCPv6|====<     site      |
+            |server|    <------|------client|     \              |
+            --------           --------------      \             |
+                                                    \            |
+                                                     -------------
+<BR>
+   This example will show how DHCPv6 and well known site local unicast
+   addresses cooperate to enable the internal nodes to access DNS.
+<BR>
+   The customer router CPE is configured on its internal interface with
+   one of the reserved site local addresses and listen for DNS queries.
+   It would act as a DNS forwarder, as in 5.2,  forwarding those queries
+   to the recursive DNS server pointed out by the ISP in the DHCPv6
+   exchange.
+<BR>
+                                                   -------------
+                                                  /            |
+        ----------           --------------      /             |
+        |ISP     |           |customer CPE|     /    Customer  |
+        |DNS     |===========|         DNS|====<     site      |
+        |resolver|    <------|---forwarder|-----\----          |
+        ----------           --------------      \             |
+                                                  \            |
+                                                   -------------
+<BR>
+<BR>
+   The same CPE router could also implement a local DHCPv6 server and
+   advertizes itself as DNS forwarder.
+<BR>
+                                                     -------------
+                                                    /            |
+            --------           --------------      /   Customer  |
+            |ISP PE|           |customer CPE|     /    site      |
+            |      |===========|DHCPv6      |====<               |
+            |      |           |server------|-----\--->          |
+            --------           --------------      \             |
+                                                    \            |
+                                                     -------------
+<BR>
+<BR>
+<BR>
+   Within the site:
+<BR>
+      a) DHCPv6 aware clients use DHCPv6 to obtain the address of the
+      DNS forwarder...
+<BR>
+                                                   -------------
+                                                  /            |
+        ----------           --------------      /   Customer  |
+        |ISP     |           |customer CPE|     /    site      |
+        |DNS     |===========|         DNS|====<               |
+        |resolver|    <------|---forwarder|-----\----DHCPv6    |
+        ----------           --------------      \   client    |
+                                                  \            |
+                                                   -------------
+          (The address of the DNS forwarder is acquired via DHCPv6.)
+<BR>
+<BR>
+      b) other nodes simply send their DNS request to the reserved site
+      local addresses.
+<BR>
+                                                   -------------
+                                                  /            |
+        ----------           --------------      /   customer  |
+        |ISP     |           |customer CPE|     /    site      |
+        |DNS     |===========|         DNS|====<               |
+        |resolver|    <------|---forwarder|-----\----non DHCPv6|
+        ----------           --------------      \   node      |
+                                                  \            |
+                                                   -------------
+          (Internal nodes use the reserved site local unicast address.)
+<BR>
+<BR>
+   A variant of this scenario is the CPE can decide to pass the global
+   address of the ISP recursive DNS server in the DHCPv6 exchange with
+   the internal nodes.
+</PRE>
+
+=end html
+
+=head1 SEE ALSO
+
+  perldoc V6evalTool
+
+=cut
+

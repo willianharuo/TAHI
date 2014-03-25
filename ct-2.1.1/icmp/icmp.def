@@ -1,0 +1,364 @@
+//
+// Copyright (C) 1999, 2000, 2001, 2002, 2003 Yokogawa Electric Corporation,
+// IPA (Information-technology Promotion Agency, Japan).
+// All rights reserved.
+// 
+// Redistribution and use of this software in source and binary forms, with 
+// or without modification, are permitted provided that the following 
+// conditions and disclaimer are agreed and accepted by the user:
+// 
+// 1. Redistributions of source code must retain the above copyright 
+// notice, this list of conditions and the following disclaimer.
+// 
+// 2. Redistributions in binary form must reproduce the above copyright 
+// notice, this list of conditions and the following disclaimer in the 
+// documentation and/or other materials provided with the distribution.
+// 
+// 3. Neither the names of the copyrighters, the name of the project which 
+// is related to this software (hereinafter referred to as "project") nor 
+// the names of the contributors may be used to endorse or promote products 
+// derived from this software without specific prior written permission.
+// 
+// 4. No merchantable use may be permitted without prior written 
+// notification to the copyrighters. However, using this software for the 
+// purpose of testing or evaluating any products including merchantable 
+// products may be permitted without any notification to the copyrighters.
+// 
+// 
+// 
+// THIS SOFTWARE IS PROVIDED BY THE COPYRIGHTERS, THE PROJECT AND 
+// CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING 
+// BUT NOT LIMITED THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS 
+// FOR A PARTICULAR PURPOSE, ARE DISCLAIMED.  IN NO EVENT SHALL THE 
+// COPYRIGHTERS, THE PROJECT OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, 
+// INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES 
+// (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR 
+// SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) 
+// HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN 
+// CONTRACT,STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) 
+// ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF 
+// THE POSSIBILITY OF SUCH DAMAGE.
+//
+// $TAHI: ct/icmp/icmp.def,v 1.7 2003/03/26 07:47:34 masaxmasa Exp $
+//
+
+//----------------------------------------------------------------------
+// Address
+//----------------------------------------------------------------------
+#define TN_GLOBAL v6merge( _GLOBAL0_UCAST_PRFX, \
+	_GLOBAL0_UCAST_PRFXLEN, \
+	v6("::1"))
+#define NUT_GLOBAL v6merge( _GLOBAL0_UCAST_PRFX, \
+	_GLOBAL0_UCAST_PRFXLEN, \
+	nutv6())
+#define OFFLINK_GLOBAL v6(_GLOBAL5A0N_UCAST_ADDR)
+
+//----------------------------------------------------------------------
+// define Packets
+//----------------------------------------------------------------------
+
+//----------------------------------------------------------------------
+// Echo Request
+// Link-local address
+//----------------------------------------------------------------------
+
+FEM_icmp6_echo_request(
+	echo_request_link_local,
+	_HETHER_tn2nut,
+	{
+		_SRC(tnv6());
+		_DST(nutv6());
+	},
+	{
+		payload = ping_data;
+	}
+)  
+
+//----------------------------------------------------------------------
+// Echo Request
+// Global address
+//----------------------------------------------------------------------
+
+FEM_icmp6_echo_request(
+	echo_request_global,
+	_HETHER_tn2nut,
+	{
+		_SRC(TN_GLOBAL);
+		_DST(NUT_GLOBAL);
+	},
+	{
+		payload = ping_data;
+	}
+)  
+
+//----------------------------------------------------------------------
+// Echo Reply 
+// Link-local address
+//----------------------------------------------------------------------
+
+FEM_icmp6_echo_reply(
+	echo_reply_link_local,
+	_HETHER_nut2tn,
+	{
+		_SRC(nutv6());
+		_DST(tnv6());
+	},
+	{
+		payload = ping_data;
+	}
+)
+
+//----------------------------------------------------------------------
+// Echo Reply 
+// Global address
+//----------------------------------------------------------------------
+
+FEM_icmp6_echo_reply(
+	echo_reply_global,
+	_HETHER_nut2tn,
+	{
+		_SRC(NUT_GLOBAL);
+		_DST(TN_GLOBAL);
+	},
+	{
+		payload = ping_data;
+	}
+)
+
+//----------------------------------------------------------------------
+// payload  data
+//----------------------------------------------------------------------
+
+Payload ping_data {
+	data = repeat(0xff,6);
+}
+
+//----------------------------------------------------------------------
+// Neighbor Solicitation Messages
+//----------------------------------------------------------------------
+
+_HETHER_define(HETHER_nut2tn_oneof,  nutether(), oneof(tnether(),_ETHER_SOLNODE_MCAST(TN_GLOBAL),_ETHER_SOLNODE_MCAST(tnv6())))
+
+//----------------------------------------------------------------------
+// TN  <-- NUT (link local address)
+// TargetAddress: TN's link local address
+// Option : Source link layer address
+//----------------------------------------------------------------------
+
+FEM_icmp6_ns(
+	ns_local_sll,
+	HETHER_nut2tn_oneof,
+	{
+		_SRC(nutv6());
+		_DST(oneof(_IPV6_SOLNODE_MCAST(tnv6()), tnv6()));
+		HopLimit = 255;
+	},
+	{
+		TargetAddress = tnv6();
+		option = _SLLOPT_nut;
+	}
+)
+
+//----------------------------------------------------------------------
+// TN  <-- NUT (link local address)
+// TargetAddress: TN's link local address
+// Option : none
+//----------------------------------------------------------------------
+
+FEM_icmp6_ns(
+	ns_local,
+	HETHER_nut2tn_oneof,
+	{
+		_SRC(nutv6());
+		_DST(oneof(_IPV6_SOLNODE_MCAST(tnv6()), tnv6()));
+		HopLimit = 255;
+	},
+	{
+		TargetAddress = tnv6();
+	}
+)
+
+//----------------------------------------------------------------------
+// TN  <-- NUT
+// Source address: NUT's global address
+// TargetAddress: TN's global address
+// Option : Source link layer address
+//----------------------------------------------------------------------
+
+FEM_icmp6_ns(
+	ns_global_sll,
+	HETHER_nut2tn_oneof,
+	{
+		_SRC(NUT_GLOBAL);
+		_DST(oneof(_IPV6_SOLNODE_MCAST(TN_GLOBAL), TN_GLOBAL));
+		HopLimit = 255;
+	},
+	{
+		TargetAddress = TN_GLOBAL;
+		option = _SLLOPT_nut;
+	}
+)
+
+//----------------------------------------------------------------------
+// TN  <-- NUT
+// Source address: NUT's link-local address
+// TargetAddress: TN's global address
+// Option : Source link layer address
+//----------------------------------------------------------------------
+
+FEM_icmp6_ns(
+	ns_global_sll_from_local,
+	HETHER_nut2tn_oneof,
+	{
+		_SRC(nutv6());
+		_DST(oneof(_IPV6_SOLNODE_MCAST(TN_GLOBAL), TN_GLOBAL));
+		HopLimit = 255;
+	},
+	{
+		TargetAddress = TN_GLOBAL;
+		option = _SLLOPT_nut;
+	}
+)
+
+//----------------------------------------------------------------------
+// TN  <-- NUT
+// Source address: NUT's global address
+// TargetAddress: TN's global address
+// Option : none
+//----------------------------------------------------------------------
+
+FEM_icmp6_ns(
+	ns_global,
+	HETHER_nut2tn_oneof,
+	{
+		_SRC(NUT_GLOBAL);
+		_DST(oneof(_IPV6_SOLNODE_MCAST(TN_GLOBAL), TN_GLOBAL));
+		HopLimit = 255;
+	},
+	{
+		TargetAddress = TN_GLOBAL;
+	}
+)
+
+//----------------------------------------------------------------------
+// TN  <-- NUT (global address)
+// Source address: NUT's link-local address
+// TargetAddress: TN's global address
+// Option : none
+//----------------------------------------------------------------------
+
+FEM_icmp6_ns(
+	ns_global_from_local,
+	HETHER_nut2tn_oneof,
+	{
+		_SRC(nutv6());
+		_DST(oneof(_IPV6_SOLNODE_MCAST(TN_GLOBAL), TN_GLOBAL));
+		HopLimit = 255;
+	},
+	{
+		TargetAddress = TN_GLOBAL;
+	}
+)
+
+
+//----------------------------------------------------------------------
+// Neighber Advertisement Messages
+//----------------------------------------------------------------------
+
+//----------------------------------------------------------------------
+// TN  (link local address)--> NUT (link local address)
+// TargetAddress: TN's link local address
+//----------------------------------------------------------------------
+
+FEM_icmp6_na(
+	na_local,
+	_HETHER_tn2nut,
+	{
+		_SRC(tnv6());
+		_DST(nutv6());
+		HopLimit = 255;
+	},
+	{
+		RFlag = 1;
+		SFlag = 1;
+		OFlag = 1;
+		TargetAddress = tnv6();
+		option = _TLLOPT_tn;
+	}
+)
+
+//----------------------------------------------------------------------
+// TN  (global address)--> NUT (global address)
+// TargetAddress: TN's global address
+//----------------------------------------------------------------------
+
+FEM_icmp6_na(
+	na_global,
+	_HETHER_tn2nut,
+	{
+		_SRC(TN_GLOBAL);
+		_DST(NUT_GLOBAL);
+		HopLimit = 255;
+	},
+	{
+		RFlag = 1;
+		SFlag = 1;
+		OFlag = 1;
+		TargetAddress = TN_GLOBAL;
+		option = _TLLOPT_tn;
+	}
+)
+
+//----------------------------------------------------------------------
+// TN  (global address)--> NUT (link-local address)
+// TargetAddress: TN's global address
+//----------------------------------------------------------------------
+
+FEM_icmp6_na(
+	na_global_to_local,
+	_HETHER_tn2nut,
+	{
+		_SRC(TN_GLOBAL);
+		_DST(nutv6());
+		HopLimit = 255;
+	},
+	{
+		RFlag = 1;
+		SFlag = 1;
+		OFlag = 1;
+		TargetAddress = TN_GLOBAL;
+		option = _TLLOPT_tn;
+	}
+)
+
+
+//----------------------------------------------------------------------
+// Router Advertisement 
+// TN  (link local address)--> NUT (all node multicast address)
+//----------------------------------------------------------------------
+
+FEM_icmp6_ra (
+	ra,
+	_HETHER_tn2allnodes,
+	{
+		_SRC(tnv6());
+		_DST(v6(_LLOCAL_ALLNODES_MCAST_ADDR));
+		HopLimit = 255;
+	},
+	{
+		CurHopLimit = 254;
+		LifeTime = 3600;
+		ReachableTime = 0;
+		RetransTimer = 1005;
+		option = _SLLOPT_tn;
+		option = prefix_ra;
+	}
+)
+
+Opt_ICMPv6_Prefix prefix_ra { 
+	LFlag = 1;
+	AFlag = 1;
+	ValidLifetime = 3600005;
+	PreferredLifetime = 3600005;
+	Prefix = v6(_GLOBAL0_UCAST_PRFX);
+}

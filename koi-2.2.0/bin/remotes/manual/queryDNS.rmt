@@ -1,0 +1,300 @@
+#!/usr/bin/perl
+#
+# Copyright (C) 2004, 2005, 2006, 2007, 2008, 2009, 2010
+# NTT Advanced Technology, Yokogawa Electric Corporation.
+# All rights reserved.
+# 
+# Redistribution and use of this software in source and binary
+# forms, with or without modification, are permitted provided that
+# the following conditions and disclaimer are agreed and accepted
+# by the user:
+# 
+# 1. Redistributions of source code must retain the above copyright
+#    notice, this list of conditions and the following disclaimer.
+# 
+# 2. Redistributions in binary form must reproduce the above copyright
+#    notice, this list of conditions and the following disclaimer in
+#    the documentation and/or other materials provided with
+#    the distribution.
+# 
+# 3. Neither the names of the copyrighters, the name of the project
+#    which is related to this software (hereinafter referred to as
+#    "project") nor the names of the contributors may be used to
+#    endorse or promote products derived from this software without
+#    specific prior written permission.
+# 
+# 4. No merchantable use may be permitted without prior written
+#    notification to the copyrighters.
+# 
+# 5. The copyrighters, the project and the contributors may prohibit
+#    the use of this software at any time.
+# 
+# THIS SOFTWARE IS PROVIDED BY THE COPYRIGHTERS, THE PROJECT AND
+# CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING
+# BUT NOT LIMITED THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS
+# FOR A PARTICULAR PURPOSE, ARE DISCLAIMED.  IN NO EVENT SHALL THE
+# COPYRIGHTERS, THE PROJECT OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT,
+# INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
+# (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+# SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
+# HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT,
+# STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING
+# IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+# POSSIBILITY OF SUCH DAMAGE.
+#
+# $TAHI: koi/bin/remotes/manual/queryDNS.rmt,v 1.2 2006/06/26 01:12:30 akisada Exp $
+#
+# $Id: queryDNS.rmt,v 1.2 2008/06/03 07:39:54 akisada Exp $
+#
+################################################################
+
+BEGIN {
+	push(@INC, '/usr/local/koi/libdata');
+	push(@INC, '.');
+}
+
+END {
+}
+
+use kRemote;
+use File::Basename;
+
+my $basename = basename($0, '.rmt');
+my $prompt = "$basename> ";
+
+my $fd = select (STDIN);  $| = 1; select($fd);
+   $fd = select (STDOUT); $| = 1; select($fd);
+   $fd = select (STDERR); $| = 1; select($fd);
+sub wait_stdin2($);
+
+kRemoteInit();
+
+################################
+# Configuration for NUT        #
+################################
+my $conf_file_name = "/etc/resolv.conf";
+my $hosts_file_name = "/etc/hosts";
+################################
+# Parameter                    #
+################################
+my $timeout = 120;
+
+################################
+# Shared                       #
+################################
+my $NET0_NODE0_IPV4_ADDR = '192.168.0.1';
+my $NET0_NODE0_IPV6_ADDR = '3ffe:501:ffff:100::1';
+################################
+# START                        #
+################################
+
+sub execQuery() {
+	my $numQuerys = scalar grep (/Query[0-9]+Mode/,keys %kRemote::kRemoteOpt);
+
+	my $execString = '';
+
+	for (my $i = 0;$i < $numQuerys;$i++) {
+
+		my $queryPath = "Query" . $i;
+
+		#------------------------------#
+		# Make resolv.conf             #
+		#------------------------------#
+		makeResolvConf($queryPath);
+
+		#------------------------------#
+		# make query string            #
+		#------------------------------#
+		my $queryAddr = $kRemote::kRemoteOpt{$queryPath . "Value"};
+
+		my $queryString = '';
+		my $queryMode = $kRemote::kRemoteOpt{$queryPath . "Mode"};
+		if ($queryMode eq 'dns') {
+			$ret = makeDnsString($queryPath,\$queryString);
+		}elsif ($queryMode eq 'icmp') {
+			$ret = makeIcmpString($queryPath,\$queryString);
+		}
+	}
+
+	return 0;
+}
+
+sub makeResolvConf($) {
+	my ($queryPath) = @_;
+        my $addrPath = $queryPath . "Addr[0-9]+";
+        my $numAddr = scalar grep (/$addrPath/,keys %kRemote::kRemoteOpt);
+
+	print $prompt . "\n";
+	print $prompt . "Configure your resolv.conf file as follows.\n\n";
+
+        for (my $j = 0;$j < $numAddr;$j++) {
+		my $addr = $kRemote::kRemoteOpt{$queryPath . "Addr" . $j};
+		print "    nameserver $addr\n";
+	}
+	print "\n";
+	print $prompt . "\n";
+	print "\n\n";
+}
+
+sub makeDnsString($$) {
+	my ($queryPath,$string_ref) = @_;
+	my $queryString .= "dig ";
+
+	my $queryTries = $kRemote::kRemoteOpt{$queryPath . "Tries"};
+	my $queryRecursive = $kRemote::kRemoteOpt{$queryPath . "Recursive"};
+	my $queryProtocol = $kRemote::kRemoteOpt{$queryPath . "Protocol"};
+	my $queryType = $kRemote::kRemoteOpt{$queryPath . "Type"};
+	my $queryClass = $kRemote::kRemoteOpt{$queryPath . "Class"};
+	my $queryValue = $kRemote::kRemoteOpt{$queryPath . "Value"};
+	my $queryBufsize = $kRemote::kRemoteOpt{$queryPath . "Bufsize"};
+
+	if (exists($kRemote::kRemoteOpt{'ModeRemoteAsync'})) {
+		print $prompt . "Transmit DNS query as follows:\n";
+	}
+	else {
+		print $prompt . "After pressing Enter key for continue, Transmit DNS query as follows:\n";
+	}
+
+	if (defined($queryType)) {
+		$queryString .= "-t $queryType ";
+		print $prompt . "    query type: $queryType\n";
+	}
+
+	if (defined($queryClass)) {
+		$queryString .= "-c $queryClass ";
+		print $prompt . "    query class: $queryClass\n";
+	}
+
+	if (defined($queryValue)) {
+		$queryString .= "\'$queryValue\' ";
+		print $prompt . "    query rdata: $queryValue\n";
+	}
+	else {
+		print STDERR "can't find ip address.\n";
+		return undef;
+	}
+
+	if (defined($queryProtocol)) {
+		if ($queryProtocol eq 'TCP') {
+			$queryString .= "+tcp ";
+			print $prompt . "    transport protocol: tcp\n";
+		}
+		else {
+			print $prompt . "    transport protocol: udp\n";
+		}
+	}
+
+	if (defined($queryRecursive)) {
+		$queryString .= "+recurse ";
+		print $prompt . "    RD (recursion desired): on\n";
+	}
+	else {
+		$queryString .= "+norecurse ";
+		print $prompt . "    RD (recursion desired): off\n";
+	}
+
+	if (defined($queryTries)) {
+		$queryString .= "+tries=$queryTries ";
+		print $prompt . "    query count: $queryTries\n";
+	}
+	else {
+		$queryString .= "+tries=1 ";
+		print $prompt . "    query count: 1\n";
+	}
+
+	if (defined($queryBufsize)) {
+		$queryString .= "+bufsize=$queryBufsize ";
+		print $prompt . "    query buffer size: $queryBufsize\n";
+	}
+
+	print $prompt . "\n";
+	print $prompt . "        Ex.) $queryString\n";
+	print $prompt . "\n";
+	wait_stdin2(60);
+
+	$$string_ref = $queryString;
+
+	return 1;
+}
+
+
+sub makeIcmpString($$) {
+
+	my ($queryPath,$string_ref) = @_;
+
+	my $queryString = '';
+	my $queryAddr = $kRemote::kRemoteOpt{$queryPath . "Value"};	
+	my $queryAddrFamily = $kRemote::kRemoteOpt{$queryPath . "AddrFamily"};	
+	my $queryTries = $kRemote::kRemoteOpt{$queryPath . "Tries"};
+	my $queryInterval = $kRemote::kRemoteOpt{$queryPath . "Interval"};
+	my $queryInterface = $kRemote::kRemoteOpt{$queryPath . "Interface"};
+	my $queryBackground = $kRemote::kRemoteOpt{$queryPath . "Background"};
+
+	if ($queryAddrFamily eq 'INET') {
+		$queryString .= "ping";
+		print $prompt . "Transmit ICMP Echo Request.\n";
+	}elsif ($queryAddrFamily eq 'INET6') {
+		$queryString .= "ping6";
+		print $prompt . "Transmit ICMPv6 Echo Request.\n";
+	}
+	else {
+		print STDERR "can't find address family.\n";
+		return undef;
+	}
+
+	if (defined($queryTries)) {
+		$queryString .= " -c $queryTries";
+		print $prompt . "    echo count: $queryTries\n";
+	}
+
+	if (defined($queryInterval)) {
+		$queryString .= " -i $queryInterval";
+		print $prompt . "    echo interval: $queryInterval\n";
+	}
+
+	if (defined($queryInterface)) {
+		if ($queryAddrFamily eq 'INET6') {
+			$queryAddr .= $queryInterface;
+		}
+	}
+	else {
+		print STDERR "can't find address family.\n";
+		return undef;
+	}
+
+	if (defined($queryAddr)) {
+		$queryString .= " " . $queryAddr;
+		print $prompt . "    Destination Address: $queryAddr\n";
+	}
+
+	print $prompt . "\n";
+	print $prompt . "        Ex.) $queryString\n";
+	print $prompt . "\n";
+
+	wait_stdin2(60);
+
+	#should be last
+	if (defined($queryBackground)) {
+		$queryString .= "& ";
+	}
+
+	$$string_ref=$queryString;
+
+	return 1;
+}
+
+sub wait_stdin2($) {
+	my ($time) = @_;
+
+	if (exists($kRemote::kRemoteOpt{'ModeRemoteAsync'})) {
+		print "\n\n";
+		sleep $time;
+	}
+	else {
+		print $prompt . "Press Enter key for continue.\a\n";
+		<STDIN>;
+		print $prompt . "\n";
+		print "\n\n";
+	}
+}
+

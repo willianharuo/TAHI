@@ -1,0 +1,790 @@
+#!/usr/bin/perl
+#
+# Copyright (C) 2002, 2003 Yokogawa Electric Corporation, 
+# INTAP(Interoperability Technology Association for Information 
+# Processing, Japan), IPA (Information-technology Promotion Agency, Japan).
+# All rights reserved.
+# 
+# Redistribution and use of this software in source and binary forms, with 
+# or without modification, are permitted provided that the following 
+# conditions and disclaimer are agreed and accepted by the user:
+# 
+# 1. Redistributions of source code must retain the above copyright 
+# notice, this list of conditions and the following disclaimer.
+# 
+# 2. Redistributions in binary form must reproduce the above copyright 
+# notice, this list of conditions and the following disclaimer in the 
+# documentation and/or other materials provided with the distribution.
+# 
+# 3. Neither the names of the copyrighters, the name of the project which 
+# is related to this software (hereinafter referred to as "project") nor 
+# the names of the contributors may be used to endorse or promote products 
+# derived from this software without specific prior written permission.
+# 
+# 4. No merchantable use may be permitted without prior written 
+# notification to the copyrighters. However, using this software for the 
+# purpose of testing or evaluating any products including merchantable 
+# products may be permitted without any notification to the copyrighters.
+# 
+# 
+# 
+# THIS SOFTWARE IS PROVIDED BY THE COPYRIGHTERS, THE PROJECT AND 
+# CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING 
+# BUT NOT LIMITED THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS 
+# FOR A PARTICULAR PURPOSE, ARE DISCLAIMED.  IN NO EVENT SHALL THE 
+# COPYRIGHTERS, THE PROJECT OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, 
+# INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES 
+# (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR 
+# SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) 
+# HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN 
+# CONTRACT,STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) 
+# ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF 
+# THE POSSIBILITY OF SUCH DAMAGE.
+#
+# $TAHI: ct/ipsec/HTR_E_In_SelectUpperProtUDPPort.seq,v 1.3 2003/06/05 13:42:46 ozoe Exp $
+#
+######################################################################
+BEGIN {
+    unshift(@INC, '../ipsec/');
+    $V6evalTool::TestVersion = '$Name: REL_2_1_1 $ ';
+}
+
+use V6evalTool;
+use IPSEC;
+
+%pktdesc = (
+	    ### TBD
+);
+$IF = Link0;
+
+#----- check NUT type
+
+ipsecCheckNUT(host);
+
+#----- set SAD,SPD
+vLogHTML("<FONT SIZE=3>*** Target initialization phase ***</FONT><BR>");
+
+ipsecClearAll();
+
+## HOST1 vs NUT
+ipsecSetSAD(
+	"src=$IPSEC::IPsecAddr{IPSEC_HOST1_NET5_ADDR}" ,
+	"dst=$IPSEC::IPsecAddr{IPSEC_NUT_NET3_ADDR}" ,
+	"spi=0x1000" ,
+	"mode=transport" ,
+	"protocol=esp" ,
+	"ealgo=null" ,
+	"eauth=hmac-md5" ,
+	"eauthkey=TAHITEST89ABCDEF"
+	);
+
+ipsecSetSPD(
+	"src=$IPSEC::IPsecAddr{IPSEC_HOST1_NET5_ADDR}" ,
+	"dst=$IPSEC::IPsecAddr{IPSEC_NUT_NET3_ADDR}" ,
+	"sport=10000" ,
+	"dport=7" ,
+	"upperspec=udp" ,
+	"direction=in" ,
+	"protocol=esp-auth" ,
+	"mode=transport" ,
+	);
+
+#======================================================================
+vLogHTML("<FONT SIZE=3>*** Target testing phase ***<FONT><BR>");
+vCapture($IF);
+
+$seq = 0;
+$ack = 0;
+
+vCPP("-DSEQ=$seq -DACK=$ack");
+
+if ($IPSEC::IPsecAddr{IPSEC_IPVERSION} == 4) {
+} else {
+## RA
+
+vSend($IF, ra_to_nut);
+vSleep(3);
+}
+
+# ping TN(HOST1) <-> NUT
+vLogHTML('Send ICMP Echo Request from HOST1 to NUT.<BR>');
+
+($stat, %ret) = ipsecPing2NUT($IF, 'echo_request_from_host1', 'echo_reply_to_host1');
+
+if ($stat ne 'GOT_REPLY') {
+    vLogHTML("TN received no echo reply from NUT to HOST1.<BR>");
+    ipsecExitFail();
+}
+vLogHTML('TN received ICMP Echo Reply from NUT to HOST1.<BR>');
+vLogHTML('OK<BR>');
+
+#-----------------------------------------------------------------------
+#
+
+vLogHTML('Send UDP Echo Request from HOST1 to NUT with ESP, Src Port=10000, Dst Port=7.<BR>');
+
+vSend($IF, udp_echo_request_from_host1_esp);
+
+%ret = vRecv($IF, 5, 0, 0, ns_to_router, udp_echo_reply_to_host1);
+if ($ret{status} != 0) {
+	vLogHTML('No response from NUT, Configuration Problem ?<BR>');
+	vLogHTML('<FONT COLOR="#FF0000">NG</FONT>');
+	exit $V6evalTool::exitFail;
+}
+
+if ($ret{recvFrame} eq 'ns_to_router') {
+	vSend($IF, na_from_router);
+	%ret = vRecv($IF, 2, 0, 0, udp_echo_reply_to_host1);
+	if($ret{status} != 0) {
+		vLogHTML('Cannot receive UDP Echo Reply.<BR>');
+		vLogHTML('<FONT COLOR="#FF0000">NG</FONT>');
+		exit $V6evalTool::exitFail;
+	}
+}
+
+if ($ret{recvFrame} ne 'udp_echo_reply_to_host1') {
+	vLogHTML('Cannot receive UDP Echo Reply.<BR>');
+	vLogHTML('<FONT COLOR="#FF0000">NG</FONT>');
+	exit $V6evalTool::exitFail;
+}
+
+vLogHTML('Receive UDP Echo Reply from NUT to HOST1, Src Port=7, Dst Port=10000.<BR>');
+vLogHTML('OK<BR>');
+
+#-----------------------------------------------------------------------
+#
+
+vLogHTML('Send UDP Echo Request from HOST1 to NUT, Src Port=20000, Dst Port=7.<BR>');
+
+vSend($IF, udp_echo_request_from_host1_20000);
+
+%ret = vRecv($IF, 5, 0, 0, ns_to_router, udp_echo_reply_to_host1_20000);
+if ($ret{status} != 0) {
+	vLogHTML('No response from NUT, Configuration Problem ?<BR>');
+	vLogHTML('<FONT COLOR="#FF0000">NG</FONT>');
+	exit $V6evalTool::exitFail;
+}
+
+if ($ret{recvFrame} eq 'ns_to_router') {
+	vSend($IF, na_from_router);
+	%ret = vRecv($IF, 2, 0, 0, udp_echo_reply_to_host1_20000);
+	if($ret{status} != 0) {
+		vLogHTML('Cannot receive UDP Echo Reply.<BR>');
+		vLogHTML('<FONT COLOR="#FF0000">NG</FONT>');
+		exit $V6evalTool::exitFail;
+	}
+}
+
+if ($ret{recvFrame} ne 'udp_echo_reply_to_host1_20000') {
+	vLogHTML('Cannot receive UDP Echo Reply.<BR>');
+	vLogHTML('<FONT COLOR="#FF0000">NG</FONT>');
+	exit $V6evalTool::exitFail;
+}
+
+vLogHTML('Receive UDP Echo Reply from NUT to HOST1, Src Port=7, Dst Port=20000.<BR>');
+vLogHTML('OK<BR>');
+
+#-----------------------------------------------------------------------
+#
+
+vLogHTML('Send UDP Echo Request from HOST2 to NUT, Src Port=10000, Dst Port=7.<BR>');
+
+vSend($IF, udp_echo_request_from_host2);
+
+%ret = vRecv($IF, 5, 0, 0, ns_to_router, udp_echo_reply_to_host2);
+if ($ret{status} != 0) {
+	vLogHTML('No response from NUT, Configuration Problem ?<BR>');
+	vLogHTML('<FONT COLOR="#FF0000">NG</FONT>');
+	exit $V6evalTool::exitFail;
+}
+
+if ($ret{recvFrame} eq 'ns_to_router') {
+	vSend($IF, na_from_router);
+	%ret = vRecv($IF, 2, 0, 0, udp_echo_reply_to_host2);
+	if($ret{status} != 0) {
+		vLogHTML('Cannot receive UDP Echo Reply.<BR>');
+		vLogHTML('<FONT COLOR="#FF0000">NG</FONT>');
+		exit $V6evalTool::exitFail;
+	}
+}
+
+if ($ret{recvFrame} ne 'udp_echo_reply_to_host2') {
+	vLogHTML('Cannot receive UDP Echo Reply.<BR>');
+	vLogHTML('<FONT COLOR="#FF0000">NG</FONT>');
+	exit $V6evalTool::exitFail;
+}
+
+vLogHTML('Receive UDP Echo Reply from NUT to HOST2, Src Port=7, Dst Port=10000.<BR>');
+vLogHTML('OK<BR>');
+
+#-----------------------------------------------------------------------
+#
+
+#$seq = 1000000000;
+#$ack = 0;
+
+#vCPP("-DSEQ=$seq -DACK=$ack");
+
+vLogHTML("Send Syn, Src=HOST1, Dst=NUT, SequenceNumber=1000000000, AcknowledgmentNumber=0<BR>");
+
+vSend($IF, syn_request_from_host1);
+
+%ret = vRecv($IF, 5, 0, 0, ns_to_router, synack_reply_to_host1);
+if ($ret{status} != 0) {
+	vLogHTML('No response from NUT, Configuration Problem ?<BR>');
+	vLogHTML('<FONT COLOR="#FF0000">NG</FONT>');
+	exit $V6evalTool::exitFail;
+}
+
+if ($ret{recvFrame} eq 'ns_to_router') {
+	vSend($IF, na_from_router);
+	%ret = vRecv($IF, 5, 0, 0, synack_reply_to_host1);
+	if($ret{status} != 0) {
+		vLogHTML('Cannot receive TCP Syn, Ack Reply.<BR>');
+		vLogHTML('<FONT COLOR="#FF0000">NG</FONT>');
+		exit $V6evalTool::exitFail;
+	}
+}
+
+if ($ret{recvFrame} ne 'synack_reply_to_host1') {
+	vLogHTML('Cannot receive TCP Syn, Ack Reply.<BR>');
+	vLogHTML('<FONT COLOR="#FF0000">NG</FONT>');
+	exit $V6evalTool::exitFail;
+}
+
+$seq=$ret{"Frame_Ether.Packet_IPv6.Upp_TCP.Hdr_TCP.SequenceNumber"};
+$ack=$ret{"Frame_Ether.Packet_IPv6.Upp_TCP.Hdr_TCP.AcknowledgmentNumber"};
+vLogHTML("Receive Syn,Ack, Src=NUT, Dst=HOST1, SequenceNumber=$seq, AcknowledgmentNumber=$ack<BR>");
+vLogHTML('OK<BR>');
+
+$seq = $ret{"Frame_Ether.Packet_IPv6.Upp_TCP.Hdr_TCP.AcknowledgmentNumber"};
+$ack = 0;
+
+vCPP("-DSEQ=$seq -DACK=$ack");
+
+vLogHTML("Send Reset, Src=HOST1, Dst=NUT, SequenceNumber=$seq, AcknowledgmentNumber=$ack<BR>");
+
+vSend($IF, reset_request_from_host1);
+
+%ret = vRecv($IF, 5, 0, 0, ns_to_router);
+if ($ret{status} != 0) {
+	vLogHTML('Reset connection between NT and  NUT<BR>');
+	vLogHTML('OK<BR>');
+	exit $V6evalTool::exitPass;
+}
+
+if ($ret{recvFrame} eq 'ns_to_router') {
+	vSend($IF, na_from_router);
+	vLogHTML('Reset connection between NT and  NUT<BR>');
+	vLogHTML('OK<BR>');
+	exit $V6evalTool::exitPass;
+}
+
+vLogHTML('Reset connection between NT and  NUT<BR>');
+vLogHTML('OK');
+exit $V6evalTool::exitPass;
+
+######################################################################
+__END__
+
+=head1 NAME
+
+  HTR_E_In_SelectUpperProtUDPPort - Host Transport Mode ESP Inbound SA selection, Protocol UDP, Same IPdst, ESP (NULL), ESP Authentication HMAC-MD5
+
+=head1 TARGET
+
+  Host
+
+=head1 SYNOPSIS
+
+=begin html
+<PRE>
+  <A HREF="./HTR_E_In_SelectUpperProtUDPPort.seq">HTR_E_In_SelectUpperProtUDPPort.seq</A> [-tooloption ...] -pkt <A HREF="./HTR_E_SelectUpper.def">HTR_E_SelectUpper.def</A>
+    -tooloption : v6eval tool option
+  See also <A HREF="./HTR_EG_common.def">HTR_EG_common.def</A> and <A HREF="./HTR_G_common.def">HTR_G_common.def</A>
+</PRE>
+
+=end html
+
+=head1 INITIALIZATION
+
+=begin html
+<P>
+For details of Network Topology, see <A HREF="00README">00README</A>
+</P>
+<P>
+Set NUT's SAD and SPD as following:
+</P>
+<PRE>
+              NET5      NET3
+    HOST1_NET5 -- Router -- NUT
+         <----transport------ (SA, Protocol UDP)
+    HOST2_NET5 
+         <------------------- (No SA)
+</PRE>
+<P>
+Security Association Database (SAD) for SA1
+</P>
+<TABLE border="1">
+  <TR>
+    <TD>source address</TD>
+    <TD>NUT_NET3</TD></TR>
+  <TR>
+    <TD>destination address</TD>
+    <TD><B>HOST1_NET5</B></TD></TR>
+  <TR>
+    <TD>SPI</TD>
+    <TD><B>0x1000</B></TD></TR>
+  <TR>
+    <TD>mode</TD>
+    <TD>transport</TD></TR>
+  <TR>
+    <TD>protocol</TD>
+    <TD>ESP</TD></TR>
+  <TR>
+    <TD>ESP algorithm</TD>
+    <TD>NULL</TD></TR>
+  <TR>
+    <TD>ESP authentication</TD>
+    <TD>HMAC-MD5</TD></TR>
+  <TR>
+    <TD>ESP authentication key</TD>
+    <TD>TAHITEST89ABCDEF</TD></TR>
+</TABLE>
+<P>
+Security Policy Database (SPD) for SA
+</P>
+<TABLE border="1">
+  <TR>
+    <TD>source address</TD>
+    <TD>NUT_NET3</TD></TR>
+  <TR>
+    <TD>destination address</TD>
+    <TD><B>HOST1_NET5</B></TD></TR>
+  <TR>
+    <TD>upper spec</TD>
+    <TD><B>udp</B></TD></TR>
+  <TR>
+    <TD>upper port</TD>
+    <TD><B>src=10000/dst=7</B></TD></TR>
+  <TR>
+    <TD>direction</TD>
+    <TD>in</TD></TR>
+  <TR>
+    <TD>protocol</TD>
+    <TD>ESP</TD></TR>
+  <TR>
+    <TD>mode</TD>
+    <TD>transport</TD></TR>
+</TABLE>
+
+=end html
+
+=head1 TEST PROCEDURE
+
+=begin html
+<PRE>
+ Tester                      Target
+   |                           |
+   |-------------------------->|
+   |      ICMP Echo Request    |
+   |         From Host1        |
+   |                           |
+   |<--------------------------|
+   |      ICMP Echo Reply      |
+   |          To Host1         |
+   |                           |
+   |-------------------------->|
+   |      UDP Echo Request     |
+   |     From Host1 with UDP   |
+   |                           |
+   |<--------------------------|
+   |      UDP Echo Reply       |
+   |          To Host1         |
+   |                           |
+   |-------------------------->|
+   |      UDP Echo Request     |
+   |        From Host2         |
+   |                           |
+   |<--------------------------|
+   |      UDP Echo Reply       |
+   |          To Host2         |
+   |                           |
+   |-------------------------->|
+   |      TCP syn              |
+   |        From Host1         |
+   |                           |
+   |<--------------------------|
+   |      TCP ack, syn         |
+   |          To Host1         |
+   |                           |
+   |-------------------------->|
+   |      TCP reset            |
+   |          To Host1         |
+   |                           |
+   v                           v
+</PRE>
+<OL>
+  <LI>Send ICMP Echo Request from Host1
+  <LI>Receive ICMP Echo Reply to Host1
+  <LI>Send UDP Echo Request from Host1 with ESP
+  <LI>Receive UDP Echo Reply to Host1
+  <LI>Send UDP Echo Request from Host2
+  <LI>Receive UDP Echo Reply to Host2
+  <LI>Send TCP syn from Host1
+  <LI>Receive TCP ack,syn to Host1
+  <LI>Send TCP reset from Host1
+</OL>
+<P>
+ICMP Echo Request from Host1
+</P>
+<TABLE border="1">
+  <TR>
+    <TD>IP Header</TD>
+    <TD>Source Address</TD>
+    <TD>HOST1_NET5</TD></TR>
+  <TR>
+    <TD></TD>
+    <TD>Destination Address</TD>
+    <TD>NUT_NET3</TD></TR>
+  <TR>
+    <TD>ICMP</TD>
+    <TD>Type</TD>
+    <TD>128 (Echo Request)</TD></TR>
+  <TR>
+    <TD></TD>
+    <TD>Data Length</TD>
+    <TD>14</TD></TR>
+</TABLE>
+<P>
+ICMP Echo Reply to Host1
+</P>
+<TABLE border="1">
+  <TR>
+    <TD>IP Header</TD>
+    <TD>Source Address</TD>
+    <TD>NUT_NET3</TD></TR>
+  <TR>
+    <TD></TD>
+    <TD>Destination Address</TD>
+    <TD><B>HOST1_NET5</B></TD></TR>
+  <TR>
+    <TD>ICMP</TD>
+    <TD>Type</TD>
+    <TD>129 (Echo Reply)</TD></TR>
+  <TR>
+    <TD></TD>
+    <TD>Data Length</TD>
+    <TD>14</TD></TR>
+</TABLE>
+<P>
+UDP Echo Request from Host1 with ESP
+</P>
+<TABLE border="1">
+  <TR>
+    <TD>IP Header</TD>
+    <TD>Source Address</TD>
+    <TD><B>HOST1_NET5</B></TD></TR>
+  <TR>
+    <TD></TD>
+    <TD>Destination Address</TD>
+    <TD>NUT_NET3</TD></TR>
+  <TR>
+    <TD>ESP</TD>
+    <TD>SPI</TD>
+    <TD><B>0x1000</B></TD></TR>
+  <TR>
+    <TD></TD>
+    <TD>Algorithm</TD>
+    <TD>NULL</TD></TR>
+  <TR>
+    <TD></TD>
+    <TD>ESP Authentication</TD>
+    <TD>HMAC-MD5</TD></TR>
+  <TR>
+    <TD></TD>
+    <TD>ESP authentication key</TD>
+    <TD>TAHITEST89ABCDEF</TD></TR>
+  <TR>
+    <TD></TD>
+    <TD>Padding</TD>
+    <TD>Zero</TD></TR>
+  <TR>
+    <TD></TD>
+    <TD>Padding Length</TD>
+    <TD>0</TD></TR>
+  <TR>
+    <TD>UDP</TD>
+    <TD>Source Port</TD>
+    <TD>10000</TD></TR>
+  <TR>
+    <TD></TD>
+    <TD>Destination Port</TD>
+    <TD>7</TD></TR>
+  <TR>
+    <TD></TD>
+    <TD>Data Length</TD>
+    <TD>14</TD></TR>
+</TABLE>
+<P>
+UDP Echo Reply to Host1
+</P>
+<TABLE border="1">
+  <TR>
+    <TD>IP Header</TD>
+    <TD>Source Address</TD>
+    <TD>NUT_NET3</TD></TR>
+  <TR>
+    <TD></TD>
+    <TD>Destination Address</TD>
+    <TD><B>HOST1_NET5</B></TD></TR>
+  <TR>
+    <TD>UDP</TD>
+    <TD>Source Port</TD>
+    <TD>7</TD></TR>
+  <TR>
+    <TD></TD>
+    <TD>Destination Port</TD>
+    <TD>10000</TD></TR>
+  <TR>
+    <TD></TD>
+    <TD>Data Length</TD>
+    <TD>14</TD></TR>
+</TABLE>
+<P>
+UDP Echo Request from Host1
+</P>
+<TABLE border="1">
+  <TR>
+    <TD>IP Header</TD>
+    <TD>Source Address</TD>
+    <TD><B>HOST1_NET5</B></TD></TR>
+  <TR>
+    <TD></TD>
+    <TD>Destination Address</TD>
+    <TD>NUT_NET3</TD></TR>
+  <TR>
+    <TD>UDP</TD>
+    <TD>Source Port</TD>
+    <TD>20000</TD></TR>
+  <TR>
+    <TD></TD>
+    <TD>Destination Port</TD>
+    <TD>7</TD></TR>
+  <TR>
+    <TD></TD>
+    <TD>Data Length</TD>
+    <TD>14</TD></TR>
+</TABLE>
+<P>
+UDP Echo Reply to Host1
+</P>
+<TABLE border="1">
+  <TR>
+    <TD>IP Header</TD>
+    <TD>Source Address</TD>
+    <TD>NUT_NET3</TD></TR>
+  <TR>
+    <TD></TD>
+    <TD>Destination Address</TD>
+    <TD><B>HOST1_NET5</B></TD></TR>
+  <TR>
+    <TD>UDP</TD>
+    <TD>Source Port</TD>
+    <TD>7</TD></TR>
+  <TR>
+    <TD></TD>
+    <TD>Destination Port</TD>
+    <TD>20000</TD></TR>
+  <TR>
+    <TD></TD>
+    <TD>Data Length</TD>
+    <TD>14</TD></TR>
+</TABLE>
+<P>
+UDP Echo Request from Host2
+</P>
+<TABLE border="1">
+  <TR>
+    <TD>IP Header</TD>
+    <TD>Source Address</TD>
+    <TD><B>HOST2_NET5</B></TD></TR>
+  <TR>
+    <TD></TD>
+    <TD>Destination Address</TD>
+    <TD>NUT_NET3</TD></TR>
+  <TR>
+    <TD>UDP</TD>
+    <TD>Source Port</TD>
+    <TD>10000</TD></TR>
+  <TR>
+    <TD></TD>
+    <TD>Destination Port</TD>
+    <TD>7</TD></TR>
+  <TR>
+    <TD></TD>
+    <TD>Data Length</TD>
+    <TD>14</TD></TR>
+</TABLE>
+<P>
+UDP Echo Reply to Host2
+</P>
+<TABLE border="1">
+  <TR>
+    <TD>IP Header</TD>
+    <TD>Source Address</TD>
+    <TD>NUT_NET3</TD></TR>
+  <TR>
+    <TD></TD>
+    <TD>Destination Address</TD>
+    <TD><B>HOST2_NET5</B></TD></TR>
+  <TR>
+    <TD>UDP</TD>
+    <TD>Source Port</TD>
+    <TD>7</TD></TR>
+  <TR>
+    <TD></TD>
+    <TD>Destination Port</TD>
+    <TD>10000</TD></TR>
+  <TR>
+    <TD></TD>
+    <TD>Data Length</TD>
+    <TD>14</TD></TR>
+</TABLE>
+<P>
+TCP syn from HOST1
+</P>
+<TABLE border="1">
+  <TR>
+    <TD>IP Header</TD>
+    <TD>Source Address</TD>
+    <TD><B>HOST1_NET5</B></TD></TR>
+  <TR>
+    <TD></TD>
+    <TD>Destination Address</TD>
+    <TD>NUT_NET3</TD></TR>
+  <TR>
+    <TD>TCP</TD>
+    <TD>Source Port</TD>
+    <TD>10000</TD></TR>
+  <TR>
+    <TD></TD>
+    <TD>Destination Port</TD>
+    <TD>7</TD></TR>
+  <TR>
+    <TD></TD>
+    <TD>SequenceNumber</TD>
+    <TD>1000000000</TD></TR>
+  <TR>
+    <TD></TD>
+    <TD>AcknowledgmentNumber</TD>
+    <TD>0</TD></TR>
+  <TR>
+    <TD></TD>
+    <TD>SYNFlag</TD>
+    <TD>1</TD></TR>
+  <TR>
+    <TD></TD>
+    <TD>Data Length</TD>
+    <TD>0</TD></TR>
+</TABLE>
+<P>
+TCP ack,syn to HOST1
+</P>
+<TABLE border="1">
+  <TR>
+    <TD>IP Header</TD>
+    <TD>Source Address</TD>
+    <TD>NUT_NET3</TD></TR>
+  <TR>
+    <TD></TD>
+    <TD>Destination Address</TD>
+    <TD><B>HOST1_NET5</B></TD></TR>
+  <TR>
+    <TD>TCP</TD>
+    <TD>Source Port</TD>
+    <TD>7</TD></TR>
+  <TR>
+    <TD></TD>
+    <TD>Destination Port</TD>
+    <TD>10000</TD></TR>
+  <TR>
+    <TD></TD>
+    <TD>SequenceNumber</TD>
+    <TD>Any</TD></TR>
+  <TR>
+    <TD></TD>
+    <TD>AcknowledgmentNumber</TD>
+    <TD>1000000001</TD></TR>
+  <TR>
+    <TD></TD>
+    <TD>ACKFlag</TD>
+    <TD>1</TD></TR>
+  <TR>
+    <TD></TD>
+    <TD>SYNFlag</TD>
+    <TD>1</TD></TR>
+  <TR>
+    <TD></TD>
+    <TD>Data Length</TD>
+    <TD>0</TD></TR>
+</TABLE>
+<P>
+TCP reset from HOST1
+</P>
+<TABLE border="1">
+  <TR>
+    <TD>IP Header</TD>
+    <TD>Source Address</TD>
+    <TD><B>HOST1_NET5</B></TD></TR>
+  <TR>
+    <TD></TD>
+    <TD>Destination Address</TD>
+    <TD>NUT_NET3</TD></TR>
+  <TR>
+    <TD>TCP</TD>
+    <TD>Source Port</TD>
+    <TD>10000</TD></TR>
+  <TR>
+    <TD></TD>
+    <TD>Destination Port</TD>
+    <TD>7</TD></TR>
+  <TR>
+    <TD></TD>
+    <TD>SequenceNumber</TD>
+    <TD>1000000001</TD></TR>
+  <TR>
+    <TD></TD>
+    <TD>AcknowledgmentNumber</TD>
+    <TD>0</TD></TR>
+  <TR>
+    <TD></TD>
+    <TD>RSTFlag</TD>
+    <TD>1</TD></TR>
+  <TR>
+    <TD></TD>
+    <TD>Data Length</TD>
+    <TD>0</TD></TR>
+</TABLE>
+
+=end html
+
+=head1 JUDGMENT
+
+  PASS: UDP Echo Reply from NUT (src port=7, dst port=10000) to HOST1 received
+  FAIL: ICMP Echo Reply from NUT with ESP HOST1 received
+        UDP Echo Reply from NUT with ESP to HOST1 received
+        TCP ack,syn from NUT with ESP to HOST1 received
+        UDP Echo Reply from NUT with ESP to HOST2 received
+
+=head1 SEE ALSO
+
+  perldoc V6evalTool
+
+=begin html
+<PRE>
+  <A HREF="./IPSEC.html">IPSEC.html</A> IPsec Test Common Utility
+</PRE>
+
+=cut
+

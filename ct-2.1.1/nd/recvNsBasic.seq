@@ -1,0 +1,764 @@
+#!/usr/bin/perl
+#
+# Copyright (C) 1999, 2000, 2001, 2002, 2003 Yokogawa Electric Corporation,
+# IPA (Information-technology Promotion Agency, Japan).
+# All rights reserved.
+# 
+# Redistribution and use of this software in source and binary forms, with 
+# or without modification, are permitted provided that the following 
+# conditions and disclaimer are agreed and accepted by the user:
+# 
+# 1. Redistributions of source code must retain the above copyright 
+# notice, this list of conditions and the following disclaimer.
+# 
+# 2. Redistributions in binary form must reproduce the above copyright 
+# notice, this list of conditions and the following disclaimer in the 
+# documentation and/or other materials provided with the distribution.
+# 
+# 3. Neither the names of the copyrighters, the name of the project which 
+# is related to this software (hereinafter referred to as "project") nor 
+# the names of the contributors may be used to endorse or promote products 
+# derived from this software without specific prior written permission.
+# 
+# 4. No merchantable use may be permitted without prior written 
+# notification to the copyrighters. However, using this software for the 
+# purpose of testing or evaluating any products including merchantable 
+# products may be permitted without any notification to the copyrighters.
+# 
+# 
+# 
+# THIS SOFTWARE IS PROVIDED BY THE COPYRIGHTERS, THE PROJECT AND 
+# CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING 
+# BUT NOT LIMITED THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS 
+# FOR A PARTICULAR PURPOSE, ARE DISCLAIMED.  IN NO EVENT SHALL THE 
+# COPYRIGHTERS, THE PROJECT OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, 
+# INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES 
+# (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR 
+# SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) 
+# HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN 
+# CONTRACT,STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) 
+# ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF 
+# THE POSSIBILITY OF SUCH DAMAGE.
+#
+# $TAHI: ct/nd/recvNsBasic.seq,v 1.34 2003/06/10 11:19:07 masaxmasa Exp $
+
+########################################################################
+BEGIN { $V6evalTool::TestVersion = '$Name: REL_2_1_1 $ '; }
+ 
+use V6evalTool;
+use nd;
+
+ndOptions(@ARGV);
+
+# The following generate debugging messages.
+$nd::debug=$ndOpt_v|$ndOpt_vv;
+
+# You can specifies debug options to a remote control program.
+# If you want to know more detail, please see the following:
+# - V6evalTool.pm: perldoc V6evalTool
+# - V6evalRemote.pm: perldoc V6evalRemote
+$nd::remote_debug="-o1" if $ndOpt_vv;
+
+$IF=Link0;
+$exit_rtn=$V6evalTool::exitPass;
+$idx=0;
+
+$wait_na=2;
+$wait_reachable=$nd::REACHABLE_TIME * $nd::MAX_RANDOM_FACTOR + 1;
+$wait_probe=$nd::DELAY_FIRST_PROBE_TIME + 1 +
+    $nd::RETRANS_TIMER * $nd::MAX_UNICAST_SOLICIT + 1;
+
+
+#
+#
+#
+$type=$V6evalTool::NutDef{Type};
+if($type ne router && $type ne host) {
+    vLogHTML(ndErrmsg("ERROR: $V6evalTool::NutDef{Type}: ".
+		      "Unknown target type<BR>"));
+    exit $V6evalTool::exitFail;
+}
+
+#
+# Start capture buffer.
+#
+vCapture($IF);
+
+#
+#
+#
+if($type eq router) {
+    #
+    # A target router should be pre-configured:
+    # Link0: 3ffe:501:ffff:100 prefixlen 64
+    #
+} else {
+    #
+    # Send a RA (src:x's link, dst:allnode)
+    # to advertise global prefix to the target.
+    #
+    $pktdesc{unsol_ra}=
+	"Send unsolicited RA (link-local\@X ==> all-node mcast)";
+    vSend($IF, unsol_ra);
+}
+
+#
+#
+#
+$idx_snd=0;
+$idx_scp=1;
+$idx_exp=2;
+$idx_msg=3;
+
+#
+@expects_ucast_ns_link2link_sll=
+    (ucast_na_link2link_RSo, ucast_na_link2link_RSO_tll)
+    if $type eq router;
+@expects_ucast_ns_link2link_sll=
+    (ucast_na_link2link_rSo, ucast_na_link2link_rSO_tll)
+    if $type eq host;
+@def_ucast_ns_link2link_sll=
+    (
+     ucast_ns_link2link_sll,
+     'local',
+     \@expects_ucast_ns_link2link_sll,
+     'unicast NS w/ SLLA (link => link)',
+     );
+
+#
+@expects_ucast_ns_link2global_sll=
+    (ucast_na_global2link_RSo, ucast_na_global2link_RSO_tll)
+    if $type eq router;
+@expects_ucast_ns_link2global_sll=
+    (ucast_na_global2link_rSo, ucast_na_global2link_rSO_tll)
+    if $type eq host;
+@def_ucast_ns_link2global_sll=
+    (
+     ucast_ns_link2global_sll,
+     'local',
+     \@expects_ucast_ns_link2global_sll,
+     'unicast NS w/ SLLA (link => global)',
+     );
+
+#
+@expects_ucast_ns_global2link_sll=
+    (ucast_na_link2global_RSo, ucast_na_link2global_RSO_tll)
+    if $type eq router;
+@expects_ucast_ns_global2link_sll=
+    (ucast_na_link2global_rSo, ucast_na_link2global_rSO_tll)
+    if $type eq host;
+@def_ucast_ns_global2link_sll=
+    (
+     ucast_ns_global2link_sll,
+     'global',
+     \@expects_ucast_ns_global2link_sll,
+     'unicast NS w/ SLLA (global => link)',
+     );
+
+#
+@expects_ucast_ns_global2global_sll=
+    (ucast_na_global2global_RSo, ucast_na_global2global_RSO_tll)
+    if $type eq router;
+@expects_ucast_ns_global2global_sll=
+    (ucast_na_global2global_rSo, ucast_na_global2global_rSO_tll)
+    if $type eq host;
+@def_ucast_ns_global2global_sll=
+    (
+     ucast_ns_global2global_sll,
+     'global',
+     \@expects_ucast_ns_global2global_sll,
+     'unicast NS w/ SLLA (global => global)',
+     );
+
+#
+@expects_mcast_ns_link2link_sll=
+    (ucast_na_link2link_RSO_tll, ucast_na_global2link_RSO_tll)
+#    (ucast_na_link2link_RSo, ucast_na_link2link_RSO_tll)
+    if $type eq router;
+@expects_mcast_ns_link2link_sll=
+    (ucast_na_link2link_rSO_tll, ucast_na_global2link_rSO_tll)
+#    (ucast_na_link2link_rSo, ucast_na_link2link_rSO_tll)
+    if $type eq host;
+@def_mcast_ns_link2link_sll=
+    (
+     mcast_ns_link2link_sll,
+     'local',
+     \@expects_mcast_ns_link2link_sll,
+     'multicast NS w/ SLLA (link => solnode[link])',
+     );
+
+#
+@expects_mcast_ns_link2global_sll=
+    (ucast_na_global2link_RSO_tll)
+#    (ucast_na_global2link_RSo, ucast_na_global2link_RSO_tll)
+    if $type eq router;
+@expects_mcast_ns_link2global_sll=
+    (ucast_na_global2link_rSO_tll)
+#    (ucast_na_global2link_rSo, ucast_na_global2link_rSO_tll)
+    if $type eq host;
+@def_mcast_ns_link2global_sll=
+    (
+     mcast_ns_link2global_sll,
+     'local',
+     \@expects_mcast_ns_link2global_sll,
+     'multicast NS w/ SLLA (link => solnode[global])',
+     );
+
+#
+@expects_mcast_ns_global2link_sll=
+    (ucast_na_link2global_RSO_tll)
+#    (ucast_na_link2global_RSo, ucast_na_link2global_RSO_tll)
+    if $type eq router;
+@expects_mcast_ns_global2link_sll=
+    (ucast_na_link2global_rSO_tll)
+#    (ucast_na_link2global_rSo, ucast_na_link2global_rSO_tll)
+    if $type eq host;
+@def_mcast_ns_global2link_sll=
+    (
+     mcast_ns_global2link_sll,
+     'global',
+     \@expects_mcast_ns_global2link_sll,
+     'multicast NS w/ SLLA (global => solnode[link])',
+     );
+
+#
+@expects_mcast_ns_global2global_sll=
+    (ucast_na_global2global_RSO_tll, ucast_na_link2global_RSO_tll)
+#    (ucast_na_global2global_RSo, ucast_na_global2global_RSO_tll)
+    if $type eq router;
+@expects_mcast_ns_global2global_sll=
+    (ucast_na_global2global_rSO_tll, ucast_na_link2global_rSO_tll)
+#    (ucast_na_global2global_rSo, ucast_na_global2global_rSO_tll)
+    if $type eq host;
+@def_mcast_ns_global2global_sll=
+    (
+     mcast_ns_global2global_sll,
+     'global',
+     \@expects_mcast_ns_global2global_sll,
+     'multicast NS w/ SLLA (global => solnode[global])',
+     );
+
+#
+#
+#
+@defs=
+    (
+     \@def_ucast_ns_link2link_sll,
+     \@def_ucast_ns_link2global_sll,
+     \@def_ucast_ns_global2link_sll,
+     \@def_ucast_ns_global2global_sll,
+     \@def_mcast_ns_link2link_sll,
+     \@def_mcast_ns_link2global_sll,
+     \@def_mcast_ns_global2link_sll,
+     \@def_mcast_ns_global2global_sll,
+     );
+
+#
+#
+#
+$idx=0;
+foreach(@defs) {
+    my($snd)=@$_[$idx_snd];
+    my($scp)=@$_[$idx_scp];
+    my($exp)=@$_[$idx_exp];
+    my($msg)=@$_[$idx_msg];
+
+    $title{$idx}="<TD>$msg</TD>";
+    if(check($snd, $scp, $exp, $msg)) {
+	$result{$idx}=$V6evalTool::exitPass;
+	vLogHTML("<A NAME=\"T$idx\">OK</A><BR>");
+    } else {
+	$exit_rtn=$V6evalTool::exitFail;
+	$result{$idx}=$exit_rtn;
+	vLogHTML("<A NAME=\"T$idx\">".ndErrmsg("NG")."</A><BR>");
+    }
+    $idx++;
+}
+
+###############################################
+# NS: link-local => link-local w/o SLLA
+###############################################
+
+#
+# Clear buffer
+#
+$msg="unicast NS w/o SLLA (link => link)";
+vLogHTML("<FONT SIZE=\"+2\">*** $msg ***</FONT><BR>");
+$title{$idx}="<TD>$msg</TD>";
+
+#
+#
+#
+vLogHTML("<FONT SIZE=\"+1\">Initialization</FONT><BR>");
+if(nd2NoNce($IF) != 0) {
+    $exit_rtn=$V6evalTool::exitFail;
+    $result{$idx}=$V6evalTool::exitFail;
+} else {
+    #
+    #
+    #
+    vLogHTML("<FONT SIZE=\"+1\">Test</FONT><BR>");
+
+    #
+    # Send an unicast NS (src, tn's link, dst:link)
+    #
+    $pktdesc{ucast_ns_link2link}=
+	"Send an unicast NS w/o SLLA (link-local\@TN ==> link-local\@NUT)";
+    %ret2=vSend($IF, ucast_ns_link2link);
+
+    #
+    # Should capture multicast NS and solicited NA.
+    #
+    if($type eq router) {
+	@expects = (mcast_ns_nut2tn_link2link,
+		    ucast_na_link2link_RSo,
+		    ucast_na_link2link_RSO_tll,
+		    ucast_na_global2link_RSO_tll);
+	$pktdesc{mcast_ns_nut2tn_link2link}=
+	    'Got multicast NS (solnode[link-local]\@TN <== lin-local\@NUT)';
+	$pktdesc{ucast_na_link2link_RSo}=
+	    'Got an unicast NA (link-local\@TN <== link-local\@NUT)';
+	$pktdesc{ucast_na_link2link_RSO_tll}=
+	    'Got an unicast NA (link-local\@TN <== link-local\@NUT)';
+	$pktdesc{ucast_na_global2link_RSO_tll}=
+	    'Got an unicast NA (link-local\@TN <== global\@NUT)';
+    } else {
+	@expects = (mcast_ns_nut2tn_link2link,
+		    ucast_na_link2link_rSo,
+		    ucast_na_link2link_rSO_tll,
+		    ucast_na_global2link_rSO_tll);
+	$pktdesc{mcast_ns_nut2tn_link2link}=
+	    'Got multicast NS (solnode[link-local]\@TN <== lin-local\@NUT)';
+	$pktdesc{ucast_na_link2link_rSo}=
+	    'Got an unicast NA (link-local\@TN <== link-local\@NUT)';
+	$pktdesc{ucast_na_link2link_rSO_tll}=
+	    'Got an unicast NA (link-local\@TN <== link-local\@NUT)';
+	$pktdesc{ucast_na_global2link_rSO_tll}=
+	    'Got an unicast NA (link-local\@TN <== global\@NUT)';
+    }
+    vLogHTML("Wait for NS/NA<BR>");
+    while(1) {
+	%ret=vRecv($IF, $wait_na, $ret2{sentTime1}, 1, @expects);
+	if($ret{status} == 0) {
+	    if($ret{recvFrame} eq mcast_ns_nut2tn_link2link) {
+		#
+		# Got a multicast NS (src:nut's link, dst:solnode[tn's link]).
+		# So, send solicited NA (src:tn's link, dst:nut's link)
+		#
+		$pktdesc{ucast_na_tn2nut_link2link_rSO_tll}=
+		    "Send NA (link-local\@TN ==> link-local\@NUT)";
+		%ret2=vSend($IF, ucast_na_tn2nut_link2link_rSO_tll);
+		next;
+	    }
+	    #
+	    # Got solicited NA (src:tn's link, dst:nut's link).
+	    # It is ok if the captured NA has a TLLA option or not.
+	    # And that's it.
+	    #
+	    vLogHTML("<A NAME=\"T$idx\">OK</A><BR>");
+	    $result{$idx}=$V6evalTool::exitPass;
+	    last;
+	} else {
+	    vLogHTML("<A NAME=\"T$idx\">".
+		     ndWarnmsg("WARN: Did not get an unicast NA ".
+			       "(link-local\@TN <== link-local\@NUT)").
+		     "</A><BR>");
+	    $exit_rtn=$V6evalTool::exitWarn
+		if $exit_rtn != $V6evalTool::exitFail;
+	    $result{$idx}=$V6evalTool::exitWarn;
+	    last;
+	}
+    }
+
+    #
+    # Skip all of solicited NAs.
+    #
+    readout($IF, $wait_probe);
+}
+
+#
+#
+#
+vLogHTML("<FONT SIZE=\"+1\">Termination</FONT><BR>");
+clear();
+
+#
+#
+#
+@col=('PTN');
+ndPrintSummaryHTML("*** Test Summary: receiving NS vs sending NA ***", @col,
+                   %title, %result, $idx);
+
+vLogHTML("*** EOT ****<BR>");
+exit $exit_rtn;
+
+#
+#
+#
+sub check($$\@$)
+{
+    my($snd)=@$_[$idx_snd];
+    my($scp)=@$_[$idx_scp];
+    my($exp)=@$_[$idx_exp];
+    my($msg)=@$_[$idx_msg];
+
+    #
+    #
+    #
+    foreach(@$exp) {
+	$pktdesc{$_}="Got NA: $_";
+    }
+
+    #
+    #
+    #
+    vLogHTML("<FONT SIZE=\"+2\">*** $msg ***</FONT><BR>");
+
+    #
+    #
+    #
+    vLogHTML("<FONT SIZE=\"+1\">Initialization</FONT><BR>");
+    if($scp eq global) {
+	clearGlobal();
+    } else {
+	goto error if nd2NoNce($IF) != 0;
+    }
+
+    #
+    # Send  NS (src:tn's link, dst:nut's link)
+    #
+    vLogHTML("<FONT SIZE=\"+1\">Test</FONT><BR>");
+    $pktdesc{$snd}="Send NS: $snd";
+    %ret=vSend($IF, $snd);
+
+    vLogHTML("Wait for unicast NA<BR>");
+    %ret=vRecv($IF, $wait_na, $ret{sentTime1}, 1, @$exp);
+    goto error if $ret{status} != 0;
+
+    #
+    # Skip all of solicited NAs.
+    #
+    readout($IF, $wait_probe);
+
+    return 1;
+
+  error:
+    vLogHTML(vErrmsg(%ret)."<BR>");
+    return 0;
+}
+
+#
+#
+#
+sub readout {
+    # reading out NSs that NUT should send to TN
+    my($if, $timeout) = @_;
+    my(%ret)=vRecv($if, $timeout, 0, 0);
+}
+
+#
+#
+#
+sub clear()
+{
+    return if $type eq router;
+    $pktdesc{unsol_ra_clrrtr}="Clear the Default Router List";
+    vSend($IF, unsol_ra_clrrtr);
+}
+
+#
+#
+#
+sub clearGlobal()
+{
+    $pktdesc{echo_request_global2link}=
+	'Send echo-request, then !NONCE';
+    $pktdesc{na_global2link}=
+	'Send NA, then REACHABLE';
+    vSend($IF,
+          echo_request_global2link,
+          na_global2link,
+          );
+
+    vRecv($IF, $wait_reachable, 0, 0);
+    vLogHTML("Then STALE<BR>");
+
+    $pktdesc{echo_request_global2link}=
+	'Send echo-request';
+    vSend($IF,
+          echo_request_global2link,
+          );
+    vLogHTML("Then DELAY->PROBE<BR>");
+    vRecv($IF, $wait_probe, 0, 0);
+    vLogHTML("Clear X's link-local<BR>");
+}
+
+########################################################################
+__END__
+
+=head1 NAME
+
+recvNsBasic - Verifying that NUT acknowledges valid NSs
+
+=head1 TARGET
+
+Host and Router
+
+=head1 SYNOPSIS
+
+  recvNsBasic.seq [-tooloption ...] -p recvNsBasic.def
+
+=head1 CASE I. A valid NS with SLLA
+
+B<recvNsBasic> verify that NUT acknowledges B<a valid NS w/ SLLA>,
+then returns a valid NA.
+
+=head2 INITIALIZATION
+
+=over 4
+
+=item B<A CASE OF A HOST>
+
+=begin html
+<OL>
+  <LI>Set a global prefix (3ffe:501:ffff:100::/64) with RA.
+  <LI>Clear NC state for TN.
+</OL>
+
+=end html
+
+  TN	               NUT
+  ------------------------
+  ==== unsolicited RA ===>
+	src=X's link-local
+	dst=NUT's link-local
+	M=0, O=0
+	LifeTime=600;
+	ReachableTime=0;
+	RetransTimer=0;
+	Prefix Option:
+		L=1, A=1
+		ValidLifetime=2592000;
+		PreferredLifetime=604800;
+
+=item B<A CASE OF A ROUTER>
+
+=begin html
+<OL>
+  <LI>NUT must be configured its interface under test (Link0)
+      to have a global prefix of "3ffe:501:ffff:100::/64".
+  <LI>Clear NC state for TN.
+</OL>
+
+=end html
+
+=back
+
+=head2 TEST PROCEDURE
+
+=begin html
+<PRE>
+  TN	              NUT
+  -----------------------
+<BR>
+  State: NONCE
+<BR>
+  ==== <A HREF="#JDG11">NS</A> ===>
+	src=TN's link-local, global
+	dst=NUT's link-local or global or 
+            solicited-node[NUT's link-local] or
+            solicited-node[global]
+	w/ SLL
+<BR>
+  State: INCOMPLETE
+<BR>
+  <=== <A HREF="#JDG11">Judgment #1</A>: NA ====
+	src=NUT's link-local or global
+	dst=TN's link-local or global
+	w/ or w/o TLL
+</PRE>
+
+=end html
+
+=head2 JUDGMENT
+
+=begin html
+<PRE>
+  <A NAME="JDG11">Input & output</A>
+  ===============================+===================================
+   NS (input)                    | NA (expected)
+  -------+---------------+-------+-----------+------+-+-+-+----------
+   Src   | Dst           | SLLA  | Src       | Dst  |<A HREF="#RFLAG">r</A>|<A HREF="#SFLAG">s</A>|<A HREF="#OFLAG">o</A>| <A HREF="#TLL">TLLA</A>
+  =======+===============+=======+===========+======+=+=+=+==========
+  link    link            exist  |link        link   * 1 0 none
+                                 |link        link   * 1 1 exist
+  -------+---------------+-------+-----------+------+-+-+-+----------
+  link    global          exist  |link/global link   * 1 0 none
+                                 |link/global link   * 1 1 exist
+  -------+---------------+-------+-----------+------+-+-+-+----------
+  global  link            exist  |link/global global * 1 0 none
+                                 |link/global global * 1 1 exist
+  -------+---------------+-------+-----------+------+-+-+-+----------
+  global  global          exist  |global      global * 1 0 none
+                                 |global      global * 1 1 exist
+  =======+===============+=======+===========+======+=+=+=+==========
+  link    sol-node[link]  exist  |link/global link   * 1 1 exist
+  -------+---------------+-------+-----------+------+-+-+-+----------
+  link    sol-node[global]exist  |link/global link   * 1 1 exist
+  -------+---------------+-------+-----------+------+-+-+-+----------
+  global  sol-node[link]  exist  |link/global global * 1 1 exist
+  -------+---------------+-------+-----------+------+-+-+-+----------
+  global  sol-node[global]exist  |link/global global * 1 1 exist
+  =======+===============+=======+===========+======+=+=+=+==========
+  *If NUT is a host, r-flag must be the zero.
+  *If NUT is a router, r-flag is must be the one.
+</PRE>
+
+=end html
+
+=head1 CASE II. A valid NS without SLLA
+
+B<recvNsBasic> verify that NUT acknowledges B<a valid NS w/o SLLA>,
+then returns a valid NA.
+
+=head2 INITIALIZATION
+
+  Clear NC state for TN.
+
+=head2 TEST PROCEDURE
+
+=begin html
+<PRE>
+  TN		                NUT
+  ---------------------------------
+<BR>
+  State: NONCE
+<BR>
+  ==== <A HREF="#JDG21">unicast NS</A> ===>
+	src=TN's link-local
+	dst=NUT's link-local
+	w/o SLL
+<BR>
+  State: INCOMPLETE
+<BR>
+  <=== <A HREF="#JDG22">Judgment #2</A>: multicast NS ====
+	src=NUT's link-local or global
+	dst=solicited-node[TN's link-local]
+	w/ SLL
+<BR>
+  ==== solicited NA ===>
+	src=TN's link-local
+	dst=NUT's link-local
+	R=0, S=1, O=1
+	w/ TLL
+<BR>
+  State: REACHABLE
+<BR>
+  <=== <A HREF="#JDG23">Judgment #3</A>: solicited NA (if any) ====
+	src=NUT's link-local or global
+	dst=TN's link-local
+	R=0/1, S=1, O=0
+	w/ or w/o TLL
+</PRE>
+
+=end html
+
+=head2 JUDGMENT
+
+=begin html
+<PRE>
+<A NAME="JDG21"></A>
+  1. Input and output
+  ===============================+===================================
+   NS (input)                    | NA (expected)
+  -------+---------------+-------+-----------+------+-+-+-+----------
+   Src   | Dst           | SLLA  | Src       | Dst  |<A HREF="#RFLAG">r</A>|<A HREF="#SFLAG">s</A>|<A HREF="#OFLAG">o</A>| <A HREF="#TLL">TLLA</A>
+  =======+===============+=======+===========+======+=+=+=+==========
+  link    link            none   |link/global link   * 1 0 none
+                                 |link/global link   * 1 0 exist
+  =======+===============+=======+===========+======+=+=+=+==========
+  *If NUT is a host, r-flag must be the zero.
+  *If NUT is a router, r-flag is must be the one.
+<A NAME="JDG22"></A>
+  2. <A HREF="#NOSLL">NUT may send at the least one multicast NS.</A>
+     src=NUT's link-local, dst=solicited-node[TN's link-local], w/ SLL
+<A NAME="JDG23"></A>
+  3. NUT may send a solicited NA.
+<BR>
+     3.1. NUT is a host
+          src=NUT's link-local, dst=TN's link-local,
+          r=0, s=1, O=0, w/ or w/o TLL
+<BR>
+     3.2. NUT is a router
+          src=NUT's link-local, dst=TN's link-local,
+          r=1, s=1, O=0, w/ or w/o TLL
+</PRE>
+
+=end html
+
+=head1 TERMINATION
+
+  Send RA with RouterLifetime=0 to clear the Default Router List.
+
+=head1 NOTE
+
+=for html <A NAME="NODE1"></A>
+
+  1. The command does not invoke any remote command.
+
+=head1 REFERENCE
+
+=begin html
+<PRE>
+RFC2461
+<HR>
+7.2.4.  Sending Solicited Neighbor Advertisements
+<BR>
+   A node sends a Neighbor Advertisement in response to a valid Neighbor
+   Solicitation targeting one of the node's assigned addresses.  <B>The
+   Target Address of the advertisement is copied from the Target Address
+   of the solicitation.</B>  <A NAME="TLL"><B>If the solicitation's IP Destination Address is
+   not a multicast address, the Target Link-Layer Address option MAY be
+   omitted; the neighboring node's cached value must already be current
+   in order for the solicitation to have been received.  If the
+   solicitation's IP Destination Address is a multicast address, the
+   Target Link-Layer option MUST be included in the advertisement.</B></A>
+   Furthermore, <A NAME="RFLAG"><B>if the node is a router, it MUST set the Router flag to
+   one; otherwise it MUST set the flag to zero.</B></A>
+<BR>
+   <A NAME="OFLAG"><B>If the Target Address is either an anycast address or a unicast
+   address for which the node is providing proxy service, or the Target
+   Link-Layer Address option is not included, the Override flag SHOULD
+   be set to zero.  Otherwise, the Override flag SHOULD be set to one.</B></A>
+   Proper setting of the Override flag ensures that nodes give
+   preference to non-proxy advertisements, even when received after
+   proxy advertisements, and also ensures that the first advertisement
+   for an anycast address "wins".
+<BR>
+   <A NAME="SFLAG"><B>If the source of the solicitation is the unspecified address, the
+   node MUST set the Solicited flag to zero and multicast the
+   advertisement to the all-nodes address.  Otherwise, the node MUST set
+   the Solicited flag to one and unicast the advertisement to the Source
+   Address of the solicitation.</B></A>
+<BR>
+   If the Target Address is an anycast address the sender SHOULD delay
+   sending a response for a random time between 0 and
+   MAX_ANYCAST_DELAY_TIME seconds.
+<BR>
+   <A NAME="NOSLL"><B>Because unicast Neighbor Solicitations are not required to include a
+   Source Link-Layer Address, it is possible that a node sending a
+   solicited Neighbor Advertisement does not have a corresponding link-
+   layer address for its neighbor in its Neighbor Cache.  In such
+   situations, a node will first have to use Neighbor Discovery to
+   determine the link-layer address of its neighbor (i.e, send out a
+   multicast Neighbor Solicitation).</B></A>
+</PRE>
+
+=end html
+
+=head1 SEE ALSO
+
+  perldoc V6evalTool
+  perldoc V6evalRemote
+
+=cut

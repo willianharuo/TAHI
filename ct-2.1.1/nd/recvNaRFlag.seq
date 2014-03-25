@@ -1,0 +1,907 @@
+#!/usr/bin/perl
+#
+# Copyright (C) 1999, 2000, 2001, 2002, 2003 Yokogawa Electric Corporation,
+# IPA (Information-technology Promotion Agency, Japan).
+# All rights reserved.
+# 
+# Redistribution and use of this software in source and binary forms, with 
+# or without modification, are permitted provided that the following 
+# conditions and disclaimer are agreed and accepted by the user:
+# 
+# 1. Redistributions of source code must retain the above copyright 
+# notice, this list of conditions and the following disclaimer.
+# 
+# 2. Redistributions in binary form must reproduce the above copyright 
+# notice, this list of conditions and the following disclaimer in the 
+# documentation and/or other materials provided with the distribution.
+# 
+# 3. Neither the names of the copyrighters, the name of the project which 
+# is related to this software (hereinafter referred to as "project") nor 
+# the names of the contributors may be used to endorse or promote products 
+# derived from this software without specific prior written permission.
+# 
+# 4. No merchantable use may be permitted without prior written 
+# notification to the copyrighters. However, using this software for the 
+# purpose of testing or evaluating any products including merchantable 
+# products may be permitted without any notification to the copyrighters.
+# 
+# 
+# 
+# THIS SOFTWARE IS PROVIDED BY THE COPYRIGHTERS, THE PROJECT AND 
+# CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING 
+# BUT NOT LIMITED THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS 
+# FOR A PARTICULAR PURPOSE, ARE DISCLAIMED.  IN NO EVENT SHALL THE 
+# COPYRIGHTERS, THE PROJECT OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, 
+# INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES 
+# (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR 
+# SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) 
+# HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN 
+# CONTRACT,STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) 
+# ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF 
+# THE POSSIBILITY OF SUCH DAMAGE.
+#
+# $TAHI: ct/nd/recvNaRFlag.seq,v 1.34 2002/02/27 01:08:28 masaxmasa Exp $
+
+########################################################################
+BEGIN { $V6evalTool::TestVersion = '$Name: REL_2_1_1 $ '; }
+ 
+use V6evalTool;
+use nd;
+
+ndOptions(@ARGV);
+
+# The following generate debugging messages.
+$nd::debug=$ndOpt_v|$ndOpt_vv;
+
+# You can specifies debug options to a remote control program.
+# If you want to know more detail, please see the following:
+# - V6evalTool.pm: perldoc V6evalTool
+# - V6evalRemote.pm: perldoc V6evalRemote
+$nd::remote_debug="-o1" if $ndOpt_vv;
+
+$IF=Link0;
+
+$wait_echo=2;
+$wait_ns=$nd::DELAY_FIRST_PROBE_TIME +
+    ($nd::RETRANS_TIMER * $nd::MAX_SOLICIT) + 1;
+
+$exit_rtn=$V6evalTool::exitPass;
+
+#
+#
+#
+$type=$V6evalTool::NutDef{Type};
+if($type eq router) {
+    vLogHTML("This test is for the host only<BR>");
+    exit $V6evalTool::exitHostOnly;
+}
+
+$type=$V6evalTool::NutDef{Type};
+if($type ne host) {
+    vLogHTML(ndErrmsg("ERROR: $V6evalTool::NutDef{Type}: ".
+		      "Unknown target type<BR>"));
+    exit $V6evalTool::exitFail;
+}
+
+#
+#
+#
+$idx_ptn=0;
+$idx_chg=1;
+$idx_exp=2;
+$idx_bin=3;
+$idx_msg=4;
+
+#
+@def_unicast_na_tn2nut_rso=
+    (
+     unicast_na_tn2nut_rso,
+     same,
+     updated,
+     $V6evalTool::exitFail,
+     'unicast rso NA w/o TLL',
+     );
+
+#
+@def_unicast_na_tn2nut_rsO=
+    (
+     unicast_na_tn2nut_rsO,
+     same,
+     updated,
+     $V6evalTool::exitFail,
+     'unicast rsO NA w/o TLL',
+     );
+
+#
+@def_unicast_na_tn2nut_rSo=
+    (
+     unicast_na_tn2nut_rSo,
+     same,
+     updated,
+     $V6evalTool::exitFail,
+     'unicast rSo NA w/o TLL',
+     );
+
+#
+@def_unicast_na_tn2nut_rSO=
+    (
+     unicast_na_tn2nut_rSO,
+     same,
+     updated,
+     $V6evalTool::exitFail,
+     'unicast rSO NA w/o TLL',
+     );
+
+#
+@def_unicast_na_tn2nut_rso_tll=
+    (
+     unicast_na_tn2nut_rso_tll,
+     same,
+     updated,
+     $V6evalTool::exitFail,
+     'unicast rso NA w/ TLL',
+     );
+
+#
+@def_unicast_na_tn2nut_rsO_tll=
+    (
+     unicast_na_tn2nut_rsO_tll,
+     same,
+     updated,
+     $V6evalTool::exitFail,
+     'unicast rsO NA w/ TLL',
+     );
+
+#
+@def_unicast_na_tn2nut_rSo_tll=
+    (
+     unicast_na_tn2nut_rSo_tll,
+     same,
+     updated,
+     $V6evalTool::exitFail,
+     'unicast rSo NA w/ TLL',
+     );
+
+#
+@def_unicast_na_tn2nut_rSO_tll=
+    (
+     unicast_na_tn2nut_rSO_tll,
+     same,
+     updated,
+     $V6evalTool::exitFail,
+     'unicast rSO NA w/ TLL',
+     );
+
+#
+@def_multicast_na_tn2allnode_rso=
+    (
+     multicast_na_tn2allnode_rso,
+     same,
+     unchanged,
+     $V6evalTool::exitWarn,
+     'multicast rso NA w/o TLL (INVALID)',
+     );
+
+#
+@def_multicast_na_tn2allnode_rsO=
+    (
+     multicast_na_tn2allnode_rsO,
+     same,
+     unchanged,
+     $V6evalTool::exitWarn,
+     'multicast rsO NA w/o TLL (INVALID)',
+     );
+
+#
+@def_multicast_na_tn2allnode_rSo=
+    (
+     multicast_na_tn2allnode_rSo,
+     same,
+     unchanged,
+     $V6evalTool::exitFail,
+     'multicast rSo NA w/o TLL (INVALID)',
+     );
+
+#
+@def_multicast_na_tn2allnode_rSO=
+    (
+     multicast_na_tn2allnode_rSO,
+     same,
+     unchanged,
+     $V6evalTool::exitFail,
+     'multicast rSO NA w/o TLL (INVALID)',
+     );
+
+#
+@def_multicast_na_tn2allnode_rso_tll=
+    (
+     multicast_na_tn2allnode_rso_tll,
+     same,
+     updated,
+     $V6evalTool::exitFail,
+     'multicast rso NA w/ TLL',
+     );
+
+#
+@def_multicast_na_tn2allnode_rsO_tll=
+    (
+     multicast_na_tn2allnode_rsO_tll,
+     same,
+     updated,
+     $V6evalTool::exitFail,
+     'multicast rsO NA w/ TLL',
+     );
+
+#
+@def_multicast_na_tn2allnode_rSo_tll=
+    (
+     multicast_na_tn2allnode_rSo_tll,
+     same,
+     unchanged,
+     $V6evalTool::exitFail,
+     'multicast rSo NA w/ TLL (INVALID)',
+     );
+
+#
+@def_multicast_na_tn2allnode_rSO_tll=
+    (
+     multicast_na_tn2allnode_rSO_tll,
+     same,
+     unchanged,
+     $V6evalTool::exitFail,
+     'multicast rSO NA w/ TLL (INVALID)',
+     );
+
+#
+@def_unicast_na_tn2nut_rso_tll2_diff=
+    (
+     unicast_na_tn2nut_rso_tll2,
+     same,
+     unchanged,
+     $V6evalTool::exitFail,
+     'unicast rso NA w/ TLL, diff. LLA',
+     );
+
+#
+@def_unicast_na_tn2nut_rsO_tll_diff=
+    (
+     unicast_na_tn2nut_rsO_tll,
+     diff,
+     updated,
+     $V6evalTool::exitFail,
+     'unicast rsO NA w/ TLL, diff. LLA',
+     );
+
+#
+@def_unicast_na_tn2nut_rSo_tll2_diff=
+    (
+     unicast_na_tn2nut_rSo_tll2,
+     same,
+     unchanged,
+     $V6evalTool::exitFail,
+     'unicast rSo NA w/ TLL, diff. LLA',
+     );
+
+#
+@def_unicast_na_tn2nut_rSO_tll_diff=
+    (
+     unicast_na_tn2nut_rSO_tll,
+     diff,
+     updated,
+     $V6evalTool::exitFail,
+     'unicast rSO NA w/ TLL, diff. LLA',
+     );
+
+#
+@def_multicast_na_tn2allnode_rso_tll2_diff=
+    (
+     multicast_na_tn2allnode_rso_tll2,
+     same,
+     unchanged,
+     $V6evalTool::exitFail,
+     'multicast rso NA w/ TLL, diff. LLA',
+     );
+
+#
+@def_multicast_na_tn2allnode_rsO_tll_diff=
+    (
+     multicast_na_tn2allnode_rsO_tll,
+     diff,
+     updated,
+     $V6evalTool::exitFail,
+     'multicast rsO NA w/ TLL, diff. LLA',
+     );
+
+#
+@def_multicast_na_tn2allnode_rSo_tll2_diff=
+    (
+     multicast_na_tn2allnode_rSo_tll2,
+     same,
+     unchanged,
+     $V6evalTool::exitFail,
+     'multicast rSo NA w/ TLL (INVALID), diff. LLA',
+     );
+
+#
+@def_multicast_na_tn2allnode_rSO_tll2_diff=
+    (
+     multicast_na_tn2allnode_rSO_tll2,
+     same,
+     unchanged,
+     $V6evalTool::exitFail,
+     'multicast rSO NA w/ TLL (INVALID), diff. LLA',
+     );
+
+#
+#
+#
+@defs=
+    (
+     \@def_unicast_na_tn2nut_rso,
+     \@def_unicast_na_tn2nut_rsO,
+     \@def_unicast_na_tn2nut_rSo,
+     \@def_unicast_na_tn2nut_rSO,
+     \@def_unicast_na_tn2nut_rso_tll,
+     \@def_unicast_na_tn2nut_rsO_tll,
+     \@def_unicast_na_tn2nut_rSo_tll,
+     \@def_unicast_na_tn2nut_rSO_tll,
+     \@def_multicast_na_tn2allnode_rso,
+     \@def_multicast_na_tn2allnode_rsO,
+     \@def_multicast_na_tn2allnode_rSo,
+     \@def_multicast_na_tn2allnode_rSO,
+     \@def_multicast_na_tn2allnode_rso_tll,
+     \@def_multicast_na_tn2allnode_rsO_tll,
+     \@def_multicast_na_tn2allnode_rSo_tll,
+     \@def_multicast_na_tn2allnode_rSO_tll,
+     \@def_unicast_na_tn2nut_rso_tll2_diff,
+     \@def_unicast_na_tn2nut_rsO_tll_diff,
+     \@def_unicast_na_tn2nut_rSo_tll2_diff,
+     \@def_unicast_na_tn2nut_rSO_tll_diff,
+     \@def_multicast_na_tn2allnode_rso_tll2_diff,
+     \@def_multicast_na_tn2allnode_rsO_tll_diff,
+     \@def_multicast_na_tn2allnode_rSo_tll2_diff,
+     \@def_multicast_na_tn2allnode_rSO_tll2_diff,
+     );
+
+#
+#
+#
+vCapture($IF);
+
+#
+#
+#
+$idx=0;
+foreach(@defs) {
+    my($ptn)=@$_[$idx_ptn];
+    my($chg)=@$_[$idx_chg];
+    my($exp)=@$_[$idx_exp];
+    my($bin)=@$_[$idx_bin];
+    my($msg)=@$_[$idx_msg];
+
+    my($s)=check($ptn, $chg, $exp, $msg);
+    if($s eq $exp) {
+	$result{$idx}=$V6evalTool::exitPass;
+	vLogHTML("<A NAME=\"T$idx\">OK</A><BR>");
+    } else {
+	$exit_rtn=$bin if $exit_rtn != $V6evalTool::exitFail;
+	$result{$idx}=$bin;
+	vLogHTML("<A NAME=\"T$idx\">".ndErrmsg("NG")."</A><BR>");
+    }
+    $title{$idx}="<TD>$msg</TD><TD>exp:$exp</TD><TD>result:$s</TD>";
+    $idx++;
+}
+$idx--;
+
+#
+#
+#
+vLogHTML("<HR><FONT SIZE=\"+1\">Termination</FONT><BR>");
+clear();
+
+#
+#
+#
+@col=('PTN', 'EXP', 'RESULT');
+ndPrintSummaryHTML("*** Test Summary: NA vs. IsRouter flag ***", @col,
+                   %title, %result, $idx);
+
+#
+#
+#
+vLogHTML("*** EOT ***<BR>");
+exit $exit_rtn;
+
+#
+#
+#
+sub check($$$$)
+{
+    my($ptn, $chg, $exp, $msg)=@_;
+
+    #
+    #
+    #
+    vLogHTML("<FONT SIZE=\"+2\">*** $msg ***</FONT><BR>");
+    $title{$idx}="$msg";
+
+    #
+    #
+    #
+    vLogHTML("<HR><FONT SIZE=\"+1\">Initialization</FONT><BR>");
+    if($chg eq same) {
+	got error if init() != 0;
+    } else {
+	goto error if initZ() != 0;
+    }
+
+    #
+    #
+    #
+    vLogHTML("<HR><FONT SIZE=\"+1\">Test</FONT><BR>");
+    vLogHTML("Send $msg<BR>");
+    vSend($IF, $ptn);
+
+#    %ret=off_link_ping();
+
+    $pktdesc{nd_echo_request_from_offlink}=
+	"Send an echo-request from off-link src";
+    %ret=vSend($IF, nd_echo_request_from_offlink);
+
+    $pktdesc{nd_echo_reply_to_offlink}=
+	'Got an echo-reply that forwarded to TN';
+    $pktdesc{nd_multicast_ns_nut2xsolnode}=
+	'Got multicast NS to resolve the global address';
+    %ret=vRecv($IF, $wait_echo, $ret{sentTime1}, 0,
+	       nd_echo_reply_to_offlink,
+	       nd_multicast_ns_nut2xsolnode,
+	       );
+    if($ret{status} == 0) {
+	if($ret{recvFrame} eq nd_echo_reply_to_offlink) {
+	    $s="unchanged";
+	    $s2="$s (IsRouter: 1)";
+	} else {
+	    $s="updated";
+	    $s2="$s (IsRouter: 1==>0)";
+	}
+    } else {
+	vLogHTML("Never got an echo-reply that forwarded to TN<BR>");
+	$s="updated";
+	$s2="$s (IsRouter=0)";
+    }
+
+    if($s eq $exp) {
+	vLogHTML("IsRouter flag was $s2<BR>");
+    } else {
+	vLogHTML(ndErrmsg("IsRouter flag was $s2<BR>"));
+    }
+    return($s);
+
+  error:
+    return("ERROR");
+}
+
+#
+#
+#
+sub init()
+{
+#    return 1 if ndClearPrefix() != 0;
+#    return 1 if ndClearDefr() != 0;
+    return 1 if nd2ReachableByRa($IF) != 0;
+    vClear($IF);
+}
+
+sub initZ()
+{
+#    return 1 if ndClearPrefix() != 0;
+#    return 1 if ndClearDefr() != 0;
+    return 1 if nd2ReachableByRaZ($IF) != 0;
+    vClear($IF);
+}
+
+#
+#
+#
+sub clear()
+{
+    $pktdesc{nd_unsol_ra_clrrtr}="Clear the Default Router List";
+    vSend($IF, nd_unsol_ra_clrrtr);
+}
+
+########################################################################
+__END__
+
+=head1 NAME
+
+recvNaRFlag - Verifying that a IsRouter flag is modified by a NA
+
+=head1 TARGET
+
+Host only
+
+=head1 SYNOPSIS
+
+ recvNaRFlag .seq [-tooloption ...] -p recvNaRFlag.def
+
+=head1 INITIALIZATION
+
+=begin html
+<OL>
+  <LI>Set the state of neighbor cache entry to REACHABLE
+      whose IsRouter flag is true. 
+  <LI>Cache either <A HREF="#Cache_a_LLA_of_TN">TN's LLA</A> or
+      <A HREF="#Cache_a_bogus_LLA">a bogus LLA</A>
+</OL>
+
+=head2 Cache a LLA of TN
+
+=begin html
+<PRE>
+  TN                 NUT
+  ----------------------
+<BR>
+  State: NONCE (for TN)
+<BR>
+  ==== unsolicited RA ===>
+       src=TN's link-local
+       dst=all-node
+       M=0, O=0
+       RouterLifetime=600
+       ReachableTime=0
+       RetransTimer=0
+       Prefix Option:
+           L=1, A=1
+	   ValidLifetime=2592000
+	   PreferredLifetime=604800
+           Prefix=3ffe:501:ffff:100::/64
+<BR>
+  <=== Ns for DAD ====
+       src=unspecified
+       dst=solicited-node[NUT's global]
+       target=NUT's global
+<BR>
+  State: INCOMPLETE (for TN)
+<BR>
+  <=== multicast NS ====
+       src=NUT's link-local
+       dst=solicited-node[TN's link-local]
+       target=TN's link-local
+       w/ SLLA
+       timeout=RETRANS_TIMER * MAX_MULTICAST_SOLICIT
+<BR>
+  ==== solicited NA ===>
+       src=TN's link-local
+       dst=NUT's link-local
+       R=1, S=1, O=1
+       target=TN's link-local
+       <B>TLLA=TN's LLA</B>
+<BR>
+  State: REACHABLE (for TN)
+</PRE>
+
+=end html
+
+=head2 Cache a bogus LLA
+
+=begin html
+<PRE>
+  TN                 NUT
+  ----------------------
+<BR>
+  State: NONCE (for TN)
+<BR>
+  ==== unsolicited RA ===>
+       src=TN's link-local
+       dst=all-node
+       M=0, O=0
+       RouterLifetime=600
+       ReachableTime=0
+       RetransTimer=0
+       Prefix Option:
+           L=1, A=1
+	   ValidLifetime=2592000
+	   PreferredLifetime=604800
+           Prefix=3ffe:501:ffff:100::/64
+<BR>
+  <=== Ns for DAD ====
+       src=unspecified
+       dst=solicited-node[NUT's global]
+       target=NUT's global
+<BR>
+  State: INCOMPLETE (for TN)
+<BR>
+  <=== multicast NS ====
+       src=NUT's link-local
+       dst=solicited-node[TN's link-local]
+       target=TN's link-local
+       w/ SLLA
+       timeout=RETRANS_TIMER * MAX_MULTICAST_SOLICIT
+<BR>
+  ==== solicited NA ===>
+       src=TN's link-local
+       dst=NUT's link-local
+       R=1, S=1, O=1
+       target=TN's link-local
+       <B>TLLA=a bogus LLA</B>
+<BR>
+  State: REACHABLE (for TN)
+</PRE>
+
+=end html
+
+=head1 TEST PROCEDURE
+
+B<recvNaRFlag> verifies that a IsRouter flag is modified by a NA.
+in REACHABLE state when receiving an NA.
+
+=begin html
+<PRE>
+  TN                 NUT
+  ----------------------
+<BR>
+  State: REACHABLE (for TN)
+<BR>
+  ==== <A HREF="#JDG1">NA</A> ===>
+       src=TN's link-local
+       dst=the NUT's link-local or all-node
+       R=0, S=0/1, O=0/1
+       Target=TN's link-local
+       w/ or w/o TLL
+<BR>
+  ==== echo-request ===>
+       src=off-link global, but LLA is TN's one
+       dst=NUT's global
+<BR>
+  <=== <A HREF="#JDG2">Judgment #2</A>: echo-reply ====
+       src=NUT's global
+       dst=off-link global, but LLA is TN's one
+
+=end html
+
+=head1 JUDGMENT
+
+=begin html
+<A NAME="JDG1"></A>
+<PRE>
+  1. Modification of the IsRouter flag depend upon both
+     its neighbor cache state and a NS.
+<HR>
+  =========+================================+=================
+  Current  |NA received by NUT              |IsRouter flag
+  State    +---------------+-+--+-+---------+-------+---------
+           |Destination    |r| s|o|TLLA     |Current|New
+  =========+===============+=+==+=+=========+=======+=========
+  REACHABLE Unicast         0  0 0 none      1       <A HREF="#CHG">0</A>
+           +---------------+-+--+-+---------+-------+---------
+            Unicast         0  0 1 none      1       <A HREF="#CHG">0</A>
+           +---------------+-+--+-+---------+-------+---------
+            Unicast         0  1 0 none      1       <A HREF="#CHG">0</A>
+           +---------------+-+--+-+---------+-------+---------
+            Unicast         0  1 1 none      1       <A HREF="#CHG">0</A>
+           +===============+=+==+=+=========+=======+=========
+            Unicast         0  0 0 same      1       <A HREF="#CHG">0</A>
+           +---------------+-+--+-+---------+-------+---------
+            Unicast         0  0 1 same      1       <A HREF="#CHG">0</A>
+           +---------------+-+--+-+---------+-------+---------
+            Unicast         0  1 0 same      1       <A HREF="#CHG">0</A>
+           +---------------+-+--+-+---------+-------+---------
+            Unicast         0  1 1 same      1       <A HREF="#CHG">0</A>
+           +===============+=+==+=+=========+=======+=========
+            Unicast         0  0 0 different 1       <A HREF="#UNCHG">unchanged</A>
+           +---------------+-+--+-+---------+-------+---------
+            Unicast         0  0 1 different 1       <A HREF="#CHG">0</A>
+           +---------------+-+--+-+---------+-------+---------
+            Unicast         0  1 0 different 1       <A HREF="#UNCHG">unchanged</A>
+           +---------------+-+--+-+---------+-------+---------
+            Unicast         0  1 1 different 1       <A HREF="#CHG">0</A>
+           +===============+=+==+=+=========+=======+=========
+            *Multicast      0  0 0 *none     1       <A HREF="#INVALID">unchanged</A>
+                            <A HREF="#NOTE2">*invalid?</A>
+           +---------------+-+--+-+---------+-------+---------
+            *Multicast      0  0 1 *none     1       <A HREF="#INVALID">unchanged</A>
+                            <A HREF="#NOTE2">*invalid?</A>
+           +---------------+-+--+-+---------+-------+---------
+            *Multicast      0 *1 0 *none     1       <A HREF="#INVALID">unchanged</A>
+                            *invalid
+           +---------------+-+--+-+---------+-------+---------
+            *Multicast      0 *1 1 *none     1       <A HREF="#INVALID">unchanged</A>
+                            invalid
+           +===============+=+==+=+=========+=======+=========
+            Multicast       0  0 0 same      1       <A HREF="#CHG">0</A>
+           +---------------+-+--+-+---------+-------+---------
+            Multicast       0  0 1 same      1       <A HREF="#CHG">0</A>
+           +---------------+-+--+-+---------+-------+---------
+            *Multicast      0 *1 0 same      1       <A HREF="#INVALID">unchanged</A>
+                            *invalid
+           +---------------+-+--+-+---------+-------+---------
+            *Multicast      0 *1 1 same      1       <A HREF="#INVALID">unchanged</A>
+                            *invalid
+           +===============+=+==+=+=========+=======+=========
+            Multicast       0  0 0 different 1       <A HREF="#UNCHG">unchanged</A>
+           +---------------+-+--+-+---------+-------+---------
+            Multicast       0  0 1 different 1       <A HREF="#CHG">0</A>
+           +---------------+-+--+-+---------+-------+---------
+            *Multicast      0 *1 0 different 1       <A HREF="#INVALID">unchanged</A>
+                            *invalid
+           +---------------+-+--+-+---------+-------+---------
+            *Multicast      0 *1 1 different 1       <A HREF="#INVALID">unchanged</A>
+                            *invalid
+  =========+===============+=+==+=+=========+=======+=========
+<A NAME="JDG2"></A>
+  2. If a IsRouter flag is modified by rule, NUT will NOT throw
+     an echo-reply to the default router (i.e. TN).
+</PRE>
+
+=end html
+
+=head1 TERMINATION
+
+  Send RA with RouterLifetime=0 to clear the Default Router List.
+
+=head1 NOTE
+
+=begin html
+<PRE>
+  1. The test does not invoke any remote command.
+<BR>
+<A NAME="NOTE2"></A>
+  2. An implementation may update Rflag of an NCE when receiving
+     an multicast NA w/o TLL. The NA is not invalid as a receiver side,
+     whereas it is invalid as a sender side (please see the following).
+     In such case, this test judges "WARN" that never means the implementation
+     is wrong. The test intends to inform such behavior.
+<BR>
+<BLOCKQUOTE>
+Sender side:
+<HR>
+4.4.  Neighbor Advertisement Message Format
+<BR>
+   Possible options:
+<BR>
+      Target link-layer address
+                     The link-layer address for the target, i.e., the
+                     sender of the advertisement.  <B>This option MUST be
+                     included on link layers that have addresses when
+                     responding to multicast solicitations.</B>  When
+                     responding to a unicast Neighbor Solicitation this
+                     option SHOULD be included.
+<HR>
+Receiver side:
+<HR>
+7.1.2.  Validation of Neighbor Advertisements
+<BR>
+   A node MUST silently discard any received Neighbor Advertisement
+   messages that do not satisfy all of the following validity checks:
+<BR>
+      - The IP Hop Limit field has a value of 255, i.e., the packet
+        could not possibly have been forwarded by a router.
+<BR>
+      - If the message includes an IP Authentication Header, the message
+        authenticates correctly.
+<BR>
+      - ICMP Checksum is valid.
+<BR>
+      - ICMP Code is 0.
+<BR>
+      - ICMP length (derived from the IP length) is 24 or more octets.
+<BR>
+      - Target Address is not a multicast address.
+<BR>
+      - If the IP Destination Address is a multicast address the
+        Solicited flag is zero.
+<BR>
+      - All included options have a length that is greater than zero.
+<HR>
+</BLOCKQUOTE>
+</PRE>
+
+=head1 REFERENCE
+
+=begin html
+RFC2461
+<HR>
+<PRE>
+7.2.5.  Receipt of Neighbor Advertisements
+<BR>
+   <A NAME="INVALID"><B>When a valid Neighbor Advertisement is received (either solicited or
+   unsolicited), the Neighbor Cache is searched for the target's entry.</B></A>
+   If no entry exists, the advertisement SHOULD be silently discarded.
+   There is no need to create an entry if none exists, since the
+   recipient has apparently not initiated any communication with the
+   target.
+<BR>
+   Once the appropriate Neighbor Cache entry has been located, the
+   specific actions taken depend on the state of the Neighbor Cache
+   entry, the flags in the advertisement and the actual link-layer
+   address supplied.
+<BR>
+     IF(State == INCOMPLETE) {
+         If the target's Neighbor Cache entry is in the INCOMPLETE state when
+         the advertisement is received, one of two things happens.  If the
+         link layer has addresses and no Target Link-Layer address option is
+         included, the receiving node should silently discard the received
+         advertisement.  Otherwise, the receiving node performs the following
+         steps:
+<BR>
+         - It records the link-layer address in the Neighbor Cache entry.
+<BR>
+         - If the advertisement's Solicited flag is set, the state of the
+           entry is set to REACHABLE, otherwise it is set to STALE.
+<BR>
+         - It sets the IsRouter flag in the cache entry based on the Router
+           flag in the received advertisement.
+<BR>
+         - It sends any packets queued for the neighbor awaiting address
+           resolution.
+<BR>
+         Note that the Override flag is ignored if the entry is in the
+         INCOMPLETE state.
+     } ELSIF(State != INCOMPLETE) {
+         If the target's Neighbor Cache entry is in any state other than
+         INCOMPLETE when the advertisement is received, processing becomes
+         quite a bit more complex.
+<BR>
+         IF(Override==0 && TLLA!=LLA) {
+             If the Override flag is clear and the supplied link-layer
+             address differs from that in the cache, then one of two
+             actions takes place:
+<BR>
+             <A NAME="UNCHG"><B>IF(REACHABLE) {
+                 if the state of the entry is REACHABLE, set it to STALE,
+                 but do not update the entry in any other way;
+             }</A></B> ELSE {
+                 otherwise, the received advertisement should be ignored
+                 and must not update the cache.
+             }
+         } ELSIF(Override==1 ||
+                 (Override==0 && TLLA==LLA) ||
+                 TLLA==NULL) {
+             If the Override flag is set, both the Override
+             flag is clear and the supplied link-layer address is the same as that
+             in the cache, or no Target Link-layer address option was supplied,
+             the received advertisement must update the Neighbor Cache entry as
+             follows:
+<BR>
+             - The link-layer address in the Target Link-Layer Address option
+               must be inserted in the cache (if one is supplied and is different
+               than the already recorded address).
+<BR>
+             - If the Solicited flag is set, the state of the entry must be set
+               to REACHABLE.  If the Solicited flag is zero and the link-layer
+               address was updated with a different address the state must be set
+               to STALE.  Otherwise, the entry's state remains unchanged.
+<BR>
+             An advertisement's Solicited flag should only be set if the
+             advertisement is a response to a Neighbor Solicitation.  Because
+             Neighbor Unreachability Detection Solicitations are sent to the
+             cached link-layer address, receipt of a solicited advertisement
+             indicates that the forward path is working.  Receipt of an
+             unsolicited advertisement, however, suggests that a neighbor has
+             urgent information to announce (e.g., a changed link-layer
+             address).  If the urgent information indicates a change from what
+             a node is currently using, the node should verify the reachability
+             of the (new) path when it sends the next packet.  There is no need
+             to update the state for unsolicited advertisements that do not
+             change the contents of the cache.
+<BR>
+             - <A NAME="CHG"><B>The IsRouter flag in the cache entry must be set based on the
+               Router flag in the received advertisement.</A></B>  In those cases where
+               the IsRouter flag changes from TRUE to FALSE as a result of this
+               update, the node must remove that router from the Default Router
+               List and update the Destination Cache entries for all destinations
+               using that neighbor as a router as specified in Section 7.3.3.
+               This is needed to detect when a node that is used as a router
+               stops forwarding packets due to being configured as a host.
+         }
+     }
+</PRE>
+
+=end html
+
+=head1 SEE ALSO
+
+  perldoc V6evalTool
+  perldoc V6evalRemote
+
+=cut

@@ -1,0 +1,805 @@
+#!/usr/bin/perl
+#
+# Copyright (C) 1999, 2000, 2001, 2002, 2003 Yokogawa Electric Corporation,
+# IPA (Information-technology Promotion Agency, Japan).
+# All rights reserved.
+# 
+# Redistribution and use of this software in source and binary forms, with 
+# or without modification, are permitted provided that the following 
+# conditions and disclaimer are agreed and accepted by the user:
+# 
+# 1. Redistributions of source code must retain the above copyright 
+# notice, this list of conditions and the following disclaimer.
+# 
+# 2. Redistributions in binary form must reproduce the above copyright 
+# notice, this list of conditions and the following disclaimer in the 
+# documentation and/or other materials provided with the distribution.
+# 
+# 3. Neither the names of the copyrighters, the name of the project which 
+# is related to this software (hereinafter referred to as "project") nor 
+# the names of the contributors may be used to endorse or promote products 
+# derived from this software without specific prior written permission.
+# 
+# 4. No merchantable use may be permitted without prior written 
+# notification to the copyrighters. However, using this software for the 
+# purpose of testing or evaluating any products including merchantable 
+# products may be permitted without any notification to the copyrighters.
+# 
+# 
+# 
+# THIS SOFTWARE IS PROVIDED BY THE COPYRIGHTERS, THE PROJECT AND 
+# CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING 
+# BUT NOT LIMITED THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS 
+# FOR A PARTICULAR PURPOSE, ARE DISCLAIMED.  IN NO EVENT SHALL THE 
+# COPYRIGHTERS, THE PROJECT OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, 
+# INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES 
+# (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR 
+# SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) 
+# HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN 
+# CONTRACT,STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) 
+# ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF 
+# THE POSSIBILITY OF SUCH DAMAGE.
+#
+# $TAHI: ct/nd/ncStateByNa4Stale.seq,v 1.30 2002/02/27 01:08:26 masaxmasa Exp $
+
+########################################################################
+BEGIN { $V6evalTool::TestVersion = '$Name: REL_2_1_1 $ '; }
+ 
+use V6evalTool;
+use nd;
+
+ndOptions(@ARGV);
+
+# The following generate debugging messages.
+$nd::debug=$ndOpt_v|$ndOpt_vv;
+
+# You can specifies debug options to a remote control program.
+# If you want to know more detail, please see the following:
+# - V6evalTool.pm: perldoc V6evalTool
+# - V6evalRemote.pm: perldoc V6evalRemote
+$nd::remote_debug="-o1" if $ndOpt_vv;
+
+$IF=Link0;
+$exit_rtn=$V6evalTool::exitPass;
+
+#
+# sub test definition:
+# - sending pattern,
+# - SLLA vs cached LLA
+# - expected state
+# - message
+#
+$idx_ptn=0;
+$idx_lla=1;
+$idx_exp=2;
+$idx_explla=3;
+$idx_msg=4;
+$idx_inc_ip=5;
+$idx_prb_ip=6;
+$idx_rpy_ip=7;
+$idx_ign_ip=8;
+$idx_non_n=9;
+$idx_rpy_n=10;
+$idx_ign_n=11;
+$idx_stl_sr=12;
+$idx_ign_sr=13;
+@null=();
+
+#
+@def_unicast_na_tn2nut_rso=
+    (
+     unicast_na_tn2nut_rso,
+     same,
+     STALE,
+     unchanged,
+     'unicast rso NA w/o TLL',
+     \@null, \@null, \@null, \@null,
+     \@null, \@null, \@null,
+     \@null, \@null
+     );
+
+#
+@def_unicast_na_tn2nut_rsO=
+    (
+     unicast_na_tn2nut_rsO,
+     same,
+     STALE,
+     unchanged,
+     'unicast rsO NA w/o TLL',
+     \@null, \@null, \@null, \@null,
+     \@null, \@null, \@null,
+     \@null, \@null
+     );
+
+#
+@def_unicast_na_tn2nut_rSo=
+    (
+     unicast_na_tn2nut_rSo,
+     same,
+     REACHABLE,
+     unchanged,
+     'unicast rSo NA w/o TLL',
+     \@null, \@null, \@null, \@null,
+     \@null, \@null, \@null,
+     \@null, \@null
+     );
+
+#
+@def_unicast_na_tn2nut_rSO=
+    (
+     unicast_na_tn2nut_rSO,
+     same,
+     REACHABLE,
+     unchanged,
+     'unicast rSO NA w/o TLL',
+     \@null, \@null, \@null, \@null,
+     \@null, \@null, \@null,
+     \@null, \@null
+     );
+
+#
+@def_unicast_na_tn2nut_rso_tll=
+    (
+     unicast_na_tn2nut_rso_tll,
+     same,
+     STALE,
+     unchanged,
+     'unicast rso NA w/ TLL',
+     \@null, \@null, \@null, \@null,
+     \@null, \@null, \@null,
+     \@null, \@null
+     );
+
+#
+@def_unicast_na_tn2nut_rsO_tll=
+    (
+     unicast_na_tn2nut_rsO_tll,
+     same,
+     STALE,
+     unchanged,
+     'unicast rsO NA w/ TLL',
+     \@null, \@null, \@null, \@null,
+     \@null, \@null, \@null,
+     \@null, \@null
+     );
+
+#
+@def_unicast_na_tn2nut_rSo_tll=
+    (
+     unicast_na_tn2nut_rSo_tll,
+     same,
+     REACHABLE,
+     unchanged,
+     'unicast rSo NA w/ TLL',
+     \@null, \@null, \@null, \@null,
+     \@null, \@null, \@null,
+     \@null, \@null
+     );
+
+#
+@def_unicast_na_tn2nut_rSO_tll=
+    (
+     unicast_na_tn2nut_rSO_tll,
+     same,
+     REACHABLE,
+     unchanged,
+     'unicast rSO NA w/ TLL',
+     \@null, \@null, \@null, \@null,
+     \@null, \@null, \@null,
+     \@null, \@null
+     );
+
+#
+@def_multicast_na_tn2allnode_rso=
+    (
+     multicast_na_tn2allnode_rso,
+     same,
+     STALE,
+     unchanged,
+     'multicast rso NA w/o TLL (INVALID)',
+     \@null, \@null, \@null, \@null,
+     \@null, \@null, \@null,
+     \@null, \@null
+     );
+
+#
+@def_multicast_na_tn2allnode_rsO=
+    (
+     multicast_na_tn2allnode_rsO,
+     same,
+     STALE,
+     unchanged,
+     'multicast rsO NA w/o TLL (INVALID)',
+     \@null, \@null, \@null, \@null,
+     \@null, \@null, \@null,
+     \@null, \@null
+     );
+
+#
+@def_multicast_na_tn2allnode_rSo=
+    (
+     multicast_na_tn2allnode_rSo,
+     same,
+     STALE,
+     unchanged,
+     'multicast rSo NA w/o TLL (INVALID)',
+     \@null, \@null, \@null, \@null,
+     \@null, \@null, \@null,
+     \@null, \@null
+     );
+
+#
+@def_multicast_na_tn2allnode_rSO=
+    (
+     multicast_na_tn2allnode_rSO,
+     same,
+     STALE,
+     unchanged,
+     'multicast rSO NA w/o TLL (INVALID)',
+     \@null, \@null, \@null, \@null,
+     \@null, \@null, \@null,
+     \@null, \@null
+     );
+
+#
+@def_multicast_na_tn2allnode_rso_tll=
+    (
+     multicast_na_tn2allnode_rso_tll,
+     same,
+     STALE,
+     unchanged,
+     'multicast rso NA w/ TLL',
+     \@null, \@null, \@null, \@null,
+     \@null, \@null, \@null,
+     \@null, \@null
+     );
+
+#
+@def_multicast_na_tn2allnode_rsO_tll=
+    (
+     multicast_na_tn2allnode_rsO_tll,
+     same,
+     STALE,
+     unchanged,
+     'multicast rsO NA w/ TLL',
+     \@null, \@null, \@null, \@null,
+     \@null, \@null, \@null,
+     \@null, \@null
+     );
+
+#
+@def_multicast_na_tn2allnode_rSo_tll=
+    (
+     multicast_na_tn2allnode_rSo_tll,
+     same,
+     STALE,
+     unchanged,
+     'multicast rSo NA w/ TLL (INVALID)',
+     \@null, \@null, \@null, \@null,
+     \@null, \@null, \@null,
+     \@null, \@null
+     );
+
+#
+@def_multicast_na_tn2allnode_rSO_tll=
+    (
+     multicast_na_tn2allnode_rSO_tll,
+     same,
+     STALE,
+     unchanged,
+     'multicast rSO NA w/ TLL (INVALID)',
+     \@null, \@null, \@null, \@null,
+     \@null, \@null, \@null,
+     \@null, \@null
+     );
+
+#
+@def_unicast_na_tn2nut_rso_tll2_diff=
+    (
+     unicast_na_tn2nut_rso_tll2,
+     same,
+     STALE,
+     unchanged,
+     'unicast NA rso w/ TLL, diff. LLA',
+     \@null, \@null, \@null, \@null,
+     \@null, \@null, \@null,
+     \@null, \@null
+     );
+
+#
+@def_unicast_na_tn2nut_rsO_tll_diff=
+    (
+     unicast_na_tn2nut_rsO_tll,
+     diff,
+     STALE,
+     updated,
+     'unicast NA rsO w/ TLL, diff. LLA',
+     \@null, \@null, \@null, \@null,
+     \@null, \@null, \@null,
+     \@null, \@null
+     );
+
+#
+@def_unicast_na_tn2nut_rSo_tll2_diff=
+    (
+     unicast_na_tn2nut_rSo_tll2,
+     same,
+     STALE,
+     unchanged,
+     'unicast NA rSo w/ TLL, diff. LLA',
+     \@null, \@null, \@null, \@null,
+     \@null, \@null, \@null,
+     \@null, \@null
+     );
+
+#
+@def_unicast_na_tn2nut_rSO_tll_diff=
+    (
+     unicast_na_tn2nut_rSO_tll,
+     diff,
+     REACHABLE,
+     updated,
+     'unicast NA rSO w/ TLL, diff. LLA',
+     \@null, \@null, \@null, \@null,
+     \@null, \@null, \@null,
+     \@null, \@null
+     );
+
+#
+@def_multicast_na_tn2allnode_rso_tll2_diff=
+    (
+     multicast_na_tn2allnode_rso_tll2,
+     same,
+     STALE,
+     unchanged,
+     'multicast rso NA w/ TLLm diff. LLA',
+     \@null, \@null, \@null, \@null,
+     \@null, \@null, \@null,
+     \@null, \@null
+     );
+
+#
+@def_multicast_na_tn2allnode_rsO_tll_diff=
+    (
+     multicast_na_tn2allnode_rsO_tll,
+     diff,
+     STALE,
+     updated,
+     'multicast rsO NA w/ TLL, diff. LLA',
+     \@null, \@null, \@null, \@null,
+     \@null, \@null, \@null,
+     \@null, \@null
+     );
+
+#
+@def_multicast_na_tn2allnode_rSo_tll2_diff=
+    (
+     multicast_na_tn2allnode_rSo_tll2,
+     same,
+     STALE,
+     unchanged,
+     'multicast rSo NA w/ TLL (INVALID), diff. LLA',
+     \@null, \@null, \@null, \@null,
+     \@null, \@null, \@null,
+     \@null, \@null
+     );
+
+#
+@def_multicast_na_tn2allnode_rSO_tll2_diff=
+    (
+     multicast_na_tn2allnode_rSO_tll2,
+     same,
+     STALE,
+     unchanged,
+     'multicast rSO NA w/ TLL (INVALID), diff. LLA',
+     \@null, \@null, \@null, \@null,
+     \@null, \@null, \@null,
+     \@null, \@null
+     );
+
+#
+#
+#
+@defs=
+    (
+     \@def_unicast_na_tn2nut_rso,
+     \@def_unicast_na_tn2nut_rsO,
+     \@def_unicast_na_tn2nut_rSo,
+     \@def_unicast_na_tn2nut_rSO,
+     \@def_unicast_na_tn2nut_rso_tll,
+     \@def_unicast_na_tn2nut_rsO_tll,
+     \@def_unicast_na_tn2nut_rSo_tll,
+     \@def_unicast_na_tn2nut_rSO_tll,
+     \@def_multicast_na_tn2allnode_rso,
+     \@def_multicast_na_tn2allnode_rsO,
+     \@def_multicast_na_tn2allnode_rSo,
+     \@def_multicast_na_tn2allnode_rSO,
+     \@def_multicast_na_tn2allnode_rso_tll,
+     \@def_multicast_na_tn2allnode_rsO_tll,
+     \@def_multicast_na_tn2allnode_rSo_tll,
+     \@def_multicast_na_tn2allnode_rSO_tll,
+     \@def_unicast_na_tn2nut_rso_tll2_diff,
+     \@def_unicast_na_tn2nut_rsO_tll_diff,
+     \@def_unicast_na_tn2nut_rSo_tll2_diff,
+     \@def_unicast_na_tn2nut_rSO_tll_diff,
+     \@def_multicast_na_tn2allnode_rso_tll2_diff,
+     \@def_multicast_na_tn2allnode_rsO_tll_diff,
+     \@def_multicast_na_tn2allnode_rSo_tll2_diff,
+     \@def_multicast_na_tn2allnode_rSO_tll2_diff,
+     );
+
+#
+#
+#
+vCapture($IF);
+
+#
+#
+#
+$idx=0;
+foreach(@defs) {
+    $exp=@$_[$idx_exp];
+    $explla=@$_[$idx_explla];
+    $msg=@$_[$idx_msg];
+    vLogHTML("<HR>");
+    vLogHTML("<FONT SIZE=\"+2\">*** STALE vs. $msg ***</FONT><BR>");
+    $s=checkState($_);
+    $c=ndCachedLLA($explla);
+    if($s eq $exp && $c eq $explla) {
+        $result{$idx}=$V6evalTool::exitPass;
+        vLogHTML("<A NAME=\"T$idx\">OK: The target was $s/$c</A><BR>");
+    } else {
+        $exit_rtn=$V6evalTool::exitFail;
+        $result{$idx}=$exit_rtn;
+        vLogHTML("<A NAME=\"T$idx\">".
+		 ndErrmsg("NG: The target was $s/$c")."</A><BR>");
+    }
+    $title{$idx}="<TD>$msg</TD><TD>exp:$exp/$explla</TD><TD>result:$s/$c</TD>";
+    $idx++;
+}
+$idx--;
+
+#
+#
+#
+@col=('PTN', 'EXP(State/Cached LLA)', 'RESULT(State/Cached LLA)');
+ndPrintSummaryHTML("*** Test Summary: STALE vs. NA ***", @col,
+                   %title, %result, $idx);
+
+#
+#
+#
+vLogHTML("*** EOT ***<BR>");
+exit $exit_rtn;
+
+#
+#
+#
+sub checkState(\@) {
+    my($def)=@_;
+    my($ptn)=@$def[$idx_ptn];
+    my($lla)=@$def[$idx_lla];
+    my($exp)=@$def[$idx_exp];
+    my($msg)=@$def[$idx_msg];
+
+    my($inc_ip)=@$def[$idx_inc_ip];
+    my($prb_ip)=@$def[$idx_prb_ip];
+    my($rpy_ip)=@$def[$idx_rpy_ip];
+    my($ign_ip)=@$def[$idx_ign_ip];
+
+    my($non_n)=@$def[$idx_non_n];
+    my($rpy_n)=@$def[$idx_rpy_n];
+    my($ign_n)=@$def[$idx_ign_n];
+
+    my($stl_sr)=@$def[$idx_stl_sr];
+    my($ign_sr)=@$def[$idx_ign_sr];
+
+    vLogHTML("<FONT SIZE=\"+1\">Initialization</FONT><BR>");
+    if($lla eq same) {
+        goto error if nd2Stale($IF) != 0;
+    } else {
+        goto error if nd2StaleZ($IF) != 0;
+    }
+    vClear($IF);
+
+    vLogHTML("<FONT SIZE=\"+1\">Test</FONT><BR>");
+    $pktdesc{$ptn}="Send $msg";
+    my(%ret)=vSend($IF, $ptn);
+    my($s)=ndStatusNum2Str(ndStatus(
+                                    $IF, $ret{sentTime1},
+                                    @$inc_ip, @$prb_ip, @$rpy_ip, @$ign_ip,
+                                    @$non_n, @$rpy_n, @$ign_n,
+                                    @$stl_sr, @$ign_sr,
+                                    )
+                       );
+    return $s;
+
+error:
+    return("ERROR");
+}
+
+########################################################################
+__END__
+
+=head1 NAME
+
+ncStateByNa4Stale - Verifying State Machine: NA vs. STALE
+
+=head1 TARGET
+
+Host and Router
+
+=head1 SYNOPSIS
+
+  ncStateByNa4Stale.seq [-tooloption ...] -p ncStateByNa4Stale.def
+
+=head1 INITIALIZATION
+
+=begin html
+<OL>
+  <LI>Set the state of neighbor cache entry to STALE.
+  <LI>Cache either <A HREF="#Cache_a_LLA_of_TN">TN's LLA</A> or
+      <A HREF="#Cache_a_bogus_LLA">a bogus LLA</A>.
+</OL>
+
+=end html
+
+=head2 Cache a LLA of TN
+
+=begin html
+<PRE>
+  TN                 NUT
+  ----------------------
+<BR>
+  State: NONCE (for TN)
+<BR>
+  ==== echo-request ===>
+        src=TN's link-local
+        dst=NUT's link-local
+<BR>
+  State: INCOMPLETE (for TN)
+<BR>
+  <=== multicast NS ====
+        src=NUT's link-local
+        dst=solicited-node[TN's link-local]
+        target=TN's link-local
+        w/ SLLA
+        timeout: RETRANS_TIMER * MAX_MULTICAST_SOLICIT
+<BR>
+  ==== solicited NA ===>
+        src=TN's link-local
+        dst=NUT's link-local
+        target=TN's link-local
+        <B>TLLA=TN's LLA</B>
+<BR>
+  State: REACHABLE (for TN)
+<BR>
+  <=== echo-reply ====
+        src=NUT's link-local
+        dst=TN's link-local
+        timeout: 2 sec
+<BR>
+  Wait (REACHABLE_TIME * MAX_RANDOM_FACTOR)
+<BR>
+  State: STALE (for TN)
+</PRE>
+
+=end html
+
+=head2 Cache a bogus LLA
+
+=begin html
+<PRE>
+  TN                 NUT
+  ----------------------
+<BR>
+  State: NONCE (for TN)
+<BR>
+  ==== echo-request ===>
+        src=TN's link-local
+        dst=NUT's link-local
+<BR>
+  State: INCOMPLETE (for TN)
+<BR>
+  <=== multicast NS ====
+        src=NUT's link-local
+        dst=solicited-node[TN's link-local]
+        target=TN's link-local
+        w/ SLLA
+        timeout: RETRANS_TIMER * MAX_MULTICAST_SOLICIT
+<BR>
+  ==== solicited NA ===>
+        src=TN's link-local
+        dst=NUT's link-local
+        target=TN's link-local
+        <B>TLLA=a bogus LLA</B>
+<BR>
+  State: REACHABLE (for TN)
+<BR>
+  <=== echo-reply ====
+        src=NUT's link-local
+        dst=TN's link-local
+        timeout: 2 sec
+<BR>
+  Wait (REACHABLE_TIME * MAX_RANDOM_FACTOR)
+<BR>
+  State: STALE (for TN)
+</PRE>
+
+=end html
+
+=head1 TEST PROCEDURE
+
+B<ncStateByNa4Stale> verifies that state transition for a NUT
+in STALE state when receiving a NA.
+
+=begin html
+<PRE>
+  TN                 NUT
+  ----------------------
+<BR>
+  State: STALE  (for TN)
+<BR>
+  ==== <A HREF="#JDG1">NA</A> ===>
+        src=TN's link-local
+        dst=NUT's link-local or all-node
+        w/o or w/ TLLA
+        r=0, s=0/1, o=0/1
+<BR>
+  <A HREF="#JDG1">Judgment</A>: <A HREF="nd.html">Examining NUT's neighbor cache state</A>
+</PRE>
+
+=end html
+
+=head1 JUDGMENT
+
+=begin html
+<A NAME="JDG1"></A>
+<PRE>
+<HR>
+7.2.5.  Receipt of Neighbor Advertisements
+<BR>
+     IF(State != INCOMPLETE) {
+         If the target's Neighbor Cache entry is in any state other than
+         INCOMPLETE when the advertisement is received, processing becomes
+         quite a bit more complex.
+         IF(Override==0 && TLLA!=LLA) {
+             If the Override flag is clear and the supplied link-layer
+             address differs from that in the cache, then one of two
+             actions takes place:
+             IF(REACHABLE) {
+                 if the state of the entry is REACHABLE, set it to STALE,
+                 but do not update the entry in any other way;
+             }<A NAME="STATE_A"><B>ELSE {
+                 otherwise, the received advertisement should be ignored
+                 and must not update the cache.
+             }</B></A>
+         } ELSIF(Override==1 ||
+                 (Override==0 && TLLA==LLA) ||
+                 TLLA==NULL) {
+             If the Override flag is set, both the Override
+             flag is clear and the supplied link-layer address is the same as that
+             in the cache, or no Target Link-layer address option was supplied,
+             the received advertisement must update the Neighbor Cache entry as
+             follows:
+             <A NAME="TLL"><B>
+             - The link-layer address in the Target Link-Layer Address option
+               must be inserted in the cache (if one is supplied and is different
+               than the already recorded address).
+             </B></A><A NAME="STATE_B"><B>
+	     - IF(Solicited flag==1) {
+                   If the Solicited flag is set, <B>the state of the entry must be set
+                   to REACHABLE.
+               }</A></B>
+               <A NAME="STATE_C">ELSIF(Solicited flag==0 && TLLA!=LLA) {
+                   If the Solicited flag is zero and the link-layer
+                   address was updated with a different address <B>the state must be set
+                   to STALE. </B>
+               }</A></B>
+               <A NAME="STATE_D"><B>ELSE {
+                   Otherwise, <B>the entry's state remains unchanged.</B>
+               }
+             </A></B>
+             An advertisement's Solicited flag should only be set if the
+             advertisement is a response to a Neighbor Solicitation.  Because
+             Neighbor Unreachability Detection Solicitations are sent to the
+             cached link-layer address, receipt of a solicited advertisement
+             indicates that the forward path is working.  Receipt of an
+             unsolicited advertisement, however, suggests that a neighbor has
+             urgent information to announce (e.g., a changed link-layer
+             address).  If the urgent information indicates a change from what
+             a node is currently using, the node should verify the reachability
+             of the (new) path when it sends the next packet.  There is no need
+             to update the state for unsolicited advertisements that do not
+             change the contents of the cache.
+             <BR>
+             - The IsRouter flag in the cache entry must be set based on the
+               Router flag in the received advertisement.  In those cases where
+               the IsRouter flag changes from TRUE to FALSE as a result of this
+               update, the node must remove that router from the Default Router
+               List and update the Destination Cache entries for all destinations
+               using that neighbor as a router as specified in Section 7.3.3.
+               This is needed to detect when a node that is used as a router
+               stops forwarding packets due to being configured as a host.
+         }
+     }
+<HR>
+  ================================+===============+=============
+  NA                              |New State      |cached LLA
+  ---------------+-+--+-+---------+               |
+  Destination    |r| s|o|TLLA     |               |
+  ===============+=+==+=+=========+===============+=============
+  Unicast         0  0 0 none      <A HREF="#STATE_D">STALE</A>           unchanged
+  ---------------+-+--+-+---------+---------------+-------------
+  Unicast         0  0 1 none      <A HREF="#STATE_D">STALE</A>           unchanged
+  ---------------+-+--+-+---------+---------------+-------------
+  Unicast         0  1 0 none      <A HREF="#STATE_B">REACHABLE</A>       unchanged
+  ---------------+-+--+-+---------+---------------+-------------
+  Unicast         0  1 1 none      <A HREF="#STATE_B">REACHABLE</A>       unchanged
+  ===============+=+==+=+=========+===============+=============
+  Unicast         0  0 0 same      <A HREF="#STATE_D">STALE</A>           unchanged
+  ---------------+-+--+-+---------+---------------+-------------
+  Unicast         0  0 1 same      <A HREF="#STATE_D">STALE</A>           unchanged
+  ---------------+-+--+-+---------+---------------+-------------
+  Unicast         0  1 0 same      <A HREF="#STATE_B">REACHABLE</A>       unchanged
+  ---------------+-+--+-+---------+---------------+-------------
+  Unicast         0  1 1 same      <A HREF="#STATE_B">REACHABLE</A>       unchanged
+  ===============+=+==+=+=========+===============+=============
+  Unicast         0  0 0 different <A HREF="#STATE_A">STALE           unchanged</A>
+  ---------------+-+--+-+---------+---------------+-------------
+  Unicast         0  0 1 different <A HREF="#STATE_C">STALE</A>           <A HREF="#TLL">*updated</A>
+  ---------------+-+--+-+---------+---------------+-------------
+  Unicast         0  1 0 different <A HREF="#STATE_A">STALE           unchanged</A>
+  ---------------+-+--+-+---------+---------------+-------------
+  Unicast         0  1 1 different <A HREF="#STATE_B">REACHABLE</A>       <A HREF="#TLL">*updated</A>
+  ===============+=+==+=+=========+===============+=============
+  *Multicast      0  0 0 *none     STALE           unchanged
+                  *invalid
+  ---------------+-+--+-+---------+---------------+-------------
+  *Multicast      0  0 1 *none     STALE           unchanged
+                  *invalid
+  ---------------+-+--+-+---------+---------------+-------------
+  *Multicast      0 *1 0 *none     STALE           unchanged
+                  *invalid
+  ---------------+-+--+-+---------+---------------+-------------
+  *Multicast      0 *1 1 *none     STALE           unchanged
+                  *invalid
+  ===============+=+==+=+=========+===============+=============
+  Multicast       0  0 0 same      <A HREF="#STATE_D">STALE</A>           unchanged
+  ---------------+-+--+-+---------+---------------+-------------
+  Multicast       0  0 1 same      <A HREF="#STATE_D">STALE</A>           unchanged
+  ---------------+-+--+-+---------+---------------+-------------
+  *Multicast      0 *1 0 same      STALE           unchanged
+                  *invalid
+  ---------------+-+--+-+---------+---------------+-------------
+  *Multicast      0 *1 1 same      STALE           unchanged
+                  *invalid
+  ===============+=+==+=+=========+===============+=============
+  Multicast       0  0 0 different <A HREF="#STATE_A">STALE           unchanged</A>
+  ---------------+-+--+-+---------+---------------+-------------
+  Multicast       0  0 1 different <A HREF="#STATE_C">STALE</A>           <A HREF="#TLL">*updated</A>
+  ---------------+-+--+-+---------+---------------+-------------
+  *Multicast      0 *1 0 different STALE           unchanged
+                  *invalid
+  ---------------+-+--+-+---------+---------------+-------------
+  *Multicast      0 *1 1 different STALE           unchanged
+                  *invalid
+  ===============+=+==+=+=========+===============+=============
+</PRE>
+
+=end html
+
+=head1 TERMINATION
+
+  N/A
+
+=head1 NOTE
+
+  The test does not invoke any remote command.
+
+=head1 SEE ALSO
+
+  perldoc V6evalTool
+  perldoc V6evalRemote
+
+=cut

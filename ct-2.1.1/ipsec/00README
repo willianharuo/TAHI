@@ -1,0 +1,263 @@
+
+				README of
+   IPv6 Conformance Test for Security Architecture for the Internet Protocol
+
+			      TAHI Project
+
+		     $Date: 2003/05/05 16:02:56 $
+
+* First of all
+
+	This is a set of conformance tests for 
+        'Security Architecture for the Internet Protocol'
+	that is based upon RFC2401, 2402, 2406
+	draft-ietf-ipsec-ciph-aes-cbc02.txt, draft-okabe-ipv6-lcna-mireq-00.txt.
+
+* Test coverage
+
+	The test coverage is the followings:
+
+					
+                                     |       the NUT type      |
+  Category                           | host       | router     | comments
+ ------------------------------------+------------+------------+----------------
+  Transport AH                         half done     N/A
+  Transport ESP                        half done     N/A
+  Tunnel AH                            N/A           half done
+  Tunnel ESP                           N/A           half done
+  SA lifetime                          N/A           N/A
+  Anti replay                          N/A           N/A
+ ------------------------------------+------------+------------+----------------
+
+   This IPsec test is based on
+       - ICMPv6 echo request and reply
+       - ICMPv4 echo request and reply
+       - UDP using echo port 7
+       - TCP using echo port 7 and telnet port 23
+          ( no test with TCP for IPv4)
+       - off-link communication with global address
+          ( no test with link-local address )
+       - manual key management
+          ( IKE is not yet available )
+
+
+* Network topology for IPv6
+
+  upper 48bit of prefix (X:X:X:) is not fixed yet (currently 3ffe:501:ffff:).
+
+  - For Host Transport Mode Test
+
+  1. Set global address to NUT manually (NUT_NET3)
+  2. Set routing table to NUT manually (for NET5, ROUTER_NET3)
+
+  Make IPsec transport mode between NUT and Host1 (and/or 2)
+
+
+                                   +-------+
+                                   |  NUT  |
+                                   +---+---+ NUT_NET3
+                                       |X:X:X:ff03:200:ff:fe00:b0b0
+                                       |
+  --------------+----------------------+----------- NET3 X:X:X:ff03:/64 (Link0)
+                |                       
+                |X:X:X:ff03:200:ff:fe00:a0a0 (Default Gateway for NUT)
+            +---+---+ ROUTER_NET3
+            | TN as |
+            | ROUTER|
+            +---+---+ ROUTER_NET5
+                |X:X:X:ff05:200:ff:fe00:a0a0
+                |
+  -----+--------+----------------------+----------- NET5 X:X:X:ff05:/64
+       |                               |
+       |X:X:X:ff05:200:ff:fe00:c1c1    |X:X:X:ff05:200:ff:fe00:c2c2 
+   +---+---+ HOST1_NET5            +---+---+ HOST2_NET5
+   | TN as |                       | TN as |
+   | HOST1 |                       | HOST2 |
+   +-------+                       +-------+
+
+  - For Router Tunnel Mode Test
+
+  1. Set global address to NUT manually (NUT_NET0, NUT_NET1)
+  2. Set routing table to NUT manually (for NET2, NET4, NET6, ROUTER_NET0)
+
+  Make IPsec tunnel mode between NUT and Security Gateway (S.G.) A (and/or B)
+
+            +-------+
+            | TN as |
+            | HOST1 |
+            +---+---+ HOST1_NET1
+                |X:X:X:ff01:200:ff:fe00:c1c1
+                |                          
+  --------------+----------------------+----------- NET1 X:X:X:ff01:/64 (Link1)
+                                       |
+                                       |X:X:X:ff01:200:ff:fe00:b1b1
+                                   +---+---+ NUT_NET1
+                                   |  NUT  |
+                                   +---+---+ NUT_NET0
+                                       |X:X:X:ff00:200:ff:fe00:b0b0
+                                       |            
+  --------------+----------------------+----------- NET0 X:X:X:ff00:/64 (Link0)
+                |                       
+                |X:X:X:ff00:200:ff:fe00:a0a0
+            +---+---+ ROUTER_NET0
+            | TN as |
+            | ROUTER|
+            +---+---+ ROUTER_NET1
+                |X:X:X:ff02:200:ff:fe00:a0a0
+                |
+  -+------------+------------+--------------------- NET2 X:X:X:ff02:/64
+   |                         |
+   |                         |X:X:X:ff02:200:ff:fe00:a1a1
+   |                     +---+---+ SG1_NET2
+   |                     | TN as |
+   |                     | SG1   |
+   |                     +---+---+ SG1_NET4
+   |                         |X:X:X:ff04:200:ff:fe00:a0a0
+   |                         |
+   |  -----+-----------------+-------------+----------- NET4 X:X:X:ff04:/64
+   |       |                               |
+   |       |X:X:X:ff04:200:ff:fe00:c1c1    |X:X:X:ff04:200:ff:fe00:c2c2 
+   |   +---+---+ HOST1_NET4            +---+---+ HOST2_NET4
+   |   | TN as |                       | TN as |
+   |   | HOST1 |                       | HOST2 |
+   |   +-------+                       +-------+
+   |
+   +---------------------+
+                         |
+                         |X:X:X:ff02:200:ff:fe00:a2a2
+                     +---+---+ SG2_NET2
+                     | TN as |
+                     | SG2   |
+                     +---+---+ SG2_NET6
+                         |X:X:X:ff06:200:ff:fe00:a0a0
+                         |
+  -----+-----------------+-------------+----------- NET6 X:X:X:ff06:/64
+       |                               |
+       |X:X:X:ff06:200:ff:fe00:c1c1    |X:X:X:ff06:200:ff:fe00:c2c2 
+   +---+---+ HOST1_NET6            +---+---+ HOST2_NET6
+   | TN as |                       | TN as |
+   | HOST1 |                       | HOST2 |
+   +-------+                       +-------+
+
+* Network topology for IPv4
+
+  - For Host Transport Mode Test
+
+  1. Set global address to NUT manually (NUT_NET3)
+  2. Set routing table to NUT manually (for NET5, ROUTER_NET3)
+
+  Make IPsec transport mode between NUT and Host1 (and/or 2)
+
+
+                                   +-------+
+                                   |  NUT  |
+                                   +---+---+ NUT_NET3
+                                       |192.168.103.20
+                                       |
+  --------------+----------------------+--------- NET3 192.168.103.0/24 (Link0)
+                |                       
+                |192.168.103.10 (Default Gateway for NUT)
+            +---+---+ ROUTER_NET3
+            | TN as |
+            | ROUTER|
+            +---+---+ ROUTER_NET5
+                |192.168.105.10
+                |
+  -----+--------+----------------------+--------- NET5 192.168.105.0/24
+       |                               |
+       |192.168.105.31                 |192.168.105.32
+   +---+---+ HOST1_NET5            +---+---+ HOST2_NET5
+   | TN as |                       | TN as |
+   | HOST1 |                       | HOST2 |
+   +-------+                       +-------+
+
+  - For Router Tunnel Mode Test
+
+  1. Set global address to NUT manually (NUT_NET0, NUT_NET1)
+  2. Set routing table to NUT manually (for NET2, NET4, NET6, ROUTER_NET0)
+
+  Make IPsec tunnel mode between NUT and Security Gateway (S.G.) A (and/or B)
+
+            +-------+
+            | TN as |
+            | HOST1 |
+            +---+---+ HOST1_NET1
+                |192.168.101.31
+                |                          
+  --------------+----------------------+--------- NET1 192.168.101.0/24 (Link1)
+                                       |
+                                       |192.168.101.21
+                                   +---+---+ NUT_NET1
+                                   |  NUT  |
+                                   +---+---+ NUT_NET0
+                                       |192.168.100.20
+                                       |            
+  --------------+----------------------+--------- NET0 192.168.100.0/24 (Link0)
+                |                       
+                |192.168.100.10
+            +---+---+ ROUTER_NET0
+            | TN as |
+            | ROUTER|
+            +---+---+ ROUTER_NET2
+                |192.168.102.10
+                |
+  -+------------+------------+------------------- NET2 192.168.102.0/24
+   |                         |
+   |                         |192.168.102.11
+   |                     +---+---+ SG1_NET2
+   |                     | TN as |
+   |                     | SG1   |
+   |                     +---+---+ SG1_NET4
+   |                         |192.168.104.10
+   |                         |
+   |  -----+-----------------+-------------+--------- NET4 192.168.104.0/24
+   |       |                               |
+   |       |192.168.104.31                 |192.168.104.32
+   |   +---+---+ HOST1_NET4            +---+---+ HOST2_NET4
+   |   | TN as |                       | TN as |
+   |   | HOST1 |                       | HOST2 |
+   |   +-------+                       +-------+
+   |
+   +---------------------+
+                         |
+                         |192.168.102.12
+                     +---+---+ SG2_NET2
+                     | TN as |
+                     | SG2   |
+                     +---+---+ SG2_NET6
+                         |192.168.106.10
+                         |
+  -----+-----------------+-------------+----------- NET6 192.168.106.0/24
+       |                               |
+       |192.168.106.31                  |192.168.106.32
+   +---+---+ HOST1_NET6            +---+---+ HOST2_NET6
+   | TN as |                       | TN as |
+   | HOST1 |                       | HOST2 |
+   +-------+                       +-------+
+
+* How to run the tests
+
+	# vi /usr/local/v6eval/etc/tn.def
+	# vi /usr/local/v6eval/etc/nut.def
+	% cp -Rp /usr/local/v6eval/ct $SOMEWHERE
+	% cd $SOMEWHERE
+	% chmod -R +w $SOMEWHERE
+	% make test
+	% netscape index.html
+
+	If you know more about it,
+	please see /usr/local/v6eval/doc/INSTALL.ct.
+
+* Using remote commands
+
+ Script             | Host/Router | Description           | Command(s)
+--------------------+-------------+-----------------------+----------
+ HTR_SetAddress.seq | H           | Initialize target     | reboot.rmt
+                    |             |                       | manualaddrconf.rmt
+                    |             |                       | route.rmt
+--------------------+-------------+-----------------------+----------
+ RTU_SetAddress.seq | R           | Initialize target     | reboot.rmt
+                    |             |                       | manualaddrconf.rmt
+                    |             |                       | route.rmt
+
+                                                        [end of README]

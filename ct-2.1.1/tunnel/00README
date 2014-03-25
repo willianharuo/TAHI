@@ -1,0 +1,58 @@
+				README of
+		IPv6 Conformance Test for IPv6 over IPv4 Tunnel
+
+			      TAHI Project
+
+		     $Date: 2000/04/21 07:36:22 $
+
+* First of all
+
+	This is a set of conformance tests for IPv6 over IPv4 Tunnel that is 
+	based upon draft-ietf-ngtrans-mech-04.
+
+* Test coverage
+
+	The test coverage is the followings:
+
+					
+	              | the NUT type    |
+	Category      | host   | router | comments
+	--------------+--------+--------+-------------------
+	Encapsulation     *        *
+	Decapsulation     *        *
+	Fragmentation              *
+	ICMP Message               *
+	--------------+--------+--------+-------------------
+
+
+* How to run the tests
+
+	# vi /usr/local/v6eval/etc/tn.def
+	# vi /usr/local/v6eval/etc/nut.def
+	% cp -Rp /usr/local/v6eval/ct $SOMEWHERE
+	% cd $SOMEWHERE
+	% make test
+	% netscape index.html
+
+	If you know more about it,
+	please see /usr/local/v6eval/doc/INSTALL.ct.
+
+
+* Using remote commands
+
+	                | the NUT type |
+	Script          | Host |Router | Description| Command(s)
+	----------------+------+-------+------------+----------
+	initialize.seq            *      Initialize  tunnel.rmt
+                                                     manualaddrconf.rmt
+                                                     route.rmt
+	----------------+------+-------+------------+----------
+	fragment.seq              *      change MTU  mtuconfig.rmt
+	----------------+------+-------+------------+----------
+	icmpv4.seq	          *      config      tunnel.rmt
+                                         tunnel
+	----------------+------+-------+------------+----------
+
+
+
+						[end of README]

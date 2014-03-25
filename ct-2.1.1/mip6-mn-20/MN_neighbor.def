@@ -1,0 +1,264 @@
+/* 
+ *
+ * Copyright (C) 2003 Yokogawa Electric Corporation , 
+ * INTAP(Interoperability Technology Association for Information 
+ * Processing, Japan) , IPA (Information-technology Promotion Agency,Japan)
+ * Copyright (C) IBM Corporation 2003.
+ * All rights reserved.
+ *
+ * Redistribution and use of this software in source and binary forms, with 
+ * or without modification, are permitted provided that the following 
+ * conditions and disclaimer are agreed and accepted by the user:
+ *
+ * 1. Redistributions of source code must retain the above copyright 
+ * notice, this list of conditions and the following disclaimer.
+ *
+ * 2. Redistributions in binary form must reproduce the above copyright 
+ * notice, this list of conditions and the following disclaimer in the 
+ * documentation and/or other materials provided with the distribution.
+ *
+ * 3. Neither the names of the copyrighters, the name of the project which 
+ * is related to this software (hereinafter referred to as "project") nor 
+ * the names of the contributors may be used to endorse or promote products 
+ * derived from this software without specific prior written permission.
+ *
+ * 4. No merchantable use may be permitted without prior written 
+ * notification to the copyrighters. However, using this software for the 
+ * purpose of testing or evaluating any products including merchantable 
+ * products may be permitted without any notification to the copyrighters.
+ *
+ *
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHTERS, THE PROJECT AND 
+ * CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING 
+ * BUT NOT LIMITED THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS 
+ * FOR A PARTICULAR PURPOSE, ARE DISCLAIMED.  IN NO EVENT SHALL THE 
+ * COPYRIGHTERS, THE PROJECT OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, 
+ * INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES 
+ * (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR 
+ * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) 
+ * HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN 
+ * CONTRACT,STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) 
+ * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF 
+ * THE POSSIBILITY OF SUCH DAMAGE.
+ *
+ *    Author: Kazuo Hiekata <hiekata@yamato.ibm.com>
+ *
+ */
+/*-----------------------------------------------------------------------------------*
+ *  Neighbor Solicitation
+ *-----------------------------------------------------------------------------------*/
+//================================================================
+//  Neighbor Solicitation (DAD)
+//  DAD NS : NUT0 (Link-Local Address)
+FEM_icmp6_ns(
+	dadns_nut0,
+	_HETHER_nut0_dad,
+	{
+		HopLimit = 255;
+		_SRC(v6(_UNSPEC_ADDR));
+		_DST(_IPV6_SOLNODE_MCAST(NUT0_LLOCAL_UCAST));
+	},
+	{
+		TargetAddress = NUT0_GLOBAL_UCAST;
+	}
+)
+//================================================================
+//  Neighbor Solicitation (DAD)
+//  DAD NS : NUT1 (Link-Local Address)
+FEM_icmp6_ns(
+	dadns_nut1,
+	_HETHER_nut1_dad,
+	{
+		HopLimit = 255;
+		_SRC(v6(_UNSPEC_ADDR));
+		_DST(_IPV6_SOLNODE_MCAST(NUT1_LLOCAL_UCAST));
+	},
+	{
+		TargetAddress = NUT1_GLOBAL_UCAST;
+	}
+)
+//================================================================
+//  Neighbor Solicitation (DAD)
+//  DAD NS : NUT2 (Link-Local Address)
+FEM_icmp6_ns(
+	dadns_nut2,
+	_HETHER_nut2_dad,
+	{
+		HopLimit = 255;
+		_SRC(v6(_UNSPEC_ADDR));
+		_DST(_IPV6_SOLNODE_MCAST(NUT2_LLOCAL_UCAST));
+	},
+	{
+		TargetAddress = NUT2_GLOBAL_UCAST;
+	}
+)
+/*-----------------------------------------------------------------------------------*
+ *  Neighbor Advertisement
+ *-----------------------------------------------------------------------------------*/
+//================================================================
+//  Neighbor Advertisement
+//  NA: HA0(from LLA) ----> NUT0(Global Address)
+FEM_icmp6_na(
+	na_ha0lla_to_nut0,
+	_HETHER_ha0_to_all,
+	{
+		HopLimit = 255;
+		_SRC(v6(HA0_LLOCAL_UCAST));
+		_DST(v6(_ALLNODES_MCAST_ADDR));
+	},
+	{
+		RFlag         = 1;
+		SFlag         = 0;
+		OFlag         = 1;
+		TargetAddress = v6(HA0_LLOCAL_UCAST);
+		option        = opt_tll_ha0;
+	}
+)
+//================================================================
+//  Neighbor Advertisement
+//  NA: HA0(from Global Address) ----> NUT0(Global Address)
+FEM_icmp6_na(
+	na_ha0ga_to_nut0,
+	_HETHER_ha0_to_all,
+	{
+		HopLimit = 255;
+		_SRC(v6(HA0_GLOBAL_UCAST));
+		_DST(v6(_ALLNODES_MCAST_ADDR));
+	},
+	{
+		RFlag         = 1;
+		SFlag         = 0;
+		OFlag         = 1;
+		TargetAddress = v6(HA0_GLOBAL_UCAST);
+		option        = opt_tll_ha0;
+	}
+)
+//================================================================
+//  Neighbor Advertisement
+//  NA: HA0(from LLA TA_GA) ----> NUT0(Global Address)
+FEM_icmp6_na(
+	na_ha0llataga_to_nut0,
+	_HETHER_ha0_to_all,
+	{
+		HopLimit = 255;
+		_SRC(v6(HA0_LLOCAL_UCAST));
+		_DST(v6(_ALLNODES_MCAST_ADDR));
+	},
+	{
+		RFlag         = 1;
+		SFlag         = 0;
+		OFlag         = 1;
+		TargetAddress = v6(HA0_GLOBAL_UCAST);
+		option        = opt_tll_ha0;
+	}
+)
+//================================================================
+//  Neighbor Advertisement
+//  NA: HA1(from LLA) ----> NUT0(Global Address)
+FEM_icmp6_na(
+	na_ha1lla_to_nut0,
+	_HETHER_ha1_to_nut0,
+	{
+		HopLimit = 255;
+		_SRC(v6(HA1_LLOCAL_UCAST));
+		_DST(NUT0_GLOBAL_UCAST);
+	},
+	{
+		RFlag         = 1;
+		SFlag         = 1;
+		OFlag         = 1;
+		TargetAddress = v6(HA1_LLOCAL_UCAST);
+		option        = opt_tll_ha1;
+	}
+)
+//================================================================
+//  Neighbor Advertisement
+//  NA: R1(from LLA) ----> NUT1(Global Address)
+FEM_icmp6_na(
+	na_r1lla_to_nut1,
+	_HETHER_r1_to_nut1,
+	{
+		HopLimit = 255;
+		_SRC(v6(R1_LLOCAL_UCAST));
+		_DST(NUT1_GLOBAL_UCAST);
+	},
+	{
+		RFlag         = 1;
+		SFlag         = 1;
+		OFlag         = 1;
+		TargetAddress = v6(R1_LLOCAL_UCAST);
+		option        = opt_tll_r1;
+	}
+)
+//================================================================
+//  Neighbor Advertisement
+//  NA: HA2(from LLA) ----> NUT1(Global Address)
+FEM_icmp6_na(
+	na_ha2lla_to_nut1,
+	_HETHER_ha2_to_nut1,
+	{
+		HopLimit = 255;
+		_SRC(v6(HA2_LLOCAL_UCAST));
+		_DST(NUT1_GLOBAL_UCAST);
+	},
+	{
+		RFlag         = 1;
+		SFlag         = 1;
+		OFlag         = 1;
+		TargetAddress = v6(HA2_LLOCAL_UCAST);
+		option        = opt_tll_ha2;
+	}
+)
+//================================================================
+//  Neighbor Advertisement
+//  NA: R2(from LLA) ----> NUT2(Global Address)
+FEM_icmp6_na(
+	na_r2lla_to_nut2,
+	_HETHER_r2_to_nut2,
+	{
+		HopLimit = 255;
+		_SRC(v6(R2_LLOCAL_UCAST));
+		_DST(NUT2_GLOBAL_UCAST);
+	},
+	{
+		RFlag         = 1;
+		SFlag         = 1;
+		OFlag         = 1;
+		TargetAddress = v6(R2_LLOCAL_UCAST);
+		option        = opt_tll_r2;
+	}
+)
+//================================================================
+//  Neighbor Advertisement
+//  NA: NUT0(Global Address) ----> all
+FEM_icmp6_na(
+	na_nut0ga_to_multi,
+	_HETHER_nut0_to_all,
+	{
+		HopLimit = 255;
+		_SRC(NUT0_GLOBAL_UCAST);
+		_DST(v6(_ALLNODES_MCAST_ADDR));
+	},
+	{
+		//RFlag         = any;
+		//SFlag         = any;
+		//OFlag         = any;
+		//TargetAddress = v6(NUT0_LLOCAL_UCAST);
+	}
+)
+Opt_ICMPv6_TLL opt_tll_ha0 {
+	LinkLayerAddress = ether(HA0_MAC_ADDR);
+}
+Opt_ICMPv6_TLL opt_tll_ha1 {
+	LinkLayerAddress = ether(HA1_MAC_ADDR);
+}
+Opt_ICMPv6_TLL opt_tll_ha2 {
+	LinkLayerAddress = ether(HA2_MAC_ADDR);
+}
+Opt_ICMPv6_TLL opt_tll_r1 {
+	LinkLayerAddress = ether(R1_MAC_ADDR);
+}
+Opt_ICMPv6_TLL opt_tll_r2 {
+	LinkLayerAddress = ether(R2_MAC_ADDR);
+}

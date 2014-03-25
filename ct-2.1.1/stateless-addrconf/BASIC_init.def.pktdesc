@@ -1,0 +1,10 @@
+vLog("Reading BASIC_init.def.pktdesc") if $debug > 0;
+
+$main::pktdesc{dadns_from_NUT_init}         = "received DAD NS from NUT";
+$main::pktdesc{chkconf_dadns_to_NUT_init}   = "send DAD NS from TN to NUT to check if NUT's address is configured";
+$main::pktdesc{chkconf_dadna_from_NUT_init} = "received DAD NA from NUT";
+$main::pktdesc{chkconf_dadna_from_NUT_init_rf1} = "received DAD NA from NUT (RouterFlag==1)";
+$main::pktdesc{dadpkt_to_NUT_init}          = "send DAD NA from TN to NUT to force NUT detect address duplication ";
+
+1;
+#end

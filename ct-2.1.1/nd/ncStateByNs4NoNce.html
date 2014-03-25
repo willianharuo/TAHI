@@ -1,0 +1,143 @@
+<HTML>
+<HEAD>
+<TITLE>ncStateByNs4Nonce - Verifying State Machine: NS vs. NONCE</TITLE>
+<LINK REV="made" HREF="mailto:hackers@FreeBSD.org">
+</HEAD>
+
+<BODY>
+
+<!-- INDEX BEGIN -->
+<!--
+
+<UL>
+
+	<LI><A HREF="#NAME">NAME</A>
+	<LI><A HREF="#TARGET">TARGET</A>
+	<LI><A HREF="#SYNOPSIS">SYNOPSIS</A>
+	<LI><A HREF="#INITIALIZATION">INITIALIZATION</A>
+	<LI><A HREF="#TEST_PROCEDURE">TEST PROCEDURE</A>
+	<LI><A HREF="#JUDGMENT">JUDGMENT</A>
+	<LI><A HREF="#TERMINATION">TERMINATION</A>
+	<LI><A HREF="#NOTE">NOTE</A>
+	<LI><A HREF="#SEE_ALSO">SEE ALSO</A>
+</UL>
+-->
+<!-- INDEX END -->
+
+<P>
+<H1><A NAME="NAME">NAME</A></H1>
+<P>
+ncStateByNs4Nonce - Verifying State Machine: NS vs. NONCE
+
+<P>
+<HR>
+<H1><A NAME="TARGET">TARGET</A></H1>
+<P>
+Host and Router
+
+<P>
+<HR>
+<H1><A NAME="SYNOPSIS">SYNOPSIS</A></H1>
+<P>
+<PRE>  ncStateByNs4Nonce.seq [-tooloption ...] -p ncStateByNs4Nonce.def
+</PRE>
+<P>
+<HR>
+<H1><A NAME="INITIALIZATION">INITIALIZATION</A></H1>
+<P>
+<PRE>  Clear NC state for TN.
+</PRE>
+<P>
+<HR>
+<H1><A NAME="TEST_PROCEDURE">TEST PROCEDURE</A></H1>
+<P>
+<STRONG>ncStateByNs4Nonce</STRONG> verifies that state transition for a NUT in NONCE state when receiving a
+NS.
+
+<PRE>
+  TN                 NUT
+  ----------------------
+<BR>
+  State: NONCE (for TN)
+<BR>
+  ==== <A HREF="#JDG1">NS</A> ===>
+        src=TN's link-local
+        dst=NUT's link-local or solicited-node[NUT's link-local]
+        w/o or w/ SLLA
+<BR>
+  <A HREF="#JDG1">Judgment</A>: <A HREF="nd.html">Examining NUT's neighbor cache state</A>
+</PRE>
+
+<P>
+<HR>
+<H1><A NAME="JUDGMENT">JUDGMENT</A></H1>
+<A NAME="JDG1"></A>
+<PRE>
+<HR>
+7.2.3.  Receipt of Neighbor Solicitations
+<BR>
+   A valid Neighbor Solicitation that does not meet any the following
+   requirements MUST be silently discarded:
+<BR>
+    - The Target Address is a "valid" unicast or anycast address
+      assigned to the receiving interface [ADDRCONF],
+<BR>
+    - The Target Address is a unicast address for which the node is
+      offering proxy service, or
+<BR>
+    - The Target Address is a "tentative" address on which Duplicate
+      Address Detection is being performed [ADDRCONF].
+<BR>
+   If the Target Address is tentative, the Neighbor Solicitation should
+   be processed as described in [ADDRCONF].  Otherwise, the following
+   description applies.  If the Source Address is not the unspecified
+   address and, on link layers that have addresses, the solicitation
+   includes a Source Link-Layer Address option, then the recipient
+   SHOULD create or update the Neighbor Cache entry for the IP Source
+   Address of the solicitation.  <B>If an entry does not already exist, the
+   node SHOULD create a new one and set its reachability state to STALE
+   as specified in Section 7.3.3.</B>  If an entry already exists, and the
+   cached link-layer address differs from the one in the received Source
+   Link-Layer option, the cached address should be replaced by the
+   received address and the entry's reachability state MUST be set to
+   STALE.
+<HR>
+  ===============================+==========+=========+=================
+  NS                             |New State |LLA       Comments
+  ---------+-----------+---------+          |
+  Source IP|Destination|SLLA     |          |
+           |IP         |         |          |
+  =========+===========+=========+==========+=========+=================
+  TN's      Unicast     none      NONCE or   unchanged not mentioned
+  link                            INCOMPLETE           by RFC2461
+  ---------+-----------+---------+----------+---------+-----------------
+  TN's      Unicast     exist     STALE      updated
+  link
+  ---------+-----------+---------+----------+---------+-----------------
+  TN's      Multicast   exist     STALE      updated
+  link
+  =========+===========+=========+==========+=========+=================
+</PRE>
+
+<P>
+<HR>
+<H1><A NAME="TERMINATION">TERMINATION</A></H1>
+<P>
+<PRE>  N/A
+</PRE>
+<P>
+<HR>
+<H1><A NAME="NOTE">NOTE</A></H1>
+<P>
+<PRE>  The test does not invoke any remote command.
+</PRE>
+<P>
+<HR>
+<H1><A NAME="SEE_ALSO">SEE ALSO</A></H1>
+<P>
+<PRE>  perldoc V6evalTool
+  perldoc V6evalRemote
+</PRE>
+</BODY>
+
+</HTML>

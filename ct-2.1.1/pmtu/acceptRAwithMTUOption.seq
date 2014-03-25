@@ -1,0 +1,484 @@
+#!/usr/bin/perl
+#
+# Copyright (C) 1999, 2000, 2001, 2002, 2003 Yokogawa Electric Corporation,
+# IPA (Information-technology Promotion Agency, Japan).
+# All rights reserved.
+# 
+# Redistribution and use of this software in source and binary forms, with 
+# or without modification, are permitted provided that the following 
+# conditions and disclaimer are agreed and accepted by the user:
+# 
+# 1. Redistributions of source code must retain the above copyright 
+# notice, this list of conditions and the following disclaimer.
+# 
+# 2. Redistributions in binary form must reproduce the above copyright 
+# notice, this list of conditions and the following disclaimer in the 
+# documentation and/or other materials provided with the distribution.
+# 
+# 3. Neither the names of the copyrighters, the name of the project which 
+# is related to this software (hereinafter referred to as "project") nor 
+# the names of the contributors may be used to endorse or promote products 
+# derived from this software without specific prior written permission.
+# 
+# 4. No merchantable use may be permitted without prior written 
+# notification to the copyrighters. However, using this software for the 
+# purpose of testing or evaluating any products including merchantable 
+# products may be permitted without any notification to the copyrighters.
+# 
+# 
+# 
+# THIS SOFTWARE IS PROVIDED BY THE COPYRIGHTERS, THE PROJECT AND 
+# CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING 
+# BUT NOT LIMITED THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS 
+# FOR A PARTICULAR PURPOSE, ARE DISCLAIMED.  IN NO EVENT SHALL THE 
+# COPYRIGHTERS, THE PROJECT OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, 
+# INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES 
+# (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR 
+# SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) 
+# HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN 
+# CONTRACT,STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) 
+# ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF 
+# THE POSSIBILITY OF SUCH DAMAGE.
+#
+# $TAHI: ct/pmtu/acceptRAwithMTUOption.seq,v 1.29 2003/04/21 02:40:06 akisada Exp $
+
+########################################################################
+BEGIN { $V6evalTool::TestVersion = '$Name: REL_2_1_1 $ '; }
+use V6evalTool;
+use PMTU_ORG;
+
+checkNUT(host);
+
+$IF=Link0;
+
+%pktdesc = (
+	    frag_smaller_1st_1300 => 'TN --1st Fragmented 800/1259--> NUT',
+	    frag_smaller_2nd_1300 => 'TN --2nd Fragmented 459/1259--> NUT',
+	    receive_smaller_reply_1300 => 'TN <--A Echo Reply-- NUT',
+	    frag_even_1st_1300 => 'TN --1st Fragmented 800/1260--> NUT',
+	    frag_even_2nd_1300 => 'TN --2nd Fragmented 460/1260--> NUT',
+	    receive_even_reply_1300 => 'TN <--A Echo Reply-- NUT',
+	    frag_bigger_1st_1300 => 'TN --1st Fragmented 800/1261--> NUT',
+	    frag_bigger_2nd_1300 => 'TN --2nd Fragmented 461/1261--> NUT',
+	    frag_bigger_reply_1st_1300 => 'TN <--1st Fragmented 1248/1261-- NUT',
+	    frag_bigger_reply_2nd_1300 => 'TN <--2nd Fragmented 13/1261-- NUT',
+
+	    frag_smaller_1st_1400 => 'TN --1st Fragmented 800/1359--> NUT',
+	    frag_smaller_2nd_1400 => 'TN --2nd Fragmented 559/1359--> NUT',
+	    receive_smaller_reply_1400 => 'TN <--A Echo Reply-- NUT',
+	    frag_even_1st_1400 => 'TN --1st Fragmented 800/1360--> NUT',
+	    frag_even_2nd_1400 => 'TN --2nd Fragmented 560/1360--> NUT',
+	    receive_even_reply_1400 => 'TN <--A Echo Reply-- NUT',
+	    frag_bigger_1st_1400 => 'TN --1st Fragmented 800/1361--> NUT',
+	    frag_bigger_2nd_1400 => 'TN --2nd Fragmented 561/1361--> NUT',
+	    frag_bigger_reply_1st_1400 => 'TN <--1st Fragmented 1352/1361-- NUT',
+	    frag_bigger_reply_2nd_1400 => 'TN <--2nd Fragmented 9/1361-- NUT',
+	    frag_1280_1st => 'TN --1st Fragmented 800/1240--> NUT',
+	    frag_1280_2nd => 'TN --2nd Fragmented 440/1240--> NUT',
+	    reply_1280 => 'TN <--1240/1240-- NUT',
+	    );
+
+#
+# Test for MTU1400
+#
+
+#vLog("initialized NUT for Path MTU test -- MTU 1400");
+
+#rebootNUT();
+vCapture($IF);
+
+if(1) {
+    $ret=pmtuClearNCE();
+    if( $ret != 0) { 
+	vLog("NUT'NCE can not be cleared");
+	goto error;
+    }
+
+    $ret=pmtuClearGlobalNCE();
+    if( $ret != 0) { 
+	vLog("NUT'NCE can not be cleared");
+	goto error;
+    }
+}
+
+$ret=makeNCE();
+if( $ret !=0) {
+    vLog("NUT can not be initialized !!");
+    goto error;
+}
+
+sendPacketWithMTU("1400",($PMTU_ORG::sendRA));
+if( $ret != 0) {
+    vLog("Unable to send RA w/ MTU=1400");
+    goto error;
+}
+$ret=checkSizeOfPathMTU("1400",\%packet_log_1400);
+if( $ret != 0) {
+    vLog("ERROR");
+    goto error;
+}
+
+vLog("OK: RA w/ MTU=1400");
+
+#
+# Test for MTU1300
+#
+
+#vLog("initialized NUT for Path MTU test -- MTU 1300");
+
+sendPacketWithMTU("1300",($PMTU_ORG::sendRA));
+if( $ret != 0) {
+    vLog("Unable to send RA w/ MTU=1300");
+    goto error;
+}
+$ret=checkSizeOfPathMTU("1300",\%packet_log_1300);
+if( $ret != 0) {
+    vLog("ERROR");
+    goto error;
+}
+
+vLog("OK: RA w/ MTU=1300");
+
+if(0) {
+    #
+    # check NUT ignore invalid MTU
+    #
+
+    vLog("check NUT ignore invalid MTU");
+
+    # Check that a node increse the Path MTU in response to a
+    # Packet Too Big message or not .
+    sendPacketWithMTU("1400",$PMTU_ORG::sendRA);
+    if( $ret != 0) {
+	vLog("NUT can not set MTU(1400)");
+	goto error;
+    }
+    $ret=checkSizeOfPathMTU("1300",\%packet_log_1400_invalid);
+    if( $ret != 0) {
+	$ret=checkSizeOfPathMTU("1400",\%packet_log_1400_invalid);
+	if( $ret == 0) {
+	    vLog("TN can not chack size of NUT's MTU");
+	    goto error;
+	}
+    }else {
+	vLog("NUT don't increse Path MTU");
+    }
+}
+
+# Check taht a node set its Path MTU below IPv6 minimum 
+# link MTU.
+sendPacketWithMTU("1200",$PMTU_ORG::sendRA);
+if( $ret != 0) {
+    vLog("Unable to send RA w/ MTU=1200");
+    goto error;
+}
+
+vClear($IF);
+
+#$pktdesc{frag_1280_1st}='Send echo-request: 1st Fragmented 800/1240';
+#$pktdesc{frag_1280_2nd}='Send echo-request: 2nd Fragmented 440/1240';
+#$pktdesc{reply_1280}='Got echo-reply: 1240/1240';
+
+vSend($IF, frag_1280_1st);
+vSend($IF, frag_1280_2nd);
+
+%ret=vRecv($IF,5,0,0,
+	   'frag_1280_reply_1st',
+	   'frag_1280_reply_2nd',
+	   'reply_1280');
+
+if( $ret{status} !=0) {
+    vLog("ERROR: Got nothing");
+    goto error;
+}elsif ( $ret{recvFrame} eq 'reply_1280') {
+    vLog("OK: NUT ignores RA w/ MTU=1200 that is smaller then Min MTU");
+}else {
+    vLog("ERROR: NUT must not learn RA w/ MTU=1200 that is smaller the Min MTU");
+    goto error;
+}
+
+#
+# NUT's MTU change to 1500(Ethenet defalut MTU)
+#
+sendPacketWithMTU("1500",($PMTU_ORG::sendRA));
+if( $ret != 0) {
+    vLog("NUT can not set MTU(1500)");
+    vLog("Failed initializetation");
+    exit $V6evalTool::exitFail;
+}
+
+vLog("OK");
+exit $V6evalTool::exitPass;
+
+
+#
+# Error 
+#
+
+error:
+
+#
+# NUT's MTU change to 1500(Ethenet defalut MTU)
+#
+    sendPacketWithMTU("1500",($PMTU_ORG::sendRA));
+if( $ret != 0) {
+    vLog("NUT can not set MTU(1500)");
+    vLog("Failed initializetation");
+    exit $V6evalTool::exitFail;
+}
+vLog("FAIL");
+exit $V6evalTool::exitFail;
+
+
+########################################################################
+__END__
+
+=head1 NAME
+
+	acceptRAwithMTUOption - Verify changing Path MTU 
+	received RA with MTU option 
+
+=head1 TARGET
+
+	Host
+
+=head1 SYNOPSIS
+
+	acceptRAwithMTUOptin.seq [-tooloption ...] -p acceptRAwithMTUOption.def
+
+=head1 NETWORK CONFIGURATION
+
+	This test is OFF-LINK Network Configuration test.
+	In this test, TN play a Roll of the Router.
+	
+	Physical Network configuration
+	
+	---------------------------------------
+		|		|
+		NUT		TN
+
+
+
+	Logical Network Configuration
+
+				HOST A (globaladdress:A)
+				|
+	----------------------------------
+			|
+			Router
+			|
+	----------------------------------
+		| 
+		NUT (globaladdress:B)
+
+	NUT < --- Router --- > HOST A
+
+	In this configuration, Packets are send and received. 
+
+	for example,
+		In Logical
+			HOST A           -- Echo Reply --> NUT
+		Actually, in physical
+			TN (as Router X) -- Echo Reply --> NUT
+
+=head1 INITIALIZATION
+
+	There are 2 patterns for initialize.	
+
+	-- Test for host --
+
+        The TN send a RA to assign global address prefix.
+
+        TN              NUT
+
+        -------------------
+
+        ===multicast RA===>
+        src=TN's link-local
+        dst=LinkLocal-all-node                                                  
+        M=0, O=0,
+        Lifetime=3600, ReachableTime=60000, RetransTimer=1005
+        Prefix:
+           L=1, A=1,                       
+           Valid Lifetime=3600005, Preferred Lifetime=3600005
+           Prefix=3ffe:501:ffff:100::, PrefixLength=64                      
+   
+          Wait (5 sec.)
+                 Ignoring DAD packets for global address.                 
+
+	-- Test for router --
+
+	TN attempt to execute remote command 'vRemote(route.rmt)'.
+	
+	'route add -inet6 3ffe:501:ffff:109 TN'slink-local-address' 
+
+=head1 TEST PROCEDURE
+
+	"acceptRAwithMTUOption" verify that changing Path MTU
+	 when node receives RA with MTU option.
+
+	This test includes 2 patterns which MTU is 1300 and 1400.
+	sample is MTU = 1300.
+
+        TN                      NUT
+
+        ---------------------------
+
+    1.
+		TN send RA which include MTU option (MTU = 1300).
+
+        === RA with MTU = 1300 ===>
+
+	2.1
+        TN send Echo Request which is fragmented.
+		orignal packet's size is 1299.
+
+         === echo request 1st ===>
+
+         === echo request 2nd ===>
+
+	2.2
+        NUT send Echo Reply 
+    << JUDGMENT 1 >>
+         <=== echo reply ===
+
+	3.1
+        TN send Echo Request which is fragmented.
+		orignal packet's size is 1300.
+
+         === echo request 1st ===>
+
+         === echo request 2nd ===>
+
+	3.2
+        NUT send Echo Reply 
+    << JUDGMENT 1 >>
+         <=== echo reply ===
+
+	4.1
+        TN send Echo Request which is fragmented.
+		orignal packet's size is 1301.
+
+         === echo request 1st ===>
+
+         === echo request 2nd ===>
+
+	4.2
+        NUT send Echo Reply which is fragmented. 
+    << JUDGMENT 1 >>
+         <=== echo reply 1st ===
+
+         <=== echo reply 2nd ===
+
+    and, this parts (1-6) test in MTU 1400
+
+	--------------------------------------------------------
+	verify that NUT ignore invalid MTU.
+	
+	NUT must not increase its estimate of the Path MTU in 
+	response to the contents of a Too Big Message
+
+	1.
+		TN send RA which include MTU option (MTU = 1450).
+
+        === RA with MTU = 1450 ===>
+
+ 	2.1
+        TN send Echo Request which is fragmented.
+		orignal packet's size is 1399.
+
+         === echo request 1st ===>
+
+         === echo request 2nd ===>
+
+	2.2
+        NUT send Echo Reply 
+	<< JUDGMENT 2 >>
+         <=== echo reply ===
+
+	3.1
+        TN send Echo Request which is fragmented.
+		orignal packet's size is 1400.
+
+         === echo request 1st ===>
+
+         === echo request 2nd ===>
+
+	3.2
+        NUT send Echo Reply 
+	<< JUDGMENT 2 >>
+         <=== echo reply ===
+
+	4.1
+        TN send Echo Request which is fragmented.
+		orignal packet's size is 1401.
+
+         === echo request 1st ===>
+
+         === echo request 2nd ===>
+
+	4.2
+        NUT send Echo Reply which is fragmented. 
+	<< JUDGMENT 2 >>
+         <=== echo reply 1st ===
+
+         <=== echo reply 2nd ===
+	
+	--------------------------------------------------------
+	verify that NUT ignore invalid MTU.
+
+	NUT must not reduce its estimate of the Path MTU below 
+	the IPv6 minimum link MTU.
+
+    1.
+		TN send RA which include MTU option (MTU = 1300).
+
+        === RA with MTU = 1300 ===>
+
+	2.1
+        TN send Echo Request which is fragmented.
+		orignal packet's size is 1299.
+
+         === echo request 1st ===>
+
+         === echo request 2nd ===>
+
+	2.2
+        NUT send Echo Reply 
+	<< JUDGMENT 3 >>
+         <=== echo reply ===
+
+
+=head1 JUDGMENT
+
+	<< JUDGMENT 1 -PASS- >>
+		NUT send 3 Echo Reply ( no fragment, no fragment, fragmented)
+
+		"PASS" means that NUT set valid MTU in response to accept 
+		Packet too big message.
+
+		In first test, NUT's Path MTU of this path can be set 1300  
+			
+		In second test, NUT's Path MTU of this path can be set 1400.
+
+	<< JUDGMENT 2 -PASS- >>
+		NUT send 3 Echo Reply ( no fragment, no fragment, fragmented
+)
+
+		"PASS" means that NUT don't increase Path MTU in response to 
+		accept invalid Packet Too Big Message
+
+	<< JUDGMENT 3 -PASS- >>
+		NUT send 1 Echo Reply ( no fragment)
+
+		"PASS" means that NUT don't set its Path MTU below IPv6 mini
+mum
+
+
+
+=head1 SEE ALSO
+
+	perldoc V6evalTool
+	perldoc V6evalRemote
+
+=cut

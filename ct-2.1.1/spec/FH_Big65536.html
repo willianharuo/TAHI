@@ -1,0 +1,104 @@
+<HTML>
+<HEAD>
+<TITLE>FH_Big65536.seq - check Fragment Reassembly</TITLE>
+<LINK REV="made" HREF="mailto:hackers@FreeBSD.org">
+</HEAD>
+
+<BODY>
+
+<!-- INDEX BEGIN -->
+<!--
+
+<UL>
+
+	<LI><A HREF="#NAME">NAME</A>
+	<LI><A HREF="#TARGET">TARGET</A>
+	<LI><A HREF="#SYNOPSIS">SYNOPSIS</A>
+	<LI><A HREF="#INITIALIZATION">INITIALIZATION</A>
+	<LI><A HREF="#TEST_PROCEDURE">TEST PROCEDURE</A>
+	<LI><A HREF="#JUDGMENT">JUDGMENT</A>
+	<LI><A HREF="#SEE_ALSO">SEE ALSO</A>
+</UL>
+-->
+<!-- INDEX END -->
+
+<P>
+<H1><A NAME="NAME">NAME</A></H1>
+<P>
+<PRE>  FH_Big65536.seq - check Fragment Reassembly (Payload Size = 65536)
+</PRE>
+<P>
+<HR>
+<H1><A NAME="TARGET">TARGET</A></H1>
+<P>
+<PRE>  Host and Router
+</PRE>
+<P>
+<HR>
+<H1><A NAME="SYNOPSIS">SYNOPSIS</A></H1>
+<PRE>
+  <A HREF="./FH_Big65536.seq">FH_Big65536.seq</A> [-tooloption ...] -pkt <A HREF="./FH_Big65536.def">FH_Big65536.def</A>
+    -tooloption : v6eval tool option
+  See also <A HREF="./FH_BigPayload.def">FH_BigPayload.def</A>
+</PRE>
+
+<P>
+<HR>
+<H1><A NAME="INITIALIZATION">INITIALIZATION</A></H1>
+<P>
+<PRE>  1. Ping to Target (create Neighbor Cache Entries, if not exist)
+  2. Override Neighbor Cache Entries
+</PRE>
+<P>
+<HR>
+<H1><A NAME="TEST_PROCEDURE">TEST PROCEDURE</A></H1>
+<P>
+<PRE>  Tester                      Target
+    |                           |
+    |--------------------------&gt;| 
+    |   Echo Request            |  * Last Fragment Only
+    |                           |
+    |                           |
+    |&lt;--------------------------|
+    |   ICMP Error              |
+    |                           |
+    |                           |
+    v                           v
+</PRE>
+<P>
+<PRE>  1. Send Echo Request (last fragment only)
+  2. Receive ICMP Error
+</PRE>
+<P>
+<HR>
+<H1><A NAME="JUDGMENT">JUDGMENT</A></H1>
+<P>
+<PRE>  PASS: ICMP Error Received.
+</PRE>
+<P>
+<PRE>        IPv6 Header
+            Version             = 6
+            Traffic Class       = 0
+            FlowLabel           = 0
+            PayloadLength       = 16
+            NextHeader          = 58 (ICMP)
+            SourceAddress       = Target Link Local Address
+            Destination Address = Tester Link Local Address
+</PRE>
+<P>
+<PRE>        ICMP Error
+            Type           = 4 (Parameter Problem)
+            Code           = 2 (erroneous header field encountered)
+            Checksum       = (auto)
+            Pointer        = 42 (Offset to Fragment Offset field)
+            PayloadData    = (Echo Request)
+</PRE>
+<P>
+<HR>
+<H1><A NAME="SEE_ALSO">SEE ALSO</A></H1>
+<P>
+<PRE>  perldoc V6evalTool
+</PRE>
+</BODY>
+
+</HTML>

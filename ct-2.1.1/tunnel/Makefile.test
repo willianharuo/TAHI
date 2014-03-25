@@ -1,0 +1,34 @@
+#
+#
+# $TAHI: ct/tunnel/Makefile.test,v 1.15 2002/07/16 04:33:14 akisada Exp $
+#
+
+all:
+
+check:
+	$(AUTORUN) -t  INDEX_host_router
+
+document:
+	$(AUTORUN) -g  INDEX_host_router
+
+document2:
+	$(AUTORUN) -G  INDEX_host_router
+
+tiny:
+	$(AUTORUN) -tiny -nolcna  INDEX_host_router
+
+clean:
+	-/bin/rm -f *.log *.dump [0-9]*.html index.html summary.html report.html
+
+test:
+	$(AUTORUN) $(AROPT) \
+	-title='IPv6 Conformance Test For IPv6 over IPv4 Tunnel ' \
+	 INDEX_host_router  
+
+tahi: document
+	/bin/rm -f index.html summary.html report.html
+	$(AUTORUN) $(AROPT) -dump2txt \
+	-title='IPv6 Conformance Test For IPv6 over IPv4 Tunnel ' \
+	 INDEX_host_router 
+
+.include "../Makefile.inc"

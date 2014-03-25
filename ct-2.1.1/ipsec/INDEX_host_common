@@ -1,0 +1,35 @@
+##
+## $Name: REL_2_1_1 $
+##
+## $TAHI: ct/ipsec/INDEX_host_common,v 1.7 2003/05/05 17:08:35 ozoe Exp $
+##
+##<seq>:<def>:[<opt>]:[<log>]:<desc>
+##
+
+&print:<B>Host Transport AH-ESP Outbound</B>
+
+./HTR_C_Out_ah_esp.seq:./HTR_C_ah_esp.def:::Outbound AH-ESP combination
+
+&print:<B>Host Transport AH-ESP Inbound</B>
+
+./HTR_C_In_ah_esp.seq:./HTR_C_ah_esp.def:::Inbound AH-ESP combination
+
+&print:<B>Host Transport Common Outbound</B>
+
+./HTR_C_Out_SPD_discard_none.seq  :./HTR_A_SPD_discard_none.def:::Select SPD entry (policy=discard,none)
+./HTR_C_Out_descbc_SPD_discard_none.seq  :./HTR_E_SPD_discard_none.def:::Select SPD entry (policy=discard,none), ESP (DES-CBC)
+./HTR_C_Out_3descbc_SPD_discard_none.seq  :./HTR_E_SPD_discard_none.def:::Select SPD entry (policy=discard,none), ESP (3DES-CBC)
+./HTR_C_Out_rijndaelcbc_SPD_discard_none.seq  :./HTR_E_SPD_discard_none.def:::Select SPD entry (policy=discard,none), ESP(RIJNDAEL-CBC)
+
+&print:<B>Host Transport Common Inbound</B>
+
+&print:Inbound Connect SA bundles
+./HTR_C_In_2SA_SspiSipsrcDproto.seq:./HTR_C_2SA_SspiSipDproto.def:::Connect two SA bundles with same spi, same IPsrc, different protocol
+./HTR_C_In_SPD_discard_none.seq  :./HTR_A_SPD_discard_none.def:::Select SPD entry (policy=discard,none), AH (HMAC-MD5)
+./HTR_C_In_descbc_SPD_discard_none.seq  :./HTR_E_SPD_discard_none.def:::Select SPD entry (policy=discard,none), ESP (DES-CBC)
+./HTR_C_In_3descbc_SPD_discard_none.seq  :./HTR_E_SPD_discard_none.def:::Select SPD entry (policy=discard,none), ESP (3DES-CBC)
+./HTR_C_In_rijndaelcbc_SPD_discard_none.seq  :./HTR_E_SPD_discard_none.def:::Select SPD entry (policy=discard,none), ESP (RIJNDAEL-CBC)
+
+
+#
+#########################################################################

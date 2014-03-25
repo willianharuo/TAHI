@@ -1,0 +1,50 @@
+##
+## $Name: REL_2_1_1 $
+##
+## $TAHI: ct/ipsec/INDEX_router_ah,v 1.23 2001/10/05 06:38:55 masaxmasa Exp $
+##
+##<seq>:<def>:[<opt>]:[<log>]:<desc>
+##
+&print:<B>Router Tunnel AH Outbound</B>
+&print:Router Tunnel AH Outbound with authentication
+
+./RTU_A_Out_hmacmd5.seq:./RTU_A_hmacmd5.def:::Outbound AH packet (HMAC-MD5):2
+./RTU_A_Out_hmacsha1.seq:./RTU_A_hmacsha1.def:::Outbound AH packet (HMAC-SHA1):2
+
+&print:Router Tunnel AH Outbound Connect SA bundles
+./RTU_A_Out_2SA_DspiDipdst.seq :./RTU_A_2SA_DspiDip.def:::Connect two SA bundles with different spi, different IPdst:2
+./RTU_A_Out_2SA_SspiDipdst.seq :./RTU_A_2SA_SspiDip.def:::Connect two SA bundles with same spi, different IPdst:2
+
+
+&print:<B>Router Tunnel AH Inbound</B>
+&print:Router Tunnel AH Inbound with authentication
+./RTU_A_In.seq  :  ./RTU_A_common.def ::: Inbound AH Tunnel packet (with SPD entry):2
+###./RTU_A_In_NoSPD.seq  :  ./RTU_A_common.def ::: Inbound AH Tunnel packet (No SPD):2
+
+./RTU_A_In_hmacmd5.seq:./RTU_A_hmacmd5.def:::Inbound AH packet (HMAC-MD5):2
+./RTU_A_In_hmacsha1.seq:./RTU_A_hmacsha1.def:::Inbound AH packet (HMAC-SHA1):2
+
+&print:Router Tunnel AH Inbound Header Order
+./RTU_A_In_Order_DSTH.seq:./RTU_A_Order_DSTH.def:::Header Order (Destination Options Header vs AH):2
+
+&print:Router Tunnel AH Inbound Connect SA bundles
+./RTU_A_In_2SA_DspiDipsrc.seq :./RTU_A_2SA_DspiDip.def:::Connect two SA bundles with different spi, different IPsrc:2
+./RTU_A_In_2SA_DspiSipsrc.seq :./RTU_A_2SA_DspiSip.def:::Connect two SA bundles with different spi, same IPsrc:2
+
+&print:Router Tunnel AH Inbound, Detect modification of packet with AH
+./RTU_A_In_DM_IPv6H_dst.seq  :./RTU_A_DM_IPv6H.def:::Detect modification of IPv6 header IP dst address with AH:2
+./RTU_A_In_DM_IPv6H_src.seq  :./RTU_A_DM_IPv6H.def:::Detect modification of IPv6 header IP src address with AH:2
+./RTU_A_In_DM_IPv6H_hlim.seq  :./RTU_A_DM_IPv6H.def:::Undetect modification of IPv6 header hoplimit with AH:2
+./RTU_A_In_DM_RH_ipv6h_dst.seq  :./RTU_A_DM_RH.def:::Detect modification of IPv6 header IP dst address with Routing header and AH:2
+./RTU_A_In_DM_RH_lastaddr.seq  :./RTU_A_DM_RH.def:::Detect modification of Routing header "last router address" with AH:2
+./RTU_A_In_DM_DSTH_opttype.seq   :./RTU_A_DM_DSTH_opttype.def:::Detect modification of DstOpt header option type before AH:2
+./RTU_A_In_DM_DSTH_optlen.seq   :./RTU_A_DM_DSTH_optlen.def:::Detect modification of DstOpt header option len before AH:2
+./RTU_A_In_DM_DSTH_optdata.seq   :./RTU_A_DM_DSTH_optdata.def:::Detect modification of DstOpt header option data before AH:2
+./RTU_A_In_DM_HBHH_opttype.seq   :./RTU_A_DM_HBHH_opttype.def:::Detect modification of HBHOpt header option type with AH:2
+./RTU_A_In_DM_HBHH_optlen.seq   :./RTU_A_DM_HBHH_optlen.def:::Detect modification of HBHOpt header option len with AH:2
+./RTU_A_In_DM_HBHH_optdata.seq   :./RTU_A_DM_HBHH_optdata.def:::Detect modification of HBHOpt header option data with AH:2
+./RTU_A_In_DM_Inner_IPv6H_hlim.seq :./RTU_A_DM_Inner_IPv6H.def:::Detect modification of inner IPv6 header hoplimit of AH tunnel:2
+./RTU_A_In_DM_Inner_Payload.seq :./RTU_A_DM_Inner_Payload.def:::Detect modification of inner payload of AH tunnel:2
+
+#
+#########################################################################

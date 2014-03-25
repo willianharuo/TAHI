@@ -1,0 +1,105 @@
+#
+# $Name: REL_2_1_1 $
+#
+# $TAHI: ct/nd/Makefile.test,v 1.42 2003/06/09 06:46:56 masaxmasa Exp $
+#
+
+#TITLE=	"Test Specification:<br>Neighbor Discovery"
+TITLE=	"IPv6 Conformance Test For Neighbor Discovery"
+
+PERL	= /usr/bin/perl
+POD2HTML= -$(PERL) -e 'use Pod::Html; pod2html("--noindex", @ARGV);'
+
+IFILE=	INDEX.start INDEX.nd INDEX.rd INDEX.redirect
+IFILE1=	INDEX-d1.nd INDEX-d1.rd INDEX-d1.redirect
+IFILE2=	INDEX-d2.nd INDEX-d2.rd INDEX-d2.redirect
+IFILE3=	INDEX-d3.nd INDEX-d3.rd INDEX-d3.redirect
+IFILER=	INDEX.start INDEX.redirect
+IFILEL=	INDEX.start INDEX.nd INDEX.rd
+
+IFILE_UHOST=	INDEX-ume.start INDEX-ume.nd INDEX-ume.rd
+IFILE_URTR=	INDEX-ume.start INDEX-ume_router.nd INDEX-ume_router.rd INDEX-ume_router.redirect
+IFILEU=	$(IFILE_UHOST)
+
+all:
+
+check:
+	$(AUTORUN) -t $(IFILE)
+
+document:
+	$(AUTORUN) -g $(IFILE)
+	$(POD2HTML) nd.pm > nd.html
+	rm -f pod2html-dircache pod2html-itemcache
+
+document2:
+	$(AUTORUN) -G $(IFILE)
+	$(POD2HTML) nd.pm > nd.html
+	rm -f pod2html-dircache pod2html-itemcache
+
+umedoc:
+	$(AUTORUN) -G -title=$(TITLE) $(IFILEU)
+	$(POD2HTML) nd.pm > nd.html
+	rm -f pod2html-dircache pod2html-itemcache
+
+ume:
+	$(AUTORUN) $(AROPT) -title=$(TITLE) -F -tiny $(IFILEU)
+	$(POD2HTML) nd.pm > nd.html
+	rm -f pod2html-dircache pod2html-itemcache
+
+umedoc_host:
+	$(AUTORUN) -G -title=$(TITLE) $(IFILE_UHOST)
+	$(POD2HTML) nd.pm > nd.html
+	rm -f pod2html-dircache pod2html-itemcache
+
+ume_host:
+	$(AUTORUN) $(AROPT) -title=$(TITLE) -F -tiny $(IFILE_UHOST)
+	$(POD2HTML) nd.pm > nd.html
+	rm -f pod2html-dircache pod2html-itemcache
+
+umedoc_router:
+	$(AUTORUN) -G -title=$(TITLE) $(IFILE_URTR)
+	$(POD2HTML) nd.pm > nd.html
+	rm -f pod2html-dircache pod2html-itemcache
+
+ume_router:
+	$(AUTORUN) $(AROPT) -title=$(TITLE) -F -tiny $(IFILE_URTR)
+	$(POD2HTML) nd.pm > nd.html
+	rm -f pod2html-dircache pod2html-itemcache
+
+tiny:
+	$(AUTORUN) $(AROPT) -tiny $(IFILEL)
+	$(POD2HTML) nd.pm > nd.html
+	rm -f pod2html-dircache pod2html-itemcache
+
+test:
+	$(AUTORUN) $(AROPT) -title=$(TITLE) $(IFILE)
+
+tahi: document
+	/bin/rm -f index.html summary.html report.html
+	$(AUTORUN) $(AROPT) -dump2txt -title=$(TITLE) $(IFILE)
+
+clean:
+	/bin/rm -f *.log *.dump [0-9]*.html index.html .*.mark tn.def nut.def summary.html report.html
+
+########################################################################
+demo1:
+	/bin/rm -f index.html summary.html report.html
+	$(AUTORUN) -dump2txt \
+	-title='IPv6 Conformance Test For Neighbor Discovery' $(IFILE1)
+
+demo2: document
+	/bin/rm -f index.html summary.html report.html
+	$(AUTORUN) -dump2txt \
+	-title='IPv6 Conformance Test For Neighbor Discovery' $(IFILE2)
+
+demo3: document
+	/bin/rm -f index.html summary.html report.html
+	$(AUTORUN) -dump2txt \
+	-title='IPv6 Conformance Test For Neighbor Discovery' $(IFILE3)
+
+redirect: document
+	/bin/rm -f index.html summary.html report.html
+	$(AUTORUN) -dump2txt \
+	-title='IPv6 Conformance Test For Neighbor Discovery (Redirect)' $(IFILER)
+########################################################################
+.include "../Makefile.inc"

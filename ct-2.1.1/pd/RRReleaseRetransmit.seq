@@ -1,0 +1,1452 @@
+#!/usr/bin/perl
+#
+# Copyright (C) 2003 Yokogawa Electric Corporation, 
+# INTAP(Interoperability Technology Association
+# for Information Processing, Japan).  All rights reserved.
+# 
+# Redistribution and use of this software in source and binary forms, with 
+# or without modification, are permitted provided that the following 
+# conditions and disclaimer are agreed and accepted by the user:
+# 
+# 1. Redistributions of source code must retain the above copyright 
+# notice, this list of conditions and the following disclaimer.
+# 
+# 2. Redistributions in binary form must reproduce the above copyright 
+# notice, this list of conditions and the following disclaimer in the 
+# documentation and/or other materials provided with the distribution.
+# 
+# 3. Neither the names of the copyrighters, the name of the project which 
+# is related to this software (hereinafter referred to as "project") nor 
+# the names of the contributors may be used to endorse or promote products 
+# derived from this software without specific prior written permission.
+# 
+# 4. No merchantable use may be permitted without prior written 
+# notification to the copyrighters. However, using this software for the 
+# purpose of testing or evaluating any products including merchantable 
+# products may be permitted without any notification to the copyrighters.
+# 
+# 
+# 
+# THIS SOFTWARE IS PROVIDED BY THE COPYRIGHTERS, THE PROJECT AND 
+# CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING 
+# BUT NOT LIMITED THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS 
+# FOR A PARTICULAR PURPOSE, ARE DISCLAIMED.  IN NO EVENT SHALL THE 
+# COPYRIGHTERS, THE PROJECT OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, 
+# INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES 
+# (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR 
+# SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) 
+# HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN 
+# CONTRACT,STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) 
+# ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF 
+# THE POSSIBILITY OF SUCH DAMAGE.
+#
+# $TAHI: ct/pd/RRReleaseRetransmit.seq,v 1.4 2003/06/11 09:31:14 ozoe Exp $
+#
+######################################################################
+BEGIN { $V6evalTool::TestVersion = '$Name: REL_2_1_1 $ '; }
+
+use V6evalTool;
+use pd;
+
+%pktdesc = (
+	echo_request    => 'Send Echo Request (Link-Local Address)',
+	echo_reply      => 'Recv Echo Reply (Link-Local Address)',
+	ns              => 'Recv Neighbor Solicitation',
+	ns_unicast      => 'Recv Neighbor Solicitation',
+	na              => 'Send Neighbor Advertisement',
+	rs              => 'Send Router Solicitation',
+        ra              => 'Recv Router Advertisement',
+        ra1             => 'Recv Router Advertisement including mtu option',
+        ra2             => 'Recv Router Advertisement including multiple prefix information',
+        ra3             => 'Recv Router Advertisement including mtu option and multiple prefix information',
+	dhcp_sol		=> 'Recv DHCP Solicit message w/o Option Request option',
+	dhcp_sol_any		=> 'Recv DHCP Solicit message',
+	dhcp_adv		=> 'Send DHCP Advertise message',
+	dhcp_req		=> 'Recv DHCP Request message w/o Option Request option',
+	dhcp_req_any		=> 'Recv DHCP Request message',
+	dhcp_req_any1		=> 'Recv DHCP Request message w/o Option Request and IA_PD Prefix option',
+	dhcp_req_any2		=> 'Recv DHCP Request message w/o IA_PD Prefix option',
+        dhcp_rep		=> 'Send DHCP Reply message',
+        dhcp_rep_to_rel		=> 'Send DHCP Reply message with Status Code Success respondig to Release message',
+        dhcp_rep_to_rel_status	=> 'Send DHCP Reply message with Status Code NoBinding respondig to Release message',
+	dhcp_rel		=> 'Recv DHCP Release message w/o Option Request option',
+	dhcp_rel_any		=> 'Recv DHCP Release message',
+);
+
+pdOptions(@ARGV);
+
+# The following generate debugging messages.
+$pd::debug=$pdOpt_v|$pdOpt_vv;
+
+# You can specifies debug options to a remote control program.
+# If you want to know more detail, please see the following:
+# - V6evalTool.pm: perldoc V6evalTool
+# - V6evalRemote.pm: perldoc V6evalRemote
+$pd::remote_debug="-o1" if $pdOpt_vv;
+
+#
+#
+$IF = Link0;
+$IF1 = Link1;
+$exit_rtn=$V6evalTool::exitPass;
+$idx=0;
+$wait_ras=$pd::MIN_DELAY_BETWEEN_RAS+1;
+
+#
+#
+$delegateprefix="3ffe:501:fff2::";
+$preferredlifetime="600";
+$validlifetime="1200";
+#
+$wait_time=16;
+$maxcount = 4;
+# time is Jan 1, 2000 (UTC), modulo 2^32
+$t64 = time() - 946684800;
+foreach($count = 0; $count < $maxcount; $count++){
+    $sid_duid_time[$count] = ($t64 & 0xffffffff);
+    $t64 = $t64 + 86400; #1 day after
+}
+
+@sid_link_addr = (
+    "00:00:00:00:a0:a0",
+    "00:00:00:00:a1:a1",
+    "00:00:00:00:a2:a2",
+    "00:00:00:00:a3:a3",
+);
+
+#
+#
+#
+$type=$V6evalTool::NutDef{Type};
+if($type eq host) {
+    vLogHTML("This test is for the router only<BR>");
+    exit $V6evalTool::exitRouterOnly;
+}
+
+$type=$V6evalTool::NutDef{Type};
+if($type ne router) {
+    vLogHTML(pdErrmsg("ERROR: $V6evalTool::NutDef{Type}: ".
+                      "Unknown target type<BR>"));
+    exit $V6evalTool::exitFail;
+}
+
+#
+#
+#
+vLogHTML("<FONT SIZE=\"+1\">Initialization</FONT><BR>");
+vLogHTML("Trying to setup NUT<BR>");
+pdStartDefaultRA() || exit $V6evalTool::exitFail;
+pdStopDHCP6Client() || exit $V6evalTool::exitFail;
+$vcpp = pdSetVCPP($pd::INITIAL, $delegateprefix, 0, 0,
+	$maxcount, @sid_duid_time, @sid_link_addr, %ret);
+vCPP($vcpp);
+#
+pdStartDHCP6Client() || exit $V6evalTool::exitFail;
+#
+vCapture($IF);
+#
+#
+
+%ret = vRecv($IF, $wait_time, 0, 0, dhcp_sol, dhcp_sol_any);
+
+if($ret{status} != 0) {
+        vLogHTML('No response from NUT, Configuration Problem ?<BR>');
+        vLogHTML('<FONT COLOR="#FF0000">NG</FONT>');
+	pdAsyncWait() || exit $V6evalTool::exitFatal;
+        exit $V6evalTool::exitFail;
+}
+
+if($ret{status} == 0) {
+	vLogHTML("Client sent DHCP Solicit message<BR>");
+	vLogHTML("OK<BR>");
+
+        $vcpp = pdSetVCPP($pd::SOLICIT, $delegateprefix, $preferredlifetime, $validlifetime,
+		$maxcount, @sid_duid_time, @sid_link_addr, %ret);
+        vCPP($vcpp);
+
+        vSend($IF, dhcp_adv);
+
+        %ret = vRecv($IF, $wait_time/2, 0, 0, ns, ns_unicast, dhcp_req, dhcp_req_any, dhcp_req_any1, dhcp_req_any2);
+        if ($ret{recvFrame} eq 'ns' || $ret{recvFrame} eq 'ns_unicast'){
+                vSend($IF, na);
+                %ret = vRecv($IF, $wait_time/2, 0, 0, dhcp_req, dhcp_req_any, dhcp_req_any1, dhcp_req_any2);
+        }
+
+        if ($ret{status} == 0) {
+		vLogHTML("Client sent DHCP Request message<BR>");
+		vLogHTML("OK<BR>");
+        }
+        else{
+                vLogHTML('Cannot receive DHCP Request message<BR>');
+                vLogHTML('<FONT COLOR="#FF0000">NG</FONT>');
+		pdAsyncWait() || exit $V6evalTool::exitFatal;
+                exit $V6evalTool::exitFail;
+        }
+
+        $vcpp = pdSetVCPP($pd::REQUEST, $delegateprefix, $preferredlifetime, $validlifetime,
+		$maxcount, @sid_duid_time, @sid_link_addr, %ret);
+        vCPP($vcpp);
+
+        %ret = vSend($IF, dhcp_rep);
+        %ret2 = vRecv($IF, $wait_time/2, 0, 0, ns, ns_unicast);
+        if($ret2{status} == 0) {
+                vSend($IF, na);
+        }
+
+        pdAsyncWait() || exit $V6evalTool::exitFatal;
+
+        vLogHTML("Stop dhcp process to release delegated prefix<BR>");
+        pdReleaseDHCP6Client() || exit $V6evalTool::exitFail;
+
+        %ret = vRecv($IF, $wait_time, 0, 0, dhcp_rel, dhcp_rel_any);
+        $rt0 = time();
+
+        $irt = $pd::REL_TIMEOUT;
+        $mrt = 0;
+        $rt  = 0;
+        $msgtyp = $pd::RELEASE;
+
+
+        if ($ret{status} == 0) {
+		vLogHTML("Client sent DHCP Release message<BR>");
+		vLogHTML("OK<BR>");
+        }
+        else{
+                vLogHTML('Cannot receive DHCP Release message<BR>');
+                vLogHTML('<FONT COLOR="#FF0000">NG</FONT>');
+		pdAsyncWait() || exit $V6evalTool::exitFatal;
+                exit $V6evalTool::exitFail;
+        }
+
+	vLogHTML("<FONT SIZE=\"+1\">Test</FONT><BR>");
+#        $vcpp = pdSetVCPP($pd::RELEASE, $delegateprefix, $preferredlifetime, $validlifetime,
+#		$maxcount, @sid_duid_time, @sid_link_addr, %ret);
+#        vCPP($vcpp);
+#        vSend($IF, dhcp_rep_to_rel);
+
+        $rt = pdRetransmitTimer($irt, $mrt, $rt);
+        %ret = vRecv($IF, $rt, 0, 0, ns, ns_unicast, dhcp_rel, dhcp_rel_any);
+        if ($ret{recvFrame} eq 'ns' || $ret{recvFrame} eq 'ns_unicast'){
+		vSend($IF, na);
+		%ret = vRecv($IF, $rt, 0, 0, dhcp_rel, dhcp_rel_any);
+	}
+
+        $title{$idx}="<TD>$pktdesc{'dhcp_rel'}</TD><TD>exp:sending DHCP Release message again</TD>";
+        if ($ret{recvFrame} eq 'dhcp_rel' || $ret{recvFrame} eq 'dhcp_rel_any'){
+            $rt = (time() - $rt0);
+            $title{$idx}.="<TD>result:sent DHCP Release message again</TD>";
+            $result{$idx}=$V6evalTool::exitPass;
+            vLogHTML("Client sent DHCP Release message again. Retransmition timeout: $rt<BR>");
+            vLogHTML("<A NAME=\"T$idx\">OK</A><BR>");
+            $idx++;
+
+            $vcpp = pdSetVCPP($pd::RELEASE, $delegateprefix, $preferredlifetime, $validlifetime,
+		$maxcount, @sid_duid_time, @sid_link_addr, %ret);
+            vCPP($vcpp);
+            vSend($IF, dhcp_rep_to_rel_status);
+
+            $title{$idx}="<TD>DHCP Release/Reply message exchange is terminated</TD>";
+            $title{$idx}.="<TD>exp:NOT sending DHCP Release message again</TD>";
+            %ret = vRecv($IF, $rt, 0, 0, ns, ns_unicast, dhcp_rel, dhcp_rel_any);
+            if ($ret{recvFrame} eq 'ns' || $ret{recvFrame} eq 'ns_unicast'){
+                    vSend($IF, na);
+                    %ret = vRecv($IF, $rt, 0, 0, dhcp_rel, dhcp_rel_any);
+                    if ($ret{status} == 0) {
+                         $title{$idx}.="<TD>result:sent DHCP Release message again</TD>";
+                         $result{$idx}=$V6evalTool::exitFail;
+                         vLogHTML("Client sent DHCP Release message again.<BR>");
+                         vLogHTML("<A NAME=\"T$idx\"><FONT COLOR=\"#FF0000\">NG</FONT></A><BR>");
+    			 pdAsyncWait() || exit $V6evalTool::exitFatal;
+                         goto error;
+                    }
+                    else{
+                         $title{$idx}.="<TD>result:NOT sent DHCP Release message again</TD>";
+                         $result{$idx}=$V6evalTool::exitPass;
+		         vLogHTML("Client does not sent DHCP Release message again<BR>");
+                         vLogHTML("<A NAME=\"T$idx\">OK</A><BR>");
+                         $idx++;
+                    }
+            }
+            elsif ($ret{recvFrame} eq 'dhcp_rel' || $ret{recvFrame} eq 'dhcp_rel_any'){
+                    $title{$idx}.="<TD>result:sent DHCP Release message again</TD>";
+                    $result{$idx}=$V6evalTool::exitFail;
+                    vLogHTML("Client sent DHCP Release message again.<BR>");
+                    vLogHTML("<A NAME=\"T$idx\"><FONT COLOR=\"#FF0000\">NG</FONT></A><BR>");
+ 		     pdAsyncWait() || exit $V6evalTool::exitFatal;
+                    goto error;
+            }
+            else{
+                    $title{$idx}.="<TD>result:NOT sent DHCP Release message again</TD>";
+                    $result{$idx}=$V6evalTool::exitPass;
+		    vLogHTML("Client does not sent DHCP Release message again<BR>");
+                    vLogHTML("<A NAME=\"T$idx\">OK</A><BR>");
+                    $idx++;
+            }
+        }
+        else{
+            vLogHTML('Received unknown packet<BR>');
+            vLogHTML('<FONT COLOR="#FF0000">NG</FONT>');
+	    pdAsyncWait() || exit $V6evalTool::exitFatal;
+            exit $V6evalTool::exitFail;
+        }
+}
+else{
+        vLogHTML('Cannot receive DHCP Solicit message<BR>');
+        vLogHTML('<FONT COLOR="#FF0000">NG</FONT>');
+	pdAsyncWait() || exit $V6evalTool::exitFatal;
+        exit $V6evalTool::exitFail;
+}
+
+pdAsyncWait() || exit $V6evalTool::exitFatal;
+vSleep($wait_time);
+
+##################################
+
+vCapture($IF1);
+$wait_ra=2;
+
+vSend($IF1, rs);
+$title{$idx}="<TD>$pktdesc{'ra'}</TD><TD>exp:NOT sending RA</TD>";
+%ret = vRecv($IF1, $wait_ra, $ret{sentTime1}, 0, ra, ra1, ra2, ra3);
+
+if ($ret{status} == 0) {
+        $VLTime = $ret{"Frame_Ether.Packet_IPv6.ICMPv6_RA.Opt_ICMPv6_Prefix.ValidLifetime"};
+	vLogHTML("ValidLifetime: $VLTime<BR>");
+        if ($VLTime == 0){
+		$title{$idx}.="<TD>result:sent RA, but delegated prefix ValidLifetime is zero. Delegated prefix has released.</TD>";
+		$result{$idx}=$V6evalTool::exitPass;
+		$exit_rtn=$V6evalTool::exitPass;
+		vLogHTML("<A NAME=\"T$idx\">OK</A><BR>");
+	}
+	else{
+		$title{$idx}.="<TD>result:sent RA, Delegated prefix is not released.</TD>";
+		$result{$idx}=$V6evalTool::exitWarn;
+		$exit_rtn=$V6evalTool::exitWarn;
+		vLogHTML("<A NAME=\"T$idx\">".pdErrmsg(Warn)."</A><BR>");
+	}
+} else {
+	$title{$idx}.="<TD>result:NOT sent RA</TD>";
+	$result{$idx}=$V6evalTool::exitPass;
+	$exit_rtn=$V6evalTool::exitPass;
+	vLogHTML("<A NAME=\"T$idx\">OK: Delegated prefixes is released.</A><BR>");
+}
+
+vSleep($wait_ras, "Wait for MIN_DELAY_BETWEEN_RAS (3 sec)");
+
+#
+#
+#
+@col=('PTN', 'EXP', 'RESULT');
+pdPrintSummaryHTML("*** Test Summary: PE vs CPE ***", @col,
+                   %title, %result, $idx);
+
+#
+#
+#
+exit $exit_rtn;
+
+#
+#
+#
+error:
+    @col=('PTN', 'EXP', 'RESULT');
+    pdPrintSummaryHTML("*** Test Summary: PE vs CPE ***", @col,
+                   %title, %result, $idx);
+    exit $V6evalTool::exitFail;
+
+######################################################################
+__END__
+
+=head1 NAME
+
+  RRReleaseRetransmit.seq - Requesting Router retransmits Release messages until recieving Reply message.
+
+=head1 TARGET
+
+  Router for DHCP client
+
+=head1 SYNOPSIS
+
+=begin html
+  &nbsp;&nbsp;<A HREF="./RRReleaseRetransmit.seq">RRReleaseRetransmit.seq</A> [-tooloption ...] -pkt <A HREF="./RRReleaseRetransmit.def">RRReleaseRetransmit.def</A> -tooloption : v6eval tool option
+
+=end html
+
+=head1 TOPOLOGY
+
+=begin html
+<BLOCKQUOTE>
+<PRE>
+   TN
+    |                     ISP site
+  --+----+--------------- Link0
+         |
+        NUT     Host
+         |       |        Customer site
+  -------+-------+------- Link1 3ffe:501:fff2:XXXX::/64
+</PRE>
+</BLOCKQUOTE>
+<BLOCKQUOTE>
+<TABLE border=1>
+   <TBODY>
+   <TR>
+     <TD rowSpan=4><TT>TN</TT></TD>
+     <TD><TT>Link-local</TT></TD>
+     <TD><TT>fe80::200:ff:fe00:a0a0</TT></TD>
+   </TR>
+   <TR>
+     <TD><TT>Ether</TT></TD>
+     <TD><TT>00:00:00:00:a0:a0</TT></TD>
+   </TR>
+   <TR>
+     <TD><TT>Delegate Prefix</TT></TD>
+     <TD><TT>3ffe:501:fff2::</TT></TD>
+   </TR>
+   <TR>
+     <TD><TT>Prefix Length</TT></TD>
+     <TD><TT>48</TT></TD>
+   </TR>
+   <TR>
+     <TD rowspan="2"><TT>Host</TT></TD>
+     <TD><TT>Link-local</TT></TD>
+     <TD><TT>fe80::200:ff:fe00:101</TT></TD>
+   </TR>
+   <TR>
+     <TD><TT>ether</TT></TD>
+     <TD><TT>00:00:00:00:01:01</TT></TD></TR></TBODY>
+   </TABLE>
+</BLOCKQUOTE>
+
+=end html
+=head1 INITIALIZATION
+
+=begin html
+<OL>
+  <LI>NUT sets up Prefix Delegation.
+  <LI>NUT sets up Router Advertisement to the interface by the side of downstream.
+</OL>
+<BR>
+<PRE>
+Tester as Server          Target as Client        Tester as Host
+    |                           |                           |
+    |<--------------------------|                           |
+    |   DHCP Solicit message    |                           |
+    |                           |                           |
+    |-------------------------->|                           |
+    |   DHCP Advertise message  |                           |
+    |                           |                           |
+    |<--------------------------|                           |
+    |   DHCP Request message    |                           |
+    |                           |                           |
+    |-------------------------->|                           |
+    |   DHCP Reply message      |                           |
+    |                           |                           |
+    |   Stop dhcp process to    |                           |
+    |  release delegated prefix |                           |
+    |                           |                           |
+    |<--------------------------|                           |
+    |   DHCP Release message    |                           |
+    |                           |                           |
+<BR>
+  1. Wait DHCP Solicit message
+  2. Send DHCP Advertise message
+  3. Wait DHCP Request message
+  4. Send DHCP Reply message
+  5. Wait DHCP Release message
+<BR>
+<b>Addresses</b>
+<BLOCKQUOTE>
+Solicit, Request, Release messages<BR>
+<TABLE border=1>
+    <TBODY>
+    <TR>
+      <TD>Src</TD>
+      <TD>NUT link-local address</TD>
+    </TR>
+    <TR>
+      <TD>Dst</TD>
+      <TD>All_DHCP_Relay_Agents_and_Servers</TD>
+    </TR>
+    </TBODY>
+  </TABLE>
+<BR>
+All_DHCP_Relay_Agents_and_Servers FF02::1:2<BR>
+Advertise, Reply message<BR>
+<TABLE border=1>
+    <TBODY>
+    <TR>
+      <TD>Src</TD>
+      <TD>fe80::200:ff:fe00:a0a0</TD>
+    </TR>
+    <TR>
+      <TD>Dst</TD>
+      <TD>NUT link-local address</TD>
+    </TR>
+    </TBODY>
+  </TABLE>
+</BLOCKQUOTE>
+<b>UDP Ports</b><BR>
+      Clients listen for DHCP messages on UDP port 546
+      Server listen for DHCP messages on UDP port 547<BR>
+<b>DHCP Messages</b>
+<BLOCKQUOTE>
+DHCP Solicit message<BR>
+<TABLE border=1>
+    <TR>
+      <TD colspan="2">msg-type</TD>
+      <TD><b>SOLICIT</b>(1)</TD>
+    </TR>
+    <tr>
+      <TD colspan="2">transaction-id</TD>
+      <TD>The transaction ID for this message exchange</TD>
+    </tr>
+    <TR>
+      <TD colspan="3">options</TD>
+    </TR>
+    <TR>
+      <TD colspan="3"><b>Client Identifier Option</b> (MUST)</TD>
+    </TR>
+    <tr>
+      <TD colspan="3"><b>IA_PD Option </b>(MUST)</TD>
+    </tr>
+    <tr>
+      <TD>&nbsp;</TD>
+      <TD>Code</TD>
+      <TD>33 (TBD)</TD>
+    </tr>
+    <tr>
+      <TD>&nbsp;</TD>
+      <TD>IAID</TD>
+      <TD>The unique identifier which client specified</TD>
+    </tr>
+    <tr>
+      <TD>&nbsp;</TD>
+      <TD>T1</TD>
+      <TD>ANY</TD>
+    </tr>
+    <tr>
+      <TD>&nbsp;</TD>
+      <TD>T2</TD>
+      <TD>ANY</TD>
+    </tr>
+    <tr>
+      <TD colspan="3">Elapsed Time Option (MUST)</TD>
+    </tr>
+    <tr>
+      <TD>&nbsp;</TD>
+      <TD>elapsed-time</TD>
+      <TD>ANY</TD>
+    </tr>
+    <TR>
+      <TD colspan="3">Option Request Option (Optional)</TD>
+    </TR>
+</TABLE>
+<BR>
+DHCP Advertise message<BR>
+<TABLE border=1>
+    <tr>
+      <TD colspan="3">msg-type</TD>
+      <TD><b>ADVERTISE</b>(2)</TD>
+    </tr>
+    <TR>
+      <TD colspan="3">transaction-id</TD>
+      <TD>The same transaction ID previous message</TD>
+    </TR>
+    <TR>
+      <TD colspan="4">options</TD>
+    </TR>
+    <TR>
+      <TD colspan="4">Client Identifier Option</TD>
+    </TR>
+    <TR>
+      <TD colspan="4">Server Identifier Option</TD>
+    </TR>
+    <TR>
+      <TD>&nbsp;</TD>
+      <TD colspan="2">DUID Contents type</TD>
+      <TD>1 Link-layer address plus time</TD>
+    </TR>
+    <TR>
+      <TD>&nbsp;</TD>
+      <TD colspan="2">hardware type</TD>
+      <TD>1 Ether</TD></TR>
+    <TR>
+      <TD>&nbsp;</TD>
+      <TD colspan="2">time</TD>
+      <TD>Time which the server included</TD>
+    </TR>
+    <TR>
+      <TD>&nbsp;</TD>
+      <TD colspan="2">link-layer address</TD>
+      <TD><B>00:00:00:00:a0:a0</B></TD></TR>
+    <TR>
+      <TD colspan="4">IA_PD Option</TD>
+    </TR>
+    <TR>
+      <TD>&nbsp;</TD>
+      <TD colspan="2">Code</TD>
+      <TD>33 (TBD)</TD></TR>
+    <TR>
+      <TD>&nbsp;</TD>
+      <TD colspan="2">IAID</TD>
+      <TD>Unique identifier which client specified</TD></TR>
+    <TR>
+      <TD>&nbsp;</TD>
+      <TD colspan="2"><B>T1</B></TD>
+      <TD><B>40</B></TD></TR>
+    <TR>
+      <TD>&nbsp;</TD>
+      <TD colspan="2"><B>T2</B></TD>
+      <TD><B>64</B></TD></TR>
+    <TR>
+      <TD>&nbsp;</TD>
+      <TD colspan="3">IA_PD Prefix Option</TD>
+    </TR>
+    <TR>
+      <TD>&nbsp;</TD>
+      <TD>&nbsp;</TD>
+      <TD>Code</TD>
+      <TD>34 (TBD)</TD></TR>
+    <TR>
+      <TD>&nbsp;</TD>
+      <TD>&nbsp;</TD>
+      <TD>preferred-lifetime</TD>
+      <TD>80</TD></TR>
+    <TR>
+      <TD>&nbsp;</TD>
+      <TD>&nbsp;</TD>
+      <TD>valid-lifetime</TD>
+      <TD>120</TD></TR>
+    <TR>
+      <TD>&nbsp;</TD>
+      <TD>&nbsp;</TD>
+      <TD>prefix-length</TD>
+      <TD>48</TD></TR>
+    <TR>
+      <TD>&nbsp;</TD>
+      <TD>&nbsp;</TD>
+      <TD>IPv6 prefix</TD>
+      <TD>3ffe:501:fff2::</TD></TR>
+</TABLE>
+<BR>
+DHCP Request message with IA_PD option<BR>
+<TABLE border=1>
+    <tr>
+      <TD colspan="3">msg-type</TD>
+      <TD><b>REQUEST</b>(3)</TD>
+    </tr>
+    <tr>
+      <TD colspan="3">transaction-id</TD>
+      <TD>The transaction ID for this message exchange</TD>
+    </tr>
+    <TR>
+      <TD colspan="4">options</TD>
+    </TR>
+    <TR>
+      <TD colspan="4"><b>Client Identifier Option </b> (MUST)</TD>
+    </TR>
+    <TR>
+      <TD colspan="4"><b>Server Identifier Option </b> (MUST)</TD>
+    </TR>
+    <TR>
+      <TD>&nbsp;</TD>
+      <TD colspan="2">DUID Contents type</TD>
+      <TD>1 Link-layer address plus time</TD>
+    </TR>
+    <TR>
+      <TD>&nbsp;</TD>
+      <TD colspan="2">hardware type</TD>
+      <TD>1 Ether</TD></TR>
+    <TR>
+      <TD>&nbsp;</TD>
+      <TD colspan="2">time</TD>
+      <TD>Time which the server included</TD>
+    </TR>
+    <TR>
+      <TD>&nbsp;</TD>
+      <TD colspan="2">link-layer address</TD>
+      <TD><B>00:00:00:00:a0:a0</B></TD></TR>
+    <tr>
+      <TD colspan="4"><b>IA_PD Option </b> (MUST)</TD>
+    </tr>
+    <tr>
+      <TD>&nbsp;</TD>
+      <TD colspan="2">Code</TD>
+      <TD>33 (TBD)</TD>
+    </tr>
+    <tr>
+      <TD>&nbsp;</TD>
+      <TD colspan="2">IAID</TD>
+      <TD>Unique identifier which client specified</TD>
+    </tr>
+    <tr>
+      <TD>&nbsp;</TD>
+      <TD colspan="2">T1</TD>
+      <TD>ANY</TD>
+    </tr>
+    <tr>
+      <TD>&nbsp;</TD>
+      <TD colspan="2">T2</TD>
+      <TD>ANY</TD>
+    </tr>
+    <tr>
+      <TD>&nbsp;</TD>
+      <TD colspan="3">IA_PD Prefix Option (Optional)</TD>
+    </tr>
+    <tr>
+      <TD>&nbsp;</TD>
+      <TD>&nbsp;</TD>
+      <TD>Code</TD>
+      <TD>34 (TBD)</TD>
+    </tr>
+    <tr>
+      <TD>&nbsp;</TD>
+      <TD>&nbsp;</TD>
+      <TD>preferred-lifetime</TD>
+      <TD>ANY</TD>
+    </tr>
+    <tr>
+      <TD>&nbsp;</TD>
+      <TD>&nbsp;</TD>
+      <TD>valid-lifetime</TD>
+      <TD>ANY</TD>
+    </tr>
+    <tr>
+      <TD>&nbsp;</TD>
+      <TD>&nbsp;</TD>
+      <TD>prefix-length</TD>
+      <TD>48</TD>
+    </tr>
+    <tr>
+      <TD>&nbsp;</TD>
+      <TD>&nbsp;</TD>
+      <TD>IPv6 prefix</TD>
+      <TD>3ffe:501:fff2::</TD>
+    </tr>
+    <tr>
+      <TD colspan="4"> <b> Elapsed Time Option </b> (MUST)</TD>
+    </tr>
+    <tr>
+      <TD>&nbsp;</TD>
+      <TD colspan="2">elapsed-time</TD>
+      <TD>ANY</TD>
+    </tr>
+    <tr>
+      <TD colspan="4"> Option Request Option (Optional)</TD>
+    </tr>
+</TABLE>
+<BR>
+DHCP Reply message with IA_PD option including IA_Prefix option<BR>
+<TABLE border=1>
+    <TR>
+      <TD colspan="3">msg-type</TD>
+      <TD><b>REPLY</b>(7)</TD>
+    </TR>
+    <tr>
+      <TD colspan="3">transaction-id</TD>
+      <TD>The same transaction ID previous message</TD>
+    </tr>
+    <TR>
+      <TD colspan="4">options</TD>
+    </TR>
+    <TR>
+      <TD colspan="4">Client Identifier Option</TD>
+    </TR>
+    <TR>
+      <TD colspan="4">Server Identifier Option</TD>
+    </TR>
+    <TR>
+      <TD>&nbsp;</TD>
+      <TD colspan="2">DUID Contents type</TD>
+      <TD>1 Link-layer address plus time</TD>
+    </TR>
+    <TR>
+      <TD>&nbsp;</TD>
+      <TD colspan="2">hardware type</TD>
+      <TD>1 Ether</TD></TR>
+    <TR>
+      <TD>&nbsp;</TD>
+      <TD colspan="2">time</TD>
+      <TD>Time which the server included</TD>
+    </TR>
+    <TR>
+      <TD>&nbsp;</TD>
+      <TD colspan="2">link-layer address</TD>
+      <TD>00:00:00:00:a0:a0</TD></TR>
+    <TR>
+      <TD colspan="4"><b>IA_PD Option</b></TD>
+    </TR>
+    <TR>
+      <TD>&nbsp;</TD>
+      <TD colspan="2">Code</TD>
+      <TD>33 (TBD)</TD></TR>
+    <tr>
+      <TD>&nbsp;</TD>
+      <TD colspan="2">IAID</TD>
+      <TD>Unique identifier which client specified</TD>
+    </tr>
+    <TR>
+      <TD>&nbsp;</TD>
+      <TD colspan="2"><B>T1</B></TD>
+      <TD><B>40</B></TD></TR>
+    <TR>
+      <TD>&nbsp;</TD>
+      <TD colspan="2"><B>T2</B></TD>
+      <TD><B>64</B></TD></TR>
+    <tr>
+    <tr>
+      <TD>&nbsp;</TD>
+      <TD>&nbsp;</TD>
+      <TD>Code</TD>
+      <TD>34 (TBD)</TD>
+    </tr>
+    <tr>
+      <TD>&nbsp;</TD>
+      <TD>&nbsp;</TD>
+      <TD>preferred-lifetime</TD>
+      <TD>80</TD>
+    </tr>
+    <tr>
+      <TD>&nbsp;</TD>
+      <TD>&nbsp;</TD>
+      <TD>valid-lifetime</TD>
+      <TD>120</TD>
+    </tr>
+    <tr>
+      <TD>&nbsp;</TD>
+      <TD>&nbsp;</TD>
+      <TD>prefix-length</TD>
+      <TD>48</TD>
+    </tr>
+    <tr>
+      <TD>&nbsp;</TD>
+      <TD>&nbsp;</TD>
+      <TD>IPv6 prefix</TD>
+      <TD>3ffe:501:fff2::</TD>
+    </tr>
+</TABLE>
+<BR>
+DHCP Release message with IA_PD option including IA_PD Prefix option<BR>
+<TABLE border=1>
+    <TR>
+      <TD colspan="3">msg-type</TD>
+      <TD><b>RELEASE</b>(8)</TD>
+    </TR>
+    <tr>
+      <TD colspan="3">transaction-id</TD>
+      <TD>The transaction ID for this message exchange</TD>
+    </tr>
+    <TR>
+      <TD colspan="4">options</TD>
+    </TR>
+    <TR>
+      <TD colspan="4"><b>Client Identifier Option</b> (MUST)</TD>
+    </TR>
+    <TR>
+      <TD colspan="4"><b>Server Identifier Option </b> (MUST)</TD>
+    </TR>
+    <TR>
+      <TD>&nbsp;</TD>
+      <TD colspan="2">DUID Contents type</TD>
+      <TD>1 Link-layer address plus time</TD>
+    </TR>
+    <TR>
+      <TD>&nbsp;</TD>
+      <TD colspan="2">hardware type</TD>
+      <TD>1 Ether</TD></TR>
+    <TR>
+      <TD>&nbsp;</TD>
+      <TD colspan="2">time</TD>
+      <TD>Time which the server included</TD>
+    </TR>
+    <TR>
+      <TD>&nbsp;</TD>
+      <TD colspan="2">link-layer address</TD>
+      <TD>00:00:00:00:a0:a0</TD></TR>
+    <TR>
+      <TD colspan="4"><b>IA_PD Option</b> (MUST)</TD>
+    </TR>
+    <TR>
+      <TD>&nbsp;</TD>
+      <TD colspan="2">Code</TD>
+      <TD>33 (TBD)</TD></TR>
+    <tr>
+      <TD>&nbsp;</TD>
+      <TD colspan="2">IAID</TD>
+      <TD>Unique identifier which client specified</TD>
+    </tr>
+    <TR>
+      <TD>&nbsp;</TD>
+      <TD colspan="2">T1</TD>
+      <TD>ANY</TD></TR>
+    <TR>
+      <TD>&nbsp;</TD>
+      <TD colspan="2">T2</TD>
+      <TD>ANY</TD></TR>
+    <tr>
+      <TD>&nbsp;</TD>
+      <TD colspan="3"><B>IA_PD Prefix Option</B> (MUST)</TD>
+    </tr>
+    <tr>
+      <TD>&nbsp;</TD>
+      <TD>&nbsp;</TD>
+      <TD>Code</TD>
+      <TD>34 (TBD)</TD>
+    </tr>
+    <tr>
+      <TD>&nbsp;</TD>
+      <TD>&nbsp;</TD>
+      <TD>Code</TD>
+      <TD>34 (TBD)</TD>
+    </tr>
+    <tr>
+      <TD>&nbsp;</TD>
+      <TD>&nbsp;</TD>
+      <TD>preferred-lifetime</TD>
+      <TD>ANY</TD>
+    </tr>
+    <tr>
+      <TD>&nbsp;</TD>
+      <TD>&nbsp;</TD>
+      <TD>valid-lifetime</TD>
+      <TD>ANY</TD>
+    </tr>
+    <tr>
+      <TD>&nbsp;</TD>
+      <TD>&nbsp;</TD>
+      <TD>prefix-length</TD>
+      <TD>48</TD>
+    </tr>
+    <tr>
+      <TD>&nbsp;</TD>
+      <TD>&nbsp;</TD>
+      <TD>IPv6 prefix</TD>
+      <TD>3ffe:501:fff2::</TD>
+    </tr>
+    <tr>
+      <TD colspan="4"> <b> Elapsed Time Option</b> (MUST)</TD>
+    </tr>
+    <tr>
+      <TD>&nbsp;</TD>
+      <TD colspan="2">elapsed-time</TD>
+      <TD>ANY</TD>
+    </tr>
+</TABLE>
+</BLOCKQUOTE>
+</PRE>
+
+=end html
+
+=head1 TEST PROCEDURE
+
+=begin html
+<PRE>
+Tester as PE              Target as CPE             Tester as client
+    |                           |                           |
+    |             :             |                           |
+    |  Wait REL_TIMEOUT passed  |                           |
+    |             :             |                           |
+    |                           |                           |
+    |<--------------------------|                           |
+    |   <A HREF="#JDG1">Judgment #1</A>             |                           |
+    |   DHCP Release message    |                           |
+    |                           |                           |
+    |-------------------------->|                           |
+    |   DHCP Reply message      |                           |
+    | w/ Status Code: NoBinding |                           |
+    |                           |                           |
+    |             :             |                           |
+    |  Wait REL_TIMEOUT passed  |                           |
+    |             :             |                           |
+    |                           |                           |
+    |<--------------------------|                           |
+    |   <A HREF="#JDG2">Judgment #2</A>             |                           |
+    |   No DHCP Release message |                           |
+    |                           |                           |
+    |                           |<--------------------------|
+    |                           |    Router Solicitation    |
+    |                           |                           |
+    |                           |(------------------------> |
+    |                           |    <A HREF="#JDG3">Judgment #3</A>            |
+    |                           |  No Router Advertisement  |
+    |                           |     or                    |
+    |                           |  Router Advertisement     |
+    |                           |  with ValidLifetime 0     |
+    |                           |                           |
+    v                           v
+<BR>
+  1. Wait DHCP Release message again or not
+  2. Send DHCP Reply message with Status Code option including status code NoBinding
+  3. No DHCP Release message
+  4. Send Router Solicitation
+  5. No Router Advertisement or wait Router Advertisement with ValidLifetime zero
+<BR>
+<b>Addresses</b>
+<BLOCKQUOTE>
+Release message<BR>
+<TABLE border=1>
+    <TBODY>
+    <TR>
+      <TD>Src</TD>
+      <TD>NUT link-local address</TD>
+    </TR>
+    <TR>
+      <TD>Dst</TD>
+      <TD>All_DHCP_Relay_Agents_and_Servers</TD>
+    </TR>
+    </TBODY>
+  </TABLE>
+<BR>
+All_DHCP_Relay_Agents_and_Servers FF02::1:2<BR>
+Reply message<BR>
+<TABLE border=1>
+    <TBODY>
+    <TR>
+      <TD>Src</TD>
+      <TD>fe80::200:ff:fe00:a0a0</TD>
+    </TR>
+    <TR>
+      <TD>Dst</TD>
+      <TD>NUT link-local address</TD>
+    </TR>
+    </TBODY>
+  </TABLE>
+</BLOCKQUOTE>
+<b>UDP Ports</b><BR>
+      Clients listen for DHCP messages on UDP port 546
+      Server listen for DHCP messages on UDP port 547<BR>
+<b>DHCP Messages</b>
+<BLOCKQUOTE>
+<BR>
+DHCP Release message with IA_PD option including IA_PD Prefix option<BR>
+<TABLE border=1>
+    <TR>
+      <TD colspan="3">msg-type</TD>
+      <TD><b>RELEASE</b>(8)</TD>
+    </TR>
+    <tr>
+      <TD colspan="3">transaction-id</TD>
+      <TD>The transaction ID for this message exchange</TD>
+    </tr>
+    <TR>
+      <TD colspan="4">options</TD>
+    </TR>
+    <TR>
+      <TD colspan="4"><b>Client Identifier Option</b> (MUST)</TD>
+    </TR>
+    <TR>
+      <TD colspan="4"><b>Server Identifier Option </b> (MUST)</TD>
+    </TR>
+    <TR>
+      <TD>&nbsp;</TD>
+      <TD colspan="2">DUID Contents type</TD>
+      <TD>1 Link-layer address plus time</TD>
+    </TR>
+    <TR>
+      <TD>&nbsp;</TD>
+      <TD colspan="2">hardware type</TD>
+      <TD>1 Ether</TD></TR>
+    <TR>
+      <TD>&nbsp;</TD>
+      <TD colspan="2">time</TD>
+      <TD>Time which the server included</TD>
+    </TR>
+    <TR>
+      <TD>&nbsp;</TD>
+      <TD colspan="2">link-layer address</TD>
+      <TD>00:00:00:00:a0:a0</TD></TR>
+    <TR>
+      <TD colspan="4"><b>IA_PD Option</b> (MUST)</TD>
+    </TR>
+    <TR>
+      <TD>&nbsp;</TD>
+      <TD colspan="2">Code</TD>
+      <TD>33 (TBD)</TD></TR>
+    <tr>
+      <TD>&nbsp;</TD>
+      <TD colspan="2">IAID</TD>
+      <TD>Unique identifier which client specified</TD>
+    </tr>
+    <TR>
+      <TD>&nbsp;</TD>
+      <TD colspan="2">T1</TD>
+      <TD>ANY</TD></TR>
+    <TR>
+      <TD>&nbsp;</TD>
+      <TD colspan="2">T2</TD>
+      <TD>ANY</TD></TR>
+    <tr>
+      <TD>&nbsp;</TD>
+      <TD colspan="3"><B>IA_PD Prefix Option</B> (MUST)</TD>
+    </tr>
+    <tr>
+      <TD>&nbsp;</TD>
+      <TD>&nbsp;</TD>
+      <TD>Code</TD>
+      <TD>34 (TBD)</TD>
+    </tr>
+    <tr>
+      <TD>&nbsp;</TD>
+      <TD>&nbsp;</TD>
+      <TD>Code</TD>
+      <TD>34 (TBD)</TD>
+    </tr>
+    <tr>
+      <TD>&nbsp;</TD>
+      <TD>&nbsp;</TD>
+      <TD>preferred-lifetime</TD>
+      <TD>ANY</TD>
+    </tr>
+    <tr>
+      <TD>&nbsp;</TD>
+      <TD>&nbsp;</TD>
+      <TD>valid-lifetime</TD>
+      <TD>ANY</TD>
+    </tr>
+    <tr>
+      <TD>&nbsp;</TD>
+      <TD>&nbsp;</TD>
+      <TD>prefix-length</TD>
+      <TD>48</TD>
+    </tr>
+    <tr>
+      <TD>&nbsp;</TD>
+      <TD>&nbsp;</TD>
+      <TD>IPv6 prefix</TD>
+      <TD>3ffe:501:fff2::</TD>
+    </tr>
+    <tr>
+      <TD colspan="4"> <b> Elapsed Time Option</b> (MUST)</TD>
+    </tr>
+    <tr>
+      <TD>&nbsp;</TD>
+      <TD colspan="2">elapsed-time</TD>
+      <TD>ANY</TD>
+    </tr>
+</TABLE>
+<BR>
+DHCP Reply message with Status Code option including status code Success<BR>
+<TABLE border=1>
+    <TR>
+      <TD colspan="3">msg-type</TD>
+      <TD><b>REPLY</b>(7)</TD>
+    </TR>
+    <tr>
+      <TD colspan="3">transaction-id</TD>
+      <TD>The same transaction ID previous message</TD>
+    </tr>
+    <TR>
+      <TD colspan="4">options</TD>
+    </TR>
+    <TR>
+      <TD colspan="4">Client Identifier Option</TD>
+    </TR>
+    <TR>
+      <TD colspan="4">Server Identifier Option</TD>
+    </TR>
+    <TR>
+      <TD>&nbsp;</TD>
+      <TD colspan="2">DUID Contents type</TD>
+      <TD>1 Link-layer address plus time</TD>
+    </TR>
+    <TR>
+      <TD>&nbsp;</TD>
+      <TD colspan="2">hardware type</TD>
+      <TD>1 Ether</TD></TR>
+    <TR>
+      <TD>&nbsp;</TD>
+      <TD colspan="2">time</TD>
+      <TD>Time which the server included</TD>
+    </TR>
+    <TR>
+      <TD>&nbsp;</TD>
+      <TD colspan="2">link-layer address</TD>
+      <TD>00:00:00:00:a0:a0</TD></TR>
+    <TR>
+      <TD colspan="4"><b>IA_PD Option</b></TD>
+    </TR>
+    <TR>
+      <TD>&nbsp;</TD>
+      <TD colspan="2">Code</TD>
+      <TD>33 (TBD)</TD></TR>
+    <tr>
+      <TD>&nbsp;</TD>
+      <TD colspan="2">IAID</TD>
+      <TD>Unique identifier which client specified</TD>
+    </tr>
+    <TR>
+      <TD>&nbsp;</TD>
+      <TD colspan="2"><B>T1</B></TD>
+      <TD><B>40</B></TD></TR>
+    <TR>
+      <TD>&nbsp;</TD>
+      <TD colspan="2"><B>T2</B></TD>
+      <TD><B>64</B></TD></TR>
+    <tr>
+      <TD>&nbsp;</TD>
+      <TD>&nbsp;</TD>
+      <TD>Code</TD>
+      <TD>34 (TBD)</TD>
+    </tr>
+    <tr>
+      <TD>&nbsp;</TD>
+      <TD>&nbsp;</TD>
+      <TD>preferred-lifetime</TD>
+      <TD>80</TD>
+    </tr>
+    <tr>
+      <TD>&nbsp;</TD>
+      <TD>&nbsp;</TD>
+      <TD>valid-lifetime</TD>
+      <TD>120</TD>
+    </tr>
+    <tr>
+      <TD>&nbsp;</TD>
+      <TD>&nbsp;</TD>
+      <TD>prefix-length</TD>
+      <TD>48</TD>
+    </tr>
+    <tr>
+      <TD>&nbsp;</TD>
+      <TD>&nbsp;</TD>
+      <TD>IPv6 prefix</TD>
+      <TD>3ffe:501:fff2::</TD>
+    </tr>
+    <tr>
+      <TD colspan="4"><b>Status Code Option</b></TD>
+    </tr>
+    <tr>
+      <TD>&nbsp;</TD>
+      <TD colspan="2"><B>status-code</B></TD>
+      <TD><b>0 Success</b></TD>
+    </tr>
+    <tr>
+      <TD>&nbsp;</TD>
+      <TD colspan="2">status-message</TD>
+      <TD>0x56, 0x56, 0x56, 0x56, 0x56, 0x56, 0x56, 0x56</TD>
+    </tr>
+</TABLE>
+<BR>
+DHCP Reply message with Status Code option including status code NoBinding</p>
+<TABLE border=1>
+    <TR>
+      <TD colspan="3">msg-type</TD>
+      <TD><b>REPLY</b>(7)</TD>
+    </TR>
+    <tr>
+      <TD colspan="3">transaction-id</TD>
+      <TD>The same transaction ID previous message</TD>
+    </tr>
+    <TR>
+      <TD colspan="4">options</TD>
+    </TR>
+    <TR>
+      <TD colspan="4">Client Identifier Option</TD>
+    </TR>
+    <TR>
+      <TD colspan="4">Server Identifier Option</TD>
+    </TR>
+    <TR>
+      <TD>&nbsp;</TD>
+      <TD colspan="2">DUID Contents type</TD>
+      <TD>1 Link-layer address plus time</TD>
+    </TR>
+    <TR>
+      <TD>&nbsp;</TD>
+      <TD colspan="2">hardware type</TD>
+      <TD>1 Ether</TD></TR>
+    <TR>
+      <TD>&nbsp;</TD>
+      <TD colspan="2">time</TD>
+      <TD>Time which the server included</TD>
+    </TR>
+    <TR>
+      <TD>&nbsp;</TD>
+      <TD colspan="2">link-layer address</TD>
+      <TD>00:00:00:00:a0:a0</TD></TR>
+    <TR>
+      <TD colspan="4">IA_PD Option</TD>
+    </TR>
+    <TR>
+      <TD>&nbsp;</TD>
+      <TD colspan="2">Code</TD>
+      <TD>33 (TBD)</TD></TR>
+    <tr>
+      <TD>&nbsp;</TD>
+      <TD colspan="2">IAID</TD>
+      <TD>Unique identifier which client specified</TD>
+    </tr>
+    <TR>
+      <TD>&nbsp;</TD>
+      <TD colspan="2"><B>T1</B></TD>
+      <TD><B>0</B></TD></TR>
+    <TR>
+      <TD>&nbsp;</TD>
+      <TD colspan="2"><B>T2</B></TD>
+      <TD><B>0</B></TD></TR>
+    <tr>
+      <TD>&nbsp;</TD>
+      <TD colspan="3"><b>Status Code Option</b></TD>
+    </tr>
+    <tr>
+      <TD>&nbsp;</TD>
+      <TD>&nbsp;</TD>
+      <TD><B>status-code</B></TD>
+      <TD><b>3 NoBinding</b></TD>
+    </tr>
+    <tr>
+      <TD>&nbsp;</TD>
+      <TD>&nbsp;</TD>
+      <TD>status-message</TD>
+      <TD>0x56, 0x56, 0x56, 0x56, 0x56, 0x56, 0x56, 0x56</TD>
+    </tr>
+</TABLE>
+</BLOCKQUOTE>
+</PRE>
+
+=end html
+
+=head1 JUDGEMENT
+
+=begin html
+<PRE>
+<A NAME="JDG1"></A>
+  1. DHCP Release message is recieved again or not.
+<A NAME="JDG2"></A>
+  2. DHCP Release message is not recieved.
+<A NAME="JDG3"></A>
+  3. Router Advertisement is not recieved, or Router Advertisement is recieved with  ValidLifetime zero.
+</PRE>
+
+=end html
+
+=head1 TERMINATION
+
+  N/A
+
+=head1 REFERENCE
+
+=begin html
+<PRE>
+draft-ietf-dhc-dhcpv6-opt-prefix-delegation-01.txt
+<HR>
+11. Requesting router initiated prefix delegation <BR>
+   A requesting router uses the same message exchanges as described in
+   section "DHCP Client-Initiated Configuration Exchange" of the DHCP
+   specification [6] to obtain or update prefix(es) from a delegating
+   router.  The requesting router and the delegating router use the
+   IA_PD Prefix option to exchange information about prefix(es) in much
+   the same way IA Address options are used for assigned addresses.  <BR>
+11.1 Requesting router behaviour <BR> <BR>
+   <B>The requesting router uses a Release message to return a delegated
+   prefix to a delegating router.  The prefixes to be released MUST be
+   included in the IA_PDs.</B> <BR>
+<HR>
+draft-ietf-dhc-dhcpv6-28.txt
+<HR>
+14. Reliability of Client Initiated Message Exchanges <BR>
+   see <A href=./retrans_mech>the retransmission mechanism</A> <BR>
+15. Message Validation <BR> <BR>
+15.9. Release Message <BR>
+   <B>Clients MUST discard any received Release messages.</B> <BR>
+   <B>Servers MUST discard any received Release message that fails to meet
+   any of the following conditions</B>: <BR>
+    -  the message MUST include a Server Identifier option <BR>
+    -  the contents of the Server Identifier option MUST match the
+       server's identifier <BR>
+    -  the message MUST include a Client Identifier option <BR>
+18. DHCP Client-Initiated Configuration Exchange <BR> <BR>
+18.1. Client Behavior <BR>
+   A client uses Request, Renew, Rebind, Release and Decline messages
+   during the normal life cycle of addresses.  It uses Confirm to
+   validate addresses when it may have moved to a new link.  It uses
+   Information-Request messages when it needs configuration information
+   but no addresses.  <BR>
+   If the client has a source address of sufficient scope that can be
+   used by the server as a return address and the client has received
+   a Server Unicast option (section 22.12) from the server, the client
+   SHOULD unicast any Request, Renew, Release and Decline messages to
+   the server.  <BR>
+   DISCUSSION: <BR>
+      Use of unicast may avoid delays due to relaying of messages
+      by relay agents as well as avoid overhead and duplicate
+      responses by servers due to delivery of client messages to
+      multiple servers.  Requiring the client to relay all DHCP
+      messages through a relay agent enables the inclusion of
+      relay agent options in all messages sent by the client.  The
+      server should enable the use of unicast only when relay
+      agent options will not be used.  <BR>
+18.1.6. Creation and Transmission of Release Messages <BR>
+   To release one or more addresses, a client sends a Release message to
+   the server.  <BR>
+   <B>The client sets the "msg-type" field to RELEASE. The client generates
+   a transaction ID and places this value in the "transaction-id" field.</B> <BR>
+   <B>The client places the identifier of the server that allocated the
+   address(es) in a Server Identifier option.</B> <BR>
+   <B>The client MUST include a Client Identifier option to identify itself
+   to the server.</B>  The client includes options containing the IAs for
+   the addresses it is releasing in the "options" field.  <B>The addresses
+   to be released MUST be included in the IAs.  Any addresses for the
+   IAs the client wishes to continue to use MUST NOT be in added to the
+   IAs.</B> <BR>
+   <B>The client MUST NOT use any of the addresses it is releasing as
+   the source address in the Release message or in any subsequently
+   transmitted message.</B> <BR>
+   <B>Because Release messages may be lost, the client should retransmit
+   the Release if no Reply is received.</B>  However, there are scenarios
+   where the client may not wish to wait for the normal retransmission
+   timeout before giving up (e.g., on power down).  <B>Implementations
+   SHOULD retransmit one or more times, but MAY choose to terminate the
+   retransmission procedure early.</B>  <BR>
+   The client transmits the message according to section 14, using the
+   following parameters: <BR>
+      IRT   REL_TIMEOUT <BR>
+      MRT   0 <BR>
+      MRC   REL_MAX_MRC <BR>
+      MRD   0 <BR>
+   <B>The client MUST stop using all of the addresses being released as
+   soon as the client begins the Release message exchange process.  If
+   addresses are released but the Reply from a DHCP server is lost,
+   the client will retransmit the Release message, and the server may
+   respond with a Reply indicating a status of NoBinding.</B>  Therefore,
+   the client does not treat a Reply message with a status of NoBinding
+   in a Release message exchange as if it indicates an error.  <BR>
+   Note that if the client fails to release the addresses, each address
+   assigned to the IA will be reclaimed by the server when the valid
+   lifetime of that address expires.  <BR>
+18.1.8. Receipt of Reply Messages <BR> <BR>
+   <B>When the client receives a valid Reply message in response to a
+   Release message, the client considers the Release event completed,
+   regardless of the Status Code option(s) returned by the server.</B> <BR>
+5.5. Transmission and Retransmission Parameters <BR> <BR>
+   This section presents a table of values used to describe the message
+   transmission behavior of clients and servers.  <BR>
+      Parameter     Default  Description
+   -------------------------------------
+   REL_TIMEOUT       1 sec   Initial Release timeout
+   REL_MAX_RC        5       MAX Release attempts <BR>
+24.2. DHCP Message Types <BR>
+   IANA is requested to record the following message types (defined
+   in section 5.3).  IANA is requested to maintain a registry of DHCP
+   message types.  <BR> <BR>
+      RELEASE               8 <BR>
+A. Appearance of Options in Message Types <BR>
+   The following table indicates with a "*" the options are allowed in
+   each DHCP message type: <BR> <BR
+        Client Server IA_NA  Option Pref  Time Relay Auth. Server
+          ID     ID   IA_TA  Request            Msg.       Unica.
+Release   *      *      *      *           *           *
+<BR> <BR>
+         Status  Rap. User  Vendor Vendor Inter. Recon. Recon.
+          Code  Comm. Class Class  Spec.    ID    Msg.  Accept
+Release                 *     *      *
+</PRE>
+
+=end html
+
+=head1 SEE ALSO
+
+  perldoc V6evalTool
+
+=cut
+

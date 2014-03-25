@@ -1,0 +1,87 @@
+#
+# $Name: REL_2_1_1 $
+#
+# $TAHI: ct/spec/Makefile.test,v 1.43 2003/06/09 06:29:27 ozoe Exp $
+#
+
+PERL	= /usr/bin/perl
+POD2HTML= -$(PERL) -e 'use Pod::Html; pod2html("--noindex", @ARGV);'
+
+check:
+	-./FH_Pre.seq -pkt /dev/null
+	$(AUTORUN) -t INDEX INDEX_robust
+
+document:
+	$(AUTORUN) -g INDEX INDEX_robust
+	$(POD2HTML) SPEC.pm > SPEC.html
+	rm -f pod2html-dircache pod2html-itemcache
+
+document2:
+	$(AUTORUN) -G INDEX INDEX_robust
+	$(POD2HTML) SPEC.pm > SPEC.html
+	rm -f pod2html-dircache pod2html-itemcache
+
+umedoc:
+	$(AUTORUN) -G INDEX_ume
+	$(POD2HTML) SPEC.pm > SPEC.html
+	rm -f pod2html-dircache pod2html-itemcache
+
+umedoc_router:
+	$(AUTORUN) -G INDEX_ume_router
+	$(POD2HTML) SPEC.pm > SPEC.html
+	rm -f pod2html-dircache pod2html-itemcache
+
+clean:
+	-/bin/rm -f *.log *.dump [0-9]*.html index.html ID.def summary.html report.html
+
+test:
+	$(AUTORUN) $(AROPT) \
+	-title='IPv6 Conformance Test For IPv6 Specification' \
+	INDEX INDEX_robust
+
+tahi:	document
+	/bin/rm -f index.html summary.html report.html
+	$(AUTORUN) $(AROPT) -dump2txt \
+	-title='IPv6 Conformance Test For IPv6 Specification' \
+	INDEX INDEX_robust
+
+tiny:	document
+	/bin/rm -f index.html summary.html report.html
+	$(AUTORUN) $(AROPT) -dump2txt -tiny \
+	-title='IPv6 Conformance Test For IPv6 Specification' \
+	INDEX_nodereq 
+
+ume:	umedoc
+	/bin/rm -f index.html summary.html report.html
+	$(AUTORUN) $(AROPT) -F -tiny \
+	-title='IPv6 Conformance Test For IPv6 Specification' \
+	INDEX_ume
+
+ume_router: umedoc_router
+	/bin/rm -f index.html summary.html report.html
+	$(AUTORUN) $(AROPT) -F -tiny \
+	-title='IPv6 Conformance Test For IPv6 Specification' \
+	INDEX_ume_router
+
+config_test:
+	/bin/rm -f index.html summary.html report.html
+	$(AUTORUN) $(AROPT) -dump2txt \
+	-title='IPv6 Conformance Test For IPv6 Specification (Configuration Check)' \
+	INDEX_config
+
+
+demo1:	document
+	/bin/rm -f index.html summary.html report.html
+	$(AUTORUN) $(AROPT) -dump2txt \
+	-title='IPv6 Conformance Test For IPv6 Specification' \
+	INDEX_demo1
+
+demo2:	document
+	/bin/rm -f index.html summary.html report.html
+	$(AUTORUN) $(AROPT) -dump2txt \
+	-title='IPv6 Conformance Test For IPv6 Specification' \
+	INDEX_demo2
+
+demo3:	demo2
+
+.include "../Makefile.inc"

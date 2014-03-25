@@ -1,0 +1,284 @@
+# ping
+# used in 1.6
+CMD_PING1_1_6		/bin/sh -c ping6 -c 1 -s 1452
+CMD_PING3_1_6		/bin/sh -c ping6 -c 3 -s 1452
+
+# ifconfig
+CMD_IFCONFIG_IF1_UP		/sbin/ifconfig MY_IF1 up
+CMD_IFCONFIG_IF2_UP		/sbin/ifconfig MY_IF2 up
+CMD_IFCONFIG_IF3_UP		/sbin/ifconfig MY_IF3 up
+
+#
+CMD_IFCONFIG_IF1_DOWN		/sbin/ifconfig MY_IF1 down
+CMD_IFCONFIG_IF2_DOWN		/sbin/ifconfig MY_IF2 down
+CMD_IFCONFIG_IF3_DOWN		/sbin/ifconfig MY_IF3 down
+
+#
+CMD_IFCONFIG_IF1_LLA_DELETE	/sbin/ifconfig MY_IF1 inet6 del MY_IF1_LLA/64
+CMD_IFCONFIG_IF2_LLA_DELETE	/sbin/ifconfig MY_IF2 inet6 del MY_IF2_LLA/64
+CMD_IFCONFIG_IF3_LLA_DELETE	/sbin/ifconfig MY_IF3 inet6 del MY_IF3_LLA/64
+
+CMD_IFCONFIG_IF1_ADD_LOGO_LLA	/sbin/ifconfig MY_IF1 inet6 add LOGO_IF1_LLA/64
+CMD_IFCONFIG_IF1_DELETE_LOGO_LLA	/sbin/ifconfig MY_IF1 inet6 del LOGO_IF1_LLA/64
+CMD_IFCONFIG_IF1_ADD_DUP_ADDR		/sbin/ifconfig MY_IF1 inet6 add DUP_ADDR/64
+CMD_IFCONFIG_IF1_DELETE_DUP_ADDR	/sbin/ifconfig MY_IF1 inet6 del DUP_ADDR/64
+
+#
+CMD_IFCONFIG_IF1_PREFIX1_GA_ADD		/sbin/ifconfig MY_IF1 inet6 add MY_IF1_PREFIX1_GA/64
+CMD_IFCONFIG_IF2_PREFIX2_GA_ADD		/sbin/ifconfig MY_IF2 inet6 add MY_IF2_PREFIX2_GA/64
+CMD_IFCONFIG_IF3_PREFIX3_GA_ADD		/sbin/ifconfig MY_IF3 inet6 add MY_IF3_PREFIX3_GA/64
+CMD_IFCONFIG_IF1_PREFIX1_ANY_ADD	/bin/echo > /dev/null
+CMD_IFCONFIG_IF2_PREFIX2_ANY_ADD	/bin/echo > /dev/null
+CMD_IFCONFIG_IF3_PREFIX3_ANY_ADD	/bin/echo > /dev/null
+
+CMD_IFCONFIG_IF1_PREFIX1_GA_DELETE	/sbin/ifconfig MY_IF1 inet6 del MY_IF1_PREFIX1_GA/64
+CMD_IFCONFIG_IF2_PREFIX2_GA_DELETE	/sbin/ifconfig MY_IF2 inet6 del MY_IF2_PREFIX2_GA/64
+CMD_IFCONFIG_IF3_PREFIX3_GA_DELETE	/sbin/ifconfig MY_IF3 inet6 del MY_IF3_PREFIX3_GA/64
+CMD_IFCONFIG_IF1_PREFIX1_ANY_DELETE	/bin/echo > /dev/null
+CMD_IFCONFIG_IF2_PREFIX2_ANY_DELETE	/bin/echo > /dev/null
+CMD_IFCONFIG_IF3_PREFIX3_ANY_DELETE	/bin/echo > /dev/null
+
+#
+CMD_IFCONFIG_IF1_PREFIX2_GA_ADD		/sbin/ifconfig MY_IF1 inet6 add MY_IF1_PREFIX2_GA/64
+CMD_IFCONFIG_IF1_PREFIX2_ANY_ADD	/bin/echo > /dev/null
+CMD_IFCONFIG_IF1_PREFIX2_GA_DELETE	/sbin/ifconfig MY_IF1 inet6 del MY_IF1_PREFIX2_GA/64
+CMD_IFCONFIG_IF1_PREFIX2_ANY_DELETE	/bin/echo > /dev/null
+
+CMD_IFCONFIG_IF2_PREFIX3_GA_ADD		/sbin/ifconfig MY_IF2 inet6 add MY_IF2_PREFIX3_GA/64
+CMD_IFCONFIG_IF2_PREFIX3_ANY_ADD	/bin/echo > /dev/null
+CMD_IFCONFIG_IF2_PREFIX3_GA_DELETE	/sbin/ifconfig MY_IF2 inet6 del MY_IF2_PREFIX3_GA/64
+CMD_IFCONFIG_IF2_PREFIX3_ANY_DELETE	/bin/echo > /dev/null
+
+CMD_IFCONFIG_IF1_MTU_1500		/sbin/ifconfig MY_IF1 mtu 1500
+CMD_IFCONFIG_IF2_MTU_1500		/sbin/ifconfig MY_IF2 mtu 1500
+CMD_IFCONFIG_IF3_MTU_1500		/sbin/ifconfig MY_IF3 mtu 1500
+CMD_IFCONFIG_IF1_MTU_1280		/sbin/ifconfig MY_IF1 mtu 1280
+CMD_IFCONFIG_IF2_MTU_1280		/sbin/ifconfig MY_IF2 mtu 1280
+
+# ndp
+CMD_CLEAR_NCE_IF1		execute "/sbin/ip neigh flush dev MY_IF1"
+CMD_CLEAR_NCE_IF2		execute "/sbin/ip neigh flush dev MY_IF2"
+CMD_CLEAR_NCE_IF3		execute "/sbin/ip neigh flush dev MY_IF3"
+CMD_PRINT_NCE_IF1		execute "/sbin/ip neigh show dev MY_IF1"
+CMD_PRINT_NCE_IF2		execute "/sbin/ip neigh show dev MY_IF2"
+CMD_PRINT_NCE_IF3		execute "/sbin/ip neigh show dev MY_IF3"
+
+# route
+CMD_FLUSH_ROUTE_PREFIX1_IF1	/sbin/ip route -A inet6 flush PREFIX1::/64 dev MY_IF1
+CMD_FLUSH_ROUTE_PREFIX2_IF1	/sbin/ip route -A inet6 flush PREFIX2::/64 dev MY_IF1
+CMD_FLUSH_ROUTE_PREFIX3_IF1	/sbin/ip route -A inet6 flush PREFIX3::/64 dev MY_IF1
+CMD_FLUSH_ROUTE_PREFIX2_IF2	/sbin/ip route -A inet6 flush PREFIX2::/64 dev MY_IF2
+CMD_FLUSH_ROUTE_PREFIX1_IF3	/sbin/ip route -A inet6 flush PREFIX1::/64 dev MY_IF3
+CMD_FLUSH_ROUTE_PREFIX3_IF3	/sbin/ip route -A inet6 flush PREFIX3::/64 dev MY_IF3
+CMD_FLUSH_ROUTE_PREFIX2_IF1	/sbin/ip route -A inet6 flush PREFIX2::/64 dev MY_IF1
+CMD_FLUSH_ROUTE_PREFIX3_IF2	/sbin/ip route -A inet6 flush PREFIX3::/64 dev MY_IF2
+CMD_FLUSH_ROUTE_LOGO		/sbin/ip route -A inet6 LOGO_IF1_PREFIX1_GA dev MY_IF1
+CMD_FLUSH_ROUTE_REDIRECT        /sbin/ip route -A inet6 flush REF2_IF1_PREFIX2_GA dev MY_IF1
+CMD_FLUSH_ROUTE_STATIC_PREFIX1          /sbin/ip -statistics route flush PREFIX1::/64
+CMD_FLUSH_ROUTE_STATIC_PREFIX2          /sbin/ip -statistics route flush PREFIX2::/64
+CMD_FLUSH_ROUTE_STATIC_PREFIX3          /sbin/ip -statistics route flush PREFIX3::/64
+CMD_FLUSH_PREFIX_LIST		/bin/sh -c echo > /dev/null
+
+CMD_1_5_ADD_ROUTE	/sbin/route -A inet6 add PREFIX2::/64 gw REF1_IF1_LLA dev MY_IF1
+CMD_1_5_DELETE_ROUTE	/sbin/route -A inet6 del PREFIX2::/64
+
+# tar
+CMD_1_6_B_ADD_ROUTE     /sbin/route -A inet6 add PREFIX2::/64 gw LOGO_IF1_LLA dev MY_IF1
+
+# ref1
+CMD_1_6_D1_ADD_ROUTE	/sbin/route -A inet6 add PREFIX3::/64 gw REF2_IF1_LLA dev MY_IF2
+# ref2
+CMD_1_6_D2_ADD_ROUTE	/sbin/route -A inet6 add PREFIX1::/64 gw REF1_IF2_LLA dev MY_IF1
+
+# tar
+CMD_1_6_D3_ADD_ROUTE	/sbin/route -A inet6 add PREFIX1::/64 gw REF2_IF2_LLA dev MY_IF3
+CMD_1_6_E_ADD_ROUTE	/sbin/route -A inet6 add PREFIX1::/64 gw REF2_IF2_LLA dev MY_IF3
+
+# sysctl
+CMD_SYSCTL_ACCEPT_RA		/sbin/sysctl -w net.ipv6.conf.all.accept_ra=1
+CMD_SYSCTL_NOT_ACCEPT_RA	/sbin/sysctl -w net.ipv6.conf.all.accept_ra=0
+
+CMD_SYSCTL_FORWARDING		/sbin/sysctl -w net.ipv6.conf.all.forwarding=1
+CMD_SYSCTL_NOT_FORWARDING	/sbin/sysctl -w net.ipv6.conf.all.forwarding=0
+
+# rtsol
+CMD_RTSOL_IF1		/bin/echo > /dev/null
+CMD_RTSOL_IF2		/bin/echo > /dev/null
+CMD_RTSOL_IF3		/bin/echo > /dev/null
+
+# rtadvd
+CMD_RTADVD_IF1		/usr/sbin/radvd -C /tmp/rtadvd.conf
+CMD_RTADVD_IF2		/usr/sbin/radvd -C /tmp/rtadvd.conf
+CMD_RTADVD_IF3		/usr/sbin/radvd -C /tmp/rtadvd.conf
+CMD_RTADVD_IFS_1_2	/usr/sbin/radvd -C /tmp/rtadvd.conf
+
+CMD_STOP_RTADVD		killall -9 radvd
+CMD_RM_RTADVD_PID	rm -f /var/run/radvd/radvd.pid
+CMD_RM_RTADVD_CONF	rm -f /tmp/rtadvd.conf
+
+#
+CMD_RTADVD_CONF_GENERIC_1	/bin/sh -c echo interface MY_IF1 {
+CMD_RTADVD_CONF_GENERIC_2	/bin/sh -c echo            AdvSendAdvert on; MinRtrAdvInterval 3; MaxRtrAdvInterval 10; AdvDefaultLifetime 1800; AdvLinkMTU 1500;
+CMD_RTADVD_CONF_GENERIC_3	/bin/sh -c echo            prefix PREFIX1::/64
+CMD_RTADVD_CONF_GENERIC_4	/bin/sh -c echo            {
+CMD_RTADVD_CONF_GENERIC_5	/bin/sh -c echo                    AdvOnLink on;
+CMD_RTADVD_CONF_GENERIC_6	/bin/sh -c echo                    AdvAutonomous on;
+CMD_RTADVD_CONF_GENERIC_7	/bin/sh -c echo            };
+CMD_RTADVD_CONF_GENERIC_8	/bin/sh -c echo    };
+
+
+CMD_RTADVD_CONF_1_3_B_1	/bin/sh -c echo interface MY_IF1 {
+CMD_RTADVD_CONF_1_3_B_2	/bin/sh -c echo            AdvSendAdvert on; MinRtrAdvInterval 3; MaxRtrAdvInterval 10; AdvDefaultLifetime 1800; AdvLinkMTU 1500;
+CMD_RTADVD_CONF_1_3_B_3	/bin/sh -c echo            prefix PREFIX1::/64
+CMD_RTADVD_CONF_1_3_B_4	/bin/sh -c echo            {
+CMD_RTADVD_CONF_1_3_B_5	/bin/sh -c echo                    AdvOnLink on;
+CMD_RTADVD_CONF_1_3_B_6	/bin/sh -c echo                    AdvAutonomous on;
+CMD_RTADVD_CONF_1_3_B_7	/bin/sh -c echo            };
+CMD_RTADVD_CONF_1_3_B_8	/bin/sh -c echo            prefix PREFIX2::/64
+CMD_RTADVD_CONF_1_3_B_9	/bin/sh -c echo            {
+CMD_RTADVD_CONF_1_3_B_A	/bin/sh -c echo                    AdvOnLink on;
+CMD_RTADVD_CONF_1_3_B_B	/bin/sh -c echo                    AdvAutonomous on;
+CMD_RTADVD_CONF_1_3_B_C	/bin/sh -c echo            };
+CMD_RTADVD_CONF_1_3_B_D	/bin/sh -c echo    };
+
+
+CMD_RTADVD_CONF_1_3_C_1	/bin/sh -c echo interface MY_IF1 {
+CMD_RTADVD_CONF_1_3_C_2	/bin/sh -c echo            AdvSendAdvert on; MinRtrAdvInterval 450; MaxRtrAdvInterval 1800; AdvDefaultLifetime 1800; AdvLinkMTU 1500;
+CMD_RTADVD_CONF_1_3_C_3	/bin/sh -c echo            prefix PREFIX1::/64
+CMD_RTADVD_CONF_1_3_C_4	/bin/sh -c echo            {
+CMD_RTADVD_CONF_1_3_C_5	/bin/sh -c echo                    AdvOnLink on;
+CMD_RTADVD_CONF_1_3_C_6	/bin/sh -c echo                    AdvAutonomous on;
+CMD_RTADVD_CONF_1_3_C_7	/bin/sh -c echo                    AdvValidLifetime 30; AdvPreferredLifetime 30;
+CMD_RTADVD_CONF_1_3_C_8	/bin/sh -c echo            };
+CMD_RTADVD_CONF_1_3_C_9	/bin/sh -c echo    };
+
+
+CMD_RTADVD_CONF_1_4_1		/bin/sh -c echo interface MY_IF1 {
+CMD_RTADVD_CONF_1_4_2		/bin/sh -c echo            MinRtrAdvInterval 50; MaxRtrAdvInterval 70; AdvSendAdvert on;
+CMD_RTADVD_CONF_1_4_3_RL0	/bin/sh -c echo            AdvDefaultLifetime 0;
+CMD_RTADVD_CONF_1_4_3_RL600	/bin/sh -c echo            AdvDefaultLifetime 600;
+CMD_RTADVD_CONF_1_4_4_RL0	/bin/sh -c echo            prefix PREFIX1::/64
+CMD_RTADVD_CONF_1_4_4_RL600	/bin/sh -c echo            prefix PREFIX1::/64
+CMD_RTADVD_CONF_1_4_5		/bin/sh -c echo            {
+CMD_RTADVD_CONF_1_4_6_RL1800	/bin/sh -c echo                    AdvOnLink on;
+CMD_RTADVD_CONF_1_4_6_RL600	/bin/sh -c echo                    AdvOnLink on;
+CMD_RTADVD_CONF_1_4_7		/bin/sh -c echo                    AdvAutonomous on;
+CMD_RTADVD_CONF_1_4_8		/bin/sh -c echo            };
+CMD_RTADVD_CONF_1_4_9		/bin/sh -c echo    };
+CMD_RTADVD_CONF_1_4_A		/bin/sh -c echo interface MY_IF2 {
+CMD_RTADVD_CONF_1_4_B		/bin/sh -c echo            MinRtrAdvInterval 50; MaxRtrAdvInterval 70; AdvSendAdvert on;
+CMD_RTADVD_CONF_1_4_C_RL1800	/bin/sh -c echo            AdvDefaultLifetime 1800; MaxRtrAdvInterval 100;
+CMD_RTADVD_CONF_1_4_C_RL600	/bin/sh -c echo            AdvDefaultLifetime 600;
+CMD_RTADVD_CONF_1_4_D		/bin/sh -c echo            prefix PREFIX2::/64
+CMD_RTADVD_CONF_1_4_E		/bin/sh -c echo            {
+CMD_RTADVD_CONF_1_4_F		/bin/sh -c echo                    AdvOnLink on;
+CMD_RTADVD_CONF_1_4_G		/bin/sh -c echo                    AdvAutonomous on;
+CMD_RTADVD_CONF_1_4_H		/bin/sh -c echo            };
+CMD_RTADVD_CONF_1_4_I		/bin/sh -c echo    };
+
+
+CMD_RTADVD_CONF_1_5_1	/bin/sh -c echo interface MY_IF2 {
+CMD_RTADVD_CONF_1_5_2	/bin/sh -c echo            AdvSendAdvert on; AdvDefaultLifetime 1800; AdvLinkMTU 1500;
+CMD_RTADVD_CONF_1_5_3	/bin/sh -c echo            prefix PREFIX2::/64
+CMD_RTADVD_CONF_1_5_4	/bin/sh -c echo            {
+CMD_RTADVD_CONF_1_5_5	/bin/sh -c echo                    AdvOnLink on;
+CMD_RTADVD_CONF_1_5_6	/bin/sh -c echo                    AdvAutonomous on;
+CMD_RTADVD_CONF_1_5_7	/bin/sh -c echo            };
+CMD_RTADVD_CONF_1_5_8	/bin/sh -c echo    };
+
+
+CMD_RTADVD_CONF_1_6_A_1	/bin/sh -c echo interface MY_IF1 {
+CMD_RTADVD_CONF_1_6_A_2	/bin/sh -c echo            AdvSendAdvert on; MinRtrAdvInterval 3; MaxRtrAdvInterval 10; AdvDefaultLifetime 1800; AdvLinkMTU 1500;
+CMD_RTADVD_CONF_1_6_A_3	/bin/sh -c echo            prefix PREFIX1::/64
+CMD_RTADVD_CONF_1_6_A_4	/bin/sh -c echo            {
+CMD_RTADVD_CONF_1_6_A_5	/bin/sh -c echo                    AdvOnLink on;
+CMD_RTADVD_CONF_1_6_A_6	/bin/sh -c echo                    AdvAutonomous on;
+CMD_RTADVD_CONF_1_6_A_7	/bin/sh -c echo                    AdvLinkMTU 1500;
+CMD_RTADVD_CONF_1_6_A_8	/bin/sh -c echo            };
+CMD_RTADVD_CONF_1_6_A_9	/bin/sh -c echo    };
+CMD_RTADVD_CONF_1_6_A_A	/bin/sh -c echo interface MY_IF2 {
+CMD_RTADVD_CONF_1_6_A_B	/bin/sh -c echo            AdvSendAdvert on; MinRtrAdvInterval 3; MaxRtrAdvInterval 10; AdvDefaultLifetime 1800; AdvLinkMTU 1280;
+CMD_RTADVD_CONF_1_6_A_C	/bin/sh -c echo            prefix PREFIX2::/64
+CMD_RTADVD_CONF_1_6_A_D	/bin/sh -c echo            {
+CMD_RTADVD_CONF_1_6_A_E	/bin/sh -c echo                    AdvOnLink on;
+CMD_RTADVD_CONF_1_6_A_F	/bin/sh -c echo                    AdvAutonomous on;
+CMD_RTADVD_CONF_1_6_A_G	/bin/sh -c echo                    AdvLinkMTU 1280;
+CMD_RTADVD_CONF_1_6_A_H	/bin/sh -c echo            };
+CMD_RTADVD_CONF_1_6_A_I	/bin/sh -c echo    };
+
+
+CMD_RTADVD_CONF_1_6_C_1	/bin/sh -c echo interface MY_IF1 {
+CMD_RTADVD_CONF_1_6_C_2	/bin/sh -c echo            AdvSendAdvert on; MinRtrAdvInterval 3; MaxRtrAdvInterval 10; AdvDefaultLifetime 1800; AdvLinkMTU 1280;
+CMD_RTADVD_CONF_1_6_C_3	/bin/sh -c echo            prefix PREFIX1::/64
+CMD_RTADVD_CONF_1_6_C_4	/bin/sh -c echo            {
+CMD_RTADVD_CONF_1_6_C_5	/bin/sh -c echo                    AdvOnLink on;
+CMD_RTADVD_CONF_1_6_C_6	/bin/sh -c echo                    AdvAutonomous on;
+CMD_RTADVD_CONF_1_6_C_7	/bin/sh -c echo                    AdvLinkMTU 1280;
+CMD_RTADVD_CONF_1_6_C_8	/bin/sh -c echo            };
+CMD_RTADVD_CONF_1_6_C_9	/bin/sh -c echo    };
+
+
+CMD_RTADVD_CONF_1_6_D1_1	/bin/sh -c echo interface MY_IF1 {
+CMD_RTADVD_CONF_1_6_D1_2	/bin/sh -c echo            AdvSendAdvert on; MinRtrAdvInterval 3; MaxRtrAdvInterval 10; AdvDefaultLifetime 1800; AdvLinkMTU 1500;
+CMD_RTADVD_CONF_1_6_D1_3	/bin/sh -c echo            prefix PREFIX1::/64
+CMD_RTADVD_CONF_1_6_D1_4	/bin/sh -c echo            {
+CMD_RTADVD_CONF_1_6_D1_5	/bin/sh -c echo                    AdvOnLink on;
+CMD_RTADVD_CONF_1_6_D1_6	/bin/sh -c echo                    AdvAutonomous on;
+CMD_RTADVD_CONF_1_6_D1_7	/bin/sh -c echo            };
+CMD_RTADVD_CONF_1_6_D1_8	/bin/sh -c echo    };
+CMD_RTADVD_CONF_1_6_D1_9	/bin/sh -c echo interface MY_IF2 {
+CMD_RTADVD_CONF_1_6_D1_A	/bin/sh -c echo            AdvSendAdvert on; MinRtrAdvInterval 3; MaxRtrAdvInterval 10; AdvDefaultLifetime 1800; AdvLinkMTU 1280;
+CMD_RTADVD_CONF_1_6_D1_B	/bin/sh -c echo            prefix PREFIX2::/64
+CMD_RTADVD_CONF_1_6_D1_C	/bin/sh -c echo            {
+CMD_RTADVD_CONF_1_6_D1_D	/bin/sh -c echo                    AdvOnLink on;
+CMD_RTADVD_CONF_1_6_D1_E	/bin/sh -c echo                    AdvAutonomous on;
+CMD_RTADVD_CONF_1_6_D1_F	/bin/sh -c echo            };
+CMD_RTADVD_CONF_1_6_D1_G	/bin/sh -c echo    };
+
+
+CMD_RTADVD_CONF_1_6_D2_1	/bin/sh -c echo interface MY_IF1 {
+CMD_RTADVD_CONF_1_6_D2_2	/bin/sh -c echo            AdvSendAdvert on; MinRtrAdvInterval 3; MaxRtrAdvInterval 10; AdvDefaultLifetime 1800; AdvLinkMTU 1280;
+CMD_RTADVD_CONF_1_6_D2_3	/bin/sh -c echo            prefix PREFIX2::/64
+CMD_RTADVD_CONF_1_6_D2_4	/bin/sh -c echo            {
+CMD_RTADVD_CONF_1_6_D2_5	/bin/sh -c echo                    AdvOnLink on;
+CMD_RTADVD_CONF_1_6_D2_6	/bin/sh -c echo                    AdvAutonomous on;
+CMD_RTADVD_CONF_1_6_D2_7	/bin/sh -c echo                    AdvLinkMTU 1280;
+CMD_RTADVD_CONF_1_6_D2_8	/bin/sh -c echo            };
+CMD_RTADVD_CONF_1_6_D2_9	/bin/sh -c echo    };
+CMD_RTADVD_CONF_1_6_D2_A	/bin/sh -c echo interface MY_IF2 {
+CMD_RTADVD_CONF_1_6_D2_B	/bin/sh -c echo            AdvSendAdvert on; MinRtrAdvInterval 3; MaxRtrAdvInterval 10; AdvDefaultLifetime 1800; AdvLinkMTU 1500;
+CMD_RTADVD_CONF_1_6_D2_C	/bin/sh -c echo            prefix PREFIX3::/64
+CMD_RTADVD_CONF_1_6_D2_D	/bin/sh -c echo            {
+CMD_RTADVD_CONF_1_6_D2_E	/bin/sh -c echo                    AdvOnLink on;
+CMD_RTADVD_CONF_1_6_D2_F	/bin/sh -c echo                    AdvAutonomous on;
+CMD_RTADVD_CONF_1_6_D2_G	/bin/sh -c echo                    AdvLinkMTU 1500;
+CMD_RTADVD_CONF_1_6_D2_H	/bin/sh -c echo            };
+CMD_RTADVD_CONF_1_6_D2_I	/bin/sh -c echo    };
+
+
+CMD_RTADVD_CONF_1_6_D3_1	/bin/sh -c echo interface MY_IF3 {
+CMD_RTADVD_CONF_1_6_D3_2	/bin/sh -c echo            AdvSendAdvert on; MinRtrAdvInterval 3; MaxRtrAdvInterval 10; AdvDefaultLifetime 1800; AdvLinkMTU 1500;
+CMD_RTADVD_CONF_1_6_D3_3	/bin/sh -c echo            prefix PREFIX3::/64
+CMD_RTADVD_CONF_1_6_D3_4	/bin/sh -c echo            {
+CMD_RTADVD_CONF_1_6_D3_5	/bin/sh -c echo                    AdvOnLink on;
+CMD_RTADVD_CONF_1_6_D3_6	/bin/sh -c echo                    AdvAutonomous on;
+CMD_RTADVD_CONF_1_6_D3_7	/bin/sh -c echo            };
+CMD_RTADVD_CONF_1_6_D3_8	/bin/sh -c echo    };
+
+
+CMD_RTADVD_CONF_1_7_A_1	/bin/sh -c echo interface MY_IF1 {
+CMD_RTADVD_CONF_1_7_A_2	/bin/sh -c echo            AdvSendAdvert on; MinRtrAdvInterval 3; MaxRtrAdvInterval 10; AdvDefaultLifetime 1800; AdvLinkMTU 1500;
+CMD_RTADVD_CONF_1_7_A_3	/bin/sh -c echo            prefix PREFIX1::/64
+CMD_RTADVD_CONF_1_7_A_4	/bin/sh -c echo            {
+CMD_RTADVD_CONF_1_7_A_5	/bin/sh -c echo                    AdvOnLink on;
+CMD_RTADVD_CONF_1_7_A_6	/bin/sh -c echo                    AdvAutonomous on;
+CMD_RTADVD_CONF_1_7_A_7	/bin/sh -c echo            };
+CMD_RTADVD_CONF_1_7_A_8	/bin/sh -c echo    };
+CMD_RTADVD_CONF_1_7_A_9	/bin/sh -c echo interface MY_IF2 {
+CMD_RTADVD_CONF_1_7_A_A	/bin/sh -c echo            AdvSendAdvert on; MinRtrAdvInterval 3; MaxRtrAdvInterval 10; AdvDefaultLifetime 1800; AdvLinkMTU 1500;
+CMD_RTADVD_CONF_1_7_A_B	/bin/sh -c echo            prefix PREFIX2::/64
+CMD_RTADVD_CONF_1_7_A_C	/bin/sh -c echo            {
+CMD_RTADVD_CONF_1_7_A_D	/bin/sh -c echo                    AdvOnLink on;
+CMD_RTADVD_CONF_1_7_A_E	/bin/sh -c echo                    AdvAutonomous on;
+CMD_RTADVD_CONF_1_7_A_F	/bin/sh -c echo            };
+CMD_RTADVD_CONF_1_7_A_G	/bin/sh -c echo    };

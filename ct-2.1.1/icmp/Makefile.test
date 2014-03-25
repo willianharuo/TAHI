@@ -1,0 +1,58 @@
+#
+#
+# $TAHI: ct/icmp/Makefile.test,v 1.22 2003/06/05 07:08:32 masaxmasa Exp $
+#
+
+TITLE=	"IPv6 Conformance Test For ICMPv6"
+
+INDEX_TAHI=	INDEX_BEGIN INDEX_host_router
+INDEX_UHOST=	INDEX_BEGIN_ume INDEX_ume
+INDEX_URTR=	INDEX_BEGIN_ume INDEX_ume_router
+INDEX_U=	$INDEX_UHOST
+
+
+all:
+
+
+check:
+	$(AUTORUN) -t $(INDEX_TAHI)
+
+document:
+	$(AUTORUN) -g $(INDEX_TAHI)
+
+document2:
+	$(AUTORUN) -G $(INDEX_TAHI)
+
+umedoc:
+	$(AUTORUN) -g -title=$(TITLE) $(INDEX_U)
+ume:
+	/bin/rm -f index.html summary.html report.html
+	$(AUTORUN) $(AROPT) -F -tiny -title=$(TITLE) $(INDEX_U)
+
+umedoc_host:
+	$(AUTORUN) -g -title=$(TITLE) $(INDEX_UHOST)
+ume_host:
+	/bin/rm -f index.html summary.html report.html
+	$(AUTORUN) $(AROPT) -F -tiny -title=$(TITLE) $(INDEX_UHOST)
+
+umedoc_router:
+	$(AUTORUN) -g -title=$(TITLE) $(INDEX_URTR)
+ume_router:
+	/bin/rm -f index.html summary.html report.html
+	$(AUTORUN) $(AROPT) -F -tiny -title=$(TITLE) $(INDEX_URTR)
+
+tiny:
+	$(AUTORUN) $(AROPT) -tiny $(INDEX_TAHI)
+
+clean:
+	-/bin/rm -f *.log *.dump [0-9]*.html index.html summary.html \
+	report.html ID.def
+
+tahi:	document
+	/bin/rm -f index.html summary.html report.html
+	$(AUTORUN) $(AROPT) -dump2txt -title=$(TITLE) $(INDEX_TAHI)
+
+test:
+	$(AUTORUN) $(AROPT) -title=$(TITLE) $(INDEX_TAHI)
+
+.include "../Makefile.inc"

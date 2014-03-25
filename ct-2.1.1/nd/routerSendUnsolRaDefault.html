@@ -1,0 +1,118 @@
+<HTML>
+<HEAD>
+<TITLE>routerSendUnsolRaDefault - verify a host sending valid RSs</TITLE>
+<LINK REV="made" HREF="mailto:hackers@FreeBSD.org">
+</HEAD>
+
+<BODY>
+
+<!-- INDEX BEGIN -->
+<!--
+
+<UL>
+
+	<LI><A HREF="#NAME">NAME</A>
+	<LI><A HREF="#TARGET">TARGET</A>
+	<LI><A HREF="#SYNOPSIS">SYNOPSIS</A>
+	<LI><A HREF="#INITIALIZATION">INITIALIZATION</A>
+	<LI><A HREF="#TEST_PROCEDURE">TEST PROCEDURE</A>
+	<LI><A HREF="#JUDGMENT">JUDGMENT</A>
+	<LI><A HREF="#TERMINATION">TERMINATION</A>
+	<LI><A HREF="#NOTE">NOTE</A>
+	<LI><A HREF="#REFERENCE">REFERENCE</A>
+	<LI><A HREF="#SEE_ALSO">SEE ALSO</A>
+</UL>
+-->
+<!-- INDEX END -->
+
+<P>
+<H1><A NAME="NAME">NAME</A></H1>
+<P>
+routerSendUnsolRaDefault - verify a host sending valid RSs
+
+<P>
+<HR>
+<H1><A NAME="TARGET">TARGET</A></H1>
+<P>
+<PRE>  Router Only
+</PRE>
+<P>
+<HR>
+<H1><A NAME="SYNOPSIS">SYNOPSIS</A></H1>
+<P>
+<PRE>  routerSendUnsolRaDefault.seq [-tooloption ...] -p routerSendUnsolRaDefault.def
+</PRE>
+<P>
+<HR>
+<H1><A NAME="INITIALIZATION">INITIALIZATION</A></H1>
+Start NUT advertising RAs whose parameters are as same as <A HREF="startDefaultRA.html#INITIALIZATION">those</A>.
+
+<P>
+<HR>
+<H1><A NAME="TEST_PROCEDURE">TEST PROCEDURE</A></H1>
+<P>
+<STRONG>routerSendUnsolRaDefault</STRONG> verifies that a NUT send valid RSs by the rules.
+
+<P>
+<PRE>  - A host sends valid RSs whose interval is
+    MAX_INITIAL_RTR_ADVERT_INTERVAL(16 sec).
+</PRE>
+<P>
+<PRE>  - A host sends the RSs at the most
+    MAX_INITIAL_RTR_ADVERTISEMENTS (3) times.
+</PRE>
+<P>
+<HR>
+<H1><A NAME="JUDGMENT">JUDGMENT</A></H1>
+<PRE>
+  1. NUT throw valid RAs:
+     - whose parameter are as same as <A HREF="startDefaultRA.html#INITIALIZATION">those</A>.
+     - that may contain a source link-layer option.
+     - that may contain a MTU option.
+     - that may contain a Prefix option.
+<BR>
+  2. The interval between RAs is MAX_INITIAL_RTR_ADVERT_INTERVAL(16 sec).
+     Because MinRtrAdvInterval(600*0.33 sec) is greater than
+     MAX_INITIAL_RTR_ADVERT_INTERVAL(16 sec).
+<BR>
+  3. NUT throws the RAs at the most MAX_INITIAL_RTR_ADVERTISEMENTS (3) times.
+</PRE>
+
+<P>
+<HR>
+<H1><A NAME="TERMINATION">TERMINATION</A></H1>
+<P>
+<PRE>  N/A
+</PRE>
+<P>
+<HR>
+<H1><A NAME="NOTE">NOTE</A></H1>
+<P>
+<PRE>  TBD
+</PRE>
+<P>
+<HR>
+<H1><A NAME="REFERENCE">REFERENCE</A></H1>
+<PRE>
+6.2.4.  Sending Unsolicited Router Advertisements
+<BR>
+   <B>For the first few advertisements (up to
+   MAX_INITIAL_RTR_ADVERTISEMENTS) sent from an interface when it
+   becomes an advertising interface, if the randomly chosen interval is
+   greater than MAX_INITIAL_RTR_ADVERT_INTERVAL, the timer SHOULD be set
+   to MAX_INITIAL_RTR_ADVERT_INTERVAL instead.</B>  Using a smaller interval
+   for the initial advertisements increases the likelihood of a router
+   being discovered quickly when it first becomes available, in the
+   presence of possible packet loss.
+</PRE>
+
+<P>
+<HR>
+<H1><A NAME="SEE_ALSO">SEE ALSO</A></H1>
+<P>
+<PRE>  perldoc V6evalTool
+  perldoc V6evalRemote
+</PRE>
+</BODY>
+
+</HTML>

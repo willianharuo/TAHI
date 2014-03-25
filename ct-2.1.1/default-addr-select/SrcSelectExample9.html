@@ -1,0 +1,145 @@
+<HTML>
+<HEAD>
+<TITLE>SrcSelectExample9.seq - Source Address Selection Examples in RFC
+                          Check #9</TITLE>
+<LINK REV="made" HREF="mailto:hackers@FreeBSD.org">
+</HEAD>
+
+<BODY>
+
+<!-- INDEX BEGIN -->
+<!--
+
+<UL>
+
+	<LI><A HREF="#NAME">NAME</A>
+	<LI><A HREF="#TARGET">TARGET</A>
+	<LI><A HREF="#SYNOPSIS">SYNOPSIS</A>
+	<LI><A HREF="#INITIALIZATION">INITIALIZATION</A>
+	<LI><A HREF="#TEST_PROCEDURE">TEST PROCEDURE</A>
+	<LI><A HREF="#JUDGEMENT">JUDGEMENT</A>
+	<LI><A HREF="#SEE_ALSO">SEE ALSO</A>
+</UL>
+-->
+<!-- INDEX END -->
+
+<P>
+<H1><A NAME="NAME">NAME</A></H1>
+<P>
+<PRE>  SrcSelectExample9.seq - Source Address Selection Examples in RFC
+                          Check #9(Prefer matching label)
+</PRE>
+<P>
+<PRE>  Rule 6: Prefer matching label. 
+    If Label(SA) = Label(D) and Label(SB) &lt;&gt; Label(D), then prefer SA. 
+</PRE>
+<P>
+<PRE>  Source addresses used for this test are &quot;temporary address&quot; and &quot;public address&quot;.
+</PRE>
+<P>
+<HR>
+<H1><A NAME="TARGET">TARGET</A></H1>
+<P>
+<PRE>  Host
+</PRE>
+<P>
+<HR>
+<H1><A NAME="SYNOPSIS">SYNOPSIS</A></H1>
+<PRE>
+  <A HREF="./SrcSelectExample9.seq">SrcSelectExample9.seq</A> [-tooloption ...] -pkt <A HREF="./ADDR_SELECT.def">ADDR_SELECT.def</A>
+    -tooloption : v6eval tool option
+</PRE>
+
+<P>
+<HR>
+<H1><A NAME="INITIALIZATION">INITIALIZATION</A></H1>
+<P>
+<PRE>  None
+</PRE>
+<P>
+<HR>
+<H1><A NAME="TEST_PROCEDURE">TEST PROCEDURE</A></H1>
+<P>
+<PRE>  This TEST performs the following Check procedures for
+  every address group defined by Check 01 - *.
+    
+  *Check procedure
+  
+  1. Initialize :
+     1.1. Set IPv6 Default Route in NUT
+          (Default Router address = &lt;TN-Link0-LinkLocalAddress&gt;)
+     1.2. Set privacy extention setting in NUT
+     1.3. Add Candidate Source Addresses (temporary / public ) in NUT
+          * temporary address is added by RA (TN-&gt;NUT)
+     1.4. Check Candidate Source Addresses by Ping6 (TN-&gt;NUT)
+  2. Send Ping6 from NUT to Destination
+     2.1. NUT send ICMPv6 echo request (NUT-&gt;TN)
+  3. Judgment :
+     if (recive packet's Destination &amp; Source Addresses)
+     = (expected Destination &amp; Source Addresses), Check pass
+  4. Cleanup :
+     4.1. Delete Candidate Source Addresses in NUT
+     4.2. Clear prefix list &amp; NCE &amp; default router list in NUT
+     4.3. Remove privacy extention setting in NUT
+</PRE>
+<P>
+<PRE>        NUT    TN  Default Router  Destination
+         |      |      |           |
+         ======(INITIALIZE)=========
+         |      |      |           |
+         |&lt;-&lt;-&lt;-+      |           | Set IPv6 Default Route
+         |&lt;-&lt;-&lt;-+      |           | Set privacy extention setting
+         |&lt;-&lt;-&lt;-+      |           | Add Candidate Source Addresses
+         |      |      |           |
+         |&lt;------------+           | RA
+         |      |      |           |
+         |&lt;------------+           | Echo Request to Candidate Source Addresses 1
+         +------------&gt;|           | Echo Reply
+         |      |      |           |
+         |&lt;------------+           | Echo Request to Candidate Source Addresses 2
+         +------------&gt;|           | Echo Reply
+         |      |      |           |
+         ======(INITIALIZE)=========
+         |      |      |           |
+         |&lt;-&lt;-&lt;-+      |           | Excute ping6 command
+         |      |      |           |
+         +------------------------&gt;| Echo Request
+         |      |      |           |
+</PRE>
+<P>
+<PRE>  LLA(Link Local Address)
+</PRE>
+<P>
+<PRE>  Check 01:
+    Destination: 2002:836b:2179::1
+    Candidate Source Addresses: 2002:836b:2179::random(temporary) or 2001::2
+    Result: 2002:836b:2179::random (prefer matching label) 
+</PRE>
+<P>
+<PRE>    * Use 2002:836b:2179::random instead of 2002:836b:2179::d5e3:7953:13eb:22e8
+</PRE>
+<P>
+<HR>
+<H1><A NAME="JUDGEMENT">JUDGEMENT</A></H1>
+<P>
+<PRE>  Check 01:
+    PASS: Receive Echo Request &amp; source address != 2001::2 and LLA
+</PRE>
+<P>
+<PRE>  TEST
+    PASS: All Check = PASS
+</PRE>
+<P>
+<HR>
+<H1><A NAME="SEE_ALSO">SEE ALSO</A></H1>
+<P>
+<PRE>  perldoc V6evalTool
+</PRE>
+<PRE>
+  <A HREF="ADDR_SELECT.html">ADDR_SELECT.html</A> "Default Address Selection for IPv6" Test Common Utility<BR>
+  <A HREF="das_rules.html">das_rules.html</A> "Default Address Selection for IPv6" Rules
+</PRE>
+
+</BODY>
+
+</HTML>

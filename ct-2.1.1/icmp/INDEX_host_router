@@ -1,0 +1,147 @@
+#
+# Copyright (C) 1999, 2000, 2001, 2002, 2003 Yokogawa Electric Corporation,
+# IPA (Information-technology Promotion Agency, Japan).
+# All rights reserved.
+# 
+# Redistribution and use of this software in source and binary forms, with 
+# or without modification, are permitted provided that the following 
+# conditions and disclaimer are agreed and accepted by the user:
+# 
+# 1. Redistributions of source code must retain the above copyright 
+# notice, this list of conditions and the following disclaimer.
+# 
+# 2. Redistributions in binary form must reproduce the above copyright 
+# notice, this list of conditions and the following disclaimer in the 
+# documentation and/or other materials provided with the distribution.
+# 
+# 3. Neither the names of the copyrighters, the name of the project which 
+# is related to this software (hereinafter referred to as "project") nor 
+# the names of the contributors may be used to endorse or promote products 
+# derived from this software without specific prior written permission.
+# 
+# 4. No merchantable use may be permitted without prior written 
+# notification to the copyrighters. However, using this software for the 
+# purpose of testing or evaluating any products including merchantable 
+# products may be permitted without any notification to the copyrighters.
+# 
+# 
+# 
+# THIS SOFTWARE IS PROVIDED BY THE COPYRIGHTERS, THE PROJECT AND 
+# CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING 
+# BUT NOT LIMITED THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS 
+# FOR A PARTICULAR PURPOSE, ARE DISCLAIMED.  IN NO EVENT SHALL THE 
+# COPYRIGHTERS, THE PROJECT OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, 
+# INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES 
+# (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR 
+# SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) 
+# HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN 
+# CONTRACT,STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) 
+# ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF 
+# THE POSSIBILITY OF SUCH DAMAGE.
+#
+# INDEX_router
+#   autorun INDEX for ICMPv6 (Test for a Host)
+#
+# $Name: REL_2_1_1 $
+#
+# $TAHI: ct/icmp/INDEX_host_router,v 1.5 2003/06/11 08:51:57 akisada Exp $
+
+#----------------------------------------------------------------------
+# ICMPv6 Informational Messages
+#----------------------------------------------------------------------
+&print:<B>ICMPv6 Informational Messages</B>
+
+#----------------------------------------------------------------------
+# Ping
+#----------------------------------------------------------------------
+&print:<B>Echo request and Echo Reply</B>
+
+#--- ping link-local to link-local
+./Echo_Link-Local.seq:./Echo_Link-Local.def:::Echo Request and Echo Reply with a link-local address
+#--- ping global to global
+./Echo_Global.seq:./Echo_Global.def:::Echo Request and Echo Reply with a global address
+#--- ping multicast to multicast
+./Echo_Multicast.seq:./Echo_Multicast.def:::Echo Request and send Echo Reply with a multicast address
+#--- check ICMPv6 checksum
+./Echo_Checksum.seq:./Echo_Checksum.def:::Check a checksum of Echo Reply
+
+#----------------------------------------------------------------------
+# ICMPv6 Error Messages
+#----------------------------------------------------------------------
+&print:<B>ICMPv6 Error Messages</B>
+
+#----------------------------------------------------------------------
+# ICMPv6 Destination Unreachable Message
+#----------------------------------------------------------------------
+&print:<B>Destination Unreachable</B>
+#--- no route (router only)
+./Dst_Unreach_0_Global.seq:./Dst_Unreach_0_Global.def:::Route Unreachable
+# router only
+#./destination_unreachable_code_two.seq:./destination_unreachable_code_two.def:::check ICMPv6 Destination Unreachable code=two
+#--- address unreach (router only)
+./Dst_Unreach_3_Global.seq:./Dst_Unreach_3_Global.def:::Address Unreachable
+#--- port unreachable with link-local
+./Dst_Unreach_4_Link-Local.seq:./Dst_Unreach_4_Link-Local.def:::Port Unreachable with a link-local address
+#--- port unreachable with global
+./Dst_Unreach_4_Global.seq:./Dst_Unreach_4_Global.def:::Port Unreachable with a global address
+
+#----------------------------------------------------------------------
+# ICMPv6 Packet Too Big Message
+#----------------------------------------------------------------------
+&print:<B>Packet Too Big</B>
+./Pkt_Too_Big.seq:./Pkt_Too_Big.def:::Packet Too Big
+
+#----------------------------------------------------------------------
+# Time Exceeded
+#----------------------------------------------------------------------
+&print:<B>Time Exceeded</B>
+#--- time exceeded with link-local address
+./FH_Pre.seq:/dev/null:::--- Fragment Test Preparation
+./Time_Exc_Link-Local.seq:./Time_Exc_Link-Local.def:::Time Exceeded with a link-local address
+
+#--- time exceeded with global address 
+./FH_Pre.seq:/dev/null:::--- Fragment Test Preparation
+./Time_Exc_Global.seq:./Time_Exc_Global.def:::Time Exceeded with a global address
+
+#----------------------------------------------------------------------
+# Parameter Problem
+#----------------------------------------------------------------------
+&print:<B>Parameter Problem</B>
+#--- parameter problem with link-local
+./P_Problem_Link-Local.seq:./P_Problem_Link-Local.def:::Parameter Problem with a link-local address
+#--- parameter problem with global
+./P_Problem_Global.seq:./P_Problem_Global.def:::Parameter Problem with a global address
+
+#----------------------------------------------------------------------
+# Message Processing Rules
+#----------------------------------------------------------------------
+&print:<B>Message Processing Rules</B>
+
+&print:<B>Receiving Unknown ICMPv6 informational message</B>
+#--- ICMPv6 unknown informational message
+./Unknown_Infomsg.seq:./Unknown_Infomsg.def:::ICMPv6 unknown type Informational message
+
+&print:<B>Check sending ICMPv6 error message size</B>
+#--- ICMPv6 pkt size check with parameter problem
+./Err_Msg_Size_P_Problem.seq:./Err_Msg_Size_P_Problem.def:::Sending Parameter Problem
+
+#--- ICMPv6 pkt size check with time exceeded
+./FH_Pre.seq:/dev/null:::--- Fragment Test Preparation
+./Err_Msg_Size_Time_Exc.seq:./Err_Msg_Size_Time_Exc.def:::Sending Time Exceeded
+
+#--- ICMPv6 pkt size check with dst unreach
+./Err_Msg_Size_Dst_Unreach_4.seq:./Err_Msg_Size_Dst_Unreach_4.def:::Sending Destination Unreachable
+
+#--- MUST NOT send icmpv6 error
+&print:<B>An ICMPv6 error MUST NOT be sent</B>
+#--- ICMPv6 error
+&print:<B>As a result of receiving an ICMPv6 error</B>
+./To_ICMPErr_Dst_Unreach_3.seq:./To_ICMPErr_Dst_Unreach_3.def:::Receive Destination Unreachable (1)
+#-- router only
+./To_ICMPErr_Dst_Unreach_4.seq:./To_ICMPErr_Dst_Unreach_4.def:::Receive Destination Unreachable (2)
+
+#--- Multicast
+&print:<B>As a result of receiving an error multicast packet</B>
+./To_Multi_Dst_Unreach_4.seq:./To_Multi_Dst_Unreach_4.def:::Receive UDP multicast packet
+./FH_Pre.seq:/dev/null:::--- Fragment Test Preparation
+./To_Multi_Time_Exc.seq:./To_Multi_Time_Exc.def:::Receive 1st fragmented multicast packet only

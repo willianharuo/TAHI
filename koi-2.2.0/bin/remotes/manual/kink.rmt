@@ -1,0 +1,367 @@
+#!/usr/bin/perl
+#
+# Copyright (C) 2004, 2005, 2006, 2007, 2008, 2009, 2010
+# NTT Advanced Technology, Yokogawa Electric Corporation.
+# All rights reserved.
+# 
+# Redistribution and use of this software in source and binary
+# forms, with or without modification, are permitted provided that
+# the following conditions and disclaimer are agreed and accepted
+# by the user:
+# 
+# 1. Redistributions of source code must retain the above copyright
+#    notice, this list of conditions and the following disclaimer.
+# 
+# 2. Redistributions in binary form must reproduce the above copyright
+#    notice, this list of conditions and the following disclaimer in
+#    the documentation and/or other materials provided with
+#    the distribution.
+# 
+# 3. Neither the names of the copyrighters, the name of the project
+#    which is related to this software (hereinafter referred to as
+#    "project") nor the names of the contributors may be used to
+#    endorse or promote products derived from this software without
+#    specific prior written permission.
+# 
+# 4. No merchantable use may be permitted without prior written
+#    notification to the copyrighters.
+# 
+# 5. The copyrighters, the project and the contributors may prohibit
+#    the use of this software at any time.
+# 
+# THIS SOFTWARE IS PROVIDED BY THE COPYRIGHTERS, THE PROJECT AND
+# CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING
+# BUT NOT LIMITED THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS
+# FOR A PARTICULAR PURPOSE, ARE DISCLAIMED.  IN NO EVENT SHALL THE
+# COPYRIGHTERS, THE PROJECT OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT,
+# INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
+# (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+# SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
+# HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT,
+# STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING
+# IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+# POSSIBILITY OF SUCH DAMAGE.
+#
+# $Id: kink.rmt,v 1.2 2010/07/22 13:23:57 velo Exp $
+#
+################################################################
+
+BEGIN {
+	push(@INC, '/usr/local/koi/libdata');
+	push(@INC, '..');
+}
+
+use kRemote;
+use File::Basename;
+use strict;
+use warnings;
+
+use constant {
+	'WAIT' => 1,
+	'NOT_WAIT' => 0
+};
+
+sub kink($);
+sub kink_start();
+sub kink_initiate();
+sub kink_stop();
+sub generate_racoon2_conf();
+sub p($@);
+
+my $true = 1;
+my $false = 0;
+
+my $basename = basename($0, '.rmt');
+my $prompt = "$basename> ";
+my %values = ();
+
+my $fd = select (STDIN);  $| = 1; select($fd);
+   $fd = select (STDOUT); $| = 1; select($fd);
+   $fd = select (STDERR); $| = 1; select($fd);
+
+my $operation = defined($kRemote::kRemoteOpt{'operation'}) ? $kRemote::kRemoteOpt{'operation'} : '';
+unless(kink($operation)) {
+	exit($kRemote::exitFail);
+}
+
+exit($kRemote::exitPass);
+# NOTREACHED
+
+
+########################################################################
+sub kink($)
+{
+	my ($operation) = @_;
+
+	if ($operation eq 'stop') {
+		kink_stop();
+		return($true);
+	}
+	elsif ($operation eq 'initiate') {
+		kink_initiate();
+		return($true);
+	}
+	else {
+		kink_start();
+		return($true);
+	}
+
+	print("unknown operation -- $operation\n");
+	return($false);
+}
+
+sub kink_start()
+{
+	unless(generate_racoon2_conf()) {
+		exit($kRemote::exitFail);
+	}
+
+	my @messages = ();
+	push(@messages, "Please configure YOUR DEVICE as directed.\n");
+	p(WAIT, @messages);
+	print "\n";
+
+	$#messages = -1;
+	push(@messages, "Please set KINK configuration.\n");
+	push(@messages, "\tYOUR Principal Name: $values{'my_principal'}\n");
+	push(@messages, "\tPEER's Principal Name: $values{'peers_principal'}\n");
+	push(@messages, "\tPEER's Address: $values{'peers_sa_ipaddr'}\n");
+	push(@messages, "\tPEER's Port: 910\n");
+	push(@messages, "\tYOUR ID Type: \n");
+	push(@messages, "\tYOUR ID Protocol ID: \n");
+	push(@messages, "\tYOUR ID Port: \n");
+	push(@messages, "\tYOUR ID Data: \n");
+	push(@messages, "\tPEER's ID Type: \n");
+	push(@messages, "\tPEER's ID Protocol ID: \n");
+	push(@messages, "\tPEER's ID Port: \n");
+	push(@messages, "\tPEER's ID Data: \n");
+	p(WAIT, @messages);
+	print "\n";
+
+	$#messages = -1;
+	push(@messages, "Please set IPsec configuration.\n");
+	push(@messages, "\tIPsec Security Protocol: $values{'sa_protocol'}\n");
+	push(@messages, "\tSA Life Type: Seconds\n");
+	push(@messages, "\tSA Life Duration: $values{'ipsec_sa_lifetime_time'}\n");
+	my $esp_enc_alg = '';
+	foreach my $elm (@{$values{'esp_enc_alg'}}) {
+		$esp_enc_alg .= $elm . ',';
+	}
+	$esp_enc_alg = substr($esp_enc_alg, 0, -1);
+	push(@messages, "\tIPsec Encryption Algorithm: $esp_enc_alg\n");
+	my $esp_auth_alg = '';
+	foreach my $elm (@{$values{'esp_auth_alg'}}) {
+		$esp_auth_alg .= $elm . ',';
+	}
+	$esp_auth_alg = substr($esp_auth_alg, 0, -1);
+	push(@messages, "\tIPsec Authentication Algorithm: $esp_auth_alg\n");
+	p(WAIT, @messages);
+	print "\n";
+
+	$#messages = -1;
+	push(@messages, "Please set SPD (used in IDi/IDr paloads).\n");
+	push(@messages, "\tDirection: inbound\n");
+	push(@messages, "\tSource Range: $values{'inbound'}->{'src_range'}\n");
+	push(@messages, "\tSource Port: $values{'inbound'}->{'src_port'}\n");
+	push(@messages, "\tDestination Range: $values{'inbound'}->{'dst_range'}\n");
+	push(@messages, "\tDestination Port: $values{'inbound'}->{'dst_port'}\n");
+	push(@messages, "\tUpper Layer Protocol: $values{'inbound'}->{'upper_layer_protocol'}\n");
+	push(@messages, "\tIPsec Mode: $values{'ipsec_mode'}\n");
+	p(WAIT, @messages);
+	print "\n";
+
+	$#messages = -1;
+	push(@messages, "Please set SPD (used in IDi/IDr paloads).\n");
+	push(@messages, "\tDirection: outbound\n");
+	push(@messages, "\tSource Range: $values{'outbound'}->{'src_range'}\n");
+	push(@messages, "\tSource Port: $values{'outbound'}->{'src_port'}\n");
+	push(@messages, "\tDestination Range: $values{'outbound'}->{'dst_range'}\n");
+	push(@messages, "\tDestination Port: $values{'outbound'}->{'dst_port'}\n");
+	push(@messages, "\tUpper Layer Protocol: $values{'outbound'}->{'upper_layer_protocol'}\n");
+	push(@messages, "\tIPsec Mode: $values{'ipsec_mode'}\n");
+	p(WAIT, @messages);
+	print "\n";
+
+	$#messages = -1;
+	push(@messages, "Please enable KINK.\n");
+	p(WAIT, @messages);
+	print "\n";
+
+	return($true);
+}
+
+sub kink_stop()
+{
+	my @messages = ();
+	$#messages = -1;
+	push(@messages, "Please disable KINK.\n");
+	p(WAIT, @messages);
+	print "\n";
+
+	$#messages = -1;
+	push(@messages, "Please flush all SPD and SAD.\n");
+	p(WAIT, @messages);
+	print "\n";
+
+	return($true);
+}
+
+sub kink_initiate()
+{
+	my $host = $kRemote::kRemoteOpt{'target'};
+	my @messages = ();
+	$#messages = -1;
+	push(@messages, "Please send ICMPv6 Echo Request to $host.\n");
+	p(WAIT, @messages);
+	print "\n";
+
+	return($true);
+}
+
+sub generate_racoon2_conf()
+{
+	my $num = undef;
+	my $address = undef;
+	my $port = undef;
+	my $provide = undef;
+
+	#
+	# default
+	#
+	$num = $kRemote::kRemoteOpt{'kink.default.remote.num'};
+	if($num) {
+		for(my $d = 0; $d < $num; $d ++) {
+			my $prefix = sprintf("%s.%d", 'kink.default.remote', $d);
+
+			my $my_principal = $kRemote::kRemoteOpt{"$prefix.kink.my_principal"};
+			$values{'my_principal'} = $my_principal;
+			my $nonce_size = $kRemote::kRemoteOpt{"$prefix.kink.nonce_size"};
+			# XXX: need nonce size information for manual operation?
+		}
+	}
+
+	#
+	# remote
+	#
+	$num = $kRemote::kRemoteOpt{'kink.remote.num'};
+	if($num) {
+		for(my $d = 0; $d < $num; $d ++) {
+			my $prefix = sprintf("%s.%d", 'kink.remote', $d);
+			my $peers_principal = $kRemote::kRemoteOpt{"$prefix.kink.peers_principal"};
+			if (defined($peers_principal)) {
+				$values{'peers_principal'} = $peers_principal;
+			}
+		}
+	}
+
+
+
+	#
+	# selector
+	#
+	$num = $kRemote::kRemoteOpt{'kink.selector.num'};
+	if($num) {
+		for(my $d = 0; $d < $num; $d ++) {
+			my $prefix = sprintf("%s.%d", 'kink.selector', $d);
+			my $direction = $kRemote::kRemoteOpt{"$prefix.direction"};
+			my $src_address = $kRemote::kRemoteOpt{"$prefix.src.address"};
+			my $dst_address = $kRemote::kRemoteOpt{"$prefix.dst.address"};
+			my $src_port = $kRemote::kRemoteOpt{"$prefix.src.port"};
+			my $dst_port = $kRemote::kRemoteOpt{"$prefix.dst.port"};
+			my $upper_layer_protocol = $kRemote::kRemoteOpt{"$prefix.upper_layer_protocol.protocol"};
+
+			$values{$direction} = {};
+			$values{$direction}->{'src_range'} = $src_address;
+			$values{$direction}->{'src_port'} = $src_port;
+			$values{$direction}->{'dst_range'} = $dst_address;
+			$values{$direction}->{'dst_port'} = $dst_port;
+			$values{$direction}->{'upper_layer_protocol'} = $upper_layer_protocol;
+		}
+	}
+
+
+
+	#
+	# policy
+	#
+	$num = $kRemote::kRemoteOpt{'kink.policy.num'};
+	if($num) {
+		for(my $d = 0; $d < $num; $d ++) {
+			my $prefix = sprintf("%s.%d", 'kink.policy', $d);
+			my $ipsec_mode = $kRemote::kRemoteOpt{"$prefix.ipsec_mode"};
+			my $peers_sa_ipaddr = $kRemote::kRemoteOpt{"$prefix.peers_sa_ipaddr"};
+
+			$values{'ipsec_mode'} = $ipsec_mode;
+			if (defined($peers_sa_ipaddr) && length($peers_sa_ipaddr) > 0) {
+				$values{'peers_sa_ipaddr'} = $peers_sa_ipaddr;
+			}
+		}
+	}
+
+
+
+	#
+	# ipsec
+	#
+	$num = $kRemote::kRemoteOpt{'kink.ipsec.num'};
+	if($num) {
+		for(my $d = 0; $d < $num; $d ++) {
+			my $prefix = sprintf("%s.%d", 'kink.ipsec', $d);
+			my $ipsec_sa_lifetime_time = $kRemote::kRemoteOpt{"$prefix.ipsec_sa_lifetime_time"};
+
+			$values{'ipsec_sa_lifetime_time'} = $ipsec_sa_lifetime_time;
+		}
+	}
+
+
+
+	#
+	# sa
+	#
+	$num = $kRemote::kRemoteOpt{'kink.sa.num'};
+	if($num) {
+		for(my $d = 0; $d < $num; $d ++) {
+			my $sub_num = undef;
+			my $prefix = sprintf("%s.%d", 'kink.sa', $d);
+			my $sa_protocol = $kRemote::kRemoteOpt{"$prefix.sa_protocol"};
+			$values{'sa_protocol'} = $sa_protocol;
+
+			$sub_num = $kRemote::kRemoteOpt{"$prefix.esp_enc_alg.num"};
+			if($sub_num) {
+				$values{'esp_enc_alg'} = [];
+				for(my $d = 0; $d < $sub_num; $d ++) {
+					my $esp_enc_alg = $kRemote::kRemoteOpt{"$prefix.esp_enc_alg.$d"};
+					push(@{$values{'esp_enc_alg'}}, $esp_enc_alg);
+				}
+			}
+
+			$sub_num = $kRemote::kRemoteOpt{"$prefix.esp_auth_alg.num"};
+			if($sub_num) {
+				$values{'esp_auth_alg'} = [];
+				for(my $d = 0; $d < $sub_num; $d ++) {
+					my $esp_auth_alg = $kRemote::kRemoteOpt{"$prefix.esp_auth_alg.$d"};
+					push(@{$values{'esp_auth_alg'}}, $esp_auth_alg);
+				}
+			}
+		}
+	}
+
+	return($true);
+}
+
+sub p($@)
+{
+	my ($wait, @strs) = @_;
+
+	print $prompt . "\n";
+	foreach my $str (@strs) {
+		print $prompt . $str;
+	}
+	print $prompt . "\n";
+	if ($wait) {
+		print $prompt . "Press Enter key for continue.\a\n";
+		<STDIN>;
+		print $prompt . "\n";
+	}
+	return;
+}

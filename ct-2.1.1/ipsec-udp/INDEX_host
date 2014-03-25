@@ -1,0 +1,14 @@
+##
+## $Name: REL_2_1_1 $
+##
+## $TINY: INDEX_host,v 1.4 2002/02/09 18:31:09 ozoe Exp $
+##
+##<seq>:<def>:[<opt>]:[<log>]:<desc>
+##
+&print:<B>Host Transport Mode</B>
+
+&print:Initialize for Host
+
+../ipsec/HTR_SetAddress.seq:./HTR_type.def:::Set Global Address and Check (Host)
+#
+#########################################################################

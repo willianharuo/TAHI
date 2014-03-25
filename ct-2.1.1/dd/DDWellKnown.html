@@ -1,0 +1,373 @@
+<HTML>
+<HEAD>
+<TITLE>DDWellknown.seq - Three well known IPv6 site local addresses is used for recursive DNS server</TITLE>
+<LINK REV="made" HREF="mailto:hackers@FreeBSD.org">
+</HEAD>
+
+<BODY>
+
+<!-- INDEX BEGIN -->
+<!--
+
+<UL>
+
+	<LI><A HREF="#NAME">NAME</A>
+	<LI><A HREF="#TARGET">TARGET</A>
+	<LI><A HREF="#SYNOPSIS">SYNOPSIS</A>
+	<LI><A HREF="#TOPOLOGY">TOPOLOGY</A>
+	<LI><A HREF="#INITIALIZATION">INITIALIZATION</A>
+	<LI><A HREF="#TEST_PROCEDURE">TEST PROCEDURE</A>
+	<LI><A HREF="#JUDGMENT">JUDGMENT</A>
+	<LI><A HREF="#TERMINATION">TERMINATION</A>
+	<LI><A HREF="#REFERENCE">REFERENCE</A>
+	<LI><A HREF="#SEE_ALSO">SEE ALSO</A>
+</UL>
+-->
+<!-- INDEX END -->
+
+<P>
+<H1><A NAME="NAME">NAME</A></H1>
+<P>
+<PRE>  DDWellknown.seq - Three well known IPv6 site local addresses is used for recursive DNS server
+</PRE>
+<P>
+<HR>
+<H1><A NAME="TARGET">TARGET</A></H1>
+<P>
+<PRE>  Host
+</PRE>
+<P>
+<HR>
+<H1><A NAME="SYNOPSIS">SYNOPSIS</A></H1>
+<P>
+<PRE>  DDWellknown.seq [-tooloption ...] -pkt DDWellknown.def
+</PRE>
+<P>
+<HR>
+<H1><A NAME="TOPOLOGY">TOPOLOGY</A></H1>
+<PRE>
+   Host1
+    |                     ISP site
+  --+----+--------------- Link1 3ffe:501:ffff:101::/64
+         |
+        TN      NUT
+         |       |        Customer site
+  -------+-------+------- Link0 3ffe:501:ffff:100::/64
+</PRE>
+<BLOCKQUOTE>
+<TABLE border=1>
+    <TBODY>
+    <tr>
+      <TD><TT>Host1</TT></TD>
+      <TD colspan="2"><TT>Global address</TT></TD>
+      <TD><TT>3ffe:501:ffff:101:200:ff:fe00:a1a1</TT></TD>
+    </tr>
+    <TR>
+      <TD rowspan=6><TT>TN<BR>DNS Server</TT></TD> 
+      <TD rowspan="6">Link0</TD>
+      <TD><TT>Link-local</TT></TD>
+      <TD><TT>fe80::200:ff:fe00:a0a0</TT></TD>
+    </TR>
+    <TR>
+      <TD><tt>Global address</tt></TD>
+      <TD><tt>3ffe:501:ffff:100:200:ff:fe00:a0a0</tt></TD>
+    </TR>
+    <TR>
+      <TD><tt>Site-local address</tt></TD>
+      <TD>fec0:000:0000:ffff::1</TD>
+    </TR>
+    <TR>
+      <TD>&nbsp;</TD>
+      <TD>fec0:000:0000:ffff::2</TD>
+    </TR>
+    <TR>
+      <TD>&nbsp;</TD>
+      <TD>fec0:000:0000:ffff::3</TD>
+    </TR>
+    <TR>
+      <TD><tt>Ether</tt></TD>
+      <TD><TT>00:00:00:00:a0:a0</TT></TD>
+    </TR>
+    <TR>
+      <TD rowspan="2"><TT>NUT</TT></TD>
+      <TD colspan="2"><TT>Link-local</TT></TD>
+      <TD><TT>NUT link-local address</TT></TD>
+    </TR>
+    <TR>
+      <TD colspan="2"><tt>Global address</tt></TD>
+      <TD><tt>NUT 3ffe:501:ffff:100: + NUT's MAC Addr</tt></TD></TR></TBODY>
+  </TABLE>
+</BLOCKQUOTE>
+
+<P>
+<HR>
+<H1><A NAME="INITIALIZATION">INITIALIZATION</A></H1>
+<PRE>
+Tester as Server        Target as Client
+    |                           |
+    |<--------------------------|
+    |   Router Solicitation     |
+    |                           |
+    |-------------------------->|
+    |   Router Advertisement    |
+    |                           |
+    |<--------------------------|
+    |  DNS Cofiguration request |
+    |         or                |
+    |  No DNS Config request    |
+    |                           |
+    |(------------------------>)|
+    |  No Response message      |
+    |                           |
+<BR>
+  1. Wait Router Solicitation
+  2. Send Router Advertisement
+  3. Wait DNS Cofiguration request message
+  4. No Response message
+</PRE>
+
+<P>
+<HR>
+<H1><A NAME="TEST_PROCEDURE">TEST PROCEDURE</A></H1>
+<PRE>
+Tester as Server        Target as Client
+    |                           |
+    |           <---------------|
+    |          ICMP Echo request|
+    |          to test.tahi.org |
+    |                           |
+    |<--------------------------|
+    |   <A HREF="#JDG2">Judgment #1</A>             |
+    | NUT send standard query   |
+    | to the well known address |
+    | for AAAA record of        |
+    |  "test.tahi.org"          |
+    |                           |
+    |-------------------------->|
+    |   DNS response            |
+    |  for AAAA record of       |
+    |  "test.tahi.org           |
+    |                           |
+    |<--------------------------|
+    |   <A HREF="#JDG3">Judgment #2</A>             |
+    |   ICMP Echo request       |
+    |   to test.tahi.org        |
+    |                           |
+    |-------------------------->|
+    |   ICMP Echo reply         |
+    |   from test.tahi.org      |
+    |                           |
+    v                           v
+<BR>
+  1. Wait DNS query to the well known address for AAAA record of "test.tahi.org"
+  2. Send DNS response for AAAA record of "test.tahi.org"
+  3. Wait Echo request to test.tahi.org
+  4. Send Echo reply from test.tahi.org
+<BR>
+</PRE>
+<BLOCKQUOTE>
+DNS query message<BR>
+Destination address is one of <B>fec0:000:0000:ffff::1, fec0:000:0000:ffff::2, fec0:000:0000:ffff::3</B> <BR>
+<TABLE border=1>
+    <TR>
+      <TD colspan="3">Header</TD>
+    </TR>
+    <tr>
+      <TD>&nbsp;</TD>
+      <TD>QR</TD>
+      <TD>0 (SQUERY)</TD>
+    </tr>
+    <tr>
+      <TD>&nbsp;</TD>
+      <TD>OPCODE</TD>
+      <TD>0 (SQUERY)</TD>
+    </tr>
+    <TR>
+      <TD colspan="3">Question section</TD>
+    </TR>
+    <TR>
+      <TD>&nbsp;</TD>
+      <TD>QNAME</TD>
+      <TD>test.tahi.org</TD>
+    </TR>
+    <TR>
+      <TD>&nbsp;</TD>
+      <TD>QTYPE</TD>
+      <TD>28 (IPv6 address)</TD></TR>
+    <TR>
+      <TD>&nbsp;</TD>
+      <TD>QCLASS</TD>
+      <TD>1 (Internet)</TD>
+    </TR>
+</TABLE>
+<BR>
+DNS standard query response message<BR>
+<TABLE border=1>
+    <TR>
+      <TD colspan="4">Header</TD>
+    </TR>
+    <tr>
+      <TD>&nbsp;</TD>
+      <TD colspan="2">QR</TD>
+      <TD>1 (RESPONSE)</TD>
+    </tr>
+    <tr>
+      <TD>&nbsp;</TD>
+      <TD colspan="2">OPCODE</TD>
+      <TD>0 (SQUERY)</TD>
+    </tr>
+    <tr>
+      <TD>&nbsp;</TD>
+      <TD colspan="2">AA</TD>
+      <TD>1 (Authoritative Answer)</TD>
+    </tr>
+    <TR>
+      <TD colspan="4">Question section</TD>
+    </TR>
+    <TR>
+      <TD>&nbsp;</TD>
+      <TD colspan="2">QNAME</TD>
+      <TD>test.tahi.org</TD>
+    </TR>
+    <TR>
+      <TD>&nbsp;</TD>
+      <TD colspan="2">QTYPE</TD>
+      <TD>28 (IPv6 address)</TD></TR>
+    <TR>
+      <TD>&nbsp;</TD>
+      <TD colspan="2">QCLASS</TD>
+      <TD>1 (Internet)</TD>
+    </TR>
+    <TR>
+      <TD colspan="4">Answer section</TD>
+    </TR>
+    <TR>
+      <TD>&nbsp;</TD>
+      <TD colspan="2">RRs</TD>
+      <TD>&nbsp;</TD>
+    </TR>
+    <TR>
+      <TD>&nbsp;</TD>
+      <TD>&nbsp;</TD>
+      <TD>NAME</TD>
+      <TD>test.tahi.org</TD>
+    </TR>
+    <TR>
+      <TD>&nbsp;</TD>
+      <TD>&nbsp;</TD>
+      <TD>TYPE</TD>
+      <TD>28 (IPv6 address)</TD>
+    </TR>
+    <TR>
+      <TD>&nbsp;</TD>
+      <TD>&nbsp;</TD>
+      <TD>CLASS</TD>
+      <TD>1 (Internet)</TD>
+    </TR>
+    <TR>
+      <TD>&nbsp;</TD>
+      <TD>&nbsp;</TD>
+      <TD>TTL</TD>
+      <TD>1800 (second)</TD>
+    </TR>
+    <TR>
+      <TD>&nbsp;</TD>
+      <TD>&nbsp;</TD>
+      <TD>RDLENGTH</TD>
+      <TD>16</TD>
+    </TR>
+    <TR>
+      <TD>&nbsp;</TD>
+      <TD>&nbsp;</TD>
+      <TD>RDATA</TD>
+      <TD>3ffe:501:ffff:101:200:ff:fe00:a2a2</TD>
+    </TR>
+</TABLE>
+</BLOCKQUOTE>
+
+<P>
+<HR>
+<H1><A NAME="JUDGMENT">JUDGMENT</A></H1>
+<PRE>
+<A NAME="JDG1"></A>
+  1. DNS query messages is recieved to the site local address of either fec0:0000:0000:fff::1,
+ fec0:0000:0000:fff::2 or fec0:0000:0000:fff::3.
+<A NAME="JDG2"></A>
+  2. ICMP Echo Request is recieved
+</PRE>
+
+<P>
+<HR>
+<H1><A NAME="TERMINATION">TERMINATION</A></H1>
+<P>
+<PRE>  N/A
+</PRE>
+<P>
+<HR>
+<H1><A NAME="REFERENCE">REFERENCE</A></H1>
+<PRE>
+draft-ietf-ipv6-dns-discovery-07.txt
+6.1 Simple case, general purpose recursive DNS server
+<BR>
+   This example shows the case of a network that manages one recursive
+   DNS server and a large number of nodes running DNS stub resolvers.
+   The recursive DNS server is performing (and caching) all the
+   recursive queries on behalf of the stub resolvers.  The recursive DNS
+   server is configured with an IPv6 address taken from the prefix
+   delegated to the site and with the 3 well known addresses defined in
+   this memo.  <B>The stub resolvers are either configured with the "real"
+   IPv6 address of the recursive DNS server or with the well known site
+   local unicast addresses defined in this memo.</B>
+<BR>
+            --------------------------------------------
+            |                                          |
+            |                  ---------------------   |
+            |                  |DNS stub resolver  |   |
+            |                  |configured with the|   |
+            |                  |"real" address of  |   |
+            |                  |the recursive DNS  |   |
+            |                  |server             |   |
+            |                  ---------------------   |
+            |  -----------          |                  |
+            |  |recursive|          |                  |
+            |  |DNS      |<----------                  |
+            |  |server   |<----------------            |
+            |  -----------                |            |
+            |                  ----------------------  |
+            |                  |DNS stub resolver   |  |
+            |                  |configured with 3   |  |
+            |                  |well known addresses|  |
+            |                  ----------------------  |
+            |                                          |
+            --------------------------------------------
+<BR>
+            (The recursive DNS server is configured to listen both on
+            its IPv6 address and on the well known address)
+<BR>
+6.4 DNS forwarder with DHCPv6 interactions
+<BR>
+      b) <B>other nodes simply send their DNS request to the reserved site
+      local addresses.</B>
+<BR>
+                                                   -------------
+                                                  /            |
+        ----------           --------------      /   customer  |
+        |ISP     |           |customer CPE|     /    site      |
+        |DNS     |===========|         DNS|====<               |
+        |resolver|    <------|---forwarder|-----\----non DHCPv6|
+        ----------           --------------      \   node      |
+                                                  \            |
+                                                   -------------
+          (Internal nodes use the reserved site local unicast address.)
+</PRE>
+
+<P>
+<HR>
+<H1><A NAME="SEE_ALSO">SEE ALSO</A></H1>
+<P>
+<PRE>  perldoc V6evalTool
+  perldoc V6evalRemote
+</PRE>
+</BODY>
+
+</HTML>

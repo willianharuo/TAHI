@@ -1,0 +1,348 @@
+<HTML>
+<HEAD>
+<TITLE>ncStateByNa4Probe - Verifying State Machine: NA vs. PROBE</TITLE>
+<LINK REV="made" HREF="mailto:hackers@FreeBSD.org">
+</HEAD>
+
+<BODY>
+
+<!-- INDEX BEGIN -->
+<!--
+
+<UL>
+
+	<LI><A HREF="#NAME">NAME</A>
+	<LI><A HREF="#TARGET">TARGET</A>
+	<LI><A HREF="#SYNOPSIS">SYNOPSIS</A>
+	<LI><A HREF="#INITIALIZATION">INITIALIZATION</A>
+	<UL>
+
+		<LI><A HREF="#Cache_a_LLA_of_TN">Cache a LLA of TN</A>
+		<LI><A HREF="#Cache_a_bogus_LLA">Cache a bogus LLA</A>
+	</UL>
+
+	<LI><A HREF="#TEST_PROCEDURE">TEST PROCEDURE</A>
+	<LI><A HREF="#JUDGMENT">JUDGMENT</A>
+	<LI><A HREF="#TERMINATION">TERMINATION</A>
+	<LI><A HREF="#NOTE">NOTE</A>
+	<LI><A HREF="#SEE_ALSO">SEE ALSO</A>
+</UL>
+-->
+<!-- INDEX END -->
+
+<P>
+<H1><A NAME="NAME">NAME</A></H1>
+<P>
+ncStateByNa4Probe - Verifying State Machine: NA vs. PROBE
+
+<P>
+<HR>
+<H1><A NAME="TARGET">TARGET</A></H1>
+<P>
+Host and Router
+
+<P>
+<HR>
+<H1><A NAME="SYNOPSIS">SYNOPSIS</A></H1>
+<P>
+<PRE>  ncStateByNa4Probe.seq [-tooloption ...] -p ncStateByNa4Probe.def
+</PRE>
+<P>
+<HR>
+<H1><A NAME="INITIALIZATION">INITIALIZATION</A></H1>
+<OL>
+  <LI>Set the state of neighbor cache entry to PROBE.
+  <LI>Cache either <A HREF="#Cache_a_LLA_of_TN">TN's LLA</A>, or
+      <A HREF="#Cache_a_bogus_LLA">a bogus LLA</A>
+</OL>
+
+<P>
+<HR>
+<H2><A NAME="Cache_a_LLA_of_TN">Cache a LLA of TN</A></H2>
+<PRE>
+  TN                 NUT
+  ----------------------
+<BR>
+  State: NONCE (for TN)
+<BR>
+  ==== echo-request ===>
+	src=TN's link-local
+	dst=NUT's link-local
+<BR>
+  State: INCOMPLETE (for TN)
+<BR>
+  <=== multicast NS ====
+	src=NUT's link-local
+	dst=solicited-node[TN's link-local]
+        target=TN's link-local
+	w/ SLLA
+	timeout: RETRANS_TIMER * MAX_MULTICAST_SOLICIT
+<BR>
+  ==== solicited NA ===>
+	src=TN's link-local
+	dst=NUT's link-local
+        target=TN's link-local
+	<B>TLLA=TN's LLA</B>
+<BR>
+  State: REACHABLE (for TN)
+<BR>
+  <=== echo-reply ====
+	src=NUT's link-local
+	dst=TN's link-local
+	timeout: 2 sec
+<BR>
+  Wait (REACHABLE_TIME * MAX_RANDOM_FACTOR)
+<BR>
+  State: STALE (for TN)
+<BR>
+  ==== echo-request ===>
+	src=TN's link-local
+	dst=NUT's link-local
+<BR>
+  <=== echo-reply ====
+	src=NUT's link-local
+	dst=TN's link-local
+	timeout: 2 sec
+<BR>
+  State: DELAY (for TN)
+<BR>
+  Wait (DELAY_FIRST_PROBE_TIME)
+<BR>
+  State: PROBE (for TN)
+</PRE>
+
+<P>
+<HR>
+<H2><A NAME="Cache_a_bogus_LLA">Cache a bogus LLA</A></H2>
+<PRE>
+  TN                 NUT
+  ----------------------
+<BR>
+  State: NONCE (for TN)
+<BR>
+  ==== echo-request ===>
+	src=TN's link-local
+	dst=NUT's link-local
+<BR>
+  State: INCOMPLETE (for TN)
+<BR>
+  <=== multicast NS ====
+	src=NUT's link-local
+	dst=solicited-node[TN's link-local]
+        target=TN's link-local
+	w/ SLLA
+	timeout: RETRANS_TIMER * MAX_MULTICAST_SOLICIT
+<BR>
+  ==== solicited NA ===>
+	src=TN's link-local
+	dst=NUT's link-local
+        target=TN's link-local
+	<B>TLLA=a bogus LLA</B>
+<BR>
+  State: REACHABLE (for TN)
+<BR>
+  <=== echo-reply ====
+	src=NUT's link-local
+	dst=TN's link-local
+	timeout: 2 sec
+<BR>
+  Wait (REACHABLE_TIME * MAX_RANDOM_FACTOR)
+<BR>
+  State: STALE (for TN)
+<BR>
+  ==== echo-request ===>
+	src=TN's link-local
+	dst=NUT's link-local
+<BR>
+  <=== echo-reply ====
+	src=NUT's link-local
+	dst=TN's link-local
+	timeout: 2 sec
+<BR>
+  State: DELAY (for TN)
+<BR>
+  Wait (DELAY_FIRST_PROBE_TIME)
+<BR>
+  State: PROBE
+</PRE>
+
+<P>
+<HR>
+<H1><A NAME="TEST_PROCEDURE">TEST PROCEDURE</A></H1>
+<P>
+<STRONG>ncStateByNa4Probe</STRONG> verifies that state transition for a NUT in PROBE state when receiving a
+NA.
+
+<PRE>
+  TN                 NUT
+  ----------------------
+<BR>
+  State: PROBE (for TN)
+<BR>
+  ==== <A HREF="#JDG1">NA</A> ===>
+        src=TN's link-local
+        dst=NUT's link-local or all-node
+        w/o or w/ TLLA
+        r=0, s=0/1, o=0/1
+<BR>
+  <A HREF="#JDG1">Judgment</A>: <A HREF="nd.html">Examining NUT's neighbor cache state</A>
+</PRE>
+
+<P>
+<HR>
+<H1><A NAME="JUDGMENT">JUDGMENT</A></H1>
+<A NAME="JDG1"></A>
+<PRE>
+<HR>
+7.2.5.  Receipt of Neighbor Advertisements
+<BR>
+     IF(State != INCOMPLETE) {
+         If the target's Neighbor Cache entry is in any state other than
+         INCOMPLETE when the advertisement is received, processing becomes
+         quite a bit more complex.
+         IF(Override==0 && TLLA!=LLA) {
+             If the Override flag is clear and the supplied link-layer
+             address differs from that in the cache, then one of two
+             actions takes place:
+             IF(REACHABLE) {
+                 if the state of the entry is REACHABLE, set it to STALE,
+                 but do not update the entry in any other way;
+             }<A NAME="STATE_A"><B>ELSE {
+                 otherwise, the received advertisement should be ignored
+                 and must not update the cache.
+             }</B></A>
+         } ELSIF(Override==1 ||
+                 (Override==0 && TLLA==LLA) ||
+                 TLLA==NULL) {
+             If the Override flag is set, both the Override
+             flag is clear and the supplied link-layer address is the same as that
+             in the cache, or no Target Link-layer address option was supplied,
+             the received advertisement must update the Neighbor Cache entry as
+             follows:
+             <A NAME="TLL"><B>
+             - The link-layer address in the Target Link-Layer Address option
+               must be inserted in the cache (if one is supplied and is different
+               than the already recorded address).
+             </B></A><A NAME="STATE_B"><B>
+	     - IF(Solicited flag==1) {
+                   If the Solicited flag is set, <B>the state of the entry must be set
+                   to REACHABLE.
+               }</A></B>
+               <A NAME="STATE_C">ELSIF(Solicited flag==0 && TLLA!=LLA) {
+                   If the Solicited flag is zero and the link-layer
+                   address was updated with a different address <B>the state must be set
+                   to STALE. </B>
+               }</A></B>
+               <A NAME="STATE_D"><B>ELSE {
+                   Otherwise, <B>the entry's state remains unchanged.</B>
+               }
+             </A></B>
+             An advertisement's Solicited flag should only be set if the
+             advertisement is a response to a Neighbor Solicitation.  Because
+             Neighbor Unreachability Detection Solicitations are sent to the
+             cached link-layer address, receipt of a solicited advertisement
+             indicates that the forward path is working.  Receipt of an
+             unsolicited advertisement, however, suggests that a neighbor has
+             urgent information to announce (e.g., a changed link-layer
+             address).  If the urgent information indicates a change from what
+             a node is currently using, the node should verify the reachability
+             of the (new) path when it sends the next packet.  There is no need
+             to update the state for unsolicited advertisements that do not
+             change the contents of the cache.
+             <BR>
+             - The IsRouter flag in the cache entry must be set based on the
+               Router flag in the received advertisement.  In those cases where
+               the IsRouter flag changes from TRUE to FALSE as a result of this
+               update, the node must remove that router from the Default Router
+               List and update the Destination Cache entries for all destinations
+               using that neighbor as a router as specified in Section 7.3.3.
+               This is needed to detect when a node that is used as a router
+               stops forwarding packets due to being configured as a host.
+         }
+     }
+<HR>
+  ================================+===============+=============
+  NA                              |New State      |cached LLA
+  ---------------+-+--+-+---------+               |
+  Destination    |r| s|o|TLLA     |               |
+  ===============+=+==+=+=========+===============+=============
+  Unicast         0  0 0 none      <A HREF="#STATE_D">PROBE</A>           unchanged
+  ---------------+-+--+-+---------+---------------+-------------
+  Unicast         0  0 1 none      <A HREF="#STATE_D">PROBE</A>           unchanged
+  ---------------+-+--+-+---------+---------------+-------------
+  Unicast         0  1 0 none      <A HREF="#STATE_B">REACHABLE</A>       unchanged
+  ---------------+-+--+-+---------+---------------+-------------
+  Unicast         0  1 1 none      <A HREF="#STATE_B">REACHABLE</A>       unchanged
+  ===============+=+==+=+=========+===============+=============
+  Unicast         0  0 0 same      <A HREF="#STATE_D">PROBE</A>           unchanged
+  ---------------+-+--+-+---------+---------------+-------------
+  Unicast         0  0 1 same      <A HREF="#STATE_D">PROBE</A>           unchanged
+  ---------------+-+--+-+---------+---------------+-------------
+  Unicast         0  1 0 same      <A HREF="#STATE_B">REACHABLE</A>       unchanged
+  ---------------+-+--+-+---------+---------------+-------------
+  Unicast         0  1 1 same      <A HREF="#STATE_B">REACHABLE</A>       unchanged
+  ===============+=+==+=+=========+===============+=============
+  Unicast         0  0 0 different <A HREF="#STATE_A">PROBE           unchanged</A>
+  ---------------+-+--+-+---------+---------------+-------------
+  Unicast         0  0 1 different <A HREF="#STATE_C">STALE</A>           <A HREF="#TLL">*updated</A>
+  ---------------+-+--+-+---------+---------------+-------------
+  Unicast         0  1 0 different <A HREF="#STATE_A">PROBE           unchanged</A>
+  ---------------+-+--+-+---------+---------------+-------------
+  Unicast	  0  1 1 different <A HREF="#STATE_B">REACHABLE</A>       <A HREF="#TLL">*updated</A>
+  ===============+=+==+=+=========+===============+=============
+  *Multicast      0  0 0 *none     PROBE           unchanged
+                  *invalid
+  ---------------+-+--+-+---------+---------------+-------------
+  *Multicast      0  0 1 *none     PROBE           unchanged
+                  *invalid
+  ---------------+-+--+-+---------+---------------+-------------
+  *Multicast      0 *1 0 *none     PROBE           unchanged
+                  *invalid
+  ---------------+-+--+-+---------+---------------+-------------
+  *Multicast      0 *1 1 *none     PROBE           unchanged
+                  *invalid
+  ===============+=+==+=+=========+===============+=============
+  Multicast       0 0 0 same       <A HREF="#STATE_D">PROBE</A>           unchanged
+  ---------------+-+--+-+---------+---------------+-------------
+  Multicast       0 0 1 same       <A HREF="#STATE_D">PROBE</A>           unchanged
+  ---------------+-+--+-+---------+---------------+-------------
+  *Multicast      0 *1 0 same      PROBE           unchanged
+                  *invalid
+  ---------------+-+--+-+---------+---------------+-------------
+  *Multicast      0 *1 1 same      PROBE           unchanged
+                  *invalid
+  ===============+=+==+=+=========+===============+=============
+  Multicast       0 0 0 different  <A HREF="#STATE_A">PROBE           unchanged</A>
+  ---------------+-+--+-+---------+---------------+-------------
+  Multicast       0 0 1 different  <A HREF="#STATE_C">STALE</A>           <A HREF="#TLL">*updated</A>
+  ---------------+-+--+-+---------+---------------+-------------
+  *Multicast      0 *1 0 different PROBE           unchanged
+                  *invalid
+  ---------------+-+--+-+---------+---------------+-------------
+  *Multicast      0 *1 1 different PROBE           unchanged
+                  *invalid
+  ===============+=+==+=+=========+===============+=============
+</PRE>
+
+<P>
+<HR>
+<H1><A NAME="TERMINATION">TERMINATION</A></H1>
+<P>
+<PRE>  N/A
+</PRE>
+<P>
+<HR>
+<H1><A NAME="NOTE">NOTE</A></H1>
+<P>
+<PRE>  The test does not invoke any remote command.
+</PRE>
+<P>
+<HR>
+<H1><A NAME="SEE_ALSO">SEE ALSO</A></H1>
+<P>
+<PRE>  perldoc V6evalTool
+  perldoc V6evalRemote
+</PRE>
+</BODY>
+
+</HTML>

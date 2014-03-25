@@ -1,0 +1,92 @@
+<HTML>
+<HEAD>
+<TITLE>routerSendUnsolRaMax - NUT sends configured RAs.</TITLE>
+<LINK REV="made" HREF="mailto:hackers@FreeBSD.org">
+</HEAD>
+
+<BODY>
+
+<!-- INDEX BEGIN -->
+<!--
+
+<UL>
+
+	<LI><A HREF="#NAME">NAME</A>
+	<LI><A HREF="#TARGET">TARGET</A>
+	<LI><A HREF="#SYNOPSIS">SYNOPSIS</A>
+	<LI><A HREF="#INITIALIZATION">INITIALIZATION</A>
+	<LI><A HREF="#TEST_PROCEDURE">TEST PROCEDURE</A>
+	<LI><A HREF="#TERMINATION">TERMINATION</A>
+	<LI><A HREF="#NOTE">NOTE</A>
+	<LI><A HREF="#SEE_ALSO">SEE ALSO</A>
+</UL>
+-->
+<!-- INDEX END -->
+
+<P>
+<H1><A NAME="NAME">NAME</A></H1>
+<P>
+routerSendUnsolRaMax - NUT sends configured RAs.
+
+<P>
+<HR>
+<H1><A NAME="TARGET">TARGET</A></H1>
+<P>
+<PRE>  Router only
+</PRE>
+<P>
+<HR>
+<H1><A NAME="SYNOPSIS">SYNOPSIS</A></H1>
+<P>
+<PRE>  routerSendUnsolRaMax.seq [-tooloption ...] -p routerSendUnsolRaMax.def
+</PRE>
+<P>
+<HR>
+<H1><A NAME="INITIALIZATION">INITIALIZATION</A></H1>
+<P>
+<PRE>  Start NUT advertising RAs:
+</PRE>
+<P>
+<PRE>    MaxRtrAdvInterval                   10
+    MinRtrAdvInterval                   7
+    AdvCurHopLimit                      64
+    AdvManagedFlag&amp;AdvOtherConfigFlag   False
+    AdvDefaultLifetime                  9000 (max value)
+    AdvReachableTime                    3600000 (max value)
+    AdvRetransTimer                     0
+    AdvOnlinkFlag&amp;AdvAutonomousFlag     True
+    AdvValidLifetime                    2592000
+    AdvPreferredLifetime                604800
+    AdvLinkMTU                          1500
+</PRE>
+<P>
+<HR>
+<H1><A NAME="TEST_PROCEDURE">TEST PROCEDURE</A></H1>
+<B>routerSendUnsolRaMax</B> verifies that NUT sends RAs
+<UL>
+<LI>whose parameters are as same as <A HREF="#INITIALIZATION">configured</A>.
+<LI>that may contain a Prefix option and/or a MUT option and/or SLL option.
+</UL>
+
+<P>
+<HR>
+<H1><A NAME="TERMINATION">TERMINATION</A></H1>
+<P>
+<PRE>  N/A
+</PRE>
+<P>
+<HR>
+<H1><A NAME="NOTE">NOTE</A></H1>
+<P>
+<PRE>  TBD
+</PRE>
+<P>
+<HR>
+<H1><A NAME="SEE_ALSO">SEE ALSO</A></H1>
+<P>
+<PRE>  perldoc V6evalTool
+  perldoc V6evalRemote
+</PRE>
+</BODY>
+
+</HTML>

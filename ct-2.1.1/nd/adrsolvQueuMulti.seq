@@ -1,0 +1,335 @@
+#!/usr/bin/perl
+#
+# Copyright (C) 1999, 2000, 2001, 2002, 2003 Yokogawa Electric Corporation,
+# IPA (Information-technology Promotion Agency, Japan).
+# All rights reserved.
+# 
+# Redistribution and use of this software in source and binary forms, with 
+# or without modification, are permitted provided that the following 
+# conditions and disclaimer are agreed and accepted by the user:
+# 
+# 1. Redistributions of source code must retain the above copyright 
+# notice, this list of conditions and the following disclaimer.
+# 
+# 2. Redistributions in binary form must reproduce the above copyright 
+# notice, this list of conditions and the following disclaimer in the 
+# documentation and/or other materials provided with the distribution.
+# 
+# 3. Neither the names of the copyrighters, the name of the project which 
+# is related to this software (hereinafter referred to as "project") nor 
+# the names of the contributors may be used to endorse or promote products 
+# derived from this software without specific prior written permission.
+# 
+# 4. No merchantable use may be permitted without prior written 
+# notification to the copyrighters. However, using this software for the 
+# purpose of testing or evaluating any products including merchantable 
+# products may be permitted without any notification to the copyrighters.
+# 
+# 
+# 
+# THIS SOFTWARE IS PROVIDED BY THE COPYRIGHTERS, THE PROJECT AND 
+# CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING 
+# BUT NOT LIMITED THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS 
+# FOR A PARTICULAR PURPOSE, ARE DISCLAIMED.  IN NO EVENT SHALL THE 
+# COPYRIGHTERS, THE PROJECT OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, 
+# INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES 
+# (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR 
+# SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) 
+# HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN 
+# CONTRACT,STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) 
+# ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF 
+# THE POSSIBILITY OF SUCH DAMAGE.
+#
+# $TAHI: ct/nd/adrsolvQueuMulti.seq,v 1.17 2002/02/27 01:08:24 masaxmasa Exp $
+
+########################################################################
+BEGIN { $V6evalTool::TestVersion = '$Name: REL_2_1_1 $ '; }
+
+use V6evalTool;
+use nd;
+
+ndOptions(@ARGV);
+
+# The following generate debugging messages.
+$nd::debug=$ndOpt_v|$ndOpt_vv;
+
+# You can specifies debug options to a remote control program.
+# If you want to know more detail, please see the following:
+# - V6evalTool.pm: perldoc V6evalTool
+# - V6evalRemote.pm: perldoc V6evalRemote
+$nd::remote_debug="-o1" if $ndOpt_vv;
+
+$IF=Link0;
+
+$wait_reachable=$nd::REACHABLE_TIME * $nd::MAX_RANDOM_FACTOR + 1;
+$wait_probe=$nd::DELAY_FIRST_PROBE_TIME + 1 +
+    $nd::RETRANS_TIMER * $nd::MAX_UNICAST_SOLICIT + 1;
+$wait_time=$nd::RETRANS_TIMER * $nd::MAX_MULTICAST_SOLICIT;
+$max_multicast_solicit=$nd::MAX_MULTICAST_SOLICIT;
+
+#
+# Start capture buffer
+#
+vLogHTML("<FONT SIZE=\"+1\">Initialization</FONT><BR>");
+vCapture($IF);
+
+#
+# Need to clear neighbor cache entries of the target.
+#
+goto error if nd2NoNce($IF) != 0;
+clearX();
+
+#
+#
+#
+vLogHTML("<FONT SIZE=\"+1\">Test</FONT><BR>");
+
+#
+# Send an echo-request from TN (src:tn's link, dst:nut's link)
+#
+$pktdesc{ echo_request_from_tn}="Send echo-request (TN ==> NUT)";
+vSend($IF, echo_request_from_tn);
+
+#
+# Send an echo-request from X (src:x's link, dst:nut's link)
+#
+$pktdesc{echo_request_from_x}="Send an echo-request (X ==> NUT)";
+vSend($IF, echo_request_from_x);
+
+#
+# Send a solicited NA if getting a multicast NS.
+# Or, Got echo-reply's
+#
+
+$pktdesc{echo_reply_to_tn}=
+    "Got an echo-reply (TN <== NUT), then REACHABLE";
+$pktdesc{echo_reply_to_x}=
+    "Got an echo-reply (X <== NUT), then REACHABLE";
+$pktdesc{multicast_ns_to_tn}=
+    "Got a multicast NS (TN <== NUT), then INCOMPLETE";
+$pktdesc{multicast_ns_to_x}=
+    "Got a multicast NS (X <== NUT), then INCOMPLETE";
+
+$ns_from_tn=0;
+$ns_from_x=0;
+$echo_from_tn=0;
+$echo_from_x=0;
+while(1) {
+    #
+    # Got a multicast NS or an echo-reply
+    #
+    vLogHTML("Wait for multicast NS or echo-reply<BR>");
+    %ret=vRecv($IF, $wait_time, 0, 1, 
+	       echo_reply_to_tn,
+	       echo_reply_to_x,
+	       multicast_ns_to_tn,
+	       multicast_ns_to_x,
+	       );
+    last if $ret{status} != 0;
+
+    $packet=$ret{recvFrame};
+    if($packet eq multicast_ns_to_tn) {
+	#
+	# Got a NS (src:nut's link, dst:solnode[tn's link])
+	# Then, send solicited NA (src:tn's link, dst:nut's link)
+	#
+	$ns_from_tn++;
+	$pktdesc{na_from_tn}="Send NA (TN ==> NUT)";
+	vSend($IF, na_from_tn);
+    } elsif($packet eq multicast_ns_to_x) {
+	#
+	# Got a NS (src:nut's link, dst:solnode[x's link])
+	# Then, send solicited NA (src:x's link, dst:nut's link)
+	#
+	$ns_from_x++;
+	$pktdesc{na_from_x}="Send NA (X ==> NUT)";
+	vSend($IF, na_from_x);
+    } elsif($packet eq echo_reply_to_tn) {
+	#
+	# Got an echo-reply from TN (src:nut's link, dst:tn's link)
+	#
+	$echo_from_tn++;
+    } elsif($packet eq echo_reply_to_x) {
+	#
+	# Got an echo-reply from X (src:nut's link, dst:x's link)
+	#
+	$echo_from_x++;
+    }
+}
+
+vLogHTML("NS from TN to TN:         $ns_from_tn packets<BR>");
+vLogHTML("NS from TN to X:          $ns_from_x packets<BR>");
+vLogHTML("echo-reply from TN to TN: $echo_from_tn packets<BR>");
+vLogHTML("echo-reply from TN to X:  $echo_from_x packets<BR>");
+
+if(!$ns_from_tn || !$ns_from_x || !$echo_from_tn || !$echo_from_x) {
+    #
+    # Some packets to be captured were missed.
+    #
+    vLogHTML(ndErrmsg("ERROR: Some packet(s) were missed<BR>"));
+    goto error;
+}
+if($ns_from_tn > $max_multicast_solicit ||
+   $ns_from_x > $max_multicast_solicit) {
+    #
+    # The number of NSs > MAX_MULTICAST_SOLICIT
+    #
+    vLogHTML(ndErrmsg("ERROR: Too many multicast NS<BR>"));
+    goto error;
+}
+if($echo_from_tn > 1 || $echo_from_x > 1) {
+    #
+    # Echo-reply was duplicated.
+    #
+    vLogHTML(ndErrmsg("ERROR: Too many echo-reply<BR>"));
+}
+
+vLogHTML("OK<BR>");
+exit $V6evalTool::exitPass;
+
+error:
+    vLogHTML(vErrmsg(%ret)."<BR>");
+    vLogHTML(ndErrmsg("NG<BR>"));
+    exit $V6evalTool::exitFail;
+
+sub clearX()
+{
+    vLogHTML("Make X's state REACHABLE with echo & NA<BR>");
+
+    $pktdesc{echo_request_from_x}="Send echo-request (X ==> NUT)";
+    vSend($IF, echo_request_from_x);
+
+    vLogHTML("Want NS if any<BR>");
+    vSleep(1);
+
+    $pktdesc{na_from_x}="Send NA (X ==> NUT), then REACHABLE";
+    vSend($IF, na_from_x);
+
+    vLogHTML("Wait for STALE<BR>");
+    vRecv($IF, $wait_reachable, 0, 0);
+    vLogHTML("Then, STALE<BR>");
+
+    $pktdesc{echo_request_from_x}="Send echo-request, Then DELAY";
+    vSend($IF, echo_request_from_x);
+    vRecv($IF, $wait_probe, 0, 0);
+    vLogHTML("Clear X's link-local<BR>");
+}
+
+########################################################################
+__END__
+
+=head1 NAME
+
+adrsolvQueuMulti - Verifying address resolution queues
+
+=head1 TARGET
+
+Host and Router
+
+=head1 SYNOPSIS
+
+  adrsolvQueuMulti.seq [-tooloption ...] -p adrsolvQueuMulti.def
+
+=head1 INITIALIZATION
+
+  Clear NC state for TN and X
+
+=head1 TEST PROCEDURE
+
+B<adrsolvQueuMulti> verifies that a NUT queues at least one packet
+for an address whose LLA is not resolved.
+
+=begin html
+<PRE>
+  TN                 NUT
+  ----------------------
+<BR>
+  State: NONCE (for TN, X)
+<BR>
+  ==== echo-request A ===>
+	src=TN's link-local
+	dst=NUT's link-local
+<BR>
+  State: INCOMPLETE (for TN), NONCE (for X)
+<BR>
+  ==== echo-request B ===>
+	src=X's link-local
+	dst==NUT's link-local
+<BR>
+  State: INCOMPLETE (for all)
+<BR>
+  <=== <A HREF="#JDG1">Judgment #1</A>: multicast NS ====
+	src==NUT's link-local
+	dst=solicited-node[TN's link-local]
+	w/ SLLA
+	timeout: $RETRANS_TIMER * $MAX_MULTICAST_SOLICIT
+  ==== solicited NA ===>
+	src=TN's link-local
+	dst==NUT's link-local
+	R=0, S=1, O=1
+	w/ TLLA
+<BR>
+  State: REACHABLE (for TN), INCOMPLETE (for X)
+<BR>
+  <=== <A HREF="#JDG2">Judgment #2</A>: multicast NS ====
+	src=l=NUT's ink-local
+	dst=solicited-node[X's link-local]
+	w/ SLLA
+	timeout: $RETRANS_TIMER * $MAX_MULTICAST_SOLICIT
+<BR>
+  ==== solicited NA ===>
+	src=X's link-local
+	dst==NUT's link-local
+	R=0, S=1, O=1
+	w/ TLLA
+<BR>
+  State: REACHABLE (for TN, X)
+<BR>
+  <=== <A HREF="#JDG3">Judgment #3</A>: echo-reply A ====
+	src==NUT's link-local
+	dst=TN's link-local
+<BR>
+  <=== <A HREF="#JDG4">Judgment #4</A>: echo-reply B ====
+	src==NUT's link-local
+	dst=X's link-local
+</PRE>
+
+=end html
+
+=head1 JUDGMENT
+
+=begin html
+<PRE>
+<A NAME="JDG1"></A>
+  1. NUT must send at the least one multicast NS to TN.
+     src==NUT's link-local, dst=solicited-node[TN's link-local], w/ SLLA
+<A NAME="JDG2"></A>
+  2. NUT must send at the least one multicast NS to the X.
+     src==NUT's link-local, dst=solicited-node[X's link-local], w/ SLLA
+<A NAME="JDG3"></A>
+  3. NUT must send an echo-reply to TN.
+     src=NUT's link-local, dst=TN's link-local
+<A NAME="JDG4"></A>
+  4. NUT must send an echo-reply to the X.
+     src=NUT's link-local, dst=X's link-local
+<A NAME="JDG5"></A>
+  5. The order that the above packets (multicast NS and
+     echo-reply) are captured in is not matter.
+</PRE>
+
+=end html
+
+=head1 TERMINATION
+
+  N/A
+
+=head1 NOTE
+
+  The test does not invoke any remote command.
+
+=head1 SEE ALSO
+
+  perldoc V6evalTool
+  perldoc V6evalRemote
+
+=cut

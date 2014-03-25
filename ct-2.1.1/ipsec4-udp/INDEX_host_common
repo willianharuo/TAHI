@@ -1,0 +1,28 @@
+##
+## $Name: REL_2_1_1 $
+##
+## $TAHI: ct/ipsec4-udp/INDEX_host_common,v 1.3 2001/10/05 06:39:01 masaxmasa Exp $
+##
+##<seq>:<def>:[<opt>]:[<log>]:<desc>
+##
+
+&print:<B>Host Transport AH-ESP Outbound</B>
+
+../ipsec/HTR_C_Out_ah_esp.seq:./HTR_C_ah_esp.def:-cpp="-include ./ipsecaddr.def"::Outbound AH-ESP combination
+
+&print:<B>Host Transport AH-ESP Inbound</B>
+
+../ipsec/HTR_C_In_ah_esp.seq:./HTR_C_ah_esp.def:-cpp="-include ./ipsecaddr.def"::Inbound AH-ESP combination
+
+&print:<B>Host Transport Common Outbound</B>
+
+../ipsec/HTR_C_Out_SPD_discard_none.seq  :./HTR_A_SPD_discard_none.def:-cpp="-include ./ipsecaddr.def"::Select SPD entry (policy=discard,none)
+
+&print:<B>Host Transport Common Inbound</B>
+
+&print:Inbound Connect SA bundles
+../ipsec/HTR_C_In_2SA_SspiSipsrcDproto.seq:./HTR_C_2SA_SspiSipDproto.def:-cpp="-include ./ipsecaddr.def"::Connect two SA bundles with same spi, same IPsrc, different protocol
+../ipsec/HTR_C_In_SPD_discard_none.seq  :./HTR_A_SPD_discard_none.def:-cpp="-include ./ipsecaddr.def"::Select SPD entry (policy=discard,none)
+
+#
+#########################################################################

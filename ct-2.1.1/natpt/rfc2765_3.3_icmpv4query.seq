@@ -1,0 +1,310 @@
+#!/usr/bin/perl
+#
+# Copyright (C) 1999, 2000, 2001, 2002, 2003 Yokogawa Electric Corporation,
+# IPA (Information-technology Promotion Agency, Japan).
+# All rights reserved.
+# 
+# Redistribution and use of this software in source and binary forms, with 
+# or without modification, are permitted provided that the following 
+# conditions and disclaimer are agreed and accepted by the user:
+# 
+# 1. Redistributions of source code must retain the above copyright 
+# notice, this list of conditions and the following disclaimer.
+# 
+# 2. Redistributions in binary form must reproduce the above copyright 
+# notice, this list of conditions and the following disclaimer in the 
+# documentation and/or other materials provided with the distribution.
+# 
+# 3. Neither the names of the copyrighters, the name of the project which 
+# is related to this software (hereinafter referred to as "project") nor 
+# the names of the contributors may be used to endorse or promote products 
+# derived from this software without specific prior written permission.
+# 
+# 4. No merchantable use may be permitted without prior written 
+# notification to the copyrighters. However, using this software for the 
+# purpose of testing or evaluating any products including merchantable 
+# products may be permitted without any notification to the copyrighters.
+# 
+# 
+# 
+# THIS SOFTWARE IS PROVIDED BY THE COPYRIGHTERS, THE PROJECT AND 
+# CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING 
+# BUT NOT LIMITED THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS 
+# FOR A PARTICULAR PURPOSE, ARE DISCLAIMED.  IN NO EVENT SHALL THE 
+# COPYRIGHTERS, THE PROJECT OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, 
+# INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES 
+# (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR 
+# SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) 
+# HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN 
+# CONTRACT,STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) 
+# ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF 
+# THE POSSIBILITY OF SUCH DAMAGE.
+#
+# $TAHI: ct/natpt/rfc2765_3.3_icmpv4query.seq,v 1.3 2001/10/11 01:41:47 akisada Exp $
+#
+
+BEGIN { $V6evalTool::TestVersion = '$Name: REL_2_1_1 $'; }
+use V6evalTool;
+use natpt;
+
+checkNUT(router);
+
+# Interface 
+$IF="Link0";
+$IF1="Link1";
+vCapture($IF);
+vCapture($IF1);
+
+%pktdesc = (
+echo_request_v4_tn2nut_df   => 'Send ICMPv4 Echo Request',
+echo_request_nut2tn_siit   => 'Recv ICMPv6 Echo Request',
+echo_reply_v4_tn2nut_df     => 'Send ICMPv4 Echo Reply',
+echo_reply_nut2tn_siit     => 'Recv ICMPv6 Echo Reply',
+
+icmpv4_information_request  => 'Send ICMPv4 Information Request (Type 15)',
+icmpv4_information_reply    => 'Send ICMPv4 Information Reply (Type 16)',
+icmpv4_timestamp_request    => 'Send ICMPv4 Timestamp Request (Type 13)',
+icmpv4_timestamp_reply      => 'Send ICMPv4 Timestamp Reply (Type 14)',
+icmpv4_address_mask_request => 'Send ICMPv4 Address Mask Request (Type 17)',
+icmpv4_address_mask_reply   => 'Send ICMPv4 Address Mask Reply (Type 18)',
+icmpv4_router_advertisement => 'Send ICMPv4 Router Advertisement (Type 9)',
+icmpv4_router_solicitation  => 'Send ICMPv4 Router Solicitation (Type 10)',
+icmpv4_unknown              => 'Send Unknown ICMPv4 (Type 255)',
+
+  arp_nut2tn_request => 'Recv ARP request on Link1 (TN IPv4addr)',
+  arp_tn2nut_reply   => 'Send ARP reply on Link1 (TN IPv4addr)',
+  ns_nut2tn_siit0    => 'Recv Neighbor Solicitation on Link0 (SIIT V6addr)',
+  na_tn2nut_siit0    => 'Send Neighbor Advertisement on Link0 (SIIT V6addr)',
+);
+
+$result = $V6evalTool::exitPass;
+$result += send_recv($IF1, 'echo_request_v4_tn2nut_df', 
+		     $IF, 'echo_request_nut2tn_siit');
+$result += send_recv($IF1, 'echo_reply_v4_tn2nut_df', 
+		     $IF, 'echo_reply_nut2tn_siit');
+$result += send_recv($IF1, 'icmpv4_information_request', $IF, '');
+$result += send_recv($IF1, 'icmpv4_information_reply', $IF, '');
+$result += send_recv($IF1, 'icmpv4_timestamp_request', $IF, '');
+$result += send_recv($IF1, 'icmpv4_timestamp_reply', $IF, '');
+$result += send_recv($IF1, 'icmpv4_address_mask_request', $IF, '');
+$result += send_recv($IF1, 'icmpv4_address_mask_reply', $IF, '');
+$result += send_recv($IF1, 'icmpv4_router_advertisement', $IF, '');
+$result += send_recv($IF1, 'icmpv4_router_solicitation', $IF, '');
+$result += send_recv($IF1, 'icmpv4_unknown', $IF, '');
+
+if($result == $V6evalTool::exitPass) {
+    vLogHTML("<H3>OK</H3>");
+    exit $V6evalTool::exitPass;
+}
+
+error:
+vLogHTML("<FONT COLOR=#FF0000><H3>NG</H3></FONT>");
+exit $V6evalTool::exitFail;
+
+########################################################################
+__END__
+
+=head1 NAME
+
+	rfc2765_3.3_icmpv4query.seq - Verify IPv6 <-> IPv4 header 
+        translation in accordance with RFC2765 [SIIT]
+
+=head1 TARGET
+
+	Router
+
+=head1 SYNOPSIS
+
+	rfc2765_3.3_icmpv4query.seq [-tooloption ...] 
+        -p rfc2765_3.3_icmpv4query.def
+
+=head1 INITIALIZATION
+
+=begin html
+<PRE>
+	Before this test starts, run <A HREF="./initialize.html">initialize.seq</A>.
+</PRE>
+
+=end html
+
+=head1 TEST PROCEDURE
+
+        This test verifies that NUT can translates ICMPv4 query messages
+        in accordance to RFC2765.
+	
+	Network Topology
+
+	Link0
+	--------------------------
+	    |               |
+	   TN              NUT
+	    |               |
+	--------------------------
+	Link1
+
+	TN -- (Link0) -- NUT        NUT -- (Link1) -- TN
+	
+	---------------------      ------------------------
+
+=begin html <HR WIDTH=80%>
+
+	1.1.[1-2]
+                                   <===================
+	ICMPv4 packet
+                IPv4 Header
+			src address : TN LINK1 IPv4 address
+			dst address : TN LINK0 IPv4 address
+                        DF = 1
+                ICMPv4 Echo Request/Reply (Type 8 and Type 0)
+
+	1.2.[1-2]
+	<<JUDGMENT>>
+	<===================
+	ICMPv6 packet
+		IPv6 Header
+			src address : TN LINK1 IPv4 embedded IPv6 address
+			dst address : TN LINK0 IPv4 embedded IPv6 address
+                ICMPv6 Echo Request/Reply (Type 128 and Type 129)
+
+=begin html <HR WIDTH=80%>
+
+	2.1.[1-2]
+                                   <===================
+	ICMPv4 packet
+                IPv4 Header
+			src address : TN LINK1 IPv4 address
+			dst address : TN LINK0 IPv4 address
+                        DF = 1
+                ICMPv4 Information Request/Reply (Type 15 and Type 16)
+	2.2.[1-2]
+	<<JUDGMENT>>
+                Packet is silently dropped
+
+=begin html <HR WIDTH=80%>
+
+	3.1.[1-2]
+                                   <===================
+	ICMPv4 packet
+                IPv4 Header
+			src address : TN LINK1 IPv4 address
+			dst address : TN LINK0 IPv4 address
+                        DF = 1
+                ICMPv4 Timestamp and Timestamp Reply (Type 13 and Type 14)
+	3.2.[1-2]
+	<<JUDGMENT>>
+                Packet is silently dropped
+
+=begin html <HR WIDTH=80%>
+
+	4.1.[1-2]
+                                   <===================
+	ICMPv4 packet
+                IPv4 Header
+			src address : TN LINK1 IPv4 address
+			dst address : TN LINK0 IPv4 address
+                        DF = 1
+                ICMPv4 Address Mask Request/Reply (Type 17 and Type 18)
+	4.2.[1-2]
+	<<JUDGMENT>>
+                Packet is silently dropped
+
+=begin html <HR WIDTH=80%>
+
+	5.1.[1-2]
+                                   <===================
+	ICMPv4 packet
+                IPv4 Header
+			src address : TN LINK1 IPv4 address
+			dst address : TN LINK0 IPv4 address
+                        DF = 1
+                ICMPv4 ICMP Router Advertisement (Type 9)
+	5.2.[1-2]
+	<<JUDGMENT>>
+                Packet is silently dropped
+
+=begin html <HR WIDTH=80%>
+
+	6.1.[1-2]
+                                   <===================
+	ICMPv4 packet
+                IPv4 Header
+			src address : TN LINK1 IPv4 address
+			dst address : TN LINK0 IPv4 address
+                        DF = 1
+                ICMPv4 ICMP Router Solicitation (Type 10)
+	6.2.[1-2]
+	<<JUDGMENT>>
+                Packet is silently dropped
+
+=begin html <HR WIDTH=80%>
+
+	7.1.
+                                   <===================
+	ICMPv4 packet
+                IPv4 Header
+			src address : TN LINK1 IPv4 address
+			dst address : TN LINK0 IPv4 address
+                        DF = 1
+                ICMPv4 Unknown ICMPv4 types
+	7.2.
+	<<JUDGMENT>>
+                Packet is silently dropped
+
+=head1 JUDGMENT
+
+	<< PASS >>
+		NUT translates ICMPv4 echo request/reply to ICMPv6 echo 
+                request/reply and silently drops other ICMPv4 query types.
+		
+	<< FAIL >>	
+                NUT fails to translate ICMPv4 echo request/reply, or doesn't
+                drop other ICMPv4 query types. 
+
+=head1 NOTE
+
+=head1 REFERENCE
+
+B<RFC2765>
+
+3.3.  Translating ICMPv4 Headers into ICMPv6 Headers
+
+   All ICMP messages that are to be translated require that the ICMP
+   checksum field be updated as part of the translation since ICMPv6,
+   unlike ICMPv4, has a pseudo-header checksum just like UDP and TCP.
+
+   In addition all ICMP packets need to have the Type value translated
+   and for ICMP error messages the included IP header also needs
+   translation.
+
+   The actions needed to translate various ICMPv4 messages are:
+
+      ICMPv4 query messages:
+
+        Echo and Echo Reply (Type 8 and Type 0)
+           Adjust the type to 128 and 129, respectively, and adjust the
+           ICMP checksum both to take the type change into account and
+           to include the ICMPv6 pseudo-header.
+
+        Information Request/Reply (Type 15 and Type 16)
+           Obsoleted in ICMPv4.  Silently drop.
+
+        Timestamp and Timestamp Reply (Type 13 and Type 14)
+           Obsoleted in ICMPv6.  Silently drop.
+
+        Address Mask Request/Reply (Type 17 and Type 18)
+           Obsoleted in ICMPv6.  Silently drop.
+
+        ICMP Router Advertisement (Type 9)
+           Single hop message.  Silently drop.
+
+        ICMP Router Solicitation (Type 10)
+           Single hop message.  Silently drop.
+
+        Unknown ICMPv4 types
+           Silently drop.
+
+=head1 SEE ALSO
+
+	perldoc V6evalTool
+
+=cut

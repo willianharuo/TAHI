@@ -1,0 +1,109 @@
+### $Name: REL_2_1_1 $
+###
+### Copyright (C) 1999, 2000, 2001, 2002, 2003 Yokogawa Electric Corporation,
+### IPA (Information-technology Promotion Agency, Japan).
+### All rights reserved.
+### 
+### Redistribution and use of this software in source and binary forms, with 
+### or without modification, are permitted provided that the following 
+### conditions and disclaimer are agreed and accepted by the user:
+### 
+### 1. Redistributions of source code must retain the above copyright 
+### notice, this list of conditions and the following disclaimer.
+### 
+### 2. Redistributions in binary form must reproduce the above copyright 
+### notice, this list of conditions and the following disclaimer in the 
+### documentation and/or other materials provided with the distribution.
+### 
+### 3. Neither the names of the copyrighters, the name of the project which 
+### is related to this software (hereinafter referred to as "project") nor 
+### the names of the contributors may be used to endorse or promote products 
+### derived from this software without specific prior written permission.
+### 
+### 4. No merchantable use may be permitted without prior written 
+### notification to the copyrighters. However, using this software for the 
+### purpose of testing or evaluating any products including merchantable 
+### products may be permitted without any notification to the copyrighters.
+### 
+### 
+### 
+### THIS SOFTWARE IS PROVIDED BY THE COPYRIGHTERS, THE PROJECT AND 
+### CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING 
+### BUT NOT LIMITED THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS 
+### FOR A PARTICULAR PURPOSE, ARE DISCLAIMED.  IN NO EVENT SHALL THE 
+### COPYRIGHTERS, THE PROJECT OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, 
+### INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES 
+### (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR 
+### SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) 
+### HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN 
+### CONTRACT,STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) 
+### ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF 
+### THE POSSIBILITY OF SUCH DAMAGE.
+###
+### INDEX_host_demo2
+###   autorun INDEX for stateless-addrconf test (Test for a Host)
+###   for Test Event version
+###
+### $TAHI: ct/stateless-addrconf/INDEX_host_demo2,v 1.5 2001/10/10 03:31:53 hoshino Exp $
+
+######################################################################
+&print:2. Test for a Host
+&print:2.1 Duplicate Address Detection
+&print:2.1.1 Stateless Address Configuration
+
+&print:2.1.1.1 DAD is performed on NUT by Stateless Global address autoconfiguration
+&#./DADSendNS_DADPostSendNS.seq   :GLOBAL0_valRA.def          :addrconf=ra init=DADSuccess_boot :DADSendNS_Stless_GLOBAL.html:DAD is performed on NUT by Stateless Global address autoconfiguration
+&#./DADSendNS_DADPostSendNS.seq   :GLOBAL0_valRA_NoLLOCAL.def :addrconf=ra init=DADFail_boot    :DADSendNS_Stless_GLOBAL_LLDADFail.html:DAD is performed on NUT by Stateless Global address autoconfiguration after DAD Failed for Link-local address autoconfiguration
+##./ADDRCONFFail.seq   :GLOBAL0_valRA_NoLLOCAL.def :addrconf=ra init=DADFail_boot    ::Global address is not configured when NUT received Valid RA after Link-local DAD Fail (buggy test)
+
+&print:2.1.2 Stateful Address Configuration
+&print:      No test is prepared now.
+
+&print:2.2 Creation of Global and Site-local address
+&print:2.2.1 Router Advertisement Processing
+&print:2.2.1.1 ADDRCONF Success when NUT received Valid RA
+&#./ADDRCONFSuccess.seq :GLOBAL0_valRA.def                               :addrconf=ra init=DADSuccess_boot  :ADDRCONFSuccess_valRA_GLOBAL.html:ADDRCONF Success when NUT received Valid RA (Global address)
+&#./ADDRCONFSuccess.seq :SLOCAL0_valRA.def                               :addrconf=ra init=DADSuccess_boot  :ADDRCONFSuccess_valRA_SLOCAL.html:ADDRCONF Success when NUT received Valid RA (Site-local address)
+
+### Surprise test
+&#./ADDRCONFSuccess.seq :GLOBAL0_supRA_ManyLinkLayerOpt.def              :addrconf=ra init=DADSuccess_boot  :ADDRCONFSuccess_supRA_ManyLinkLayerOpt.html:ADDRCONF Success when NUT received Surprise RA (Many link-layer options) (Surprise test)
+
+
+
+&print:2.2.1.2 NUT ignores irregular prefixopt
+&#./ADDRCONFFail.seq    :GLOBAL0_irregRA_prfxopt_ignore_PLTgtVLT.def     :addrconf=ra init=DADSuccess_boot  :ADDRCONFFail_irregRA_prfxopt_ignore_PLTgtVLT.html:NUT ignores prefixopt if PreferredLifeTime > ValidLifeTime
+&#./ADDRCONFFail.seq    :GLOBAL0_irregRA_prfxopt_ignore_PRFXLENgt64.def  :addrconf=ra init=none  :ADDRCONFFail_irregRA_prfxopt_ignore_PRFXLENgt64.html:NUT ignores prefixopt if Prefixlen > 64 (interface ID len is 64)
+&#./ADDRCONFFail.seq    :GLOBAL0_irregRA_prfxopt_ignore_PRFXLENlt64.def  :addrconf=ra init=none  :ADDRCONFFail_irregRA_prfxopt_ignore_PRFXLENlt64.html:NUT ignores prefixopt if Prefixlen < 64 (interface ID len is 64)
+&#./ADDRCONFFail.seq    :GLOBAL0_irregRA_prfxopt_ignore_af0.def          :addrconf=ra init=none  :ADDRCONFFail_irregRA_prfxopt_ignore_af0.html:NUT ignores prefixopt if A flag is 0
+&#./ADDRCONFFail.seq    :LLOCAL_irregRA_prfxopt_ignore_llocal.def        :addrconf=ra init=DADFail_boot     :ADDRCONFFail_irregRA_prfxopt_ignore_llocal.html:NUT ignores prefixopt if prefix is Link-local
+&#./ADDRCONFFail.seq    :GLOBAL0_irregRA_prfxopt_ignore_PRFXLENgt128.def :addrconf=ra init=none  :ADDRCONFFail_irregRA_prfxopt_ignore_PRFXLENgt128.html:NUT ignores prefixopt if Prefixlen > 128
+&#./ADDRCONFFail.seq    :GLOBAL0_irregRA_prfxopt_ignore_VLT0.def         :addrconf=ra init=DADSuccess_boot  :ADDRCONFFail_irregRA_prfxopt_ignore_VLT0.html:NUT ignores prefixopt if ValidLifeTime is 0 (unknown prefix)
+&#./ADDRCONFSuccess.seq :GLOBAL0_irregRA_prfxopt_ignore_VLT0.def       :addrconf=ra init=ra :ADDRCONFSuccess_irregRA_prfxopt_ignore_VLT0_NoIPSEC.html:NUT ignores prefixopt if ValidLifeTime is 0 (known prefix but without IPSEC authentication)
+
+### Surprise test
+&#./ADDRCONFFail.seq    :GLOBAL_irregRA_prfxopt_ignore_mcast.def         :addrconf=ra init=DADSuccess_boot  :ADDRCONFFail_irregRA_prfxopt_ignore_mcast.html:NUT ignores prefixopt if prefix is Global Multicast (Surprise test)
+&#./ADDRSTATE_sameprfxes_order.seq  :GLOBAL0_valRA_sameprfxes.def              :init=DADSuccess_boot    ::Probe PrefixOptions processing order of same prefixes in one RA (Surprise test)
+
+&print:2.2.1.3 Resetting Lifetime
+&#./ADDRSTATE_reset_VLT.seq  :GLOBAL0_valRA_sameprfxes.def   :sequence=usolra_vlt60,wait30,usolra_vlt120 init=DADSuccess_boot    :ADDRSTATE_reset_VLT_BeforExpiry_GreaterVLT.html:Check if ValidLifetime is reset on NUT by RA with same prefix (before expiry, greater VLT)
+&#./ADDRSTATE_reset_VLT.seq  :GLOBAL0_valRA_sameprfxes.def   :sequence=usolra_vlt60,wait70,usolra_vlt120 init=DADSuccess_boot    :ADDRSTATE_reset_VLT_AfterExpiry_GreaterVLT.html:Check if ValidLifetime is reset on NUT by RA with same prefix (after expiry, greater VLT)
+
+&#./ADDRSTATE_reset_VLT.seq  :GLOBAL0_valRA_sameprfxes.def   :sequence=usolra_vlt60,wait30,usolra_vlt60 init=DADSuccess_boot :ADDRSTATE_reset_VLT_BeforExpiry_SameVLT.html:Check if ValidLifetime is reset on NUT by RA with same prefix (before expiry, same VLT)
+&#./ADDRSTATE_reset_VLT.seq       :GLOBAL0_valRA_sameprfxes.def   :sequence=usolra_vlt60,wait70,usolra_vlt60 init=DADSuccess_boot :ADDRSTATE_reset_VLT_AfterExpiry_SameVLT.html:Check if ValidLifetime is reset on NUT by RA with same prefix (after expiry, same VLT)
+
+&#./ADDRSTATE_not_reset_VLT.seq  :GLOBAL0_valRA_sameprfxes.def   :sequence=usolra_vlt120,wait30,usolra_vlt60 init=DADSuccess_boot :ADDRSTATE_not_reset_VLT_BeforExpiry_LessVLT.html:Check if ValidLifetime is NOT reset on NUT by RA with same prefix (before expiry, less VLT)
+&#./ADDRSTATE_reset_VLT.seq       :GLOBAL0_valRA_sameprfxes.def   :sequence=usolra_vlt120,wait130,usolra_vlt60 init=DADSuccess_boot :ADDRSTATE_reset_VLT_AfterExpiry_LessVLT.html:Check if ValidLifetime is reset on NUT by RA with same prefix (after expiry, less VLT)
+
+
+&print:2.2.2 Address Lifetime Expiry
+&print:2.2.2.1 Packet receiving and Global address lifetime expiry
+&#./ADDRSTATE_pkt_receiving.seq :GLOBAL0_valRA_vlt60plt30.def                :addrconf=ra init=DADSuccess_boot    :ADDRSTATE_pkt_receiving_GLOBAL.html:Packet receiving and Global address lifetime expiry (valid preferred, valid deprecated, invalid)
+&#./ADDRSTATE_pkt_receiving.seq :SLOCAL0_valRA_vlt60plt30.def                :addrconf=ra init=DADSuccess_boot    :ADDRSTATE_pkt_receiving_SLOCAL.html:Packet receiving and Site-local address lifetime expiry (valid preferred, valid deprecated, invalid)
+
+&print:2.2.2.2 Source address selection and address lifetime expiry
+&#./ADDRSTATE_src_select.seq  :ADDRSTATE_dep_pref.def   :waitsec=40  init=DADSuccess_boot   :ADDRSTATE_src_select_dep_pref.html:Source address selection and address lifetime expiry (valid deprecated VS valid preferred)
+&#./ADDRSTATE_src_select.seq  :ADDRSTATE_dep_dep.def    :waitsec=70  init=DADSuccess_boot   :ADDRSTATE_src_select_dep_dep.html:Source address selection and address lifetime expiry (valid deprecated VS valid deprecated)
+&#./ADDRSTATE_src_select.seq  :ADDRSTATE_inval_dep.def  :waitsec=100 init=DADSuccess_boot   :ADDRSTATE_src_select_inval_dep.html:Source address selection and address lifetime expiry (invalid VS valid deprecated)
+&#./ADDRSTATE_src_select.seq  :ADDRSTATE_inval_inval.def  :waitsec=130 init=DADSuccess_boot   :ADDRSTATE_src_select_inval_inval.html:Source address selection and address lifetime expiry (invalid VS invalid)
+
+######################################################################

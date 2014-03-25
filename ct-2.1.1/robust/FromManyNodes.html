@@ -1,0 +1,140 @@
+<HTML>
+<HEAD>
+<TITLE>FromManyNodes.seq - Ping from Many Many node</TITLE>
+<LINK REV="made" HREF="mailto:hackers@FreeBSD.org">
+</HEAD>
+
+<BODY>
+
+<!-- INDEX BEGIN -->
+<!--
+
+<UL>
+
+	<LI><A HREF="#NAME">NAME</A>
+	<LI><A HREF="#TARGET">TARGET</A>
+	<LI><A HREF="#SYNOPSIS">SYNOPSIS</A>
+	<LI><A HREF="#INITIALIZATION">INITIALIZATION</A>
+	<LI><A HREF="#TEST_PROCEDURE">TEST PROCEDURE</A>
+	<LI><A HREF="#JUDGMENT">JUDGMENT</A>
+	<LI><A HREF="#TERMINATION">TERMINATION</A>
+	<LI><A HREF="#SEE_ALSO">SEE ALSO</A>
+</UL>
+-->
+<!-- INDEX END -->
+
+<P>
+<H1><A NAME="NAME">NAME</A></H1>
+<P>
+FromManyNodes.seq - Ping from Many Many node
+
+<P>
+<HR>
+<H1><A NAME="TARGET">TARGET</A></H1>
+<P>
+Host and Router
+
+<P>
+<HR>
+<H1><A NAME="SYNOPSIS">SYNOPSIS</A></H1>
+<P>
+<STRONG>FromManyNodes.seq</STRONG> [<EM>nodes=num</EM>]
+
+<P>
+<HR>
+<H1><A NAME="INITIALIZATION">INITIALIZATION</A></H1>
+<P>
+NONE
+
+<P>
+<HR>
+<H1><A NAME="TEST_PROCEDURE">TEST PROCEDURE</A></H1>
+<P>
+This is one of robustness tests for neighbor cache entry (NCE) and
+destination cache entry (DCE) memory management.
+
+<P>
+The test emulate that there are many nodes (the number as specified
+[nodes=num] option) on a link (Figure .1) and each nodes send ICMP Echo
+Request to NUT.
+
+<P>
+<PRE>    ---+--------+----------+-------------+--- Link0
+       |        |          |             |
+     +-+-+   +--+---+   +--+---+     +---+--+
+     |NUT|   |Node 1|   |Node 2| ... |Node N|
+     +---+   +------+   +------+     +------+
+</PRE>
+<P>
+<PRE>                 Figure. 1
+</PRE>
+
+<P>
+Each node send packets as following sequence.
+
+<OL>
+<LI>
+<P>
+Node #N send a ICMP Echo Request Packet to NUT.
+
+<P>
+<PRE>  [Node #N]   ------&gt;  [NUT]
+               request
+</PRE>
+<LI>
+<P>
+If NUT send a NS packet to Node #N, reply NA.
+
+<P>
+<PRE>  [Node #N]   &lt;------  [NUT]
+                NS
+</PRE>
+<P>
+<PRE>  [Node #N]   ------&gt;  [NUT]
+                NA
+</PRE>
+<LI>
+<P>
+Wait a ICMP Echo Reply Packet from NUT. 
+
+<P>
+<PRE>  [Node #N]   &lt;------  [NUT]
+               Reply
+</PRE>
+</OL>
+<P>
+In these sequence, NUT makes NCE and DCE for each node. And NUT maybe
+delete the entry as :
+
+<P>
+<PRE>  expire time.
+  can't allocate more memory for the cache.
+</PRE>
+<P>
+When make the entry, NUT allocate the memory and when delete the entry,
+free the memory. In the test, NUT is tested whether NUT have a problem of
+these memory handling.
+
+<P>
+<HR>
+<H1><A NAME="JUDGMENT">JUDGMENT</A></H1>
+<P>
+If TN receive echo reply packets for all request, the NUT pass the test,
+but if NUT can't receive one of echo replies, the script presume NUT have
+some problem and judged FAIL.
+
+<P>
+<HR>
+<H1><A NAME="TERMINATION">TERMINATION</A></H1>
+<P>
+NONE
+
+<P>
+<HR>
+<H1><A NAME="SEE_ALSO">SEE ALSO</A></H1>
+<P>
+perldoc V6evalTool
+
+</BODY>
+
+</HTML>

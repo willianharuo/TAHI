@@ -1,0 +1,1616 @@
+#!/usr/bin/perl
+#
+# Copyright (C) 2003 Yokogawa Electric Corporation, 
+# INTAP(Interoperability Technology Association
+# for Information Processing, Japan).  All rights reserved.
+# 
+# Redistribution and use of this software in source and binary forms, with 
+# or without modification, are permitted provided that the following 
+# conditions and disclaimer are agreed and accepted by the user:
+# 
+# 1. Redistributions of source code must retain the above copyright 
+# notice, this list of conditions and the following disclaimer.
+# 
+# 2. Redistributions in binary form must reproduce the above copyright 
+# notice, this list of conditions and the following disclaimer in the 
+# documentation and/or other materials provided with the distribution.
+# 
+# 3. Neither the names of the copyrighters, the name of the project which 
+# is related to this software (hereinafter referred to as "project") nor 
+# the names of the contributors may be used to endorse or promote products 
+# derived from this software without specific prior written permission.
+# 
+# 4. No merchantable use may be permitted without prior written 
+# notification to the copyrighters. However, using this software for the 
+# purpose of testing or evaluating any products including merchantable 
+# products may be permitted without any notification to the copyrighters.
+# 
+# 
+# 
+# THIS SOFTWARE IS PROVIDED BY THE COPYRIGHTERS, THE PROJECT AND 
+# CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING 
+# BUT NOT LIMITED THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS 
+# FOR A PARTICULAR PURPOSE, ARE DISCLAIMED.  IN NO EVENT SHALL THE 
+# COPYRIGHTERS, THE PROJECT OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, 
+# INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES 
+# (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR 
+# SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) 
+# HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN 
+# CONTRACT,STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) 
+# ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF 
+# THE POSSIBILITY OF SUCH DAMAGE.
+#
+# $TAHI: ct/pd/RRRecfgKeyAuthProto.seq,v 1.4 2003/06/11 09:31:14 ozoe Exp $
+#
+######################################################################
+BEGIN { $V6evalTool::TestVersion = '$Name: REL_2_1_1 $ '; }
+
+use V6evalTool;
+use pd;
+
+%pktdesc = (
+	echo_request    => 'Send Echo Request (Link-Local Address)',
+	echo_reply      => 'Recv Echo Reply (Link-Local Address)',
+	ns              => 'Recv Neighbor Solicitation',
+	na              => 'Send Neighbor Advertisement',
+	rs              => 'Send Router Solicitation',
+	ra		=> 'Recv Router Advertisement',
+	ra1		=> 'Recv Router Advertisement including mtu option',
+	ra2		=> 'Recv Router Advertisement including multiple prefix information',
+	ra3		=> 'Recv Router Advertisement including mtu option and multiple prefix information',
+	dhcp_sol		=> 'Recv DHCP Solicit message w/o Option Request option',
+	dhcp_sol_any		=> 'Recv DHCP Solicit message',
+	dhcp_sol_recfg_accpt	=> 'Recv DHCP Solicit message w/ Reconfigure Accept option and w/o Option Request option',
+	dhcp_sol_any_recfg_accpt => 'Recv DHCP Solicit message w/ Reconfigure Accept option',
+        dhcp_adv_recfg_accept   => 'Send DHCP Advertise message w/ Reconfigure Accept option',
+	dhcp_req		=> 'Recv DHCP Request message w/o Option Request option',
+	dhcp_req_any		=> 'Recv DHCP Request message',
+	dhcp_req_any1		=> 'Recv DHCP Request message w/o Option Request and IA_PD Prefix option',
+	dhcp_req_any2		=> 'Recv DHCP Request message w/o IA_PD Prefix option',
+	dhcp_req_recfg_accept	=> 'Recv DHCP Request message w/ Reconfigure Accept option and w/o Option Request option',
+	dhcp_req_any_recfg_accept  => 'Recv DHCP Request message w/ Reconfigure Accept option',
+	dhcp_req_any1_recfg_accept => 'Recv DHCP Request message w/ Reconfigure Accept option and w/o Option Request and IA_PD Prefix option',
+	dhcp_req_any2_recfg_accept => 'Recv DHCP Request message w/ Reconfigure Accept option and w/o IA_PD Prefix option',
+	dhcp_recfg_keyauth	=> 'Send DHCP Reconfigure message with Authentication Option',
+	dhcp_renew              => 'Recv DHCP Renew message w/o Option Request using multicast address',
+	dhcp_renew_any          => 'Recv DHCP Renew message using multicast address',
+	dhcp_renew_recfg_accept	=> 'Recv DHCP Renew message w/ Reconfigure Accept option and w/o Option Request',
+	dhcp_renew_any_recfg_accept => 'Recv DHCP Renew message w/ Reconfigure Accept option',
+        dhcp_rep_recfg_keyauth  => 'Send DHCP Reply message with Authentication Option',
+        dhcp_rep_recfg_accept   =>'Send DHCP Reply message w/ Reconfigure Accept option including updated prefix information'
+);
+
+pdOptions(@ARGV);
+
+# The following generate debugging messages.
+$pd::debug=$pdOpt_v|$pdOpt_vv;
+
+# You can specifies debug options to a remote control program.
+# If you want to know more detail, please see the following:
+# - V6evalTool.pm: perldoc V6evalTool
+# - V6evalRemote.pm: perldoc V6evalRemote
+$pd::remote_debug="-o1" if $pdOpt_vv;
+
+#
+#
+$IF = Link0;
+$IF1 = Link1;
+$exit_rtn=$V6evalTool::exitPass;
+$idx=0;
+$wait_ras=$pd::MIN_DELAY_BETWEEN_RAS+1;
+
+#
+#
+# Initial values
+$delegateprefix="3ffe:501:fff0::";
+$preferredlifetime="600";
+$validlifetime="1200";
+#
+$wait_time=16;
+$maxcount = 4;
+# time is Jan 1, 2000 (UTC), modulo 2^32
+$t64 = time() - 946684800;
+foreach($count = 0; $count < $maxcount; $count++){
+    $sid_duid_time[$count] = ($t64 & 0xffffffff);
+    $t64 = $t64 + 86400; #1 day after
+}
+
+@sid_link_addr = (
+    "00:00:00:00:a0:a0",
+    "00:00:00:00:a1:a1",
+    "00:00:00:00:a2:a2",
+    "00:00:00:00:a3:a3",
+);
+
+#
+#
+#
+$type=$V6evalTool::NutDef{Type};
+if($type eq host) {
+    vLogHTML("This test is for the router only<BR>");
+    exit $V6evalTool::exitRouterOnly;
+}
+
+$type=$V6evalTool::NutDef{Type};
+if($type ne router) {
+    vLogHTML(pdErrmsg("ERROR: $V6evalTool::NutDef{Type}: ".
+                      "Unknown target type<BR>"));
+    exit $V6evalTool::exitFail;
+}
+
+#
+#
+#
+vLogHTML("<FONT SIZE=\"+1\">Initialization</FONT><BR>");
+vLogHTML("Trying to setup NUT<BR>");
+pdStartDefaultRA() || exit $V6evalTool::exitFail;
+pdStopDHCP6Client() || exit $V6evalTool::exitFail;
+$vcpp = pdSetVCPP($pd::INITIAL, $delegateprefix, 0, 0,
+	$maxcount, @sid_duid_time, @sid_link_addr, %ret);
+vCPP($vcpp);
+#
+pdStartRecfgKeyAuthDHCP6Client() || exit $V6evalTool::exitFail;
+#
+vCapture($IF);
+#
+#
+
+%ret = vRecv($IF, $wait_time, 0, 0, dhcp_sol, dhcp_sol_any,
+		dhcp_sol_recfg_accept, dhcp_sol_any_recfg_accept);
+
+if($ret{status} != 0) { 
+        vLogHTML('No response from NUT, Configuration Problem ?<BR>');
+        vLogHTML('<FONT COLOR="#FF0000">NG</FONT>');
+	pdAsyncWait() || exit $V6evalTool::exitFatal;
+        exit $V6evalTool::exitFail;
+} 
+
+if($ret{status} == 0) {
+        vLogHTML('Sent DHCP Solicit message<BR>');
+        vLogHTML('OK<BR>');
+
+        $vcpp = pdSetVCPP($pd::SOLICIT, $delegateprefix, $preferredlifetime, $validlifetime,
+		$maxcount, @sid_duid_time, @sid_link_addr, %ret);
+        vCPP($vcpp);
+
+        vSend($IF, dhcp_adv_recfg_accept);
+
+        %ret = vRecv($IF, $wait_time/2, 0, 0, ns,
+			dhcp_req, dhcp_req_any,
+			dhcp_req_any1, dhcp_req_any2,
+			dhcp_req_recfg_accept, dhcp_req_any_recfg_accept,
+			dhcp_req_any1_recfg_accept, dhcp_req_any2_recfg_accept);
+        if ($ret{recvFrame} eq 'ns') {
+                vSend($IF, na);
+                %ret = vRecv($IF, $wait_time/2, 0, 0,
+			dhcp_req, dhcp_req_any,
+			dhcp_req_any1, dhcp_req_any2,
+			dhcp_req_recfg_accept, dhcp_req_any_recfg_accept,
+			dhcp_req_any1_recfg_accept, dhcp_req_any2_recfg_accept);
+        }
+
+        if ($ret{status} == 0) {
+                vLogHTML('Sent DHCP Request message<BR>');
+                vLogHTML('OK<BR>');
+        }
+        else{
+                vLogHTML('Cannot receive DHCP Request message<BR>');
+                vLogHTML('<FONT COLOR="#FF0000">NG</FONT>');
+		pdAsyncWait() || exit $V6evalTool::exitFatal;
+                exit $V6evalTool::exitFail;
+        }
+
+        $vcpp = pdSetVCPP($pd::REQUEST, $delegateprefix, $preferredlifetime, $validlifetime,
+		$maxcount, @sid_duid_time, @sid_link_addr, %ret);
+        vCPP($vcpp);
+
+        vLogHTML("<FONT SIZE=\"+1\">Test</FONT><BR>");
+        vLogHTML('Server sent DHCP Reply message with Authentication option including Reconfigure Key<BR>');
+        vSend($IF, dhcp_rep_recfg_keyauth);
+
+##################################
+	vSleep($wait_time);
+        vCapture($IF1);
+        $wait_ra=2;
+
+        vSend($IF1, rs);
+	$title{$idx}="<TD>$pktdesc{'ra'}</TD><TD>exp:sending RA</TD>";
+	%ret2 = vRecv($IF1, $wait_ra, $ret{sentTime1}, 0, ra, ra1, ra2, ra3);
+                
+	if ($ret2{status} == 0) {
+		$title{$idx}.="<TD>result:sent RA</TD>";
+		$result{$idx}=$V6evalTool::exitPass;
+		vLogHTML("<A NAME=\"T$idx\">OK: sent RA.</A><BR>");
+		$idx++;
+	} else {
+		$title{$idx}.="<TD>result:NOT sent RA</TD>";
+		$result{$idx}=$V6evalTool::exitFail;
+		$exit_rtn=$V6evalTool::exitFail;
+		vLogHTML("<A NAME=\"T$idx\">".pdErrmsg(NG)."</A><BR>");
+		$idx++;
+	}
+
+        vSleep($wait_ras, "Wait for MIN_DELAY_BETWEEN_RAS (3 sec)");
+##################################
+
+        vLogHTML('Server sent DHCP Reconfigure message with Authentication option including HMAC-MD5 digest of the message<BR>');
+
+        $vcpp = pdSetVCPP($pd::RECONFIGURE, $delegateprefix, $preferredlifetime, $validlifetime,
+		$maxcount, @sid_duid_time, @sid_link_addr, %ret);
+        vCPP($vcpp);
+        vSend($IF, dhcp_recfg_keyauth);
+
+        $title{$idx}="<TD>$pktdesc{'dhcp_renew'}</TD><TD>exp:sending DHCP Renew message</TD>";
+        #Expire lifetime REC_TIMEOUT
+        $rt=$pd::REC_TIMEOUT;
+        $count=0;
+        while(1){
+            %ret = vRecv($IF, $rt, 0, 0, ns,
+				dhcp_renew, dhcp_renew_any,
+				dhcp_renew_recfg_accept, dhcp_renew_any_recfg_accept);
+            if ($ret{recvFrame} eq 'ns') {
+                    vSend($IF, na);
+                    %ret = vRecv($IF, $rt, 0, 0,
+				dhcp_renew, dhcp_renew_any,
+				dhcp_renew_recfg_accept, dhcp_renew_any_recfg_accept);
+                    if($ret{status} == 0) {
+                          $title{$idx}.="<TD>result:sent DHCP Renew message</TD>";
+                          $result{$idx}=$V6evalTool::exitPass;
+                          vLogHTML("<A NAME=\"T$idx\">OK</A><BR>");
+                          $idx++;
+                          last;
+                    }
+            }
+	    elsif($ret{recvFrame} eq 'dhcp_renew' || $ret{recvFrame} eq 'dhcp_renew_any' ||
+		    $ret{recvFrame} eq 'dhcp_renew_recfg_accept' ||
+		    $ret{recvFrame} eq 'dhcp_renew_any_recfg_accept') {
+                    $title{$idx}.="<TD>result:sent DHCP Renew message</TD>";
+                    $result{$idx}=$V6evalTool::exitPass;
+                    vLogHTML("<A NAME=\"T$idx\">OK</A><BR>");
+                    $idx++;
+                    last;
+            }
+            $rt= 2*$rt;
+            $count++;
+	    vLogHTML("Retransmit count $count.<BR>");
+            # The server continues this process until REC_MAX_RC(8).
+            if($count == $pd::REC_MAX_RC) {
+                          $title{$idx}.="<TD>result:NOT sent DHCP Renew message</TD>";
+                          $result{$idx}=$V6evalTool::exitFail;
+                          vLogHTML("<A NAME=\"T$idx\">NG</A><BR>");
+			  pdAsyncWait() || exit $V6evalTool::exitFatal;
+                          goto error;
+            }
+	    $vcpp = pdSetVCPP($pd::RECONFIGURE, $delegateprefix, $preferredlifetime, $validlifetime,
+	    		$maxcount, @sid_duid_time, @sid_link_addr, %ret);
+	    vCPP($vcpp);
+	    vSend($IF, dhcp_recfg_keyauth);
+        }
+
+        vLogHTML('Server sent DHCP Reply message containing the IA_PD and update configuration parameters<BR>');
+        $preferredlifetime="80";
+        $validlifetime="120";
+
+        $vcpp = pdSetVCPP($pd::RENEW, $delegateprefix, $preferredlifetime, $validlifetime,
+		$maxcount, @sid_duid_time, @sid_link_addr, %ret);
+        vCPP($vcpp);
+
+        vSend($IF, dhcp_rep_recfg_accept);
+        %ret = vRecv($IF, $wait_time/2, 0, 0, ns);
+        if($ret{status} == 0) {
+                vSend($IF, na);
+        }
+
+}
+else{
+        vLogHTML('Cannot receive DHCP Solicit message<BR>');
+        vLogHTML('<FONT COLOR="#FF0000">NG</FONT>');
+	pdAsyncWait() || exit $V6evalTool::exitFatal;
+        exit $V6evalTool::exitFail;
+}
+
+pdAsyncWait() || exit $V6evalTool::exitFatal;
+##################################
+vSleep($wait_time);
+
+vCapture($IF1);
+$wait_ra=2;
+
+vSend($IF1, rs);
+$title{$idx}="<TD>$pktdesc{'ra'}</TD><TD>exp:sending RA</TD>";
+%ret = vRecv($IF1, $wait_ra, $ret{sentTime1}, 0, ra, ra1, ra2, ra3);
+
+if ($pd::NOASYNC_RA == 0){
+    if ($ret{status} == 0) {
+        $title{$idx}.="<TD>result:sent RA, ";
+        $stat = pdCheckRA($delegateprefix, $validlifetime, %ret);
+           if ($stat == 0) {
+              $title{$idx}.="RA's Prefix, Validlifetime and PrefixLength are valid.</TD>";
+              $result{$idx}=$V6evalTool::exitPass;
+              vLogHTML("<A NAME=\"T$idx\">OK</A><BR>");
+           }elsif ($stat == 1) {
+              $title{$idx}.="RA's Prefix ValidLifetime is invalid.</TD>";
+              $result{$idx}=$V6evalTool::exitFail;
+              $exit_rtn=$V6evalTool::exitFail;
+              vLogHTML("<A NAME=\"T$idx\">NG: RA's Prefix ValidLifetime is invalid.</A><BR>");
+           }elsif ($stat == 2) {
+              $title{$idx}.="RA's PrefixLength is invalid.</TD>";
+              $result{$idx}=$V6evalTool::exitWarn;
+              $exit_rtn=$V6evalTool::exitWarn;
+              vLogHTML("<A NAME=\"T$idx\">Warn: RA's PrefixLength is invalid.</A><BR>");
+           }elsif ($stat == 3) {
+              $title{$idx}.="RA's Prefix information is invalid.</TD>";
+              $result{$idx}=$V6evalTool::exitFail;
+              $exit_rtn=$V6evalTool::exitFail;
+              vLogHTML("<A NAME=\"T$idx\">NG: RA's Prefix information is invalid.</A><BR>");
+           }else{
+              $title{$idx}.="Unknown RA.</TD>";
+              $result{$idx}=$V6evalTool::exitWarn;
+              $exit_rtn=$V6evalTool::exitWarn;
+              vLogHTML("<A NAME=\"T$idx\">Warn: Unknown RA.</A><BR>");
+           }
+        $idx++;
+    } else {
+        $title{$idx}.="<TD>result:NOT sent RA</TD>";
+        $result{$idx}=$V6evalTool::exitFail;
+        $idx++;
+        $exit_rtn=$V6evalTool::exitFail;
+        vLogHTML("<A NAME=\"T$idx\">".pdErrmsg(NG)."</A><BR>");
+    }
+}
+else{
+    if ($ret{status} == 0) {
+        $title{$idx}.="<TD>result:sent RA</TD>";
+        $result{$idx}=$V6evalTool::exitPass;
+        vLogHTML("<A NAME=\"T$idx\">OK: sent RA.</A><BR>");
+    } else {
+        $title{$idx}.="<TD>result:NOT sent RA</TD>";
+        $result{$idx}=$V6evalTool::exitFail;
+        $exit_rtn=$V6evalTool::exitFail;
+        vLogHTML("<A NAME=\"T$idx\">".pdErrmsg(NG)."</A><BR>");
+    }
+}
+
+vSleep($wait_ras, "Wait for MIN_DELAY_BETWEEN_RAS (3 sec)");
+
+#
+#
+#
+@col=('PTN', 'EXP', 'RESULT');
+pdPrintSummaryHTML("*** Test Summary: PE vs CPE ***", @col,
+                   %title, %result, $idx);
+
+#
+#
+#
+exit $exit_rtn;
+
+error:
+    clear();
+    vLogHTML(vErrmsg(%ret)."<BR>");
+    vLogHTML(pdErrmsg("NG<BR>"));
+    exit $V6evalTool::exitFail;
+
+######################################################################
+__END__
+
+=head1 NAME
+
+  RRRecfgKeyAuthProto.seq - Requesting Router has recieved a Reconfigure message using Reconfigure Key Authentication Protocol
+
+=head1 TARGET
+
+  Router for DHCP Client
+
+=head1 SYNOPSIS
+
+=begin html
+  &nbsp;&nbsp;<A HREF="./RRRecfgKeyAuthProto.seq">RRRecfgKeyAuthProto.seq</A> [-tooloption ...] -pkt <A HREF="./RRRecfgKeyAuthProto.def">RRRecfgKeyAuthProto.def</A> -tooloption : v6eval tool option
+
+=end html
+
+=head1 TOPOLOGY
+
+=begin html
+<BLOCKQUOTE>
+<PRE>
+   TN
+    |                     ISP site
+  --+----+--------------- Link0
+         |
+        NUT     Host
+         |       |        Customer site
+  -------+-------+------- Link1 3ffe:501:fff0:XXXX::/64
+</PRE>
+</PRE>
+</BLOCKQUOTE>
+<BLOCKQUOTE>
+<TABLE border=1>
+   <TBODY>
+   <TR>
+     <TD rowSpan=4><TT>TN</TT></TD>
+     <TD><TT>Link-local</TT></TD>
+     <TD><TT>fe80::200:ff:fe00:a0a0</TT></TD>
+   </TR>
+   <TR>
+     <TD><TT>Ether</TT></TD>
+     <TD><TT>00:00:00:00:a0:a0</TT></TD>
+   </TR>
+     <TR>
+     <TD><TT>Delegate Prefix</TT></TD>
+     <TD><TT>3ffe:501:fff0::</TT></TD>
+   </TR>
+     <TR>
+     <TD><TT>Prefix Length</TT></TD>
+     <TD><TT>48</TT></TD>
+   </TR>
+   <TR>
+     <TD rowspan="2"><TT>Host</TT></TD>
+     <TD><TT>Link-local</TT></TD>
+     <TD><TT>fe80::200:ff:fe00:101</TT></TD>
+   </TR>
+   <TR>
+     <TD><TT>ether</TT></TD>
+     <TD><TT>00:00:00:00:01:01</TT></TD></TR></TBODY>
+   </TABLE>
+</BLOCKQUOTE>
+
+=end html
+
+=head1 INITIALIZATION
+
+=begin html
+<OL>
+  <LI>NUT sets up Prefix Delegation.
+  <LI>NUT sets up Router Advertisement to the interface by the side of downstream.
+</OL>
+<BR>
+<B>Authentication option </B>
+<BLOCKQUOTE>
+<TABLE border="1">
+  <TR>
+    <TD>protocol</TD>
+    <TD>3: Reconfigure Key Authentication Protocol</TD></TR>
+  <TR>
+    <TD>algorithm</TD>
+    <TD>1: MAC</TD></TR>
+  <TR>
+    <TD>RDM</TD>
+    <TD>0x00: a monotonically increasing counter</TD></TR>
+  <TR>
+    <TD>auth-info</TD>
+    <TD>authentication information(variable length)</TD></TR>
+</TABLE>
+</BLOCKQUOTE>
+<B>
+Authentication information
+</B>
+<BLOCKQUOTE>
+<TABLE border="1">
+  <TR>
+    <TD>Type</TD>
+    <TD>1: Reconfigure Key value</TD></TR>
+  <TR>
+    <TD>Value</TD>
+    <TD>TAHITEST89ABCDEF</TD></TR>
+</TABLE>
+<BR>
+<TABLE border="1">
+  <TR>
+    <TD>Type</TD>
+    <TD>2: HMAC-MD5 digest of the message</TD></TR>
+  <TR>
+    <TD>Value</TD>
+    <TD>HMAC-MD5 computed</TD></TR>
+</TABLE>
+</BLOCKQUOTE>
+<BR>
+<PRE>
+Tester as Server          Target as Client        Tester as Host
+    |                           |                           |
+    |<--------------------------|                           |
+    |   DHCP Solicit message    |                           |
+    |                           |                           |
+    |-------------------------->|                           |
+    |   DHCP Advertise message  |                           |
+    |                           |                           |
+    |<--------------------------|                           |
+    |   DHCP Request message    |                           |
+    |                           |                           |
+<BR>
+  1. Wait DHCP Solicit message
+  2. Send DHCP Advertise message with Reconfigure Accept Option
+  3. Wait DHCP Request message
+<BR>
+<b>Addresses</b>
+<BLOCKQUOTE>
+Solicit, Request messages<BR>
+<TABLE border=1>
+    <TBODY>
+    <TR>
+      <TD>Src</TD>
+      <TD>NUT link-local address</TD>
+    </TR>
+    <TR>
+      <TD>Dst</TD>
+      <TD>All_DHCP_Relay_Agents_and_Servers</TD>
+    </TR>
+    </TBODY>
+  </TABLE>
+<BR>
+All_DHCP_Relay_Agents_and_Servers FF02::1:2<BR>
+Advertise message<BR>
+<TABLE border=1>
+    <TBODY>
+    <TR>
+      <TD>Src</TD>
+      <TD>fe80::200:ff:fe00:a0a0</TD>
+    </TR>
+    <TR>
+      <TD>Dst</TD>
+      <TD>NUT link-local address</TD>
+    </TR>
+    </TBODY>
+  </TABLE>
+</BLOCKQUOTE>
+<b>UDP Ports</b><BR>
+      Clients listen for DHCP messages on UDP port 546
+      Server listen for DHCP messages on UDP port 547<BR>
+<b>DHCP Messages</b>
+<BLOCKQUOTE>
+DHCP Solicit message<BR>
+<TABLE border=1>
+    <TR>
+      <TD colspan="2">msg-type</TD>
+      <TD><b>SOLICIT</b>(1)</TD>
+    </TR>
+    <tr>
+      <TD colspan="2">transaction-id</TD>
+      <TD>The transaction ID for this message exchange</TD>
+    </tr>
+    <TR>
+      <TD colspan="3">options</TD>
+    </TR>
+    <TR>
+      <TD colspan="3"><b>Client Identifier Option</b> (MUST)</TD>
+    </TR>
+    <tr>
+      <TD colspan="3"><b>IA_PD Option </b>(MUST)</TD>
+    </tr>
+    <tr>
+      <TD>&nbsp;</TD>
+      <TD>Code</TD>
+      <TD>33 (TBD)</TD>
+    </tr>
+    <tr>
+      <TD>&nbsp;</TD>
+      <TD>IAID</TD>
+      <TD>The unique identifier which client specified</TD>
+    </tr>
+    <tr>
+      <TD>&nbsp;</TD>
+      <TD>T1</TD>
+      <TD>ANY</TD>
+    </tr>
+    <tr>
+      <TD>&nbsp;</TD>
+      <TD>T2</TD>
+      <TD>ANY</TD>
+    </tr>
+    <tr>
+      <TD colspan="3">Elapsed Time Option (MUST)</TD>
+    </tr>
+    <tr>
+      <TD>&nbsp;</TD>
+      <TD>elapsed-time</TD>
+      <TD>ANY</TD>
+    </tr>
+    <TR>
+      <TD colspan="3">Option Request Option (Optional)</TD>
+    </TR>
+    <tr>
+      <TD colspan="4"><b>Reconfigure Accept option</b> (Optional)</TD> 
+    </tr>
+</TABLE>
+<BR>
+DHCP Advertise message with Reconfigure Accept option<BR>
+<TABLE border=1>
+    <tr>
+      <TD colspan="3">msg-type</TD>
+      <TD><b>ADVERTISE</b>(2)</TD>
+    </tr>
+    <TR>
+      <TD colspan="3">transaction-id</TD>
+      <TD>The same transaction ID previous message</TD>
+    </TR>
+    <TR>
+      <TD colspan="4">options</TD>
+    </TR>
+    <TR>
+      <TD colspan="4">Client Identifier Option</TD>
+    </TR>
+    <TR>
+      <TD colspan="4">Server Identifier Option</TD>
+    </TR>
+    <TR>
+      <TD>&nbsp;</TD>
+      <TD colspan="2">DUID Contents type</TD>
+      <TD>1 Link-layer address plus time</TD>
+    </TR>
+    <TR>
+      <TD>&nbsp;</TD>
+      <TD colspan="2">hardware type</TD>
+      <TD>1 Ether</TD></TR>
+    <TR>
+      <TD>&nbsp;</TD>
+      <TD colspan="2">time</TD>
+      <TD>Time which the server included</TD>
+    </TR>
+    <TR>
+      <TD>&nbsp;</TD>
+      <TD colspan="2">link-layer address</TD>
+      <TD><B>00:00:00:00:a0:a0</B></TD></TR>
+    <TR>
+      <TD colspan="4">IA_PD Option</TD>
+    </TR>
+    <TR>
+      <TD>&nbsp;</TD>
+      <TD colspan="2">Code</TD>
+      <TD>33 (TBD)</TD></TR>
+    <TR>
+      <TD>&nbsp;</TD>
+      <TD colspan="2">IAID</TD>
+      <TD>Unique identifier which client specified</TD></TR>
+    <TR>
+      <TD>&nbsp;</TD>
+      <TD colspan="2"><B>T1</B></TD>
+      <TD><B>300</B></TD></TR>
+    <TR>
+      <TD>&nbsp;</TD>
+      <TD colspan="2"><B>T2</B></TD>
+      <TD><B>480</B></TD></TR>
+    <TR>
+      <TD>&nbsp;</TD>
+      <TD colspan="3">IA_PD Prefix Option</TD>
+    </TR>
+    <TR>
+      <TD>&nbsp;</TD>
+      <TD>&nbsp;</TD>
+      <TD>Code</TD>
+      <TD>34 (TBD)</TD></TR>
+    <TR>
+      <TD>&nbsp;</TD>
+      <TD>&nbsp;</TD>
+      <TD>preferred-lifetime</TD>
+      <TD>600</TD></TR>
+    <TR>
+      <TD>&nbsp;</TD>
+      <TD>&nbsp;</TD>
+      <TD>valid-lifetime</TD>
+      <TD>1200</TD></TR>
+    <TR>
+      <TD>&nbsp;</TD>
+      <TD>&nbsp;</TD>
+      <TD>prefix-length</TD>
+      <TD>48</TD></TR>
+    <TR>
+      <TD>&nbsp;</TD>
+      <TD>&nbsp;</TD>
+      <TD>IPv6 prefix</TD>
+      <TD>3ffe:501:fff0::</TD></TR>
+    <tr>
+      <TD colspan="4"><b>Reconfigure Accept option</b></TD> 
+    </tr>
+</TABLE>
+<BR>
+DHCP Request message with Reconfigure Accept option</BR>
+<TABLE border=1>
+    <tr>
+      <TD colspan="3">msg-type</TD>
+      <TD><b>REQUEST</b>(3)</TD>
+    </tr>
+    <tr>
+      <TD colspan="3">transaction-id</TD>
+      <TD>The transaction ID for this message exchange</TD>
+    </tr>
+    <TR>
+      <TD colspan="4">options</TD>
+    </TR>
+    <TR>
+      <TD colspan="4"><b>Client Identifier Option </b> (MUST)</TD>
+    </TR>
+    <TR>
+      <TD colspan="4"><b>Server Identifier Option</b> (MUST)</TD> 
+    </TR>
+    <TR>
+      <TD>&nbsp;</TD>
+      <TD colspan="2">DUID Contents type</TD>                    
+      <TD>1 Link-layer address plus time</TD> 
+    </TR>
+    <TR>
+      <TD>&nbsp;</TD>
+      <TD colspan="2">hardware type</TD>   
+      <TD>1 Ether</TD></TR>
+    <TR>
+      <TD>&nbsp;</TD>
+      <TD colspan="2">time</TD>
+      <TD>Time which the server included</TD> 
+    </TR>
+    <TR>
+      <TD>&nbsp;</TD>
+      <TD colspan="2">link-layer address</TD>   
+      <TD>00:00:00:00:a0:a0</TD></TR>
+    <tr>
+      <TD colspan="4"><b>IA_PD Option </b> (MUST)</TD>
+    </tr>
+    <tr>
+      <TD>&nbsp;</TD>
+      <TD colspan="2">Code</TD>
+      <TD>33 (TBD)</TD> 
+    </tr>
+    <tr>
+      <TD>&nbsp;</TD>
+      <TD colspan="2">IAID</TD>
+      <TD>Unique identifier which client specified</TD>
+    </tr>
+    <tr>
+      <TD>&nbsp;</TD>
+      <TD colspan="2">T1</TD>
+      <TD>ANY</TD>
+    </tr>
+    <tr>
+      <TD>&nbsp;</TD>
+      <TD colspan="2">T2</TD>
+      <TD>ANY</TD>
+    </tr>
+    <tr>
+      <TD>&nbsp;</TD>
+      <TD colspan="3">IA_PD Prefix Option (Optional)</TD>                
+    </tr>
+    <tr>
+      <TD>&nbsp;</TD>
+      <TD>&nbsp;</TD>
+      <TD>Code</TD>
+      <TD>34 (TBD)</TD>
+    </tr>
+    <tr>
+      <TD>&nbsp;</TD>
+      <TD>&nbsp;</TD>
+      <TD>preferred-lifetime</TD>
+      <TD>ANY</TD>
+    </tr>
+    <tr>
+      <TD>&nbsp;</TD>
+      <TD>&nbsp;</TD>
+      <TD>valid-lifetime</TD>
+      <TD>ANY</TD>
+    </tr>
+    <tr>
+      <TD>&nbsp;</TD>
+      <TD>&nbsp;</TD>
+      <TD>prefix-length</TD>
+      <TD>48</TD>
+    </tr>
+    <tr>
+      <TD>&nbsp;</TD>
+      <TD>&nbsp;</TD>
+      <TD>IPv6 prefix</TD>   
+      <TD>3ffe:501:fff0::</TD>
+    </tr>
+    <tr>
+      <TD colspan="4"> <b> Elapsed Time Option </b> (MUST)</TD>
+    </tr>
+    <tr>
+      <TD>&nbsp;</TD>
+      <TD colspan="2">elapsed-time</TD>
+      <TD>ANY</TD>
+    </tr>
+    <tr>
+      <TD colspan="4"> Option Request Option (Optional)</TD>  
+    </tr>
+    <tr>
+      <TD colspan="4"><b>Reconfigure Accept option</b> (MUST)</TD> 
+    </tr>
+</TABLE>
+</BLOCKQUOTE>
+</PRE>
+
+=end html
+
+=head1 TEST PROCEDURE
+
+=begin html
+<PRE>
+Tester as PE              Target as CPE           Tester as Client
+    |                           |                           |
+    |                           |                           |
+    |-------------------------->|                           |
+    |   DHCP Reply message      |                           |
+    | w/ Reconfigure Key and    |                           |
+    | Reconfigure Accept option |                           |
+    |                           |                           |
+    |                           |<--------------------------|
+    |                           |    Router Solicitation    |
+    |                           |                           |
+    |                           |-------------------------->|
+    |                           |    <A HREF="#JDG1">Judgment #1</A>            |
+    |                           |    Router Advertisement   |
+    |                           |                           |
+    |-------------------------->|                           |
+    |  DHCP Reconfigure message |                           |
+    | w/ HMAC-MD5 digest        |                           |
+    |                           |                           |
+    |<--------------------------|                           |
+    |   <A HREF="#JDG2">Judgment #2</A>             |                           |
+    |   DHCP Renew message      |                           |
+    |                           |                           |
+    |-------------------------->|                           |
+    |   DHCP Reply message      |                           |
+    | w/ updated IA_PD          |                           |
+    |                           |<--------------------------|
+    |                           |    Router Solicitation    |
+    |                           |                           |
+    |                           |-------------------------->|
+    |                           |    <A HREF="#JDG3">Judgment #3</A>            |
+    |                           |    Router Advertisement   |
+    |                           |                           |
+    |                           |                           |
+    v                           v                           v
+<BR>
+  1. Send DHCP Reply message with Authentication option including Reconfigure Key value and Reconfigure Accept option
+  2. Send Router Solicitation message
+  3. Wait Router Advertisement message
+  4. Send DHCP Reconfigure message with Authentication option including HMAC-MD5 digest of the message
+  5. Wait DHCP Renew message
+  6. Send DHCP Reply message with Reconfigure Accept option
+  7. Send Router Solicitation message
+  8. Wait Router Advertisement message included updated prefix information
+<BR>
+<b>Addresses</b>
+<BLOCKQUOTE>
+Renew message<BR>
+<TABLE border=1>
+    <TBODY>
+    <TR>
+      <TD>Src</TD>
+      <TD>NUT link-local address</TD>
+    </TR>
+    <TR>
+      <TD>Dst</TD>
+      <TD>All_DHCP_Relay_Agents_and_Servers</TD>
+    </TR>
+    </TBODY>
+  </TABLE>
+<BR>
+All_DHCP_Relay_Agents_and_Servers FF02::1:2<BR>
+Reply message<BR>
+<TABLE border=1>
+    <TBODY>
+    <TR>
+      <TD>Src</TD>
+      <TD>fe80::200:ff:fe00:a0a0</TD>
+    </TR>
+    <TR>
+      <TD>Dst</TD>
+      <TD>NUT link-local address</TD>
+    </TR>
+    </TBODY>
+  </TABLE>
+</BLOCKQUOTE>
+<b>UDP Ports</b><BR>
+      Clients listen for DHCP messages on UDP port 546
+      Server listen for DHCP messages on UDP port 547<BR>
+<b>DHCP Messages</b>
+<BLOCKQUOTE>
+DHCP Reply message with Reconfigure Accept option and Authentication Option 
+including Authentication information<BR>
+<TABLE border=1>
+    <TR>
+      <TD colspan="3">msg-type</TD>
+      <TD><b>REPLY</b>(7)</TD>
+    </TR>
+    <tr>
+      <TD colspan="3">transaction-id</TD>
+      <TD>The same transaction ID previous message</TD> 
+    </tr>
+    <TR>
+      <TD colspan="4">options</TD>
+    </TR>
+    <TR>
+      <TD colspan="4">Client Identifier Option</TD>
+    </TR>
+    <TR>
+      <TD colspan="4">Server Identifier Option</TD>
+    </TR>
+    <TR>
+      <TD>&nbsp;</TD>
+      <TD colspan="2">DUID Contents type</TD>                   
+      <TD>1 Link-layer address plus time</TD> 
+    </TR>
+    <TR>
+      <TD>&nbsp;</TD>
+      <TD colspan="2">hardware type</TD>   
+      <TD>1 Ether</TD></TR>
+    <TR>
+      <TD>&nbsp;</TD>
+      <TD colspan="2">time</TD>
+      <TD>Time which the server included</TD> 
+    </TR>
+    <TR>
+      <TD>&nbsp;</TD>
+      <TD colspan="2">link-layer address</TD>   
+      <TD>00:00:00:00:a0:a0</TD></TR>
+    <TR>
+      <TD colspan="4">IA_PD Option</TD>
+    </TR>
+    <TR>
+      <TD>&nbsp;</TD>
+      <TD colspan="2">Code</TD>
+      <TD>33 (TBD)</TD></TR>
+    <tr>
+      <TD>&nbsp;</TD>
+      <TD colspan="2">IAID</TD>
+      <TD>Unique identifier which client specified</TD>
+    </tr>
+    <TR>
+      <TD>&nbsp;</TD>
+      <TD colspan="2">T1</TD>
+      <TD>300</TD></TR>
+    <TR>
+      <TD>&nbsp;</TD>
+      <TD colspan="2">T2</TD>
+      <TD>480</TD></TR>
+    <tr>
+      <TD>&nbsp;</TD>
+      <TD colspan="3">IA_PD Prefix Option</TD>                   
+    </tr>
+    <tr>
+      <TD>&nbsp;</TD>
+      <TD>&nbsp;</TD>
+      <TD>Code</TD>
+      <TD>34 (TBD)</TD>
+    </tr>
+    <tr>
+      <TD>&nbsp;</TD>
+      <TD>&nbsp;</TD>
+      <TD>preferred-lifetime</TD>
+      <TD>600</TD>
+    </tr>
+    <tr>
+      <TD>&nbsp;</TD>
+      <TD>&nbsp;</TD>
+      <TD>valid-lifetime</TD>
+      <TD>1200</TD>
+    </tr>
+    <tr>
+      <TD>&nbsp;</TD>
+      <TD>&nbsp;</TD>
+      <TD>prefix-length</TD>
+      <TD>48</TD>
+    </tr>
+    <tr>
+      <TD>&nbsp;</TD>
+      <TD>&nbsp;</TD>
+      <TD>IPv6 prefix</TD>    
+      <TD>3ffe:501:fff0::</TD>
+    </tr>
+    <tr>
+      <TD colspan="4"><b>Reconfigure Accept option</b></TD> 
+    </tr>
+    <tr>
+      <TD colspan="4"><b>Authentication Option</b></TD>  
+    </tr>
+    <tr>
+      <TD>&nbsp;</TD>
+      <TD colspan="2">protocol</TD>       
+      <TD><b>3 for the Reconfigure Key Authentication Protocol</b></TD>
+    </tr>
+    <tr>
+      <TD>&nbsp;</TD>
+      <TD colspan="2">algorithm</TD>
+      <TD>1 for HMAC-MD5</TD>
+    </tr>
+    <tr>
+      <TD>&nbsp;</TD>
+      <TD colspan="2">RDM</TD>
+      <TD>0x00 a monotonically increasing counter</TD> 
+    </tr>
+    <tr>
+      <TD>&nbsp;</TD>
+      <TD colspan="2">replay detection</TD>
+      <TD>0x00000000 0x00000000</TD> 
+    </tr>
+    <tr>
+      <TD>&nbsp;</TD>
+      <TD colspan="3"><b>Authentication information</b></TD>               
+    </tr>
+    <tr>
+      <TD>&nbsp;</TD>
+      <TD>&nbsp;</TD>
+      <TD>type</TD>
+      <TD><b>1 Reconfigure Key value</b></TD>
+    </tr>
+    <tr>
+      <TD>&nbsp;</TD>
+      <TD>&nbsp;</TD>
+      <TD>Value</TD>
+      <TD>Data as defined by field</TD>
+    </tr>
+</TABLE>
+<BR>
+DHCP Reconfigure message with Authentication Option including Authentication information<BR>
+<TABLE border=1>
+    <TR>
+      <TD colspan="3">msg-type</TD>
+      <TD><b>RECONFIGURE</b>(10)</TD>
+    </TR>
+    <tr>
+      <TD colspan="3"><B>transaction-id</B></TD>
+      <TD><B>0</B></TD>
+    </tr>
+    <TR>
+      <TD colspan="4">options</TD>
+    </TR>
+    <TR>
+      <TD colspan="4">Client Identifier Option</TD>
+    </TR>
+    <TR>
+      <TD colspan="4">Server Identifier Option</TD>
+    </TR>
+    <TR>
+      <TD>&nbsp;</TD>
+      <TD colspan="2">DUID Contents type</TD>                   
+      <TD>1 Link-layer address plus time</TD> 
+    </TR>
+    <TR>
+      <TD>&nbsp;</TD>
+      <TD colspan="2">hardware type</TD>   
+      <TD>1 Ether</TD>
+    </TR>
+    <TR>
+      <TD>&nbsp;</TD>
+      <TD colspan="2">time</TD>
+      <TD>Time which the server included</TD>  
+    </TR>
+    <TR>
+      <TD>&nbsp;</TD>
+      <TD colspan="2">link-layer address</TD>   
+      <TD>00:00:00:00:a0:a0</TD>
+    </TR>
+    <tr>
+      <TD colspan="4"><b>Option Request Option</b></TD>   
+    </tr>
+    <tr>
+      <TD>&nbsp;</TD>
+      <TD colspan="2">requested-option-code-1</TD>
+      <TD> 33 IA_PD Option (TBD)</TD> 
+    </tr>
+    <tr>
+      <TD colspan="4">Reconfigure Message Option</TD>  
+    </tr>
+    <tr>
+      <TD>&nbsp;</TD>
+      <TD colspan="2">msg-type</TD>
+      <TD><b>5 for Renew message</b></TD>  
+    </tr>
+    <tr>
+      <TD colspan="4"><b>Authentication Option</b></TD>  
+    </tr>
+    <tr>
+      <TD>&nbsp;</TD>
+      <TD colspan="2">protocol</TD>       
+      <TD><b>3 for the Reconfigure Key Authentication Protocol</b></TD>
+    </tr>
+    <tr>
+      <TD>&nbsp;</TD>
+      <TD colspan="2">algorithm</TD>
+      <TD>1 for HMAC-MD5</TD>
+    </tr>
+    <tr>
+      <TD>&nbsp;</TD>
+      <TD colspan="2">RDM</TD>
+      <TD>0x00 a monotonically increasing counter</TD> 
+    </tr>
+    <tr>
+      <TD>&nbsp;</TD>
+      <TD colspan="2">replay detection</TD>
+      <TD>0x00000000 0x00000001</TD> 
+    </tr>
+    <tr>
+      <TD>&nbsp;</TD>
+      <TD colspan="3"><b>Authentication information</b></TD>             
+    </tr>
+    <tr>
+      <TD>&nbsp;</TD>
+      <TD>&nbsp;</TD>
+      <TD>type</TD>
+      <TD><b>2</b> <b>HMAC-MD5 digest of the message</b></TD>
+    </tr>
+    <tr>
+      <TD>&nbsp;</TD>
+      <TD>&nbsp;</TD>
+      <TD>Value</TD>
+      <TD>Data as defined by field</TD>
+    </tr>
+</TABLE>
+<BR>
+DHCP Renew message with IA_PD option including IA_PD Prefix option<BR>
+<TABLE border=1>
+    <TR>
+      <TD colspan="3">msg-type</TD>
+      <TD><b>RENEW</b>(5)</TD>
+    </TR>
+    <tr>
+      <TD colspan="3">transaction-id</TD>
+      <TD>The transaction ID for this message exchange</TD>
+    </tr>
+    <TR>
+      <TD colspan="4">options</TD>
+    </TR>
+    <TR>
+      <TD colspan="4"><b>Client Identifier Option </b> (MUST)</TD>
+    </TR>
+    <TR>
+      <TD colspan="4"><b>Server Identifier Option </b> (MUST)</TD>
+    </TR>
+    <TR>
+      <TD>&nbsp;</TD>
+      <TD colspan="2">DUID Contents type</TD>
+      <TD>1 Link-layer address plus time</TD>
+    </TR>
+    <TR>
+      <TD>&nbsp;</TD>
+      <TD colspan="2">hardware type</TD>
+      <TD>1 Ether</TD></TR>
+    <TR>
+      <TD>&nbsp;</TD>
+      <TD colspan="2">time</TD>
+      <TD>Time which the server included</TD>
+    </TR>
+    <TR>
+      <TD>&nbsp;</TD>
+      <TD colspan="2">link-layer address</TD>
+      <TD><B>00:00:00:00:a0:a0</B></TD></TR>
+    <TR>
+      <TD colspan="4"><b>IA_PD Option </b> (MUST)</TD>
+    </TR>
+    <TR>
+      <TD>&nbsp;</TD>
+      <TD colspan="2">Code</TD>
+      <TD>33 (TBD)</TD></TR>
+    <tr>
+      <TD>&nbsp;</TD>
+      <TD colspan="2">IAID</TD>
+      <TD>Unique identifier which client specified</TD>
+    </tr>
+    <TR>
+      <TD>&nbsp;</TD>
+      <TD colspan="2">T1</TD>
+      <TD>ANY</TD></TR>
+    <TR>
+      <TD>&nbsp;</TD>
+      <TD colspan="2">T2</TD>
+      <TD>ANY</TD></TR>
+    <tr>
+      <TD>&nbsp;</TD>
+      <TD colspan="3"><b>IA_PD Prefix Option </b> (MUST)</TD>
+    </tr>
+    <tr>
+      <TD>&nbsp;</TD>
+      <TD>&nbsp;</TD>
+      <TD>Code</TD>
+      <TD>34 (TBD)</TD>
+    </tr>
+    <tr>
+      <TD>&nbsp;</TD>
+      <TD>&nbsp;</TD>
+      <TD>preferred-lifetime</TD>
+      <TD>ANY</TD>
+    </tr>
+    <tr>
+      <TD>&nbsp;</TD>
+      <TD>&nbsp;</TD>
+      <TD>valid-lifetime</TD>
+      <TD>ANY</TD>
+    </tr>
+    <tr>
+      <TD>&nbsp;</TD>
+      <TD>&nbsp;</TD>
+      <TD><B>prefix-length</B></TD>
+      <TD><B>48</B></TD>
+    </tr>
+    <tr>
+      <TD>&nbsp;</TD>
+      <TD>&nbsp;</TD>
+      <TD><B>IPv6 prefix</B></TD>
+      <TD><B>3ffe:501:fff0::</B></TD>
+    </tr>
+    <tr>
+      <TD colspan="4"> <b> Elapsed Time Option </b> (MUST)</TD>
+    </tr>
+    <tr>
+      <TD>&nbsp;</TD>
+      <TD colspan="2">elapsed-time</TD>
+      <TD>ANY</TD>
+    </tr>
+    <tr>
+      <TD colspan="4"> Option Request Option (Optional)</TD>
+    </tr>
+    <tr>
+      <TD colspan="4"><b>Reconfigure Accept option (Optional)</b></TD> 
+    </tr>
+</TABLE>
+<BR>
+DHCP Reply message updated information about the IA_PD<BR>
+<TABLE border=1>
+    <TR>
+      <TD colspan="3">msg-type</TD>
+      <TD><b>REPLY</b>(7)</TD>
+    </TR>
+    <tr>
+      <TD colspan="3">transaction-id</TD>
+      <TD>The same transaction ID previous message</TD>
+    </tr>
+    <TR>
+      <TD colspan="4">options</TD>
+    </TR>
+    <TR>
+      <TD colspan="4">Client Identifier Option</TD>
+    </TR>
+    <TR>
+      <TD colspan="4">Server Identifier Option</TD>
+    </TR>
+    <TR>
+      <TD>&nbsp;</TD>
+      <TD colspan="2">DUID Contents type</TD>
+      <TD>1 Link-layer address plus time</TD>
+    </TR>
+    <TR>
+      <TD>&nbsp;</TD>
+      <TD colspan="2">hardware type</TD>
+      <TD>1 Ether</TD></TR>
+    <TR>
+      <TD>&nbsp;</TD>
+      <TD colspan="2">time</TD>
+      <TD>Time which the server included</TD>
+    </TR>
+    <TR>
+      <TD>&nbsp;</TD>
+      <TD colspan="2">link-layer address</TD>
+      <TD><B>00:00:00:00:a0:a0</B></TD></TR>
+    <TR>
+      <TD colspan="4"><b>IA_PD Option</b></TD>
+    </TR>
+    <TR>
+      <TD>&nbsp;</TD>
+      <TD colspan="2">Code</TD>
+      <TD>33 (TBD)</TD></TR>
+    <tr>
+      <TD>&nbsp;</TD>
+      <TD colspan="2">IAID</TD>
+      <TD>Unique identifier which client specified</TD>
+    </tr>
+    <TR>
+      <TD>&nbsp;</TD>
+      <TD colspan="2"><B>T1</B></TD>
+      <TD><B>40</B></TD></TR>
+    <TR>
+      <TD>&nbsp;</TD>
+      <TD colspan="2"><B>T2</B></TD>
+      <TD><B>64</B></TD></TR>
+    <tr>
+      <TD>&nbsp;</TD>
+      <TD>&nbsp;</TD>
+      <TD>Code</TD>
+      <TD>34 (TBD)</TD>
+    </tr>
+    <tr>
+      <TD>&nbsp;</TD>
+      <TD>&nbsp;</TD>
+      <TD><B>preferred-lifetime</B></TD>
+      <TD><B>80</B></TD>
+    </tr>
+    <tr>
+      <TD>&nbsp;</TD>
+      <TD>&nbsp;</TD>
+      <TD><B>valid-lifetime</B></TD>
+      <TD><B>120</B></TD>
+    </tr>
+    <tr>
+      <TD>&nbsp;</TD>
+      <TD>&nbsp;</TD>
+      <TD><B>prefix-length</B></TD>
+      <TD><B>48</B></TD>
+    </tr>
+    <tr>
+      <TD>&nbsp;</TD>
+      <TD>&nbsp;</TD>
+      <TD><B>IPv6 prefix</B></TD>
+      <TD><B>3ffe:501:fff0::</B></TD>
+    </tr>
+    <tr>
+      <TD colspan="4"><b>Reconfigure Accept option</b></TD> 
+    </tr>
+</TABLE>
+</BLOCKQUOTE>
+</PRE>
+
+=end html
+
+=head1 JUDGEMENT
+
+=begin html
+<PRE>
+<A NAME="JDG1"></A>
+  1. Router Advertisement is recieved.
+<A NAME="JDG2"></A>
+  2. DHCP Renew message is recieved. NUT accept a Reconfigure Key Authentication Protocol. 
+<A NAME="JDG3"></A>
+  3. Router Advertisement is recieved updated information.
+</PRE>
+
+=end html
+
+=head1 TERMINATION
+
+  N/A
+
+=head1 REFERENCE
+
+=begin html
+<PRE>
+draft-ietf-dhc-dhcpv6-opt-prefix-delegation-01.txt
+<HR>
+12. Prefix Delegation reconfiguration <BR>
+   This section describes prefix delegation in Reconfigure message
+   exchanges.  <BR>
+12.1 Delegating Router behaviour <BR>
+   The delegating router initiates a configuration message exchange with
+   a requesting router, as described in the section "DHCP Server-
+   Initiated Configuration Exchange" of the DHCP specification [6].  The
+   delegating router specifies the IA_PD option in the Option Request
+   option to cause the requesting router to include an IA_PD option to
+   obtain new information about delegated prefix(es).  <BR>
+12.2 Requesting Router behaviour <BR>
+   The requesting router responds to a Reconfigure message received from
+   a delegating router as described in the DHCP specification [6].  <B>The
+   requesting router MUST include the IA_PD Prefix option(s) (in an
+   IA_PD option) for prefix(es) that have been delegated to the
+   requesting router by the delegating router from which the Reconfigure
+   message was received.</B>
+<HR>
+draft-ietf-dhc-dhcpv6-28.txt
+<HR>
+14. Reliability of Client Initiated Message Exchanges <BR>
+   see <A href=./retrans_mech>the retransmission mechanism</A> <BR>
+15. Message Validation <BR>
+15.11. Reconfigure Message <BR>
+   Servers and relay agents MUST discard any received Reconfigure
+   messages.  <BR>
+   <B>Clients MUST discard any Reconfigure messages that fails any of the
+   following conditions:</B> <BR>
+    -  the message MUST have been unicast to the client <BR>
+    -  the message MUST include a Server Identifier option <BR>
+    -  the message MUST include a Client Identifier option that contains
+       the client's DUID <BR>
+    -  the message MUST contain a Reconfigure Message option and the
+       msg-type must be a valid value <BR>
+    -  the message MUST NOT include any IA options if the msg-type in
+       the Reconfigure Message option is INFORMATION-REQUEST <BR>
+    -  the message MUST include DHCP authentication: <BR>
+        *  the message MUST contain an authentication option <BR>
+        *  the message MUST pass the authentication validation performed
+           by the client <BR>
+17.1.1. Creation of Solicit Messages <BR>
+   <B>The client includes a Reconfigure Accept option (see section 22.20)
+   if the client is willing to accept Reconfigure messages from the
+   server.</B> <BR>
+18.1.1. Creation and Transmission of Request Messages <BR>
+   <B>The client includes a Reconfigure Accept option (see section
+   indicating whether or not the client is willing to accept Reconfigure
+   messages from the server.</B> <BR>
+19.4. Client Behavior <BR>
+   A client receives Reconfigure messages sent to UDP port 546 on
+   interfaces for which it has acquired configuration information
+   through DHCP. These messages may be sent at any time.  Since the
+   results of a reconfiguration event may affect application layer
+   programs, the client SHOULD log these events, and MAY notify these
+   programs of the change through an implementation-specific interface.  <BR>
+19.4.1. Receipt of Reconfigure Messages <BR>
+   <B>Upon receipt of a valid Reconfigure message, the client responds with
+   either a Renew message or an Information-request message as indicated
+   by the Reconfigure Message option (as defined in section 22.19).</B>  The
+   client ignores the transaction-id field in the received Reconfigure
+   message.  While the transaction is in progress, the client silently
+   discards any Reconfigure messages it receives.  <BR>
+   DISCUSSION: <BR>
+      The Reconfigure message acts as a trigger that signals the
+      client to complete a successful message exchange.  Once
+      the client has received a Reconfigure, the client proceeds
+      with the message exchange (retransmitting the Renew or
+      Information-request message if necessary); the client
+      ignores any additional Reconfigure messages until the
+      exchange is complete.  Subsequent Reconfigure messages cause
+      the client to initiate a new exchange.  <BR>
+      How does this mechanism work in the face of duplicated or
+      retransmitted Reconfigure messages?  Duplicate messages
+      will be ignored because the client will begin the exchange
+      after the receipt of the first Reconfigure.  Retransmitted
+      messages will either trigger the exchange (if the first
+      Reconfigure was not received by the client) or will be
+      ignored.  The server can discontinue retransmission of
+      Reconfigure messages to the client once the server receives
+      the Renew or Information-request message from the client.  <BR>
+      It might be possible for a duplicate or retransmitted
+      Reconfigure to be sufficiently delayed (and delivered out of
+      order) to arrive at the client after the exchange (initiated
+      by the original Reconfigure) has been completed.  In this
+      case, the client would initiate a redundant exchange.  The
+      likelihood of delayed and out of order delivery is small
+      enough to be ignored.  The consequence of the redundant
+      exchange is inefficiency rather than incorrect operation.  <BR>
+19.4.2. Creation and Transmission of Renew Messages <BR>
+   <B>When responding to a Reconfigure, the client creates and sends
+   the Renew message in exactly the same manner as outlined in
+   section 18.1.3, with the exception that the client copies the Option
+   Request option and any IA options from the Reconfigure message into
+   the Renew message.</B>  <BR>
+19.4.3. Creation and Transmission of Information-request Messages <BR>
+   When responding to a Reconfigure, the client creates and sends the
+   Information-request message in exactly the same manner as outlined in
+   section 18.1.5, with the exception that the client includes a Server
+   Identifier option with the identifier from the Reconfigure message to
+   which the client is responding.  <BR>
+19.4.4. Time Out and Retransmission of Renew or Information-request
+   Messages <BR>
+   The client uses the same variables and retransmission algorithm as
+   it does with Renew or Information-request messages generated as part
+   of a client-initiated configuration exchange.  See sections 18.1.3
+   and 18.1.5 for details.  If the client does not receive a response
+   from the server by the end of the retransmission process, the client
+   ignores and discards the Reconfigure message.  <BR>
+19.4.5. Receipt of Reply Messages <BR>
+   Upon the receipt of a valid Reply message, the client processes the
+   options and sets (or resets) configuration parameters appropriately.
+   The client records and updates the lifetimes for any addresses
+   specified in IAs in the Reply message.  <BR>
+21.5. Reconfigure Key Authentication Protocol <BR>
+   <B>The Reconfigure key authentication protocol provides protection
+   against misconfiguration of a client caused by a Reconfigure message
+   sent by a malicious DHCP server.  In this protocol, a DHCP server
+   sends a Reconfigure Key to the client in the initial exchange of
+   DHCP messages.  The client records the Reconfigure Key for use in
+   authenticating subsequent Reconfigure messages from that server.  The
+   server then includes an HMAC computed from the Reconfigure Key in
+   subsequent Reconfigure messages.</B>  <BR>
+   Both the Reconfigure Key sent from the server to the client and
+   the HMAC in subsequent Reconfigure messages are carried as the
+   Authentication information in an Authentication option.  The format
+   of the Authentication information is defined in the following
+   section.  <BR>
+   The Reconfigure Key protocol is used (initiated by the server) only
+   if the client and server are not using any other authentication
+   protocol and the client and server have negotiated to use Reconfigure
+   messages.  <BR>
+21.5.1. Use of the Authentication Option in the Reconfigure Key
+   Authentication Protocol <BR>
+   The following fields are set in an Authentication option for the
+   Reconfigure Key Authentication Protocol: <BR>
+      protocol    3 <BR>
+      algorithm   1 <BR>
+      RDM         0 <BR>
+   The format of the Authentication information for the Reconfigure Key
+   Authentication Protocol is: <BR>
+   0                   1                   2                   3
+   0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
+  +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+  |     Type      |                 Value (128 bits)              |
+  +-+-+-+-+-+-+-+-+                                               |
+  .                                                               .
+  .                                                               .
+  .                                               +-+-+-+-+-+-+-+-+
+  |                                               |
+  +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+<BR>
+      Type    Type of data in Value field carried in this option: <BR>
+                 1   Reconfigure Key value (used in Reply message) <BR>
+                 2   HMAC-MD5 digest of the message (used in Reconfigure
+                     message) <BR>
+      Value   Data as defined by field <BR>
+21.5.2. Server considerations for Reconfigure Key protocol <BR>
+   The server selects a Reconfigure Key for a client during the
+   Request/Reply, Solicit/Reply or Information-request/Reply message
+   exchange.  The server records the Reconfigure Key and transmits that
+   key to the client in an Authentication option in the Reply message.  <BR>
+   <B>The Reconfigure Key is 128 bits long, and MUST be a cryptographically
+   strong random or pseudo-random number that cannot easily be predicted.</B> <BR>
+   To provide authentication for a Reconfigure message, the server
+   selects a replay detection value according to the RDM selected by
+   the server, and computes an HMAC-MD5 of the Reconfigure message
+   using the Reconfigure Key for the client.  The server computes the
+   HMAC-MD5 over then entire DHCP Reconfigure message, including the
+   Authentication option; the HMAC-MD5 field in the Authentication
+   option is set to zero for the HMAC-MD5 computation.  The server
+   includes the HMAC-MD5 in the authentication information field in an
+   Authentication option included in the Reconfigure message sent to the
+   client.  <BR>
+21.5.3. Client considerations for Reconfigure Key protocol <BR>
+   The client will receive a Reconfigure Key from the server in the
+   initial Reply message from the server.  The client records the
+   Reconfigure Key for use in authenticating subsequent Reconfigure
+   messages.  <BR>
+   To authenticate a Reconfigure message, the client computes an
+   HMAC-MD5 over the DHCP Reconfigure message, using the Reconfigure
+   Key received from the server.  If this computed HMAC-MD5 matches
+   the value in the Authentication option, the client accepts the
+   Reconfigure message.  <BR>
+22.19. Reconfigure Message Option <BR>
+   A server includes a Reconfigure Message option in a Reconfigure
+   message to indicate to the client whether the client responds with a
+   Renew message or an Information-request message.  The format of this
+   option is: <BR>
+    0                   1                   2                   3
+    0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
+   +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+   |      OPTION_RECONF_MSG        |         option-len            |
+   +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+   |    msg-type   |
+   +-+-+-+-+-+-+-+-+
+<BR>
+      option-code          OPTION_RECONF_MSG (19) <BR>
+      option-len           1 <BR>
+      msg-type             5 for Renew message, 11 for
+                           Information-request message <BR>
+   The Reconfigure Message option can only appear in a Reconfigure
+   message.  <BR>
+22.20. Reconfigure Accept Option <BR>
+   A client uses the Reconfigure Accept option to announce to the server
+   whether the client is willing to accept Reconfigure messages, and a
+   server uses this option to tell the client whether or not to accept
+   Reconfigure messages.  The default behavior, in the absence of this
+   option, means unwillingness to accept Reconfigure messages, or
+   instruction not to accept Reconfigure messages, for the client and
+   server messages, respectively.  The following figure gives the format
+   of the Reconfigure Accept option: <BR>
+    0                   1                   2                   3
+    0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
+   +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+   |     OPTION_RECONF_ACCEPT      |               0               |
+   +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+<BR>
+      option-code   OPTION_RECONF_ACCEPT (20) <BR>
+      option-len    0 <BR>
+24.2. DHCP Message Types <BR>
+   IANA is requested to record the following message types (defined
+   in section 5.3).  IANA is requested to maintain a registry of DHCP
+   message types.  <BR>
+      RECONFIGURE           10 <BR>
+A. Appearance of Options in Message Types <BR>
+   The following table indicates with a "*" the options are allowed in
+   each DHCP message type: <BR>
+        Client Server IA_NA  Option Pref  Time Relay Auth. Server
+          ID     ID   IA_TA  Request            Msg.       Unica.
+Solicit   *             *      *           *           *
+Advert.   *      *      *            *     *           *
+Request   *      *      *      *           *           *
+Renew     *      *      *      *           *           *
+Reply     *      *      *            *     *           *     *
+Reconf.   *      *             *                       * <BR> <BR>
+         Status  Rap. User  Vendor Vendor Inter. Recon. Recon.
+          Code  Comm. Class Class  Spec.    ID    Msg.  Accept
+Solicit           *     *     *      *                    *
+Advert.    *            *     *      *                    *
+Request                 *     *      *                    *
+Renew                   *     *      *                    *
+Reply      *      *     *     *      *                    *
+Reconf.                                            *
+</PRE>
+
+=end html
+
+=head1 SEE ALSO
+
+  perldoc V6evalTool
+
+=cut
+

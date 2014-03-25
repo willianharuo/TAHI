@@ -1,0 +1,201 @@
+<HTML>
+<HEAD>
+<TITLE>routerSendRedirectOfflink - TBD</TITLE>
+<LINK REV="made" HREF="mailto:hackers@FreeBSD.org">
+</HEAD>
+
+<BODY>
+
+<!-- INDEX BEGIN -->
+<!--
+
+<UL>
+
+	<LI><A HREF="#NAME">NAME</A>
+	<LI><A HREF="#TARGET">TARGET</A>
+	<LI><A HREF="#SYNOPSIS">SYNOPSIS</A>
+	<LI><A HREF="#INITIALIZATION">INITIALIZATION</A>
+	<LI><A HREF="#TEST_PROCEDURE">TEST PROCEDURE</A>
+	<LI><A HREF="#JUDGMENT">JUDGMENT</A>
+	<LI><A HREF="#TERMINATION">TERMINATION</A>
+	<LI><A HREF="#NOTE">NOTE</A>
+	<LI><A HREF="#REFERENCE">REFERENCE</A>
+	<LI><A HREF="#SEE_ALSO">SEE ALSO</A>
+</UL>
+-->
+<!-- INDEX END -->
+
+<P>
+<H1><A NAME="NAME">NAME</A></H1>
+<P>
+routerSendRedirectOfflink - TBD
+
+<P>
+<HR>
+<H1><A NAME="TARGET">TARGET</A></H1>
+<P>
+<PRE>  Router Only
+</PRE>
+<P>
+<HR>
+<H1><A NAME="SYNOPSIS">SYNOPSIS</A></H1>
+<P>
+<PRE>  routerSendRedirectOfflink.seq [-tooloption ...]
+                                -p routerSendRedirectOfflink.def
+</PRE>
+<P>
+<HR>
+<H1><A NAME="INITIALIZATION">INITIALIZATION</A></H1>
+Initialization was done by <A HREF="startRedirect.html#INITIALIZATION">
+a previous test</A>.
+
+<P>
+<HR>
+<H1><A NAME="TEST_PROCEDURE">TEST PROCEDURE</A></H1>
+<P>
+<STRONG>routerSendRedirectOfflink</STRONG> verifies that that NUT send a redirect message if NUT know the better
+router's link-local address.
+
+<PRE>
+  TN               NUT
+  --------------------
+<BR>
+  ==== echo-request to H3 ===>
+       TN throws an echo-request to NUT
+       <B>mac src=TN</B>
+       <B>mac dst=NUT</B>
+       ip src=TN's global
+       ip dst=H3's global
+<BR>
+  <=== NS for R1 (if any) ====
+       src=NUT's link-local
+       dst=R1's link-local
+       target=R1's link-local
+       w/ SLLA
+<BR>
+  ==== NA for R1 (if any) ===>
+       src=R1's link-local
+       dst=NUT's link-local
+       target=R1's link-local
+       R=1, S=1, O=1
+       w/ TLLA
+<BR>
+  <=== <A HREF="#JDG1">echo-request to H3</A> ====
+       NUT forwards an echo-request to R1
+       <B>mac src=NUT</B>
+       <B>mac dst=R1</B>
+       ip src=TN's global
+       ip dst=H3's global
+<BR>
+  <=== NS for TN (if any) ====
+       src=NUT's link-local
+       dst=solicited-node[TN's global]
+       target=TN's global
+       w/ SLLA
+<BR>
+  ==== NA for TN (if any) ===>
+       src=TN's global
+       dst=NUT's link-local
+       target=TN's global
+       R=0, S=1, O=1
+       w/ TLLA
+<BR>
+  <=== <A HREF="#JDG2">Redirect</A> ====
+       src=NUT's link-local
+       dst=TN's global
+       <B>target=R1's link-local</B>
+       <B>icmp dst=H3's global</B>
+       w/ OR w/o TLLA
+       w/ OR w/o Redirected header
+</PRE>
+
+<P>
+<HR>
+<H1><A NAME="JUDGMENT">JUDGMENT</A></H1>
+<PRE>
+<A NAME="JDG1">  1.</A> NUT must forwards an echo-request to the better router, R1:
+<BR>
+<A NAME="JDG2">  2.</A> NUT must send a redirect message to TN:
+     ip src=NUT's link-local
+     ip dst=TN's global
+     icmp target=R1's link-local
+     icmp dst=H3's global
+</PRE>
+
+<P>
+<HR>
+<H1><A NAME="TERMINATION">TERMINATION</A></H1>
+<P>
+<PRE>  N/A
+</PRE>
+<P>
+<HR>
+<H1><A NAME="NOTE">NOTE</A></H1>
+<P>
+<PRE>  NUT may send a redirect message that contains a redirected header option,
+  but whose hop limit value is decreased from the original one.
+  It does make sense. In such case, this test will judges &quot;WARN&quot; instead of
+  &quot;PASS&quot; to notify the difference.
+</PRE>
+<P>
+<HR>
+<H1><A NAME="REFERENCE">REFERENCE</A></H1>
+<PRE>
+RFC2461
+<HR>
+8.2.  Router Specification
+<BR>
+   A router SHOULD send a redirect message, subject to rate limiting,
+   whenever it forwards a packet that is not explicitly addressed to
+   itself (i.e. a packet that is not source routed through the router)
+   in which:
+<BR><B>
+      - the Source Address field of the packet identifies a neighbor,
+        and
+<BR>
+      - the router determines that a better first-hop node resides on
+        the same link as the sending node for the Destination Address of
+        the packet being forwarded, and
+<BR>
+      - the Destination Address of the packet is not a multicast
+        address, and
+<BR></B>
+   The transmitted redirect packet contains, consistent with the message
+   format given in Section 4.5:
+<BR>
+      - In the Target Address field: the address to which subsequent
+        packets for the destination SHOULD be sent.  <B>If the target is a
+        router, that router's link-local address MUST be used.</B>  If the
+        target is a host the target address field MUST be set to the
+        same value as the Destination Address field.
+<BR>
+      - <B>In the Destination Address field: the destination address of the
+        invoking IP packet.</B>
+<BR>
+      - In the options:
+<BR>
+           o Target Link-Layer Address option: link-layer address of the
+             target, if known.
+<BR>
+           o Redirected Header: as much of the forwarded packet as can
+             fit without the redirect packet exceeding 1280 octets in
+             size.
+<BR>
+   A router MUST limit the rate at which Redirect messages are sent, in
+   order to limit the bandwidth and processing costs incurred by the
+   Redirect messages when the source does not correctly respond to the
+   Redirects, or the source chooses to ignore unauthenticated Redirect
+   messages.  More details on the rate-limiting of ICMP error messages
+   can be found in [ICMPv6].
+</PRE>
+
+<P>
+<HR>
+<H1><A NAME="SEE_ALSO">SEE ALSO</A></H1>
+<P>
+<PRE>  perldoc V6evalTool
+  perldoc V6evalRemote
+</PRE>
+</BODY>
+
+</HTML>

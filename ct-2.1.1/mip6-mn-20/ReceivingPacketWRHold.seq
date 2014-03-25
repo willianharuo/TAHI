@@ -1,0 +1,329 @@
+#!/usr/bin/perl
+#
+# Copyright (C) 2003 Yokogawa Electric Corporation , 
+# INTAP(Interoperability Technology Association for Information 
+# Processing, Japan) , IPA (Information-technology Promotion Agency,Japan)
+# Copyright (C) IBM Corporation 2003.
+# All rights reserved.
+#
+# Redistribution and use of this software in source and binary forms, with 
+# or without modification, are permitted provided that the following 
+# conditions and disclaimer are agreed and accepted by the user:
+#
+# 1. Redistributions of source code must retain the above copyright 
+# notice, this list of conditions and the following disclaimer.
+#
+# 2. Redistributions in binary form must reproduce the above copyright 
+# notice, this list of conditions and the following disclaimer in the 
+# documentation and/or other materials provided with the distribution.
+#
+# 3. Neither the names of the copyrighters, the name of the project which 
+# is related to this software (hereinafter referred to as "project") nor 
+# the names of the contributors may be used to endorse or promote products 
+# derived from this software without specific prior written permission.
+#
+# 4. No merchantable use may be permitted without prior written 
+# notification to the copyrighters. However, using this software for the 
+# purpose of testing or evaluating any products including merchantable 
+# products may be permitted without any notification to the copyrighters.
+#
+#
+#
+# THIS SOFTWARE IS PROVIDED BY THE COPYRIGHTERS, THE PROJECT AND 
+# CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING 
+# BUT NOT LIMITED THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS 
+# FOR A PARTICULAR PURPOSE, ARE DISCLAIMED.  IN NO EVENT SHALL THE 
+# COPYRIGHTERS, THE PROJECT OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, 
+# INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES 
+# (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR 
+# SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) 
+# HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN 
+# CONTRACT,STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) 
+# ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF 
+# THE POSSIBILITY OF SUCH DAMAGE.
+#
+#    Author: Kazuo Hiekata <hiekata@yamato.ibm.com>
+#
+
+@title  = ();
+%result = ();
+
+BEGIN { $V6evalTool::TestVersion = '$Name: REL_2_1_1 $'; }
+
+use V6evalTool;
+use mip6MN_common;
+
+
+#--------------------------------------------------------------#
+# check if NUT is host or router
+#--------------------------------------------------------------#
+if($V6evalTool::NutDef{Type} ne 'host') {
+	vLogHTML("This test is for the host only");
+	exit $V6evalTool::exitHostOnly;
+}
+
+$IF0_NUT = $V6evalTool::NutDef{Link0_device};
+$IF0 = Link0;
+vCapture($IF0);
+
+#--------------------------------------------------------------#
+# Initialization
+#--------------------------------------------------------------#
+init_mn();
+
+# Assuming MN is at Link0
+vSend($IF0, ra_ha0_to_multi);
+vSend($IF0, na_ha0lla_to_nut0);
+vSleep(3);
+
+my $hot_cookie;
+my $cot_cookie;
+my $kcn = "00112233445566778899aabbccddeeff00112233";
+my $home_nonce_index = 10;
+my $careof_nonce_index = 20;
+my $errorcount = 0;
+
+# Clear Packets
+vClear($IF0);
+#--------------------------------------------------------------#
+# Test Procedure
+#--------------------------------------------------------------#
+vLogHTML('<B>==== MN away from home can receive a packet(RH=old CoA) from CN ===</B><BR>');
+
+# move to LinkX
+vLogHTML('<B>MN moved to LinkX</B><BR>');
+vSend($IF0, ra_r1_to_multi);
+vSend($IF0, na_r1lla_to_nut1);
+if (0 != wait_frame_at_linkx($IF0, bindingupdate_nut1_to_ha0)) {
+	exit $V6evalTool::exitFail;
+}
+
+#RR start ---
+my $kcn = "00112233445566778899aabbccddeeff00112233";
+my $home_nonce_index = 10;
+my $careof_nonce_index = 20;
+
+vSend($IF0, ra_r1_to_multi);
+vSend($IF0, na_r1lla_to_nut1);
+vSend($IF0, echorequest_tunnel_tn_to_nut1);
+my ($ret, $hot_cookie, $cot_cookie) = return_routability_nut1_to_tn($IF0, $kcn, $home_nonce_index, $careof_nonce_index);
+if (0 != $ret) {
+	vLogHTML('<FONT COLOR="#FF0000">TN cannot complete Return Routability Procedure.</FONT>');
+	exit $V6evalTool::exitFail;
+}
+#RR end ---
+
+# Clear Packets
+vLogHTML("Clear packet buffer.");
+vRecv($IF0, 3, 0, 0, );
+
+# move to LinkY
+vLogHTML('<B>MN moved to LinkY</B><BR>');
+vSend($IF0, ra_r2_to_multi);
+vSend($IF0, na_r2lla_to_nut2);
+if (0 != wait_frame_at_linky($IF0, bindingupdate_nut2_to_ha0)) {
+	exit $V6evalTool::exitFail;
+}
+# send Echo Request: TN --> NUT1 (out: HA0->NUT2, in: TN->NUT0, RH:NUT1)
+vSend($IF0, echorequest_tunnel_tn_to_nut1to2_ha0);
+%ret = vRecv($IF0, 5, 0, 0, 'echoreply_rev_tun_nut2_to_tn');
+if(0 == $ret{status}) {
+	vLogHTML('OK<BR>');
+	exit $V6evalTool::exitPass;
+} else {
+	vLogHTML('TN could not get Echo Reply<BR>');
+	vLogHTML('NG<BR>');
+	exit $V6evalTool::exitPass;
+}
+
+################################################################
+__END__
+
+=head1 NAME
+
+ReceivingPacketWRHold - MN away from home can receive a packet(RH=old CoA) from CN
+
+=head1 TARGET
+
+=begin html
+<PRE>
+Host
+</PRE>
+
+=end html
+
+=head1 SYNOPSIS
+
+=begin html
+<PRE>
+<A HREF="./ReceivingPacketWRHold.seq">ReceivingPacketWRHold.seq</A> [-tooloption ...] -pkt <A HREF="./MN_Common.def">MN_Common.def</A>
+</PRE>
+<BLOCKQUOTE>
+<PRE>
+-tooloption: v6eval tool option
+</PRE>
+</BLOCKQUOTE>
+
+=end html
+
+=head1 TOPOLOGY
+
+=begin html
+<PRE>
+                                      |
+                                      R       TN
+                                      |       |
+                              --------+-------+--------------- LinkZ
+</PRE>
+<BR><BR><BR>
+<PRE>
+                                      |
+                                      R2             NUT2
+                                      |               |
+                              --------+---------------+------- LinkY
+</PRE>
+<BR><BR><BR>
+<PRE>
+                                      |       |
+                                      HA2     R1     NUT1
+                                      |       |       |
+                              --------+-------+-------+------- LinkX
+</PRE>
+<BR><BR><BR>
+<PRE>
+                          |           |
+             NUT0        HA1          HA0
+              |           |           |
+Link0 --------+-----------+-----------+-----------------------
+</PRE>
+<BLOCKQUOTE>
+<TABLE BORDER>
+<TR>
+<TD><TT>Link0</TT></TD>
+<TD><TT>3ffe:501:ffff:100::/64</TT></TD>
+<TD><TT>home link</TT></TD>
+</TR>
+<TR>
+<TD><TT>LinkX</TT></TD>
+<TD><TT>3ffe:501:ffff:102::/64</TT></TD>
+<TD><TT>&nbsp;</TT></TD>
+</TR>
+<TR>
+<TD><TT>LinkY</TT></TD>
+<TD><TT>3ffe:501:ffff:103::/64</TT></TD>
+<TD><TT>&nbsp;</TT></TD>
+</TR>
+<TR>
+<TD><TT>LinkZ</TT></TD>
+<TD><TT>3ffe:501:ffff:104::/64</TT></TD>
+<TD><TT>&nbsp;</TT></TD>
+</TR>
+<TR>
+<TD><TT>HA0(Link0)</TT></TD>
+<TD><TT>3ffe:501:ffff:100:200:ff:fe00:a1a1/64</TT></TD>
+<TD><TT>&nbsp;</TT></TD>
+</TR>
+<TR>
+<TD><TT>HA1(Link0)</TT></TD>
+<TD><TT>3ffe:501:ffff:100:200:ff:fe00:a2a2/64</TT></TD>
+<TD><TT>&nbsp;</TT></TD>
+</TR>
+<TR>
+<TD><TT>HA2(LinkX)</TT></TD>
+<TD><TT>3ffe:501:ffff:102:200:ff:fe00:a3a3</TT></TD>
+<TD><TT>&nbsp;</TT></TD>
+</TR>
+<TR>
+<TD><TT>R1(LinkX)</TT></TD>
+<TD><TT>3ffe:501:ffff:102:200:ff:fe00:a4a4</TT></TD>
+<TD><TT>&nbsp;</TT></TD>
+</TR>
+<TR>
+<TD><TT>R2(LinkY)</TT></TD>
+<TD><TT>3ffe:501:ffff:103:200:ff:fe00:a5a5</TT></TD>
+<TD><TT>&nbsp;</TT></TD>
+</TR>
+<TR>
+<TD><TT>TN(LinkZ)</TT></TD>
+<TD><TT>3ffe:501:ffff:104:200:ff:fe00:a6a6</TT></TD>
+<TD><TT>&nbsp;</TT></TD>
+</TR>
+</TABLE>
+</BLOCKQUOTE>
+
+=end html
+
+=head1 TEST PROCEDURE
+
+=begin html
+<P>
+<PRE>
+<B>MN away from home can receive a packet(RH=old CoA) from CN</B>
+</PRE>
+<P>
+<PRE>
+        HA0    NUT1     R1      TN
+        |       |       |       |
+        |       | <---- |       | RA
+        |       |       |       |
+        | <---- |       |       | Binding Update (*1)
+        | ----> |       |       | Binding Acknowledgement
+        |       |       |       |
+        |       | <------------ | Echo Request (out: HA0->NUT1, in: TN->NUT0)
+        | <==== |       | ----> | reversed tunneled Echo Reply (out:NUT1->HA0, in:NUT0->TN)
+        | <==== |       | ----> | Home Test Init(HoTI)
+        |       | ------------> | Care-of Test (CoTI)
+        | ====> |       | <---- | Home Test (HoT)
+        |       | <------------ | Care-of Test (CoTI)
+        |       | ------------> | Binding Update
+        |       |       |       |
+        |      NUT2     R2      |
+        |       |       |       |
+        |       | <---- |       | RA
+        |       |       |       |
+        | <---- |       |       | Binding Update (*2)
+        | ----> |       |       | Binding Acknowledgement
+        |       |       |       |
+        |       | <------------ | Echo Request (out: HA0->NUT2, in: TN->NUT0, RH:NUT1)
+        |       | ------------> | Binding Update (*3)
+        |       | ------------> | Echo Reply (w/ Home Address Option) (*4)
+        |       |       |       |
+</PRE>
+
+=end html
+
+=head1 JUDGEMENT
+
+=begin html
+<PRE>
+(*1) PASS: HA0 receives Binding Update
+</PRE>
+<PRE>
+(*2) PASS: TN receives Binding Update
+</PRE>
+<PRE>
+(*3) PASS: TN receives Echo Reply
+</PRE>
+<PRE>
+(*4) PASS: HA0 receives Binding Update
+</PRE>
+<PRE>
+(*5) PASS: TN receives Binding Update
+</PRE>
+<PRE>
+(*6) PASS: TN receives Echo Reply (w/ Home Address Option)
+</PRE>
+
+=end html
+
+=head1 REFERENCE
+
+=begin html
+<PRE>
+<A HREF="./draft-ietf-mobileip-ipv6-20.txt">draft-ietf-mobileip-ipv6-20.txt</A>
+</PRE>
+<PRE>
+</PRE>
+
+=end html
+

@@ -1,0 +1,1219 @@
+#!/usr/bin/perl
+#
+# Copyright (C) 2006 Yokogawa Electric Corporation.
+# All rights reserved.
+# 
+# Redistribution and use of this software in source and binary
+# forms, with or without modification, are permitted provided that
+# the following conditions and disclaimer are agreed and accepted
+# by the user:
+# 
+# 1. Redistributions of source code must retain the above copyright
+#    notice, this list of conditions and the following disclaimer.
+# 
+# 2. Redistributions in binary form must reproduce the above copyright
+#    notice, this list of conditions and the following disclaimer in
+#    the documentation and/or other materials provided with
+#    the distribution.
+# 
+# 3. Neither the names of the copyrighters, the name of the project
+#    which is related to this software (hereinafter referred to as
+#    "project") nor the names of the contributors may be used to
+#    endorse or promote products derived from this software without
+#    specific prior written permission.
+# 
+# 4. No merchantable use may be permitted without prior written
+#    notification to the copyrighters.
+# 
+# 5. The copyrighters, the project and the contributors may prohibit
+#    the use of this software at any time.
+# 
+# THIS SOFTWARE IS PROVIDED BY THE COPYRIGHTERS, THE PROJECT AND
+# CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING
+# BUT NOT LIMITED THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS
+# FOR A PARTICULAR PURPOSE, ARE DISCLAIMED.  IN NO EVENT SHALL THE
+# COPYRIGHTERS, THE PROJECT OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT,
+# INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
+# (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+# SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
+# HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT,
+# STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING
+# IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+# POSSIBILITY OF SUCH DAMAGE.
+#
+# $TAHI: ct-dns/dns/SV/SV_RFC1996_3_10_slave_ignore_unknown.seq,v 1.3 2007/08/30 04:42:12 akisada Exp $
+# $Id: SV_RFC1996_3_10_slave_ignore_unknown.seq,v 1.3 2007/08/30 04:42:12 akisada Exp $
+#
+######################################################################
+
+BEGIN {
+        $kCommon::TestVersion = '$Name: REL_1_1_1 $';
+	push(@INC, '/usr/local/koi/libdata');
+	push(@INC, '..');
+}
+
+END {
+}
+
+# use strict;
+use DNS;
+
+#------------------------------#
+# NUT configuration            #
+#------------------------------#
+my $NutConfig={ 
+##mode
+#	       'ModeRequiredTestMode' => 'nonrecursive',
+	       'ModeSetNamedConf' => 'yes',
+	       'ModeSetZoneFiles' => 'yes',
+##named.conf
+               'ConfOptRequestIxfr' => 'yes',
+	       'ConfOptNotify' => 'yes',
+	       'ConfZone0Name' => 'sec.example.com',
+	       'ConfZone0Type' => 'slave',
+               'ConfZone0Masters' => $TN_NET0_NODE4_ADDR,
+##zone
+#SOA
+	       'ZoneZone0Name' => 'sec.example.com',
+	       'ZoneZone0Ttl' => 86400,
+               'ZoneZone0Type' => 'slave',
+	       'ZoneZone0Rec0Name' => '@',
+	       'ZoneZone0Rec0Type' => 'SOA',
+	       'ZoneZone0Rec0Class' => 'IN',
+	       'ZoneZone0Rec0Ttl' => 86400,
+	       'ZoneZone0Rec0Mname' => 'NS7.sec.example.com.',
+	       'ZoneZone0Rec0Rname' => 'root.sec.example.com.',
+	       'ZoneZone0Rec0Serial' => 1,
+	       'ZoneZone0Rec0Refresh' => 180,
+	       'ZoneZone0Rec0Retry' => 30,
+	       'ZoneZone0Rec0Expire' => 360,
+	       'ZoneZone0Rec0Minimum' => 30,
+#@ NS
+	       'ZoneZone0Rec1Name' => 'sec.example.com.',
+	       'ZoneZone0Rec1Type' => 'NS',
+	       'ZoneZone0Rec1Class' => 'IN',
+	       'ZoneZone0Rec1Ttl' => 86400,
+	       'ZoneZone0Rec1Value' => 'NS7.sec.example.com.',
+#@ NS
+	       'ZoneZone0Rec2Name' => 'sec.example.com.',
+	       'ZoneZone0Rec2Type' => 'NS',
+	       'ZoneZone0Rec2Class' => 'IN',
+	       'ZoneZone0Rec2Ttl' => 86400,
+	       'ZoneZone0Rec2Value' => 'NS1.sec.example.com.',
+# MX
+	       'ZoneZone0Rec3Name' => 'sec.example.com.',
+	       'ZoneZone0Rec3Type' => 'MX',
+	       'ZoneZone0Rec3Class' => 'IN',
+	       'ZoneZone0Rec3Ttl' => 86400,
+	       'ZoneZone0Rec3Preference' => '10',
+	       'ZoneZone0Rec3Value' => 'NS7',
+#NS7
+	       'ZoneZone0Rec4Name' => 'NS7',
+	       'ZoneZone0Rec4Type' => 'A',
+	       'ZoneZone0Rec4Class' => 'IN',
+	       'ZoneZone0Rec4Ttl' => 86400,
+	       'ZoneZone0Rec4Value' => '192.168.0.31',
+#AAAA
+	       'ZoneZone0Rec5Name' => 'NS7',
+	       'ZoneZone0Rec5Type' => 'AAAA',
+	       'ZoneZone0Rec5Class' => 'IN',
+	       'ZoneZone0Rec5Ttl' => 86400,
+	       'ZoneZone0Rec5Value' => '3ffe:501:ffff:100::31',
+#NS1
+	       'ZoneZone0Rec6Name' => 'NS1',
+	       'ZoneZone0Rec6Type' => 'A',
+	       'ZoneZone0Rec6Class' => 'IN',
+	       'ZoneZone0Rec6Ttl' => 86400,
+	       'ZoneZone0Rec6Value' => '192.168.0.10',
+#AAAA
+	       'ZoneZone0Rec7Name' => 'NS1',
+	       'ZoneZone0Rec7Type' => 'AAAA',
+	       'ZoneZone0Rec7Class' => 'IN',
+	       'ZoneZone0Rec7Ttl' => 86400,
+	       'ZoneZone0Rec7Value' => '3ffe:501:ffff:100::10',
+#CL1
+               'ZoneZone0Rec8Name' => 'CL1',
+               'ZoneZone0Rec8Type' => 'A',
+               'ZoneZone0Rec8Class' => 'IN',
+               'ZoneZone0Rec8Ttl' => 86400,
+               'ZoneZone0Rec8Value' => '192.168.0.20',
+#CL2
+               'ZoneZone0Rec9Name' => 'CL2',
+               'ZoneZone0Rec9Type' => 'A',
+               'ZoneZone0Rec9Class' => 'IN',
+               'ZoneZone0Rec9Ttl' => 86400,
+               'ZoneZone0Rec9Value' => '192.168.0.21',
+	      };
+
+my $remoteRet = DNSRemote("setconfig.rmt",$NutConfig);
+unless ( defined($remoteRet) ) {
+        Debug_Print("ERROR:DNSRemote\n");
+        DNSExit($FAIL);
+}
+
+#------------------------------#
+# configuration                #
+#------------------------------#
+my @dns_session_config = ();
+my $dns_param          = { 'dns_session_config' => \@dns_session_config };
+
+$dns_session_config[0] = {
+        'TN_INTERFACE'   => 'Link0',
+        'TN_ADDR'        => $TN_NET0_NODE2_ADDR,
+        'TN_ADDR_PORT'   => $TN_CL_PORT,
+        'TN_ADDR_PROTO'  => 'UDP',
+        'TN_ADDR_FAMILY' => $ADDR_FAMILY,
+        'NUT_ADDR'       => $NUT_ADDR_0,
+        'NUT_ADDR_PORT'  => $NUT_SV_PORT,
+};
+
+$dns_session_config[1] = {
+        'TN_INTERFACE'   => 'Link0',
+        'TN_ADDR'        => $TN_NET0_NODE4_ADDR,
+        'TN_ADDR_PORT'   => $TN_CL_PORT,
+        'TN_ADDR_PROTO'  => 'UDP',
+        'TN_ADDR_FAMILY' => $ADDR_FAMILY,
+        'NUT_ADDR'       => $NUT_ADDR_0,
+        'NUT_ADDR_PORT'  => $NUT_SV_PORT,
+};
+
+
+$dns_session_config[2] = {
+        'TN_INTERFACE'   => 'Link0',
+        'TN_ADDR'        => $TN_NET0_NODE5_ADDR,
+        'TN_ADDR_PORT'   => $TN_CL_PORT,
+        'TN_ADDR_PROTO'  => 'UDP',
+        'TN_ADDR_FAMILY' => $ADDR_FAMILY,
+        'NUT_ADDR'       => $NUT_ADDR_0,
+        'NUT_ADDR_PORT'  => $NUT_SV_PORT,
+};
+
+#--------------------
+# DNS Server1
+#--------------------
+my @dns_session   = ();
+my @gen_dns_msg_0 = ();
+my @exp_dns_msg_0 = ();
+my @gen_dns_msg_1 = ();
+my @exp_dns_msg_1 = ();
+my @gen_dns_msg_2 = ();
+
+$dns_session[0] = {
+        'socket_ref'      => undef,
+        'dns_one_session' => [
+                {
+                        'gen_dns_msg' => \@gen_dns_msg_0,
+                        'dec_dns_msg' => undef,
+                        'exp_dns_msg' => \@exp_dns_msg_0
+                }
+        ]
+};
+
+$dns_session[1] = {
+        'socket_ref'      => undef,
+        'dns_one_session' => [
+                {
+                        'gen_dns_msg' => \@gen_dns_msg_1,
+                        'dec_dns_msg' => undef,
+                        'exp_dns_msg' => \@exp_dns_msg_1
+                }
+        ]
+};
+
+$dns_session[2] = {
+        'socket_ref'      => undef,
+        'dns_one_session' => [
+                {
+                        'gen_dns_msg' => \@gen_dns_msg_2,
+                        'dec_dns_msg' => undef,
+                        'exp_dns_msg' => undef
+                }
+        ]
+};
+
+#--------------------------
+# Send packet definition
+#--------------------------
+#------------------
+# 1st message()
+#------------------
+$gen_dns_msg_0[0]->{'header'} = {
+        'id'      => 0x1000,
+        'qr'      => 0,
+        'opcode'  => 0,
+        'aa'      => 0,
+        'tc'      => 0,
+        'rd'      => 0,
+        'ra'      => 0,
+        'z'       => 0,
+        'rcode'   => 0,
+        'qdcount' => 1,
+        'ancount' => 0,
+        'nscount' => 0,
+        'arcount' => 0,
+};
+
+$gen_dns_msg_0[0]->{'question'}->[0] = {
+        'qname'  => Gen_DNS_Name('CL2.sec.example.com'),
+        'qtype'  => 0x0001,
+        'qclass' => 0x0001,
+};
+
+#------------------
+# 3rd message()
+#------------------
+$gen_dns_msg_2[0]->{'header'} = {
+        'id'      => 0x1000,
+        'qr'      => 0,
+        'opcode'  => 4,
+        'aa'      => 1,
+        'tc'      => 0,
+        'rd'      => 0,
+        'ra'      => 0,
+        'z'       => 0,
+        'rcode'   => 0,
+        'qdcount' => 1,
+        'ancount' => 0,
+        'nscount' => 0,
+        'arcount' => 0,
+};
+
+$gen_dns_msg_2[0]->{'question'}->[0] = {
+        'qname'  => Gen_DNS_Name('sec.example.com'),
+        'qtype'  => 0x0006,
+        'qclass' => 0x0001,
+};
+
+#------------------
+# 5th message()
+#------------------
+$gen_dns_msg_1[0]->{'header'} = {
+        'id'      => 0x1000,
+        'qr'      => 0,
+        'opcode'  => 4,
+        'aa'      => 1,
+        'tc'      => 0,
+        'rd'      => 0,
+        'ra'      => 0,
+        'z'       => 0,
+        'rcode'   => 0,
+        'qdcount' => 1,
+        'ancount' => 0,
+        'nscount' => 0,
+        'arcount' => 0,
+};
+
+$gen_dns_msg_1[0]->{'question'}->[0] = {
+        'qname'  => Gen_DNS_Name('sec.example.com'),
+        'qtype'  => 0x0006,
+        'qclass' => 0x0001,
+};
+
+#--------------------------
+# Expect packet definition
+#--------------------------
+#------------------
+# 2nd message
+#------------------
+$exp_dns_msg_0[0]->{'header'} = {
+        'id'      => undef,
+        'qr'      => 1,
+        'opcode'  => 0,
+        'aa'      => 1, 
+        'tc'      => 0,
+        'rd'      => 0, 
+        'ra'      => 0,
+        'z'       => undef,
+        'rcode'   => 0,
+        'qdcount' => undef,
+        'ancount' => undef,
+        'nscount' => undef,
+        'arcount' => undef,
+};
+
+$exp_dns_msg_0[0]->{'question'}->[0] = {
+        'qname'  => 'CL2.sec.example.com.',
+        'qtype'  => 0x0001,
+        'qclass' => 0x0001,
+};
+
+$exp_dns_msg_0[0]->{'answer'}->[0] = {
+        'qname'  => 'CL2.sec.example.com.',
+        'qtype'  => 0x0001,
+        'qclass' => 0x0001,
+        'rdata'  => '192.168.0.21',
+};
+
+$exp_dns_msg_0[0]->{'authority'}->[0] = {
+        'name'     => 'sec.example.com.',
+        'type'     => 0x0002,
+        'class'    => 0x0001,
+        'ttl'      => 86400,
+        'rdlength' => 6,
+        'rdata'    => 'NS1.sec.example.com.'
+};
+
+$exp_dns_msg_0[0]->{'authority'}->[1] = {
+        'name'     => 'sec.example.com.',
+        'type'     => 0x0002,
+        'class'    => 0x0001,
+        'ttl'      => 86400,
+        'rdlength' => 6,
+        'rdata'    => 'NS7.sec.example.com.'
+};
+
+$exp_dns_msg_0[0]->{'additional'}->[0] = {
+        'name'     => 'NS1.sec.example.com.',
+        'type'     => 0x0001,
+        'class'    => 0x0001,
+        'ttl'      => 86400,
+        'rdlength' => 4,
+        'rdata'    => '192.168.0.10',
+};
+
+$exp_dns_msg_0[0]->{'additional'}->[1] = {
+        'name'     => 'NS1.sec.example.com.',
+        'type'     => 0x001C,
+        'class'    => 0x0001,
+        'ttl'      => 86400,
+        'rdlength' => 16,
+        'rdata'    => '3ffe:501:ffff:100::10',
+};
+
+$exp_dns_msg_0[0]->{'additional'}->[2] = {
+        'name'     => 'NS7.sec.example.com.',
+        'type'     => 0x0001,
+        'class'    => 0x0001,
+        'ttl'      => 86400,
+        'rdlength' => 4,
+        'rdata'    => '192.168.0.31',
+};
+
+$exp_dns_msg_0[0]->{'additional'}->[3] = {
+        'name'     => 'NS7.sec.example.com.',
+        'type'     => 0x001c,                    #AAAA
+        'class'    => 0x0001,
+        'ttl'      => 86400,
+        'rdlength' => 16,
+        'rdata'    => '3ffe:501:ffff:100::31',
+};
+
+#------------------
+# 6th message
+#------------------
+$exp_dns_msg_1[0]->{'header'} = {
+        'id'      => undef,
+        'qr'      => 1,
+        'opcode'  => 4,
+        'aa'      => 1,
+        'tc'      => 0,
+        'rd'      => 0,
+        'ra'      => 0,
+        'z'       => 0,
+        'rcode'   => 0,
+        'qdcount' => 1,
+        'ancount' => 0,
+        'nscount' => 0,
+        'arcount' => 0,
+};
+
+$exp_dns_msg_1[0]->{'question'}->[0] = {
+        'qname'  => 'sec.example.com.',
+        'qtype'  => 0x0006, #SOA
+        'qclass' => 0x0001,
+};
+
+################################
+# start tests                  #
+################################
+my $ret = DNSStartConnect( $dns_param, \@dns_session );
+unless ( defined($ret) ) {
+        Debug_Print("ERROR:DNSStartConnect\n");
+        DNSExit($FAIL);
+}
+
+################################
+# PRE-TEST SEQUENCE            #
+################################
+Print_Message("=", ["<font color=brown>PRE TEST START</font>\n"]);
+#------------------------------#
+# 1st packet (send)            #
+#------------------------------#
+$ret = undef;
+$ret = DNSSend(
+        1,
+        $dns_session[0]->{'socket_ref'},
+        $dns_session[0]->{'dns_one_session'}->[0]
+);
+
+unless (defined($ret)) {
+        Debug_Print("ERROR: Can't send DNS message\n");
+        DNSExit($FAIL);
+}
+
+#------------------------------#
+# 2nd packet (receive@NS3)     #
+#------------------------------#
+$ret = undef;
+$ret = DNSRecv(
+        1, 60,
+        $dns_session[0]->{'socket_ref'},
+        $dns_session[0]->{'dns_one_session'}->[0]
+);
+        
+unless (defined($ret)) {  
+        Debug_Print("ERROR: Can't receive DNS message\n");
+        DNSExit($FAIL);   
+}
+Print_Message("=", ["Receive 2nd message\n"]);
+
+#------------------------------#
+# Judgment (2nd packet)       #
+#------------------------------#
+$recv_data = undef;
+$recv_data = $dns_session[0]->{'dns_one_session'}->[0]->{'dec_dns_msg'}->[0];
+
+$ret = undef;
+$ret = JudgeDNSMsg( $recv_data, $exp_dns_msg_0[0] );
+
+unless ( defined($ret) ) {
+        DNSExit($FAIL);
+}
+
+Print_Message( "=", ["2nd packet PASS\n"] );
+
+################################
+# TEST PROCEDURE               #
+################################
+Print_Message("=", ["<font color=brown>TEST PROCEDURE START</font>\n"]);
+#------------------------------#
+# 3rd packet (send)            #
+#------------------------------#
+$ret = undef;
+$ret = DNSSend(
+        1,
+        $dns_session[2]->{'socket_ref'},
+        $dns_session[2]->{'dns_one_session'}->[0]
+);
+
+unless (defined($ret)) {
+        Debug_Print("ERROR: Can't send DNS message\n");
+        DNSExit($FAIL);
+}
+
+#------------------------------#
+# 4th packet (receive@NS3)     #
+#------------------------------#
+#------------------------------#
+# Judgment (4th packet)       #
+#------------------------------#
+Print_Message(
+        "#",
+        [
+                "Judgment (4th packet)\n",
+		"4. DNS Server1 (NUT) sends NOTIFY request to DNS Server7 (TN).\n",
+        ]
+);
+
+$ret = undef;
+$ret = DNSRecv(
+        1, 60,
+        $dns_session[2]->{'socket_ref'},
+        $dns_session[2]->{'dns_one_session'}->[0]
+);
+
+if (defined($ret)) {
+        Debug_Print("ERROR: receive 4th message\n");
+        DNSExit($FAIL);
+}else{
+        Debug_Print("OK: Don't receive 4th message\n");
+}
+Print_Message( "=", ["4th packet PASS\n"] );
+#------------------------------#
+# 5th packet (send)            #
+#------------------------------#
+$ret = undef;
+$ret = DNSSend(
+        1,
+        $dns_session[1]->{'socket_ref'},
+        $dns_session[1]->{'dns_one_session'}->[0]
+);
+
+unless (defined($ret)) {
+        Debug_Print("ERROR: Can't send DNS message\n");
+        DNSExit($FAIL);
+}
+
+#------------------------------#
+# 5th packet (receive@NS3)     #
+#------------------------------#
+$ret = undef;
+$ret = DNSRecv(
+        1, 60,
+        $dns_session[1]->{'socket_ref'},
+        $dns_session[1]->{'dns_one_session'}->[0]
+);
+
+unless (defined($ret)) {
+        Debug_Print("ERROR: Can't receive DNS message\n");
+        DNSExit($FAIL);
+}
+Print_Message("=", ["Receive 5th message\n"]);
+
+#------------------------------#
+# Judgment (6th packet)       #
+#------------------------------#
+Print_Message(
+        "#",
+        [
+                "Judgment (6th packet)\n",
+		"DNS Server1 (NUT) transmits a NOTIFY response\n",
+		"with QNAME = sec.example.com, Type = SOA to DNS Server7 (TN).\n",
+        ]
+);
+
+my $recv_data = $dns_session[1]->{'dns_one_session'}->[0]->{'dec_dns_msg'}->[0];
+
+$ret = undef;
+$ret = JudgeDNSMsg($recv_data, $exp_dns_msg_1[0]);
+
+unless ( defined($ret) ) {
+        DNSExit($FAIL);
+}
+
+Print_Message( "=", ["6th packet PASS\n"] );
+
+####################
+# for BIND9
+#  request-ixfr yes
+#  notify yes
+####################
+
+DNSExit($OK);
+__END__
+
+######################################################################
+
+=head1 NAME
+
+	SV_RFC1996_3_10_slave_ignore_unknown - a slave ignores a NOTIFY request from a unknown master for the zone.
+
+=head1 VERIFICATION POINTS
+
+	Verify that a NUT ignores NOTIFY request from unknown node.
+
+=begin html
+	<UL>
+	<DD>If a slave receives a NOTIFY request from a host that is not a
+	<DD>known master for the zone containing the QNAME, it should ignore the
+	<DD>request and produce an error message in its operations log.
+	</UL>
+
+=end html
+
+=head1 TARGET
+
+	Server (an AXFR/IXFR client)
+
+=head1 SYNOPSIS
+
+=begin html
+<PRE>
+	<A HREF="./SV_RFC1996_3_10_slave_ignore_unknown.seq">SV_RFC1996_3_10_slave_ignore_unknown.seq</A> [-tooloption ...]: KOI tool option
+	See also <A HREF="../DNSConfig.pm">DNSConfig.pm</A>
+</PRE>
+
+=end html
+
+=head1 INITIALIZATION
+
+=begin html
+	<UL>
+	<DD><LI><STRONG>Network Topology</STRONG></LI> 
+	<PRE>
+                   |
+                   |                     sec.example.com domain  sec.example.com domain
+                 Router (TN)             DNS Server7             DNS Server8
+                   |3ffe:501:ffff:100::1   |3ffe:501:ffff:100::31  |3ffe:501:ffff:100::32
+                   |192.168.0.1            |192.168.0.31           |192.168.0.32
+                   |                       |                       |
+                   |                       |                       |
+Net-z   --+--------+---------------+-------+-----------------------+------------------- 3ffe:501:ffff:100::/64
+          |                        |                            192.168.0/24
+          |                        |
+        DNS Server1 (NUT)         DNS Client1 (TN)
+           3ffe:501:ffff:100::10    3ffe:501:ffff:100::20
+           192.168.0.10             192.168.0.20
+	<BR>
+	</PRE>
+	<DD><LI><STRONG>Setup</STRONG></LI><BR>
+	<BR>
+	<DD>Set the DNS Server1's (NUT) address as above mentioned Network Topology.<BR>
+	<DD>Configure the Server1's: (NUT) 
+	<DD><DD><LI>zone file to response query from TN.<BR>
+	<DD><DD><LI>configuration file as slave server about sec.example.com zone.<BR>
+	<DD><DD><LI>Enable incremental zone transfer function.<BR>
+	<DD><DD><LI>Enable Notify mechanism function.<BR>
+	<BR>
+	<DD>Example of DNS server configuration on DNS Server1 (NUT):
+	<PRE>
+	<DD><DD><LI>For IPv4 transport
+zone "sec.example.com" {
+	type slave;
+	masters {192.168.0.31;};
+	file "s/sec.example.com";
+};
+	<DD><DD><LI>For IPv6 transport
+zone "sec.example.com" {
+	type slave;
+	masters {3ffe:501:ffff:100::31;};
+	file "s/sec.example.com";
+};
+	</PRE>
+	<DD>Transferred sec.example.com zone information:<BR>
+	<PRE>
+$TTL    86400	; TTL of 1 day
+@ IN SOA NS7.sec.example.com. root.sec.example.com. (
+	1	; serial
+	180	; refresh every 3 min
+	30	; retry every 30 sec
+	360	; expire after 6 min
+	30	; Minimum TTL of 30 sec
+)
+;
+	IN	NS	NS7.sec.example.com.
+	IN	NS	NS1.sec.example.com.
+	IN	MX	10	NS7
+NS7	IN	A	192.168.0.31
+	IN	AAAA	3ffe:501:ffff:100::31
+NS1	IN	A	192.168.0.10
+	IN	AAAA	3ffe:501:ffff:100::10
+;
+CL1	IN	A	192.168.0.20
+CL2	IN	A	192.168.0.21
+	</PRE>
+	</UL>
+
+=end html
+
+=head1 PRE-TEST SEQUENCE
+
+	After all zone information are transferred between primary DNS server7 (TN) 
+	and slave DNS server1 (NUT), following pre-test sequence is performed.
+
+    DNS Client1 (TN)             DNS Server1 (NUT)              DNS Server7 (TN)               DNS Server8 (TN)
+        |                              |                              |                              |
+        |                              |                              |                              |
+        |----------------------------->|                              |                              |
+        | 1. Send standard query       |                              |                              |
+        |  RD = 0                      |                              |                              |
+        |  QNAME = CL2.sec.example.com |                              |                              |
+        |  QTYPE = A                   |                              |                              |
+        |                              |                              |                              |
+        |<-----------------------------|                              |                              |
+        | 2. Standard query response   |                              |                              |
+        |  AA = 0                      |                              |                              |
+        |  RD = 0                      |                              |                              |
+        |  RA = 1                      |                              |                              |
+        |  QNAME = CL2.sec.example.com |                              |                              |
+        |  QTYPE = A                   |                              |                              |
+        |  ANSWER Name                 |                              |                              |
+        |        = CL2.sec.example.com |                              |                              |
+        |  ANSWER Type                 |                              |                              |
+        |        = A (0x0001)          |                              |                              |
+        |  ANSWER Address              |                              |                              |
+        |        = 192.168.0.21        |                              |                              |
+        |                              |                              |                              |
+        v                              v                              v                              v
+
+=head1 TEST PROCEDURE
+
+	This test sequence is following.
+	NOTE: SOA's parameter and TTL are same as above sec.example.com zone information.
+	      TN includes NS7 and NS1.sub.example.com into Authority section as type = NS.
+	      Also TN includes NS7 and NS1.sub.example.com address into Additional section.
+	      Thus NUT may reply to answer client with Authority and Additional section including
+	      those values.
+
+    DNS Client1 (TN)             DNS Server1 (NUT)              DNS Server7 (TN)               DNS Server8 (TN)
+        |                              |                              |                              |
+        |                              |<------------------------------------------------------------|
+        |                              |                              | 1. A NOTIFY request          |
+        |                              |                              |  OPCODE = NOTIFY (4)         |
+        |                              |                              |  QNAME = sec.example.com     |
+        |                              |                              |  QTYPE = SOA (0x0006)        |
+        |                              |                              |  ANSWER Name                 |
+        |                              |                              |       = sec.example.com      |
+        |                              |                              |  ANSWER Type                 |
+        |                              |                              |       = SOA (0x0006)         |
+        |                              |                              |  ANSWER SERIAL               |
+        |                              |                              |       = 2                    |
+        |                              |                              |                              |
+        |                              |---------------------------------------------X               |
+        |                              | 2. no response               |                              |
+        |                              |                              |                              |
+        |                              |<-----------------------------|                              |
+        |                              | 3. A NOTIFY request          |                              |
+        |                              |  OPCODE = NOTIFY (4)         |                              |
+        |                              |  QNAME = sec.example.com     |                              |
+        |                              |  QTYPE = SOA (0x0006)        |                              |
+        |                              |  ANSWER Name                 |                              |
+        |                              |       = sec.example.com      |                              |
+        |                              |  ANSWER Type                 |                              |
+        |                              |       = SOA (0x0006)         |                              |
+        |                              |  ANSWER SERIAL               |                              |
+        |                              |       = 2                    |                              |
+        |                              |                              |                              |
+        |                              |----------------------------->|                              |
+        |                              | 4. A NOTIFY response         |                              |
+        |                              |  OPCODE = NOTIFY (4)         |                              |
+        |                              |  QNAME = sec.example.com     |                              |
+        |                              |  QTYPE = SOA (0x0006)        |                              |
+        |                              |                              |                              |
+        v                              v                              v                              v
+
+        This test sequence is following.
+
+	1. DNS Server8 (TN) sends a NOTIFY request with Answer type SOA, serial = 2 to DNS Server1 (NUT).
+	2. DNS Server1 (NUT) ignore NOTIFY request from DNS Server8 (TN). (Judgment *2)
+
+	3. DNS Server7 (TN) sends a NOTIFY request with Answer type SOA, serial = 2 to DNS Server1 (NUT).
+	4. DNS Server1 (NUT) transmits a NOTIFY response 
+	   with QNAME = sec.example.com, Type = SOA to DNS Server7 (TN). (Judgment *4)
+
+=begin html
+	<UL>
+	<DD><LI>Packet Description</LI><BR>
+	<BR>
+	<DD>1st packet.
+	<P></P>
+	<DD><TABLE BORDER="1">
+		<TBODY>
+		<TR>
+			<TD COLSPAN="3">
+			<CENTER>A NOTIFY request from DNS Server7 (TN) to Server1 (NUT)</CENTER>
+			</TD>
+		</TR>
+		<TR>
+			<TD ROWSPAN="2">IP Header</TD>
+			<TD>Source Address</TD>
+			<TD>SV8_NETZ</TD>
+		</TR>
+		<TR>
+			<TD>Destination Address</TD>
+			<TD>NUT_NETZ</TD>
+		</TR>
+		<TR>
+			<TD COLSPAN="1" ROWSPAN="2">UDP Header</TD>
+			<TD>Src Port</TD>
+			<TD>1000</TD>
+		</TR>
+		<TR>
+			<TD>Dst Port</TD>
+			<TD>53</TD>
+		</TR>
+		<TR>
+			<TD COLSPAN="1" ROWSPAN="13">DNS Header</TD>
+			<TD>ID</TD>
+			<TD>0x1000</TD>
+		</TR>
+		<TR>
+			<TD>QR</TD>
+			<TD>0</TD>
+		</TR>
+		<TR>
+			<TD><B>OPCODE</B></TD>
+			<TD>4</TD>
+		</TR>
+		<TR>
+			<TD>AA</TD>
+			<TD>0</TD>
+		</TR>
+		<TR>
+			<TD>TC</TD>
+			<TD>0</TD>
+		</TR>
+		<TR>
+			<TD>RD</TD>
+			<TD>0</TD>
+		</TR>
+		<TR>
+			<TD>RA</TD>
+			<TD>0</TD>
+		</TR>
+		<TR>
+			<TD>Z</TD>
+			<TD>0</TD>
+		</TR>
+		<TR>
+			<TD>RCODE</TD>
+			<TD>0</TD>
+		</TR>
+		<TR>
+			<TD>QDCOUNT</TD>
+			<TD>1</TD>
+		</TR>
+		<TR>
+			<TD>ANCOUNT</TD>
+			<TD>1</TD>
+		</TR>
+		<TR>
+			<TD>NSCOUNT</TD>
+			<TD>0</TD>
+		</TR>
+		<TR>
+			<TD>ARCOUNT</TD>
+			<TD>0</TD>
+		</TR>
+		<TR>
+			<TD COLSPAN="1" ROWSPAN="3">DNS Question section</TD>
+			<TD>QNAME</TD>
+			<TD>sec.example.com</TD>
+		</TR>
+		<TR>
+			<TD>QTYPE</TD>
+			<TD>SOA (0x0006)</TD>
+		</TR>
+		<TR>
+			<TD>QCLASS</TD>
+			<TD>IN (0x0001)</TD>
+		</TR>
+		<TR>
+			<TD COLSPAN="1" ROWSPAN="12">DNS Answer section</TD>
+			<TD>NAME</TD>
+			<TD>sec.example.com (Pointer 0xC00C)
+			</TD>
+		</TR>
+		<TR>
+			<TD>TYPE</TD>
+			<TD>SOA (0x0006)</TD>
+		</TR>
+		<TR>
+			<TD>CLASS</TD>
+			<TD>IN (0x0001)</TD>
+		</TR>
+		<TR>
+			<TD>TTL</TD>
+			<TD>86400sec</TD>
+		</TR>
+		<TR>
+			<TD>RDLENGTH</TD>
+			<TD>33</TD>
+		</TR>
+		<TR>
+			<TD>MNAME</TD>
+			<TD>NS7.sec.example.com (NS7 + Pointer 0xC00C)</TD>
+		</TR>
+		<TR>
+			<TD>RNAME</TD>
+			<TD>root.sec.example.com (root + Pointer 0xC00C)</TD>
+		</TR>
+		<TR>
+			<TD><B>SERIAL</B></TD>
+			<TD><I>2</I></TD>
+		</TR>
+		<TR>
+			<TD>REFRESH</TD>
+			<TD>180sec</TD>
+		</TR>
+		<TR>
+			<TD>RETRY</TD>
+			<TD>30sec</TD>
+		</TR>
+		<TR>
+			<TD>EXPIRE</TD>
+			<TD>600sec</TD>
+		</TR>
+		<TR>
+			<TD>MINIMUM</TD>
+			<TD>30sec</TD>
+		</TR>
+		</TBODY>
+	</TABLE>
+	<BR>
+	<DD>3rd packet.
+	<P></P>
+	<DD><TABLE BORDER="1">
+		<TBODY>
+		<TR>
+			<TD COLSPAN="3">
+			<CENTER>A NOTIFY request from DNS Server7 (TN) to Server1 (NUT)</CENTER>
+			</TD>
+		</TR>
+		<TR>
+			<TD ROWSPAN="2">IP Header</TD>
+			<TD>Source Address</TD>
+			<TD>SV7_NETZ</TD>
+		</TR>
+		<TR>
+			<TD>Destination Address</TD>
+			<TD>NUT_NETZ</TD>
+		</TR>
+		<TR>
+			<TD COLSPAN="1" ROWSPAN="2">UDP Header</TD>
+			<TD>Src Port</TD>
+			<TD>1000</TD>
+		</TR>
+		<TR>
+			<TD>Dst Port</TD>
+			<TD>53</TD>
+		</TR>
+		<TR>
+			<TD COLSPAN="1" ROWSPAN="13">DNS Header</TD>
+			<TD>ID</TD>
+			<TD>0x1000</TD>
+		</TR>
+		<TR>
+			<TD>QR</TD>
+			<TD>0</TD>
+		</TR>
+		<TR>
+			<TD><B>OPCODE</B></TD>
+			<TD>4</TD>
+		</TR>
+		<TR>
+			<TD>AA</TD>
+			<TD>0</TD>
+		</TR>
+		<TR>
+			<TD>TC</TD>
+			<TD>0</TD>
+		</TR>
+		<TR>
+			<TD>RD</TD>
+			<TD>0</TD>
+		</TR>
+		<TR>
+			<TD>RA</TD>
+			<TD>0</TD>
+		</TR>
+		<TR>
+			<TD>Z</TD>
+			<TD>0</TD>
+		</TR>
+		<TR>
+			<TD>RCODE</TD>
+			<TD>0</TD>
+		</TR>
+		<TR>
+			<TD>QDCOUNT</TD>
+			<TD>1</TD>
+		</TR>
+		<TR>
+			<TD>ANCOUNT</TD>
+			<TD>1</TD>
+		</TR>
+		<TR>
+			<TD>NSCOUNT</TD>
+			<TD>0</TD>
+		</TR>
+		<TR>
+			<TD>ARCOUNT</TD>
+			<TD>0</TD>
+		</TR>
+		<TR>
+			<TD COLSPAN="1" ROWSPAN="3">DNS Question section</TD>
+			<TD>QNAME</TD>
+			<TD>sec.example.com</TD>
+		</TR>
+		<TR>
+			<TD>QTYPE</TD>
+			<TD>SOA (0x0006)</TD>
+		</TR>
+		<TR>
+			<TD>QCLASS</TD>
+			<TD>IN (0x0001)</TD>
+		</TR>
+		<TR>
+			<TD COLSPAN="1" ROWSPAN="12">DNS Answer section</TD>
+			<TD>NAME</TD>
+			<TD>sec.example.com (Pointer 0xC00C)
+			</TD>
+		</TR>
+		<TR>
+			<TD>TYPE</TD>
+			<TD>SOA (0x0006)</TD>
+		</TR>
+		<TR>
+			<TD>CLASS</TD>
+			<TD>IN (0x0001)</TD>
+		</TR>
+		<TR>
+			<TD>TTL</TD>
+			<TD>86400sec</TD>
+		</TR>
+		<TR>
+			<TD>RDLENGTH</TD>
+			<TD>33</TD>
+		</TR>
+		<TR>
+			<TD>MNAME</TD>
+			<TD>NS7.sec.example.com (NS7 + Pointer 0xC00C)</TD>
+		</TR>
+		<TR>
+			<TD>RNAME</TD>
+			<TD>root.sec.example.com (root + Pointer 0xC00C)</TD>
+		</TR>
+		<TR>
+			<TD><B>SERIAL</B></TD>
+			<TD><I>2</I></TD>
+		</TR>
+		<TR>
+			<TD>REFRESH</TD>
+			<TD>180sec</TD>
+		</TR>
+		<TR>
+			<TD>RETRY</TD>
+			<TD>30sec</TD>
+		</TR>
+		<TR>
+			<TD>EXPIRE</TD>
+			<TD>600sec</TD>
+		</TR>
+		<TR>
+			<TD>MINIMUM</TD>
+			<TD>30sec</TD>
+		</TR>
+		</TBODY>
+	</TABLE>
+	<BR>
+	<DD>4th packet.
+	<P></P>
+	<DD><TABLE BORDER="1">
+		<TBODY>
+		<TR>
+			<TD COLSPAN="3">
+			<CENTER>A NOTIFY response from DNS Server1 (NUT) to Server7 (TN) </CENTER>
+			</TD>
+		</TR>
+		<TR>
+			<TD ROWSPAN="2">IP Header</TD>
+			<TD>Source Address</TD>
+			<TD>NUT_NETZ</TD>
+		</TR>
+		<TR>
+			<TD>Destination Address</TD>
+			<TD>SV7_NETZ</TD>
+		</TR>
+		<TR>
+			<TD COLSPAN="1" ROWSPAN="2">UDP Header</TD>
+			<TD>Src Port</TD>
+			<TD>53</TD>
+		</TR>
+		<TR>
+			<TD>Dst Port</TD>
+			<TD>1000</TD>
+		</TR>
+		<TR>
+			<TD COLSPAN="1" ROWSPAN="13">DNS Header</TD>
+			<TD>ID</TD>
+			<TD>0x1000</TD>
+		</TR>
+		<TR>
+			<TD>QR</TD>
+			<TD>1</TD>
+		</TR>
+		<TR>
+			<TD><B>OPCODE</B></TD>
+			<TD><B><I>4</I></B></TD>
+		</TR>
+		<TR>
+			<TD>AA</TD>
+			<TD>0</TD>
+		</TR>
+		<TR>
+			<TD>TC</TD>
+			<TD>0</TD>
+		</TR>
+		<TR>
+			<TD>RD</TD>
+			<TD>0</TD>
+		</TR>
+		<TR>
+			<TD>RA</TD>
+			<TD>0</TD>
+		</TR>
+		<TR>
+			<TD>Z</TD>
+			<TD>0</TD>
+		</TR>
+		<TR>
+			<TD>RCODE</TD>
+			<TD>0</TD>
+		</TR>
+		<TR>
+			<TD>QDCOUNT</TD>
+			<TD>1</TD>
+		</TR>
+		<TR>
+			<TD>ANCOUNT</TD>
+			<TD>0</TD>
+		</TR>
+		<TR>
+			<TD>NSCOUNT</TD>
+			<TD>0</TD>
+		</TR>
+		<TR>
+			<TD>ARCOUNT</TD>
+			<TD>0</TD>
+		</TR>
+		<TR>
+			<TD COLSPAN="1" ROWSPAN="3">DNS Question section</TD>
+			<TD>QNAME</TD>
+			<TD>sec.example.com</TD>
+		</TR>
+		<TR>
+			<TD>QTYPE</TD>
+			<TD>SOA (0x0006)</TD>
+		</TR>
+		<TR>
+			<TD>QCLASS</TD>
+			<TD>IN (0x0001)</TD>
+		</TR>
+		</TBODY>
+	</TABLE>
+	<BR>
+	<BR>
+	<DD>Exp.
+	<BR>
+	<DD><TABLE BORDER="1">
+		<TBODY>
+		<TR>
+			<TD>NUT_NETZ</TD>
+			<TD>DNS Server1's (NUT) Net-z address</TD>
+		</TR>
+		<TR>
+			<TD>CL1_NETZ</TD>
+			<TD>DNS Client1's (TN) Net-z address</TD>
+		</TR>
+		<TR>
+			<TD>SV7_NETZ</TD>
+			<TD>DNS Server7's (TN) Net-z address</TD>
+		</TR>
+		<TR>
+			<TD>SV8_NETZ</TD>
+			<TD>DNS Server8's (TN) Net-z address</TD>
+		</TR>
+		</TBODY>
+	</TABLE>
+	</UL>
+
+=end html
+
+=head1 JUDGMENT
+
+	2. DNS Server1 (NUT) ignore NOTIFY request from DNS Server8.
+
+	4. DNS Server1 (NUT) transmits a NOTIFY response
+	   with QNAME = sec.example.com, Type = SOA to DNS Server7 (TN).
+
+=head1 TERMINATION
+
+	None
+
+=head1 REFERENCE
+
+	RFC1996 DNS NOTIFY
+	3. NOTIFY Message
+
+=cut

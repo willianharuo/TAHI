@@ -1,0 +1,105 @@
+<HTML>
+<HEAD>
+<TITLE>Dst_Unreach_0_Global.seq - check ICMPv6 Destination 
+	Unreachable code 0</TITLE>
+<LINK REV="made" HREF="mailto:hackers@FreeBSD.org">
+</HEAD>
+
+<BODY>
+
+<!-- INDEX BEGIN -->
+<!--
+
+<UL>
+
+	<LI><A HREF="#NAME">NAME</A>
+	<LI><A HREF="#TARGET">TARGET</A>
+	<LI><A HREF="#SYNOPSIS">SYNOPSIS</A>
+	<LI><A HREF="#INITIALIZATION">INITIALIZATION</A>
+	<LI><A HREF="#TEST_PROCEDURE">TEST PROCEDURE</A>
+	<LI><A HREF="#JUDGMENT">JUDGMENT</A>
+	<LI><A HREF="#SEE_ALSO">SEE ALSO</A>
+</UL>
+-->
+<!-- INDEX END -->
+
+<P>
+<H1><A NAME="NAME">NAME</A></H1>
+<P>
+<PRE>        Dst_Unreach_0_Global.seq - check ICMPv6 Destination 
+        Unreachable code 0 
+</PRE>
+<P>
+<HR>
+<H1><A NAME="TARGET">TARGET</A></H1>
+<P>
+<PRE>        Router
+</PRE>
+<P>
+<HR>
+<H1><A NAME="SYNOPSIS">SYNOPSIS</A></H1>
+<P>
+<PRE>        Dst_Unreach_0_Global.seq [-tooloption ...] -p 
+        Dst_Unreach_0_Global.def
+</PRE>
+<P>
+<HR>
+<H1><A NAME="INITIALIZATION">INITIALIZATION</A></H1>
+<P>
+<PRE>        When test starts, states of Neighbor Cache Entry for TN's 
+        addresses are reachable.
+</PRE>
+<P>
+<HR>
+<H1><A NAME="TEST_PROCEDURE">TEST PROCEDURE</A></H1>
+<P>
+<PRE>        This test verifies that NUT sends valid ICMPv6 Destination 
+        Unreachable (code 0) in response to a packet which can not 
+        be delivered to destination address because NUT have no route.
+        And this test verifies that the message processing rule ,
+</PRE>
+<P>
+<PRE>        If the message is a response to a message sent to one of the
+        node's unicast addresses, the Source Address of the reply must
+        be that same address.
+        
+</PRE>
+<P>
+<PRE>        TN                      NUT
+</PRE>
+<P>
+<PRE>        ---------------------------
+</PRE>
+<P>
+<PRE>        1.
+         === Echo Request  ===&gt;
+                src address : TN global address
+                dst address : offlink address
+        2.
+        &lt;&lt; JUDGMENT &gt;&gt;
+</PRE>
+<P>
+<PRE>         &lt;=== ICMPv6 Destination Unreachable ===
+                Code is 0
+</PRE>
+<P>
+<HR>
+<H1><A NAME="JUDGMENT">JUDGMENT</A></H1>
+<P>
+<PRE>        &lt;&lt; PASS &gt;&gt;
+                NUT send ICMPv6 Destination Unreachable.
+                
+</PRE>
+<P>
+<PRE>        &lt;&lt; FAIL &gt;&gt;      
+                NUT do not send ICMPv6 Destination Unreachable.
+</PRE>
+<P>
+<HR>
+<H1><A NAME="SEE_ALSO">SEE ALSO</A></H1>
+<P>
+<PRE>          perldoc V6evalTool
+</PRE>
+</BODY>
+
+</HTML>

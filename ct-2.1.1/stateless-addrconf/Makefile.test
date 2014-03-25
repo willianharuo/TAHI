@@ -1,0 +1,140 @@
+#
+# $Name: REL_2_1_1 $
+# $TINY: Makefile.test,v 1.11 2002/03/05 17:13:54 miyata Exp $
+# 
+#
+
+PERL	= /usr/bin/perl
+DUMP2TXT= -dump2txt
+IFILES  =  INDEX_LLA INDEX_RA
+IFILES  =  INDEX_LLA
+#IFILES  =  INDEX_RA
+IFILES_UME_HOST  =  INDEX_UME_HOST
+IFILES_UME_ROUTER  =  INDEX_UME_ROUTER
+
+.ifndef NUTTYPE
+NUTTYPE!=./showhead.seq -pkt /dev/null ; \
+	case $$? in \
+	4) echo 'host'; \
+		;; \
+	5) echo 'router'; \
+		;; \
+	*) echo 'unknown'; \
+		;;\
+	esac ;\
+	[ -f showhead.log ] && rm showhead.log*
+.endif
+
+
+all:
+
+document:
+	/bin/rm -f *.html
+	/bin/rm -f pod2html-dircache pod2html-itemcache
+	$(AUTORUN) -g $(IFILES)
+
+document_ume_host:
+	/bin/rm -f *.html
+	/bin/rm -f pod2html-dircache pod2html-itemcache
+	$(AUTORUN) -g $(IFILES_UME_HOST)
+
+document_ume_router:
+	/bin/rm -f *.html
+	/bin/rm -f pod2html-dircache pod2html-itemcache
+	$(AUTORUN) -g $(IFILES_UME_ROUTER)
+
+clean:
+	/bin/rm -f *.log *.dump [0-9]*.html report.html summary.html index.html
+
+test:
+	$(AUTORUN) $(AROPT) \
+	-title='IPv6 Conformance Test For Stateless Address Configuration ' \
+	$(IFILES)
+
+tahi:	document
+	/bin/rm -f index.html summary.html report.html
+	$(AUTORUN) $(AROPT) \
+	-title='IPv6 Conformance Test For Stateless Address Configuration ' \
+	$(IFILES)
+
+tiny:	document
+	/bin/rm -f index.html summary.html report.html
+	$(AUTORUN) $(AROPT) -tiny \
+	-title='IPv6 Conformance Test For Stateless Address Configuration ' \
+	$(IFILES)
+
+ume_host:document_ume_host
+	/bin/rm -f index.html summary.html report.html
+	$(AUTORUN) $(AROPT) \
+	-title='IPv6 Conformance Test For Stateless Address Configuration ' \
+	$(IFILES_UME_HOST)
+
+ume_router:document_ume_router
+	/bin/rm -f index.html summary.html report.html
+	$(AUTORUN) $(AROPT) \
+	-title='IPv6 Conformance Test For Stateless Address Configuration ' \
+	$(IFILES_UME_ROUTER)
+
+
+############################
+# Legacy Test 
+############################
+
+legacy-document:
+	$(AUTORUN) -g INDEX_seq
+	/bin/rm -f index.html summary.html report.html
+	$(AUTORUN) -g INDEX_BEGIN INDEX_hostrouter INDEX_host INDEX_END
+	$(POD2HTML) DAD.pm > DAD.html
+	/bin/rm -f pod2html-dircache pod2html-itemcache
+
+legacy-test:	
+	case $(NUTTYPE) in \
+	host) \
+		$(MAKE) $(NOPT) AROPT="$(AROPT)" legacy-testhost; \
+		;; \
+	router) \
+		$(MAKE) $(NOPT) AROPT="$(AROPT)" legacy-testrouter; \
+		;; \
+	*) \
+		echo "Unknown NUT Type (check nut.def)"; \
+		exit 1; \
+		;; \
+	esac
+
+legacy-tahi:	document
+	/bin/rm -f index.html summary.html report.html
+	case $(NUTTYPE) in \
+	host) \
+		$(MAKE) $(NOPT) AROPT="$(AROPT)" legacy-testhost2; \
+		;; \
+	router) \
+		$(MAKE) $(NOPT) AROPT="$(AROPT)" legacy-testrouter2; \
+		;; \
+	*) \
+		echo "Unknown NUT Type (check nut.def)"; \
+		exit 1; \
+		;; \
+	esac
+
+legacy-testhost:
+	$(AUTORUN) $(AROPT)\
+	-title='IPv6 Conformance Test For Stateless Address Configuration (Host)' \
+	INDEX_BEGIN INDEX_hostrouter INDEX_host INDEX_END
+
+legacy-testrouter:
+	$(AUTORUN) $(AROPT)\
+	-title='IPv6 Conformance Test For Stateless Address Configuration (Router)' \
+	INDEX_BEGIN INDEX_hostrouter INDEX_router INDEX_END
+
+legacy-testhost2:
+	$(AUTORUN) $(DUMP2TXT) $(AROPT)\
+	-title='IPv6 Conformance Test For Stateless Address Configuration (Host)' \
+	INDEX_BEGIN INDEX_hostrouter INDEX_host INDEX_END
+
+legacy-testrouter2:
+	$(AUTORUN) $(DUMP2TXT) $(AROPT)\
+	-title='IPv6 Conformance Test For Stateless Address Configuration (Router)' \
+	INDEX_BEGIN INDEX_hostrouter INDEX_router INDEX_END
+
+
+.include "../Makefile.inc"

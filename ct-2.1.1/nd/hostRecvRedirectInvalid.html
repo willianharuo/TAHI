@@ -1,0 +1,189 @@
+<HTML>
+<HEAD>
+<TITLE>hostRecvRedirectInvalid - Verifying invalid redirects vs neighbor cache entry</TITLE>
+<LINK REV="made" HREF="mailto:hackers@FreeBSD.org">
+</HEAD>
+
+<BODY>
+
+<!-- INDEX BEGIN -->
+<!--
+
+<UL>
+
+	<LI><A HREF="#NAME">NAME</A>
+	<LI><A HREF="#TARGET">TARGET</A>
+	<LI><A HREF="#SYNOPSIS">SYNOPSIS</A>
+	<LI><A HREF="#INITIALIZATION">INITIALIZATION</A>
+	<LI><A HREF="#TEST_PROCEDURE">TEST PROCEDURE</A>
+	<LI><A HREF="#JUDGMENT">JUDGMENT</A>
+	<LI><A HREF="#TERMINATION">TERMINATION</A>
+	<LI><A HREF="#NOTE">NOTE</A>
+	<LI><A HREF="#SEE_ALSO">SEE ALSO</A>
+</UL>
+-->
+<!-- INDEX END -->
+
+<P>
+<H1><A NAME="NAME">NAME</A></H1>
+<P>
+hostRecvRedirectInvalid - Verifying invalid redirects vs neighbor cache
+entry
+
+<P>
+<HR>
+<H1><A NAME="TARGET">TARGET</A></H1>
+<P>
+Host only
+
+<P>
+<HR>
+<H1><A NAME="SYNOPSIS">SYNOPSIS</A></H1>
+<P>
+<PRE>  hostRecvRedirectInvalid.seq [-tooloption ...] -p hostRecvRedirectInvalid.def
+</PRE>
+<P>
+<HR>
+<H1><A NAME="INITIALIZATION">INITIALIZATION</A></H1>
+<OL>
+  <LI>Clear NC state for TN.
+  <LI>Set R1 as the default router, and its state to REACHABLE.
+</OL>
+<BR>
+<PRE>
+  TN                 NUT
+  ----------------------
+<BR>
+  State: NONCE (for R1, TN)
+<BR>
+  ==== unsolicited RA ===>
+       src=R1's link-local
+       dst=all-node
+       M=0, O=0
+       RouterLifetime=600
+       ReachableTime=0
+       RetransTimer=0
+       w/ SLLA
+       Prefix Option:
+           L=1, A=1
+           ValidLifetime=2592000
+           PreferredLifetime=604800
+           Prefix=3ffe:501:ffff:100::/64
+<BR>
+  State: STALE (for R1), NONCE (for TN)
+<BR>
+  ==== solicited NA ===>
+        src=R1's link-local
+        dst=NUT's link-local
+        R=1, S=1, O=1
+        target=R1's link-local
+        TLLA=R1's LLA
+<BR>
+  State: REACHABLE (for R1), NONCE (for TN)
+<BR>
+  Wait (3 sec) for DAD NS
+</PRE>
+
+<P>
+<HR>
+<H1><A NAME="TEST_PROCEDURE">TEST PROCEDURE</A></H1>
+<P>
+<STRONG>hostRecvRedirectInvalid</STRONG> verifies that no neighbor cache entry is created with invalid redirect
+messages.
+
+<PRE>
+  TN               NUT
+  ----------------------
+<BR>
+  State: REACHABLE (for R1), NONCE (for TN)
+<BR>
+  ==== <A HREF="#JDG1">invalid redirect</A> ===>
+       ICMP Target=TN's link-local
+<BR>
+  <A HREF="#JDG1">Judgment</A>: <A HREF="nd.html">Examining NUT's neighbor cache state is NONCE</A>
+</PRE>
+
+<P>
+<HR>
+<H1><A NAME="JUDGMENT">JUDGMENT</A></H1>
+<PRE>
+<A NAME="JDG1"></A>
+ 1. Invalid redirect messages
+<HR>
+8.1.  Validation of Redirect Messages
+<BR>
+   A host MUST silently discard any received Redirect message that does
+   not satisfy all of the following validity checks:
+<BR>
+      - <A NAME="INVALID1"><B>IP Source Address is a link-local address.</A></B>  Routers must use
+        their link-local address as the source for Router Advertisement
+        and Redirect messages so that hosts can uniquely identify
+        routers.
+<BR>
+      - <A NAME="INVALID2"><B>The IP Hop Limit field has a value of 255,</A></B> i.e., the packet
+        could not possibly have been forwarded by a router.
+<BR>
+      - If the message includes an IP Authentication Header, the message
+        authenticates correctly.
+<BR>
+      - <A NAME="INVALID3"><B>ICMP Checksum is valid.</A></B>
+<BR>
+      - <A NAME="INVALID4"><B>ICMP Code is 0.</A></B>
+<BR>
+      - ICMP length (derived from the IP length) is 40 or more octets.
+<BR>
+      - <A NAME="INVALID5"><B>The IP source address of the Redirect is the same as the current
+        first-hop router for the specified ICMP Destination Address.</A></B>
+<BR>
+      - <A NAME="INVALID6"><B>The ICMP Destination Address field in the redirect message does
+        not contain a multicast address.</A></B>
+<BR>
+      - <A NAME="INVALID7"><B>The ICMP Target Address is either a link-local address (when
+        redirected to a router) or the same as the ICMP Destination
+        Address (when redirected to the on-link destination).</A></B>
+<BR>
+      - All included options have a length that is greater than zero.
+<HR>
+ ================+================+=========+====+========+==========+===============+===========
+ IP                                         |ICMP                                    |NC state
+ ----------------+----------------+---------+----+--------+----------+---------------+-----+-----
+ Src             |Dst             |Hop Limit|Code|Chksum  |Dst       |Target         |Now  |New
+ ================+================+=========+====+========+==========+===============+===========
+ <A HREF="#INVALID1">*R1's global</A>    |NUT's link-local|255      |0   |valid   |off-link  |TN's link-local|NONCE|NONCE
+ ----------------+----------------+---------+----+--------+----------+---------------+-----+----
+ R1's link-local |NUT's link-local|<A HREF="#INVALID2">*!=255</A>   |0   |valid   |off-link  |TN's link-local|NONCE|NONCE
+ ----------------+----------------+---------+----+--------+----------+---------------+-----+-----
+ R1's link-local |NUT's link-local|255      |<A HREF="#INVALID4">*!=0</A>|valid   |off-link  |TN's link-local|NONCE|NONCE
+ ----------------+----------------+---------+----+--------+----------+---------------+-----+-----
+ R1's link-local |NUT's link-local|255      |0   |<A HREF="#INVALID3">*invalid</A>|off-link  |TN's link-local|NONCE|NONCE
+ ----------------+----------------+---------+----+--------+----------+---------------+-----+-----
+ R1's link-local |NUT's link-local|255      |0   |valid   |<A HREF="#INVALID6">*multicast</A>|TN's link-local|NONCE|NONCE
+ ----------------+----------------+---------+----+--------+----------+---------------+-----+-----
+ <A HREF="#INVALID5">*R2's link-local</A>|NUT's link-local|255      |0   |valid   |off-link  |TN's link-local|NONCE|NONCE
+ ----------------+----------------+---------+----+--------+----------+---------------+-----+-----
+ R1's link-local |NUT's link-local|255      |0   |valid   |<A HREF="#INVALID7">*off-link |*TN's global</A>   |NONCE|NONCE
+ ================+================+=========+====+========+==========+===============+===========
+</PRE>
+
+<P>
+<HR>
+<H1><A NAME="TERMINATION">TERMINATION</A></H1>
+<P>
+<PRE>  Send RA with RouterLifetime=0 to clear the Default Router List.
+</PRE>
+<P>
+<HR>
+<H1><A NAME="NOTE">NOTE</A></H1>
+<P>
+<PRE>  The test does not invoke any remote command.
+</PRE>
+<P>
+<HR>
+<H1><A NAME="SEE_ALSO">SEE ALSO</A></H1>
+<P>
+<PRE>  perldoc V6evalTool
+  perldoc V6evalRemote
+</PRE>
+</BODY>
+
+</HTML>

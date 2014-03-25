@@ -1,0 +1,229 @@
+<HTML>
+<HEAD>
+<TITLE>LLA_DAD_NSPreDAD_SrcUni - check the process when NUT receives NS for address  resolution before transmitting DAD NS.</TITLE>
+<LINK REV="made" HREF="mailto:hackers@FreeBSD.org">
+</HEAD>
+
+<BODY>
+
+<!-- INDEX BEGIN -->
+<!--
+
+<UL>
+
+	<LI><A HREF="#NAME">NAME</A>
+	<LI><A HREF="#TARGET">TARGET</A>
+	<LI><A HREF="#SYNOPSIS">SYNOPSIS</A>
+	<LI><A HREF="#INITIALIZATION">INITIALIZATION</A>
+	<LI><A HREF="#TEST_PROCEDURE">TEST PROCEDURE</A>
+	<LI><A HREF="#JUDGEMENT">JUDGEMENT</A>
+	<LI><A HREF="#REFERENCE">REFERENCE</A>
+	<LI><A HREF="#SEE_ALSO">SEE ALSO</A>
+</UL>
+-->
+<!-- INDEX END -->
+
+<P>
+<H1><A NAME="NAME">NAME</A></H1>
+<P>
+LLA_DAD_NSPreDAD_SrcUni - check the process when NUT receives NS for
+address <CODE>resolution(Src=Unicast)</CODE> before transmitting DAD NS.
+
+<P>
+<HR>
+<H1><A NAME="TARGET">TARGET</A></H1>
+<P>
+All Node
+
+<P>
+<HR>
+<H1><A NAME="SYNOPSIS">SYNOPSIS</A></H1>
+<P>
+LLA_DAD_NSPreDAD_SrcUni.seq [-tooloption ...] -pkt &lt;packetdef&gt;
+[addrconf=&lt;addrconfname&gt;] 
+
+<P>
+<PRE>  -tooloption   : v6eval tool option
+  &lt;packetdef&gt;   : packet definition file (v6eval tool option)
+  &lt;addrconfname&gt;: how to configure address on NUT; boot/reboot
+</PRE>
+<PRE>
+ detail of v6eval tool option: see perldoc V6evalTool.pm, perldoc V6evalRemote.pm
+</PRE>
+
+<P>
+<HR>
+<H1><A NAME="INITIALIZATION">INITIALIZATION</A></H1>
+<PRE>
+ Reboot NUT or Initialize interface of NUT or Initialize IPv6 stack of NUT.
+</PRE>
+
+<P>
+<HR>
+<H1><A NAME="TEST_PROCEDURE">TEST PROCEDURE</A></H1>
+<DL>
+<DT><STRONG><A NAME="item_Test">Test for Unicast address configuration</A></STRONG><DD>
+<P>
+The following tests are prepared in this test package. See INDEX file.
+
+<P>
+<STRONG>Test for all node</STRONG>
+
+
+
+<P>
+<PRE>   NUT performs DAD for its Link-local unicast address made by stateless address
+   autoconfiguration, though NUT receives NS which contains unicast as source
+   address before transimitting DAD NS.
+</PRE>
+<P>
+<STRONG>Test sequence</STRONG>
+
+
+
+<P>
+<PRE>  TN                            NUT
+  ---------------------------------
+  Initialize NUT
+</PRE>
+<P>
+<PRE>  Configure address of NUT (reboot or interface initialization etc...)
+</PRE>
+<P>
+<PRE>  ==== Action #1: NS =============&gt;
+  ====        #1: NS =============&gt;
+                :
+                :
+  ====        #1: NS =============&gt;
+        name: SOLNS_from_TN_SameTgt
+</PRE>
+<P>
+<PRE>  TN wait the DAD NS sent from NUT
+  &lt;=== Judgement #1: DAD NS =======
+        name: DADNS_from_NUT
+</PRE>
+<P>
+<PRE>  Wait for DupAddrDetectTransmits*RetransTimer
+</PRE>
+<P>
+<PRE>  Check if NUT's address is configured
+  ==== Action #2: SOL NS =========&gt;
+        name: SOLNS_from_TN_SameTgt
+</PRE>
+<P>
+<PRE>  &lt;=== Judgement #2: SOL NA =======
+        name: NA_from_NUT, NA_from_NUT_woTLL 
+</PRE>
+</DL>
+<P>
+<HR>
+<H1><A NAME="JUDGEMENT">JUDGEMENT</A></H1>
+<DL>
+<DT><STRONG>Test for Link-local Unicast address autoconfiguration</STRONG><DD>
+<P>
+<STRONG>Test for all NODE</STRONG>
+
+
+
+<P>
+<STRONG>NUT performs Stateless Address Autoconfiguration(Link-local) on its interface</STRONG>
+
+
+
+<P>
+<PRE>   Action #1. TN transmits NS which contains unicast as source address for NUT's tentative Link-local address
+        name: SOLNS_from_TN_SameTgt
+        src: TN's Link-local
+        dst: solnode[NUT's tentative Link-local]
+        TargetAddress: TN's Link-local
+</PRE>
+<P>
+<PRE>   Judgement #1. NUT MUST transmit DAD NS for its autoconfigured Link-local address.
+        name: DADNS_from_NUT
+        src: ::0
+        dst: solnode[NUT's tentative Link-local]
+        TargetAddress: NUT's tentative Link-local
+</PRE>
+<P>
+<PRE>   Action #2. TN transmits SOL NS to check if NUT's address is configured
+        name: SOLNS_from_TN_SameTgt
+        src: TN's Link-local
+        dst: solnode[NUT's Link-local]
+        TargetAddress: NUT's Link-local
+</PRE>
+<P>
+<PRE>   Judgement #2. NUT MUST transmit SOL NA for its autoconfigured  Link-local address.
+        name: NA_from_NUT, NA_from_NUT_woTLL
+        src: NUT's Link-local
+        dst: TN's Link-local
+        TargetAddress: NUT's Link-local
+        RFlag: 0 ( if NUT is a Router then 1)
+        SFlag: 1
+        OFlag: 1
+        TLLOPT: NUT's MAC address
+</PRE>
+</DL>
+<P>
+<HR>
+<H1><A NAME="REFERENCE">REFERENCE</A></H1>
+<PRE>
+RFC2462
+<HR>
+<BR>
+   (omit)
+5.4.2.  Sending Neighbor Solicitation Messages
+<BR>
+   Before sending a Neighbor Solicitation, an interface MUST join the
+   all-nodes multicast address and the solicited-node multicast address
+   of the tentative address.  The former insures that the node receives
+   Neighbor Advertisements from other nodes already using the address;
+   the latter insures that two nodes attempting to use the same address
+   simultaneously detect each other's presence.
+<BR>
+   To check an address, a node sends DupAddrDetectTransmits Neighbor
+   Solicitations, each separated by RetransTimer milliseconds. The
+   solicitation's Target Address is set to the address being checked,
+   the IP source is set to the unspecified address and the IP
+   destination is set to the solicited-node multicast address of the
+   target address.
+<BR>
+   If the Neighbor Solicitation is the first message to be sent from an
+   interface after interface (re)initialization, the node should delay
+   sending the message by a random delay between 0 and
+   MAX_RTR_SOLICITATION_DELAY as specified in [DISCOVERY].  This serves
+   to alleviate congestion when many nodes start up on the link at the
+   same time, such as after a power failure, and may help to avoid race
+   conditions when more than one node is trying to solicit for the same
+<A NAME="REF">
+   address at the same time. <B>In order to improve the robustness of the
+   Duplicate Address Detection algorithm, an interface MUST receive and
+   process datagrams sent to the all-nodes multicast address or
+   solicited-node multicast address of the tentative address while
+   delaying transmission of the initial Neighbor Solicitation.</B></A>
+<BR>
+5.4.3.  Receiving Neighbor Solicitation Messages
+<BR>
+   On receipt of a valid Neighbor Solicitation message on an interface,
+   node behavior depends on whether the target address is tentative or
+   not.  If the target address is not tentative (i.e., it is assigned to
+   the receiving interface), the solicitation is processed as described
+   in [DISCOVERY].  <B>If the target address is tentative, and the source
+   address is a unicast address, the solicitation's sender is performing
+   address resolution on the target; the solicitation should be silently
+   ignored</B>.  Otherwise, processing takes place as described below. <B>In
+   all cases, a node MUST NOT respond to a Neighbor Solicitation for a   
+   tentative address</B>.
+<BR>
+   (omit)
+</PRE>
+
+<P>
+<HR>
+<H1><A NAME="SEE_ALSO">SEE ALSO</A></H1>
+<PRE>
+ detail of v6eval tool option: see perldoc V6evalTool.pm, perldoc V6evalRemote.pm
+</PRE>
+
+</BODY>
+
+</HTML>

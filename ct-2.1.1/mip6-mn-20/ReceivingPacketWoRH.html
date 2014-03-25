@@ -1,0 +1,216 @@
+<HTML>
+<HEAD>
+<TITLE>ReceivingPacketWoRH - MN can received packets via HA</TITLE>
+<LINK REV="made" HREF="mailto:hackers@FreeBSD.org">
+</HEAD>
+
+<BODY>
+
+<!-- INDEX BEGIN -->
+<!--
+
+<UL>
+
+	<LI><A HREF="#NAME">NAME</A>
+	<LI><A HREF="#TARGET">TARGET</A>
+	<LI><A HREF="#SYNOPSIS">SYNOPSIS</A>
+	<LI><A HREF="#TOPOLOGY">TOPOLOGY</A>
+	<LI><A HREF="#TEST_PROCEDURE">TEST PROCEDURE</A>
+	<LI><A HREF="#JUDGEMENT">JUDGEMENT</A>
+	<LI><A HREF="#REFERENCE">REFERENCE</A>
+</UL>
+-->
+<!-- INDEX END -->
+
+<P>
+<H1><A NAME="NAME">NAME</A></H1>
+<P>
+ReceivingPacketWoRH - MN can received packets via HA
+
+<P>
+<HR>
+<H1><A NAME="TARGET">TARGET</A></H1>
+<PRE>
+Host
+</PRE>
+
+<P>
+<HR>
+<H1><A NAME="SYNOPSIS">SYNOPSIS</A></H1>
+<PRE>
+<A HREF="./ReceivingPacketWoRH.seq">ReceivingPacketWoRH.seq</A> [-tooloption ...] -pkt <A HREF="./MN_Common.def">MN_Common.def</A>
+</PRE>
+<BLOCKQUOTE>
+<PRE>
+-tooloption: v6eval tool option
+</PRE>
+</BLOCKQUOTE>
+
+<P>
+<HR>
+<H1><A NAME="TOPOLOGY">TOPOLOGY</A></H1>
+<PRE>
+                                      |
+                                      R       TN
+                                      |       |
+                              --------+-------+--------------- LinkZ
+</PRE>
+<BR><BR><BR>
+<PRE>
+                                      |
+                                      R2             NUT2
+                                      |               |
+                              --------+---------------+------- LinkY
+</PRE>
+<BR><BR><BR>
+<PRE>
+                                      |       |
+                                      HA2     R1     NUT1
+                                      |       |       |
+                              --------+-------+-------+------- LinkX
+</PRE>
+<BR><BR><BR>
+<PRE>
+                          |           |
+             NUT0        HA1          HA0
+              |           |           |
+Link0 --------+-----------+-----------+-----------------------
+</PRE>
+<BLOCKQUOTE>
+<TABLE BORDER>
+<TR>
+<TD><TT>LinkX</TT></TD>
+<TD><TT>3ffe:501:ffff:102::/64</TT></TD>
+<TD><TT>&nbsp;</TT></TD>
+</TR>
+<TR>
+<TD><TT>LinkY</TT></TD>
+<TD><TT>3ffe:501:ffff:103::/64</TT></TD>
+<TD><TT>&nbsp;</TT></TD>
+</TR>
+<TR>
+<TD><TT>LinkZ</TT></TD>
+<TD><TT>3ffe:501:ffff:104::/64</TT></TD>
+<TD><TT>&nbsp;</TT></TD>
+</TR>
+<TR>
+<TD><TT>HA0(Link0)</TT></TD>
+<TD><TT>3ffe:501:ffff:100:200:ff:fe00:a1a1/64</TT></TD>
+<TD><TT>&nbsp;</TT></TD>
+</TR>
+<TR>
+<TD><TT>HA1(Link0)</TT></TD>
+<TD><TT>3ffe:501:ffff:100:200:ff:fe00:a2a2/64</TT></TD>
+<TD><TT>&nbsp;</TT></TD>
+</TR>
+<TR>
+<TD><TT>HA2(LinkX)</TT></TD>
+<TD><TT>3ffe:501:ffff:102:200:ff:fe00:a3a3</TT></TD>
+<TD><TT>&nbsp;</TT></TD>
+</TR>
+<TR>
+<TD><TT>R1(LinkX)</TT></TD>
+<TD><TT>3ffe:501:ffff:102:200:ff:fe00:a4a4</TT></TD>
+<TD><TT>&nbsp;</TT></TD>
+</TR>
+<TR>
+<TD><TT>R2(LinkY)</TT></TD>
+<TD><TT>3ffe:501:ffff:103:200:ff:fe00:a5a5</TT></TD>
+<TD><TT>&nbsp;</TT></TD>
+</TR>
+<TR>
+<TD><TT>TN(LinkZ)</TT></TD>
+<TD><TT>3ffe:501:ffff:104:200:ff:fe00:a6a6</TT></TD>
+<TD><TT>&nbsp;</TT></TD>
+</TR>
+</TABLE>
+</BLOCKQUOTE>
+
+<P>
+<HR>
+<H1><A NAME="TEST_PROCEDURE">TEST PROCEDURE</A></H1>
+<PRE>
+<B>MN can received packets via HA</B>
+</PRE>
+<P>
+<PRE>
+        HA0    NUT1     R1      TN
+        |       |       |       |
+        |       | <---- |       | RA
+        |       | <---- |       | NA
+        |       |       |       |
+        | <---- |       |       | Binding Update (*1)
+        | ----> |       |       | Binding Acknowledgement
+        |       |       |       |
+        |       | <------------ | Echo Request (out: HA0->NUT1, in: TN->NUT0)
+        | <==== |       | ----> | reversed tunneled Echo Reply (out:NUT1->HA0, in:NUT0->TN) (*2)
+        | <==== |       | ----> | Home Test Init(HoTI)
+        |       | ------------> | Care-of Test (CoTI)
+        | ====> |       | <---- | Home Test (HoT)
+        |       | <------------ | Care-of Test (CoTI)
+        |       | ------------> | Binding Update (*3)
+        |       |       |       |
+</PRE>
+<P>
+
+<P>
+<HR>
+<H1><A NAME="JUDGEMENT">JUDGEMENT</A></H1>
+<PRE>
+(*1) PASS: HA0 receives Binding Update
+</PRE>
+<PRE>
+(*2) PASS: TN receives Echo Reply
+</PRE>
+<PRE>
+(*3) PASS: TN receives Binding Update
+</PRE>
+
+<P>
+<HR>
+<H1><A NAME="REFERENCE">REFERENCE</A></H1>
+<PRE>
+<A HREF="./draft-ietf-mobileip-ipv6-20.txt">draft-ietf-mobileip-ipv6-20.txt</A>
+</PRE>
+<PRE>
+11.3 Packet Processing
+</PRE>
+<PRE>
+11.3.3 Receiving Packets While Away from Home
+</PRE>
+<PRE>
+   While away from home, a mobile node will receive packets addressed to
+   its home address, by one of three methods:
+</PRE>
+<PRE>
+   o  Packets sent by a correspondent node that does not have a Binding
+      Cache entry for the mobile node, will be tunneled to the mobile
+      node via its home agent.
+</PRE>
+<PRE>
+   o  Packets sent by a correspondent node that has a Binding Cache
+      entry for the mobile node that contains the mobile node's current
+      care-of address, will be sent by the correspondent node using a
+      type 2 routing header.  The packet will be addressed to the mobile
+      node's care-of address, with the final hop in the routing header
+      directing the packet to the mobile node's home address; the
+      processing of this last hop of the routing header is entirely
+      internal to the mobile node, since the care-of address and home
+      address are both addresses within the mobile node.
+</PRE>
+<PRE>
+   For packets received by the first of these methods, the mobile node
+   MUST check that the IPv6 source address of the tunneled packet is the
+   IP address of its home agent.  In this method the mobile node SHOULD
+   also send a Binding Update to the original sender of the packet, as
+   described in Section 11.7.2, subject to the rate limiting defined in
+   Section 11.8.  The mobile node MUST also process the received packet
+   in the manner defined for IPv6 encapsulation [15], which will result
+   in the encapsulated (inner) packet being processed normally by
+   upper-layer protocols within the mobile node, as if it had been
+   addressed (only) to the mobile node's home address.
+</PRE>
+
+</BODY>
+
+</HTML>

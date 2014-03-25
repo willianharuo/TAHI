@@ -1,0 +1,109 @@
+<HTML>
+<HEAD>
+<TITLE>Unknown_Infomsg.seq - check Message Processing Rules</TITLE>
+<LINK REV="made" HREF="mailto:hackers@FreeBSD.org">
+</HEAD>
+
+<BODY>
+
+<!-- INDEX BEGIN -->
+<!--
+
+<UL>
+
+	<LI><A HREF="#NAME">NAME</A>
+	<LI><A HREF="#TARGET">TARGET</A>
+	<LI><A HREF="#SYNOPSIS">SYNOPSIS</A>
+	<LI><A HREF="#NETWORK_CONFIGURATION">NETWORK CONFIGURATION</A>
+	<LI><A HREF="#INITIALIZATION">INITIALIZATION</A>
+	<LI><A HREF="#TEST_PROCEDURE">TEST PROCEDURE</A>
+	<LI><A HREF="#JUDGMENT">JUDGMENT</A>
+	<LI><A HREF="#SEE_ALSO">SEE ALSO</A>
+</UL>
+-->
+<!-- INDEX END -->
+
+<P>
+<H1><A NAME="NAME">NAME</A></H1>
+<P>
+<PRE>        Unknown_Infomsg.seq - check Message Processing Rules
+</PRE>
+<P>
+<HR>
+<H1><A NAME="TARGET">TARGET</A></H1>
+<P>
+<PRE>        Host/Router
+</PRE>
+<P>
+<HR>
+<H1><A NAME="SYNOPSIS">SYNOPSIS</A></H1>
+<P>
+<PRE>        Unknown_Infomsg.seq [-tooloption ...] -p Unknown_Infomsg.def
+</PRE>
+<P>
+<HR>
+<H1><A NAME="NETWORK_CONFIGURATION">NETWORK CONFIGURATION</A></H1>
+<P>
+<PRE>        This test is ON-LINK Network Configuration test.
+        
+        Physical/Logical Network configuration
+        
+        ---------------------------------------
+                |               |
+                NUT             TN
+</PRE>
+<P>
+<HR>
+<H1><A NAME="INITIALIZATION">INITIALIZATION</A></H1>
+<P>
+<PRE>        Make a Neighbor Cache Entry for TN's in NUT.
+</PRE>
+<P>
+<HR>
+<H1><A NAME="TEST_PROCEDURE">TEST PROCEDURE</A></H1>
+<P>
+<PRE>        This test verifies that the message processing rule ,
+</PRE>
+<P>
+<PRE>        If an ICMPv6 informational message of unknown type is received,
+        it MUST be silently discarded.
+</PRE>
+<P>
+<PRE>        TN                      NUT
+</PRE>
+<P>
+<PRE>        ---------------------------
+</PRE>
+<P>
+<PRE>        1.
+         === Unknown Type ICMPv6 Information message ===&gt;
+                src address : TN link-local address
+                dst address : NUT link-local address
+                type        : 255 (unknown type)
+        2.
+        &lt;&lt; JUDGMENT &gt;&gt;
+        
+         &lt;=== No packets ===
+                        or      
+         &lt;=== ICMPv6 Parameter Problem ===
+</PRE>
+<P>
+<HR>
+<H1><A NAME="JUDGMENT">JUDGMENT</A></H1>
+<P>
+<PRE>        &lt;&lt; PASS &gt;&gt;
+                NUT do not send ICMPv6 Parameter Problem.
+</PRE>
+<P>
+<PRE>        &lt;&lt; FAIL &gt;&gt;      
+                NUT send ICMPv6 Parameter Problem.
+</PRE>
+<P>
+<HR>
+<H1><A NAME="SEE_ALSO">SEE ALSO</A></H1>
+<P>
+<PRE>          perldoc V6evalTool
+</PRE>
+</BODY>
+
+</HTML>

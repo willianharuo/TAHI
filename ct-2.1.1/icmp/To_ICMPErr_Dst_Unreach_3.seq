@@ -1,0 +1,195 @@
+#!/usr/bin/perl
+#
+# Copyright (C) 1999, 2000, 2001, 2002, 2003 Yokogawa Electric Corporation,
+# IPA (Information-technology Promotion Agency, Japan).
+# All rights reserved.
+# 
+# Redistribution and use of this software in source and binary forms, with 
+# or without modification, are permitted provided that the following 
+# conditions and disclaimer are agreed and accepted by the user:
+# 
+# 1. Redistributions of source code must retain the above copyright 
+# notice, this list of conditions and the following disclaimer.
+# 
+# 2. Redistributions in binary form must reproduce the above copyright 
+# notice, this list of conditions and the following disclaimer in the 
+# documentation and/or other materials provided with the distribution.
+# 
+# 3. Neither the names of the copyrighters, the name of the project which 
+# is related to this software (hereinafter referred to as "project") nor 
+# the names of the contributors may be used to endorse or promote products 
+# derived from this software without specific prior written permission.
+# 
+# 4. No merchantable use may be permitted without prior written 
+# notification to the copyrighters. However, using this software for the 
+# purpose of testing or evaluating any products including merchantable 
+# products may be permitted without any notification to the copyrighters.
+# 
+# 
+# 
+# THIS SOFTWARE IS PROVIDED BY THE COPYRIGHTERS, THE PROJECT AND 
+# CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING 
+# BUT NOT LIMITED THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS 
+# FOR A PARTICULAR PURPOSE, ARE DISCLAIMED.  IN NO EVENT SHALL THE 
+# COPYRIGHTERS, THE PROJECT OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, 
+# INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES 
+# (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR 
+# SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) 
+# HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN 
+# CONTRACT,STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) 
+# ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF 
+# THE POSSIBILITY OF SUCH DAMAGE.
+#
+# $TAHI: ct/icmp/To_ICMPErr_Dst_Unreach_3.seq,v 1.1 2003/03/26 07:47:33 masaxmasa Exp $
+#
+#----------------------------------------------------------------------
+
+BEGIN {
+	$V6evalTool::TestVersion = '$Name: REL_2_1_1 $';
+}
+
+use V6evalTool;
+
+%pktdesc = (
+    echo_request	=> 'Send Echo Request',
+    echo_reply		=> 'Receive Echo Reply',
+    ns			=> 'Receive Neighbor Solicitation',
+    na			=> 'Send Neighbor Advertisement',
+    dst_unreach		=> 'Send Destination Unreachable (Hop-by-Hop Options Header after Destination Options Header)',
+    parameter_problem	=> 'Receive ICMP Error (Parameter Problem, unrecognized Next Header type encounted)',
+);
+
+$IF = Link0;
+
+vCapture($IF);
+
+#----------------------------------------------------------------------
+# Test
+#----------------------------------------------------------------------
+
+vLogHTML('<FONR SIZE=+1>TEST</FONT>');
+
+%ret = vSend($IF, echo_request);
+%ret = vRecv($If, 5, $ret{sentTime1}, 0, echo_reply, ns);
+if ($ret{status} != 0) {
+	vLogHTML('Recv no packets');
+	goto error;
+};
+
+if ($ret{recvFrame} eq 'echo_reply') {
+	%ret = vSend($IF, na);
+}
+elsif ($ret{recvFrame} eq 'ns') {
+	%ret = vSend($IF, na);
+	%ret = vRecv($IF, 5, $ret{sentTime1}, 0, echo_reply);
+	if ($ret{status} == 0) {
+		goto error;
+	};
+}
+else {
+	goto error;
+};
+
+%ret = vSend($IF, dst_unreach);
+
+%ret = vRecv($IF, 5, $ret{sentTime}, 0, ns, parameter_problem);
+if ($ret{status} != 0) {
+	vLogHTML('OK');
+	exit($V6evalTool::exitPass);
+};
+
+if ($ret{recvFrame} eq 'ns') {
+	vSend($IF, na);
+
+	%ret = vRecv($IF, 5, 0, 0, parameter_problem);
+	if ($ret{status} != 0) {
+		vLogHTML('OK');
+		exit($V6evalTool::exitPass);
+	}
+}
+elsif ($ret{recvFrame} eq 'parameter_problem') {
+	vLogHTML('<FONT COLOR="#FF0000">NG</FONT>');
+	exit($V6evalTool::exitWarn);
+};
+
+error:
+
+vLog("FAIL");
+exit($V6evalTool::exitFail);
+
+########################################################################
+__END__
+
+=head1 NAME
+
+	To_ICMPErr_Dst_Unreach.seq - check Message Processing Rules
+	(ICMPv6 Destination Unreachable)
+
+=head1 TARGET
+
+	Host/Router
+
+=head1 SYNOPSIS
+
+	To_ICMPErr_Dst_Unreach.seq [-tooloptions ...] -p To_ICMPErr_Dst_Unreach.def
+
+=head1 NETWORK CONFIGURATION
+
+	This test is On-Link Network Configuration test.
+
+	Physical/Logical Network Configuration
+
+	---------------------------------------
+		|               |
+                NUT             TN
+
+=head1 INITIALIZATION
+
+	Make a Neighbor Cache Entry for TN's in NUT.
+
+=head1 TEST PROCEDURE
+
+	This test verifies that the message processing rule,
+
+	An ICMPv6 error message MUST NOT be sent as a result of
+	receiving an ICMPv6 error message.
+
+	TN			NUT
+
+	---------------------------
+
+	1.
+	======== echo request========>
+		src address:	TN link-local address
+		dst address:	NUT link-local address
+	2.
+	<======== echo reply ========
+		src address:	NUT link-local address
+		dst address:	TN link-local address
+	3.
+	=== ICMPv6 Destination Unreachable ===>
+		src address:	TN link-local address
+		dst address:	NUT link-local address
+		code:		address unreachable
+		with extension headers
+		Destination options header appears before hop-by-hop options
+		header.
+	4.
+	<< JUDGMENT >>
+	<=== No packets ===
+		or
+	<=== ICMPv6 Parameter Problem ===
+
+=head1 JUDGMENT
+
+	<< PASS >>
+		NUT don't send ICMPv6 Parameter Problem.
+
+	<< FAIL >>
+		NUT send ICMPv6 Parameter Problem.
+
+=head1 SEE ALSO
+
+	perldoc V6evalTool
+
+=cut

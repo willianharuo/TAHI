@@ -1,0 +1,37 @@
+#
+# $Name: REL_2_1_1 $
+# INDEX file for UME
+#<seq>:<def>:[<opt>]:[<log>]:<desc>
+#
+&print:<font size=+1><B>Neighbor Discovery</B></font>
+&print:<B>- Sending Neighbor Solicitation</B>
+./sendNsBasicLocal.seq:./sendNsBasicLocal.def:::Verify that the NUT send NSs (link-local ==> link-local)
+./sendNsBasicGlobGlob.seq:./sendNsBasicGlobGlob.def:::Verify that the NUT send NSs (global ==> global)
+./sendNsBasicGlobLink.seq:./sendNsBasicGlobLink.def:::Verify that the NUT send NSs (link-local ==> global)
+./sendNsBasicLinkGlob.seq:./sendNsBasicLinkGlob.def:::Verify that the NUT send NSs (global ==> link-local)
+./sendMcastNS.seq:./sendMcastNS.def:::Sending Multicast NS w/ RetransTimer=Default Config.
+./sendMcastNS2.seq:./sendMcastNS2.def:::Sending Multicast NS w/ RetransTimer=3sec.
+./sendUcastNS.seq:./sendUcastNS.def:::Sending Unicast NS w/ RetransTimer=Default Config.
+./sendUcastNS2.seq:./sendUcastNS2.def:::Sending Unicast NS w/ RetransTimer=3sec.
+./adrsolvQueuOne.seq:./adrsolvQueuOne.def:::Verify an Address Resolution Queue (one entry for an address ?)
+./adrsolvQueuTwo.seq:./adrsolvQueuTwo.def:::Verify an Address Resolution Queue (more then one entry for an address ?)
+./adrsolvQueuMulti.seq:./adrsolvQueuMulti.def:::Verify an Address Resolution Queue (one entry per an address ?)
+#
+&print:<B>- Receiving Neighbor Solicitation</B>
+./recvNsBasic.seq:./recvNsBasic.def:::Receiving valid NSs
+./recvNsInvalid.seq:./recvNsInvalid.def:::Receiving invalid NSs
+./recvNsRFlag.seq:./recvNsRFlag.def:::NS vs. IsRouter flag<br>Verify that NUT's IsRouter flag when receiving NS
+./ncStateByNs4NoNce.seq:./ncStateByNs4NoNce.def:::NS vs. NONCE<br>Receiving NS while correspondent Neighbor Cache Entry is NONCE
+./ncStateByNs4Incomplete.seq:./ncStateByNs4Incomplete.def:::NS vs. INCOMPLETE<br>Receiving NS while correspondent Neighbor Cache Entry is INCOMPLETE
+./ncStateByNs4Reachable.seq:./ncStateByNs4Reachable.def:::NS vs. REACHABLE<br>Receiving NS while correspondent Neighbor Cache Entry is REACHABLE
+./ncStateByNs4Stale.seq:./ncStateByNs4Stale.def:::NS vs. STALE<br>Receiving NS while correspondent Neighbor Cache Entry is STALE
+./ncStateByNs4Probe.seq:./ncStateByNs4Probe.def:::NS vs. PROBE<br>Receiving NS while correspondent Neighbor Cache Entry is PROBE
+#
+&print:<B>- Receiving Neighbor Advertisement</B>
+./recvNaRFlag.seq:./recvNaRFlag.def:::R flag vs. IsRouter flag<br>Verify that NUT's IsRouter flag when receiving NA with R flag=1
+./ncStateByNa4Nonce.seq:./ncStateByNa4Nonce.def:::NA vs. NONCE<br>Receiving NA while correspondent Neighbor Cache Entry is NONCE
+./ncStateByNa4Incomplete.seq:./ncStateByNa4Incomplete.def:::NA vs. INCOMPLETE<br>Receiving NA while correspondent Neighbor Cache Entry is INCOMPLETE
+./ncStateByNa4Reachable.seq:./ncStateByNa4Reachable.def:::NA vs. REACHABLE<br>Receiving NA while correspondent Neighbor Cache Entry is REACHABLE
+./ncStateByNa4Stale.seq:./ncStateByNa4Stale.def:::NA vs. STALE<br>Receiving NA while correspondent Neighbor Cache Entry is STALE
+./ncStateByNa4Probe.seq:./ncStateByNa4Probe.def:::NA vs. PROBE<br>Receiving NA while correspondent Neighbor Cache Entry is PROBE
+# EOF

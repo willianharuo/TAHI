@@ -1,0 +1,153 @@
+<HTML>
+<HEAD>
+<TITLE>EH_UnrecognizedNextHeader - check Unrecognized Next Header in Extension Header</TITLE>
+<LINK REV="made" HREF="mailto:hackers@FreeBSD.org">
+</HEAD>
+
+<BODY>
+
+<!-- INDEX BEGIN -->
+<!--
+
+<UL>
+
+	<LI><A HREF="#NAME">NAME</A>
+	<LI><A HREF="#TARGET">TARGET</A>
+	<LI><A HREF="#SYNOPSIS">SYNOPSIS</A>
+	<LI><A HREF="#INITIALIZATION">INITIALIZATION</A>
+	<LI><A HREF="#TEST_PROCEDURE">TEST PROCEDURE</A>
+	<LI><A HREF="#JUDGMENT">JUDGMENT</A>
+	<LI><A HREF="#REFERENCE">REFERENCE</A>
+	<LI><A HREF="#SEE_ALSO">SEE ALSO</A>
+</UL>
+-->
+<!-- INDEX END -->
+
+<P>
+<H1><A NAME="NAME">NAME</A></H1>
+<P>
+<PRE>  EH_UnrecognizedNextHeader - check Unrecognized Next Header in Extension Header
+</PRE>
+<P>
+<HR>
+<H1><A NAME="TARGET">TARGET</A></H1>
+<P>
+<PRE>  Host and Router
+</PRE>
+<P>
+<HR>
+<H1><A NAME="SYNOPSIS">SYNOPSIS</A></H1>
+<PRE>
+  <A HREF="./EH_UnrecognizedNextHeader.seq">EH_UnrecognizedNextHeader.seq</A> [-tooloption ...] -pkt <A HREF="./EH_UnrecognizedNextHeader.def">EH_UnrecognizedNextHeader.def</A>
+    -tooloption : v6eval tool option
+</PRE>
+
+<P>
+<HR>
+<H1><A NAME="INITIALIZATION">INITIALIZATION</A></H1>
+<P>
+<PRE>  None
+</PRE>
+<P>
+<HR>
+<H1><A NAME="TEST_PROCEDURE">TEST PROCEDURE</A></H1>
+<P>
+<PRE>  Tester                      Target
+    |                           |
+    |--------------------------&gt;|
+    |   Test Packet             |
+    |                           |
+    |                           |
+    |&lt;--------------------------|
+    |   Neighbor Solicitation   |
+    |                           |
+    |                           |
+    |--------------------------&gt;|
+    |   Neighbor Advertisement  |
+    |                           |
+    |                           |
+    |&lt;--------------------------|
+    |   ICMP Error              |
+    |                           |
+    v                           v
+</PRE>
+<P>
+<PRE>  1. Send Test Packet (Unrecognized Next Header in Extension Header)
+  2. Wait ICMP Error or NS
+  3. If NS received then send NA, and wait ICMP Error again
+  4. Receive ICMP Error
+</PRE>
+<P>
+<PRE>  Test Packet to Target Data is:
+</PRE>
+<P>
+<PRE>        IPv6 Header
+            Version            = 6
+            Traffic Class      = 0
+            FlowLabel          = 0
+            PayloadLength      = 16
+            NextHeader         = 60 (Destination Options Header)
+            SourceAddress      = Tester Address
+            DestinationAddress = Tester Address
+</PRE>
+<P>
+<PRE>        Destination Options Header
+            NextHeader      = 128 (Unrecognized value)
+            HeaderExtLength = 0
+            OptionType      = 1 (PadN)
+            OptDataLength   = 4
+            pad             = {0,0,0,0}
+</PRE>
+<P>
+<HR>
+<H1><A NAME="JUDGMENT">JUDGMENT</A></H1>
+<P>
+<PRE>  PASS: ICMP Error Received
+</PRE>
+<P>
+<PRE>        IPv6 Header
+            Version            = 6
+            Traffic Class      = 0
+            FlowLabel          = 0
+            PayloadLength      = 56
+            NextHeader         = 58 (ICMP)
+            SourceAddress      = Target Address
+            DestinationAddress = Tester Address
+</PRE>
+<P>
+<PRE>        ICMP Error
+            Type           = 4 (Parameter Problem)
+            Code           = 1 (unrecognized Next Header type encountered)
+            Checksum       = (auto)
+            Pointer        = 40 (Offset to Next Header type)
+            PayloadData    = (Sent Packet)
+</PRE>
+<P>
+<HR>
+<H1><A NAME="REFERENCE">REFERENCE</A></H1>
+<P>
+RFC2460
+
+<P>
+4. IPv6 Extension Headers
+
+<P>
+<PRE>   If, as a result of processing a header, a node is required to proceed
+   to the next header but the Next Header value in the current header is
+   unrecognized by the node, it should discard the packet and send an
+   ICMP Parameter Problem message to the source of the packet, with an
+   ICMP Code value of 1 (&quot;unrecognized Next Header type encountered&quot;)
+   and the ICMP Pointer field containing the offset of the unrecognized
+   value within the original packet.  The same action should be taken if
+   a node encounters a Next Header value of zero in any header other
+   than an IPv6 header.
+</PRE>
+<P>
+<HR>
+<H1><A NAME="SEE_ALSO">SEE ALSO</A></H1>
+<P>
+<PRE>  perldoc V6evalTool
+</PRE>
+</BODY>
+
+</HTML>

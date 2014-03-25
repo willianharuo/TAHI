@@ -1,0 +1,341 @@
+<HTML>
+<HEAD>
+<TITLE>hostRecvRedirect4OfflinkDC - Verifying Redirect vs. Destination Cache</TITLE>
+<LINK REV="made" HREF="mailto:hackers@FreeBSD.org">
+</HEAD>
+
+<BODY>
+
+<!-- INDEX BEGIN -->
+<!--
+
+<UL>
+
+	<LI><A HREF="#NAME">NAME</A>
+	<LI><A HREF="#TARGET">TARGET</A>
+	<LI><A HREF="#SYNOPSIS">SYNOPSIS</A>
+	<LI><A HREF="#INITIALIZATION">INITIALIZATION</A>
+	<LI><A HREF="#TEST_PROCEDURE">TEST PROCEDURE</A>
+	<LI><A HREF="#JUDGMENT">JUDGMENT</A>
+	<LI><A HREF="#TERMINATION">TERMINATION</A>
+	<LI><A HREF="#NOTE">NOTE</A>
+	<LI><A HREF="#SEE_ALSO">SEE ALSO</A>
+</UL>
+-->
+<!-- INDEX END -->
+
+<P>
+<H1><A NAME="NAME">NAME</A></H1>
+<P>
+hostRecvRedirect4OfflinkDC - Verifying Redirect (to a better router) vs.
+Destination Cache
+
+<P>
+<HR>
+<H1><A NAME="TARGET">TARGET</A></H1>
+<P>
+Host only
+
+<P>
+<HR>
+<H1><A NAME="SYNOPSIS">SYNOPSIS</A></H1>
+<P>
+<PRE>  hostRecvRedirect4OfflinkDC.seq [-tooloption ...]
+                                  -p hostRecvRedirect4OfflinkDC.def
+</PRE>
+<P>
+<HR>
+<H1><A NAME="INITIALIZATION">INITIALIZATION</A></H1>
+<OL>
+  <LI>Clear IPv6 routes.
+  <LI>Send RAs (src=R1 and TN) to clear the Default Router List.
+  <LI>Set R1 as the default router by sending RA and NA.
+  <LI>Set TN as the second router by sending RA and NA.
+</OL>
+<BR>
+<PRE>
+  TN                 NUT
+  ----------------------
+<BR>
+  State: NONCE (for R1, TN)
+<BR>
+  ==== unsolicited RA ===>
+       src=R1's link-local
+       dst=all-node
+       M=0, O=0
+       RouterLifetime=0
+       ReachableTime=0
+       RetransTimer=0
+<BR>
+  ==== unsolicited RA ===>
+       src=TN's link-local
+       dst=all-node
+       M=0, O=0
+       RouterLifetime=0
+       ReachableTime=0
+       RetransTimer=0
+<BR>
+  ==== unsolicited RA ===>
+       src=R1's link-local
+       dst=all-node
+       M=0, O=0
+       RouterLifetime=600
+       ReachableTime=0
+       RetransTimer=0
+       w/ SLLA
+       Prefix Option:
+           L=1, A=1
+           ValidLifetime=2592000
+           PreferredLifetime=604800
+           Prefix=3ffe:501:ffff:100::/64
+<BR>
+  State: STALE (for R1), NONCE (for TN)
+<BR>
+  ==== solicited NA ===>
+        src=R1's link-local
+        dst=NUT's link-local
+        R=1, S=1, O=1
+        target=R1's link-local
+        TLLA=R1's LLA
+<BR>
+  State: REACHABLE (for R1), NONCE (for TN)
+<BR>
+  ==== unsolicited RA ===>
+       src=TN's link-local
+       dst=all-node
+       M=0, O=0
+       RouterLifetime=600
+       ReachableTime=0
+       RetransTimer=0
+       w/ SLLA
+       Prefix Option:
+           L=1, A=1
+           ValidLifetime=2592000
+           PreferredLifetime=604800
+           Prefix=3ffe:501:ffff:100::/64
+<BR>
+  State: REACHABLE (for R1), STALE (for TN)
+<BR>
+  ==== solicited NA ===>
+        src=TN's link-local
+        dst=NUT's link-local
+        R=1, S=1, O=1
+        target=TN's link-local
+        TLLA=TN's LLA
+<BR>
+  State: REACHABLE (for R1, TN)
+<BR>
+  Wait (3 sec) for DAD NS
+</PRE>
+
+<P>
+<HR>
+<H1><A NAME="TEST_PROCEDURE">TEST PROCEDURE</A></H1>
+<P>
+<STRONG>hostRecvRedirect4OfflinkDC</STRONG> verifies that a redirect message (ICMP Destination != ICMP Target) updates
+a Destination Cache entry.
+
+<OL>
+  <LI>Send echo-request (src:H1, dst:NUT)
+  <LI>Verify that NUT send echo-reply to the default router, R1
+  <LI>Send redirect message to NUT.
+  <LI>Send echo-request (src:H1, dst:NUT) again.
+  <LI>Verify echo-reply that NUT throw:
+  <OL>
+    <LI>The redirect message is ether valid or suspicious:<BR>
+        NUT must send echo-reply to the better router TN
+    <LI>The redirect message is invalid:<BR>
+        NUT must send echo-reply to the default router R1
+  </OL>
+</OL>
+<PRE>
+  TN               NUT
+  ----------------------
+<BR>
+  State: REACHABLE (for R1, TN)
+<BR>
+  ==== echo-request ===>
+       src=H1(off-link global), prefix=3ffe:501:ffff:109::/64,
+           but LLA is R1's one
+       dst=NUT's global, prefix=3ffe:501:ffff:100::/64
+<BR>
+  <=== <A HREF="#JDG1">Judgment #1</A>: echo-reply ====
+       src=NUT's global, prefix=3ffe:501:ffff:100::/64
+       dst=H1(off-link global), prefix=3ffe:501:ffff:109::/64,
+           but LLA is R1's one
+<BR>
+  ==== redirect ===>
+       <A HREF="#JDG2">valid redirect</A>
+              OR
+       <A HREF="#JDG3">suspicious redirect</A>
+              OR
+       <A HREF="#JDG4">invalid redirect</A>
+<BR>
+  ==== echo-request ===>
+       src=H1(off-link global), prefix=3ffe:501:ffff:109::/64,
+           but LLA is R1's one
+       dst=NUT's global, prefix=3ffe:501:ffff:100::/64
+<BR>
+  <=== echo-reply ====
+       If the message is either <A HREF="#JDG2">valid</A> or <A HREF="#JDG3">suspicious</A>,
+       NUT throw echo-reply to TN (the better router) :
+         src=NUT's global, prefix=3ffe:501:ffff:100::/64
+         dst=H1(off-link global), prefix=3ffe:501:ffff:109::/64,but LLA is TN's one
+              OR
+       If the message is <A HREF="#JDG4">invalid</A>,
+       NUT throw echo-reply to R1 (the default router) :
+         src=NUT's global, prefix=3ffe:501:ffff:100::/64
+         dst=H1(off-link global), prefix=3ffe:501:ffff:109::/64,but LLA is R1's one
+</PRE>
+
+<P>
+<HR>
+<H1><A NAME="JUDGMENT">JUDGMENT</A></H1>
+<A NAME="JDG1"></A>
+
+<P>
+<PRE>  1. NUT must throw echo-reply whose destination is off-link global
+    to the default router, ie R1.
+</PRE>
+<A NAME="JDG2"></A>
+
+<P>
+<PRE>  2. Valid redirect messages vs. Destination Cache
+  ========================================================+=============+=======================
+  Valid redirect message that NUT receives                |Destination  | Expected packet
+  ---------------------+-----------------+----------------+Cache        |
+  IP                   |ICMP             |Options         |for H1       |
+  ----------+----------+----------+------+-----+----------+-------+-----+
+  Src       |Dst       |Target    |Dst   |TLLA |Redirected|Before |After|
+  ==========+==========+==========+======+=====+==========+=======+=====+=======================
+  link-local|link-local|link-local|global|none |none      |R1     |TN   |echo-reply
+  (R1)      |(NUT)     |(TN)      |(H1)  |     |          |       |     |  src=NUT's global
+            |          |          |      |     |          |       |     |  dst=H1's global
+            |          |          |      |     |          |       |     |      but, LLA is TN's
+  ----------+----------+----------+------+-----+----------+-------+-----+-----------------------
+  -         |-         |-         |-     |none |exist     |R1     |TN   |echo-reply
+            |          |          |      |     |          |       |     |  src=NUT's global
+            |          |          |      |     |          |       |     |  dst=H1's global
+            |          |          |      |     |          |       |     |      but, LLA is TN's
+  ----------+----------+----------+------+-----+----------+-------+-----+-----------------------
+  -         |-         |-         |-     |exist|none      |R1     |TN   |echo-reply
+            |          |          |      |     |          |       |     |  src=NUT's global
+            |          |          |      |     |          |       |     |  dst=H1's global
+            |          |          |      |     |          |       |     |      but, LLA is TN's
+  ----------+----------+----------+------+-----+----------+-------+-----+-----------------------
+  -         |-         |-         |-     |exist|exist     |R1     |TN   |echo-reply
+            |          |          |      |     |          |       |     |  src=NUT's global
+            |          |          |      |     |          |       |     |  dst=H1's global
+            |          |          |      |     |          |       |     |      but, LLA is TN's
+  ----------+----------+----------+------+-----+----------+-------+-----+-----------------------
+  -         |global    |-         |-     |none |none      |R1     |TN   |echo-reply
+            |(NUT)     |          |      |     |          |       |     |  src=NUT's global
+            |          |          |      |     |          |       |     |  dst=H1's global
+            |          |          |      |     |          |       |     |      but, LLA is TN's
+  ----------+----------+----------+------+-----+----------+-------+-----+-----------------------
+  -         |-         |-         |-     |none |exist     |R1     |TN   |echo-reply
+            |          |          |      |     |          |       |     |  src=NUT's global
+            |          |          |      |     |          |       |     |  dst=H1's global
+            |          |          |      |     |          |       |     |      but, LLA is TN's
+  ----------+----------+----------+------+-----+----------+-------+-----+-----------------------
+  -         |-         |-         |-     |exist|none      |R1     |TN   |echo-reply
+            |          |          |      |     |          |       |     |  src=NUT's global
+            |          |          |      |     |          |       |     |  dst=H1's global
+            |          |          |      |     |          |       |     |      but, LLA is TN's
+  ----------+----------+----------+------+-----+----------+-------+-----+-----------------------
+  -         |-         |-         |-     |exist|exist     |R1     |TN   |echo-reply
+            |          |          |      |     |          |       |     |  src=NUT's global
+            |          |          |      |     |          |       |     |  dst=H1's global
+            |          |          |      |     |          |       |     |      but, LLA is TN's
+  ==========+==========+==========+======+=====+==========+=======+=====+=======================
+  -: same as above
+</PRE>
+<A NAME="JDG3"></A>
+
+<P>
+<PRE>  3. Suspicious redirect messages vs. Destination Cache
+  ========================================================+============+========================
+  Suspicious redirect message that NUT receives           |Destination |Expected packet
+  ---------------------+-----------------+----------------+Cache       |
+  IP                   |ICMP             |Options         |for H1      |
+  ----------+----------+----------+------+-----+----------+------+-----+
+  Src       |Dst       |Target    |Dst   |TLLA |Redirected|Before|After|
+  ==========+==========+==========+======+=====+==========+======+=====+========================
+  link-local|link-local|link-local|global|exist|exist     |R1    |TN   |echo-reply
+  (R1)      |(NUT)     |(TN)      |(H1)  |     |&gt; 1280 and|      |     |  src=NUT's global
+            |          |          |      |     |bogus     |      |     |  dst=H1's global
+            |          |          |      |     |*susp.    |      |     |      but, LLA is TN's
+  ----------+----------+----------+------+-----+----------+------+-----+------------------------
+  -         |all-node  |-         |-     |exist|exist     |R1    |TN   |echo-reply
+            |*susp.    |          |      |     |          |      |     |  src=NUT's global
+            |          |          |      |     |          |      |     |  dst=H1's global
+            |          |          |      |     |          |      |     |      but, LLA is TN's
+  ==========+==========+==========+======+=====+==========+======+=====+========================
+  -: same as above
+</PRE>
+<A NAME="JDG4"></A>
+
+<P>
+<PRE>  4. Invalid redirect messages vs. Destination Cache
+  ==============================================================+============+======================
+  Invalid redirect message that NUT receive                     |Destination |Expected packet
+  ---------------------+----------------------------------------+Cache       |
+  IP                   |ICMP                                    |for H1      |
+  ----------+----------+--------+----+--------+----------+------+------------+
+  Src       |Dst       |Hoplimit|Code|Checksum|Target    |Dst   |Before|After|
+  ==========+==========+========+====+========+==========+======+======+=====+======================
+  global    |link-local|255     |0   |valid   |link-local|global|R1    |R1   |echo-reply
+  *invalid  |(NUT)     |        |    |        |(TN)      |(H1)  |      |     |  src=NUT's global
+            |          |        |    |        |          |      |      |     |  dst=H1's global
+            |          |        |    |        |          |      |      |     |      but LLA is R1's
+  ----------+----------+--------+----+--------+----------+------+------+-----+----------------------
+  bogus     |-         |-       |-   |-       |-         |-     |R1    |R1   |echo-reply
+  router's  |          |        |    |        |          |      |      |     |  src=NUT's global
+  link-local|          |        |    |        |          |      |      |     |  dst=H1's global
+  *invalid  |          |        |    |        |          |      |      |     |      but LLA is R1's
+  ----------+----------+--------+----+--------+----------+------+------+-----+----------------------
+  link-local|-         |!=255   |-   |-       |-         |-     |R1    |R1   |echo-reply
+  (R1)      |          |*invalid|    |        |          |      |      |     |  src=NUT's global
+            |          |        |    |        |          |      |      |     |  dst=H1's global
+            |          |        |    |        |          |      |      |     |      but LLA is R1's
+  ----------+----------+--------+----+--------+----------+------+------+-----+----------------------
+  -         |-         |255     |!=0 |-       |-         |-     |R1    |R1   |echo-reply
+            |          |        |*inv|        |          |      |      |     |  src=NUT's global
+            |          |        |    |        |          |      |      |     |  dst=H1's global
+            |          |        |    |        |          |      |      |     |      but LLA is R1's
+  ----------+----------+--------+----+--------+----------+------+------+-----+----------------------
+  -         |-         |-       |0   |*invalid|-         |-     |R1    |R1   |echo-reply
+            |          |        |    |        |          |      |      |     |  src=NUT's global
+            |          |        |    |        |          |      |      |     |  dst=H1's global
+            |          |        |    |        |          |      |      |     |      but LLA is R1's
+  ==========+==========+========+====+========+==========+======+======+=====+======================
+  -: same as above
+</PRE>
+<P>
+<HR>
+<H1><A NAME="TERMINATION">TERMINATION</A></H1>
+<P>
+<PRE>  Send RAs to clear the Default Router List:
+  - RA (src=R1) with RouterLifetime=0
+  - RA (src=TN) with RouterLifetime=0
+</PRE>
+<P>
+<PRE>  Clear IPv6 routes by remote command. XXX
+</PRE>
+<P>
+<HR>
+<H1><A NAME="NOTE">NOTE</A></H1>
+<P>
+<PRE>  The test invokes the following command:
+  - Clear IPv6 routes
+</PRE>
+<P>
+<HR>
+<H1><A NAME="SEE_ALSO">SEE ALSO</A></H1>
+<P>
+<PRE>  perldoc V6evalTool
+  perldoc V6evalRemote
+</PRE>
+</BODY>
+
+</HTML>

@@ -1,0 +1,20 @@
+# [directory name]	[description for the category]
+spec			IPv6 Specification
+icmp			ICMPv6 for IPv6 Specification
+nd			Neighbor Discovery
+stateless-addrconf	IPv6 Stateless Address Autoconfiguration
+pmtu			IPv6 Path MTU Discovery
+router-select		Default Router Preferences, More-Specific Routes, and Load Sharing
+ipsec			IPSec AH and ESP for IPv6
+ipsec-udp		IPSec ESP for IPv6(UDP)
+ipsec4			IPSec AH and ESP for IPv4
+ipsec4-udp		IPSec AH and ESP for IPv4(UDP)
+mip6-cn-20		Mobility Support in IPv6 (ID-20) - Correspondent Node
+mip6-ha-20		Mobility Support in IPv6 (ID-20) - Home Agent
+mip6-mn-20		Mobility Support in IPv6 (ID-20) - Mobile Node
+default-addr-select	Default Address Selection for Internet Protocol version 6 (IPv6)
+dd			DNS discovery
+pd			Prefix delegation
+tunnel			IPv6 over IPv4 Tunnel
+natpt			NAT-PT
+robust			Robustness

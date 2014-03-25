@@ -1,0 +1,161 @@
+<HTML>
+<HEAD>
+<TITLE>hostRecvRaReachableTime - Verifying that NUT recognize ReachableTime</TITLE>
+<LINK REV="made" HREF="mailto:hackers@FreeBSD.org">
+</HEAD>
+
+<BODY>
+
+<!-- INDEX BEGIN -->
+<!--
+
+<UL>
+
+	<LI><A HREF="#NAME">NAME</A>
+	<LI><A HREF="#TARGET">TARGET</A>
+	<LI><A HREF="#SYNOPSIS">SYNOPSIS</A>
+	<LI><A HREF="#INITIALIZATION">INITIALIZATION</A>
+	<LI><A HREF="#TEST_PROCEDURE">TEST PROCEDURE</A>
+	<LI><A HREF="#JUDGMENT">JUDGMENT</A>
+	<LI><A HREF="#TERMINATION">TERMINATION</A>
+	<LI><A HREF="#NOTE">NOTE</A>
+	<LI><A HREF="#SEE_ALSO">SEE ALSO</A>
+</UL>
+-->
+<!-- INDEX END -->
+
+<P>
+<H1><A NAME="NAME">NAME</A></H1>
+<P>
+hostRecvRaReachableTime - Verifying that NUT recognize ReachableTime
+
+<P>
+<HR>
+<H1><A NAME="TARGET">TARGET</A></H1>
+<P>
+Host only
+
+<P>
+<HR>
+<H1><A NAME="SYNOPSIS">SYNOPSIS</A></H1>
+<P>
+<PRE>  hostRecvRaReachableTime.seq [-tooloption ...] -p hostRecvRaReachableTime.def
+</PRE>
+<P>
+<HR>
+<H1><A NAME="INITIALIZATION">INITIALIZATION</A></H1>
+<OL>
+  <LI>Set <A HREF="#JDG1">ReachableTime</A> by router X.
+  <LI>Create the state of neighbor cache entry for TN.
+  <LI>Set its state to REACHABLE whose IsRouter flag is FALSE. 
+</OL>
+<PRE>
+  TN                 NUT
+  ----------------------
+  State: NONCE (for all)
+<BR>
+  ==== unsolicited RA ===>
+       src=X's link-local
+       dst=all-node
+       M=0, O=0
+       RouterLifetime=600
+       <B>ReachableTime=a test condition</B>
+       RetransTimer=0
+       w/ SLLA
+<BR>
+  State: NONE (for TN), STALE(for X)
+<BR>
+  ==== echo-request ===>
+       src=TN's link-local
+       dst=NUT's link-local
+<BR>
+  <=== multicast NS ====
+       src=NUT's link-local
+       dst=solicited-node[TN's link-local]
+       w/ SLLA
+       timeout=RETRANS_TIMER * MAX_MULTICAST_SOLICIT
+<BR>
+  ==== solicited NA ===>
+       src=TN's link-local
+       dst=NUT's link-local
+       R=0, S=1, O=1
+       target=TN's link-local
+       w/ TLLA
+<BR>
+  State: REACHABLE (for TN), STALE (for X)
+</PRE>
+
+<P>
+<HR>
+<H1><A NAME="TEST_PROCEDURE">TEST PROCEDURE</A></H1>
+<P>
+<STRONG>hostRecvRaReachableTime</STRONG> verifies that NUT recognize ReachableTime.
+
+<PRE>
+  TN               NUT
+  ----------------------
+  State: REACHABLE (for TN)
+<BR>
+  Wait for <A HREF="#JDG1">some seconds</A>
+<BR>
+  <A HREF="#JDG1">Judgment</A>: <A HREF="nd.html">Examining NUT's neighbor cache state</A>
+
+<P>
+<HR>
+<H1><A NAME="JUDGMENT">JUDGMENT</A></H1>
+<A NAME="JDG1"></A>
+<PRE>
+<HR>
+6.3.4.  Processing Received Router Advertisements
+<BR>
+   If the received Reachable Time value is non-zero the host SHOULD set
+   its BaseReachableTime variable to the received value.  <B>If the new
+   value differs from the previous value, the host SHOULD recompute a
+   new random ReachableTime value.  ReachableTime is computed as a
+   uniformly-distributed random value between MIN_RANDOM_FACTOR and
+   MAX_RANDOM_FACTOR times the BaseReachableTime.</B>  Using a random
+   component eliminates the possibility Neighbor Unreachability
+   Detection messages synchronize with each other.
+<HR>
+  ==============+===================+==================
+  RA received   | Wait Time
+  by NUT        |
+  --------------+-------------------+------------------
+  ReachableTime | t <               | t >
+                | ReachableTime *   | ReachableTime *
+                | MIN_RANDOM_FACTOR | MAX_RANDOM_FACTOR
+  ==============+===================+==================
+  60            | t < 30, REACHABLE | t > 90,  STALE
+  --------------+-------------------+------------------
+  30            | t < 15, REACHABLE | t > 45,  STALE
+  --------------+-------------------+------------------
+  90            | t < 45, REACHABLE | t > 135, STALE
+  ==============+===================+==================
+</PRE>
+
+<P>
+<HR>
+<H1><A NAME="TERMINATION">TERMINATION</A></H1>
+<P>
+<PRE>  1. Send RA with ReachableTime=30sec to set TN's reachable time
+     to the default value.
+</PRE>
+<P>
+<PRE>  2. Send RA with RouterLifetime=0 to clear the Default Router List.
+</PRE>
+<P>
+<HR>
+<H1><A NAME="NOTE">NOTE</A></H1>
+<P>
+<PRE>  The test does not invoke any remote command.
+</PRE>
+<P>
+<HR>
+<H1><A NAME="SEE_ALSO">SEE ALSO</A></H1>
+<P>
+<PRE>  perldoc V6evalTool
+  perldoc V6evalRemote
+</PRE>
+</BODY>
+
+</HTML>

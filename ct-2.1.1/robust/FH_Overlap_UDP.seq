@@ -1,0 +1,289 @@
+#!/usr/bin/perl
+#
+# Copyright (C) 1999, 2000, 2001, 2002, 2003 Yokogawa Electric Corporation,
+# IPA (Information-technology Promotion Agency, Japan).
+# All rights reserved.
+# 
+# Redistribution and use of this software in source and binary forms, with 
+# or without modification, are permitted provided that the following 
+# conditions and disclaimer are agreed and accepted by the user:
+# 
+# 1. Redistributions of source code must retain the above copyright 
+# notice, this list of conditions and the following disclaimer.
+# 
+# 2. Redistributions in binary form must reproduce the above copyright 
+# notice, this list of conditions and the following disclaimer in the 
+# documentation and/or other materials provided with the distribution.
+# 
+# 3. Neither the names of the copyrighters, the name of the project which 
+# is related to this software (hereinafter referred to as "project") nor 
+# the names of the contributors may be used to endorse or promote products 
+# derived from this software without specific prior written permission.
+# 
+# 4. No merchantable use may be permitted without prior written 
+# notification to the copyrighters. However, using this software for the 
+# purpose of testing or evaluating any products including merchantable 
+# products may be permitted without any notification to the copyrighters.
+# 
+# 
+# 
+# THIS SOFTWARE IS PROVIDED BY THE COPYRIGHTERS, THE PROJECT AND 
+# CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING 
+# BUT NOT LIMITED THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS 
+# FOR A PARTICULAR PURPOSE, ARE DISCLAIMED.  IN NO EVENT SHALL THE 
+# COPYRIGHTERS, THE PROJECT OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, 
+# INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES 
+# (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR 
+# SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) 
+# HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN 
+# CONTRACT,STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) 
+# ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF 
+# THE POSSIBILITY OF SUCH DAMAGE.
+#
+# $TAHI: ct/robust/FH_Overlap_UDP.seq,v 1.2 2001/10/05 06:39:13 masaxmasa Exp $
+#
+################################################################
+
+BEGIN {
+	$V6evalTool::TestVersion = '$Name: REL_2_1_1 $';
+}
+
+use V6evalTool;
+
+%pktdesc = (
+	udp_request              => 'Send UDP Echo - data is 0 only',
+	udp_reply                => 'Recv UDP Echo - data is 0 only',
+	udp_request_frag_1st     => 'Send UDP Echo (Fragment packets) (1st) - data is 0 only',
+	udp_request_frag_2nd     => 'Send UDP Echo (Fragment packets) (2nd) - data is 0 only',
+	udp_request_bad_frag_2nd => 'Send UDP Echo (bad Fragment packets) (2nd) - override UDP data - data is 1 only',
+	udp_bad_reply            => 'Recv bad UDP Echo - data is 0 and 1',
+	multicast_ns             => 'Recv Multicast Neighbor Solicitation',
+	unicast_ns               => 'Recv Unicast Neighbor Solicitation',
+	na                       => 'Send Neighbor Advertisement',
+	port_unreachable         => 'Recv Destination Unreachable - port unreachable'
+);
+
+$IF = Link0;
+srand;
+
+$frag_id = int(rand(0xFFFFFFFF));
+vCPP("-DFRAG_ID=$frag_id");
+
+vCapture($IF);
+
+################################################################
+
+vLogHTML('<BR>');
+vLogHTML('<B> -- Test Preparation (UDP Echo) --</B><BR>');
+vLogHTML('<BR>');
+
+vSend($IF, udp_request);
+%ret = vRecv($IF, 5, 0, 0, multicast_ns, unicast_ns, udp_reply, port_unreachable);
+
+if($ret{status} != 0) {
+	vLogHTML('<FONT COLOR="#FF0000">No response from NUT</FONT><BR>');
+	goto fail;
+} elsif($ret{recvFrame} eq 'multicast_ns') {
+	vSend($IF, na);
+	%ret = vRecv($IF, 5, 0, 0, udp_reply, port_unreachable);
+
+	if($ret{status} != 0) {
+		vLogHTML('<FONT COLOR="#FF0000">No response from NUT</FONT><BR>');
+		goto fail;
+	}
+} elsif($ret{recvFrame} eq 'unicast_ns') {
+	vSend($IF, na);
+	%ret = vRecv($IF, 5, 0, 0, udp_reply, port_unreachable);
+
+	if($ret{status} != 0) {
+		vLogHTML('<FONT COLOR="#FF0000">No response from NUT</FONT><BR>');
+		goto fail;
+	}
+}
+
+if($ret{recvFrame} eq 'udp_reply') {
+	vLogHTML('NUT support this function.<BR>');
+	vLogHTML('<BR>');
+        vLogHTML('<B>OK</B><BR>');
+	vLogHTML('<BR>');
+} elsif($ret{recvFrame} eq 'port_unreachable') {
+	vLogHTML('NUT does not support this function.<BR>');
+	vLogHTML('<BR>');
+	exit $V6evalTool::exitNS;
+}
+
+################################################################
+
+vClear($IF);
+
+vLogHTML('<BR>');
+vLogHTML('<B> -- Test Preparation (UDP Echo, Fragment Header) --</B><BR>');
+vLogHTML('<BR>');
+
+vSend($IF, na);
+vLogHTML('Make NCE certainly<BR>');
+vLogHTML('<BR>');
+
+vSend($IF, udp_request_frag_1st);
+vSend($IF, udp_request_frag_2nd);
+%ret = vRecv($IF, 5, 0, 0, udp_reply);
+
+if($ret{status} != 0) {
+	vLogHTML('<FONT COLOR="#FF0000">No response from NUT</FONT><BR>');
+	goto fail;
+} elsif($ret{recvFrame} eq 'udp_reply') {
+	vLogHTML('NUT support this function.<BR>');
+	vLogHTML('<BR>');
+        vLogHTML('<B>OK</B><BR>');
+	vLogHTML('<BR>');
+}
+
+################################################################
+
+vClear($IF);
+
+$frag_id = int(rand(0xFFFFFFFF));
+vCPP("-DFRAG_ID=$frag_id");
+
+vLogHTML('<BR>');
+vLogHTML('<B> -- Test (override UDP data) --</B><BR>');
+vLogHTML('<BR>');
+
+vSend($IF, na);
+vLogHTML('Make NCE certainly<BR>');
+vLogHTML('<BR>');
+
+vSend($IF, udp_request_frag_1st);
+vSend($IF, udp_request_bad_frag_2nd);
+vSend($IF, udp_request_frag_2nd);
+%ret = vRecv($IF, 5, 0, 0, udp_reply, udp_bad_reply);
+
+if($ret{status} != 0) {
+	vLogHTML('No response from NUT<BR>');
+	vLogHTML('<BR>');
+        vLogHTML('<B>OK</B><BR>');
+	vLogHTML('<BR>');
+} elsif($ret{recvFrame} eq 'bad_reply') {
+	goto pass;
+} elsif($ret{recvFrame} eq 'udp_bad_reply') {
+	vLogHTML('<FONT COLOR="#FF0000">1st packet over 2nd packet.</FONT><BR>');
+	vLogHTML('<BR>');
+	goto fail;
+}
+
+################################################################
+
+pass:
+        vLogHTML('<B>OK</B>');
+        exit $V6evalTool::exitPass;
+
+fail:
+        vLogHTML('<B><FONT COLOR="#FF0000">NG</FONT></B>');
+        exit $V6evalTool::exitFail;
+
+################################################################
+__END__
+
+=head1 NAME
+
+    FH_Overlap_UDP - UDP Fragment packets with Overlap data
+
+=head1 TARGET
+
+    Host and Router
+
+=head1 SYNOPSIS
+
+=begin html
+    <PRE>
+    <A HREF="./FH_Overlap_UDP.seq">FH_Overlap_UDP.seq</A> [-tooloption ...] -pkt <A HREF="./FH_Overlap_UDP.def">FH_Overlap_UDP.def</A>
+        -tooloption: v6eval tool option
+    </PRE>
+
+=end html
+
+=head1 INITIALIZATION
+
+    1. Check Link0 Link Local address Reachability and UDP echo support.
+    2. Check support of Fragment Header
+
+=head1 TEST PROCEDURE
+
+    1. Send 1st fragment packet
+    2. Send broken 2nd fragment packet
+    1. Send 2nd fragment packet
+    2. Wait 5 sec.
+
+        +----------------+
+        |      IPv6      |
+        |     Header     |
+        +----------------+    +----------------+
+        |   UDP Header   |    |   UDP Header   |
+        +----------------+    +----------------+    +----------------+
+        |0000000000000000|    |0000000000000000|    |1111111111111111|
+        |0000000000000000|    |0000000000000000|    |1111111111111111|
+        |0000000000000000|    |0000000000000000|    |1111111111111111|
+        |0000000000000000|    +----------------+    |1111111111111111|
+        |0000000000000000|                          |1111111111111111|
+        |0000000000000000|                          |1111111111111111|
+        |0000000000000000|                          |1111111111111111|
+        +----------------+                          +----------------+
+
+        [Original packet]     [1st frag. data]      [broken 2nd frag. data]
+
+    1st fragment packet is:
+
+        IPv6 Header
+            Version            = 6
+            Traffic Class      = 0
+            FlowLabel          = 0
+            PayloadLength      = 528
+            NextHeader         = 44 (Fragment Header)
+            HopLimit           = 64
+            SourceAddress      = Tester Link Local Address
+            DestinationAddress = Target Link Local Address
+
+        Fragment Header
+            NextHeader         = 17 (UDP)
+            Reserved1          = 0
+            FragmentOffset     = 0
+            Reserved2          = 0
+            MFlag              = 1
+            Identification     = (random)
+
+        Payload
+            data = substr(_PACKET_IPV6_NAME(udp_request), 40, 520)
+
+    2nd fragment packet is:
+
+        IPv6 Header
+            Version            = 6
+            Traffic Class      = 0
+            FlowLabel          = 0
+            PayloadLength      = 1032
+            NextHeader         = 44 (Fragment Header)
+            HopLimit           = 64
+            SourceAddress      = Tester Link Local Address
+            DestinationAddress = Target Link Local Address
+
+        Fragment Header
+            NextHeader         = 17 (UDP)
+            Reserved1          = 0
+            FragmentOffset     = 1
+            Reserved2          = 0
+            MFlag              = 0
+            Identification     = (same as 1st fragment packet)
+
+        Payload
+            data               = substr(_PACKET_IPV6_NAME(udp_request_1), 48, 1024)
+
+=head1 JUDGMENT
+
+    PASS : don't received UDP packet, or correct UDP packet received.
+    FAIL : broken UDP packet received.
+
+=head1 SEE ALSO
+
+    perldoc V6evalTool
+
+=cut

@@ -1,0 +1,33 @@
+#
+# Makefile
+#
+# $TAHI: ct/Makefile.test,v 1.39 2003/06/10 11:38:46 akisada Exp $
+#
+
+SUBDIR=	spec \
+	icmp \
+	nd \
+	stateless-addrconf \
+	pmtu \
+	router-select \
+	ipsec \
+	ipsec-udp \
+	ipsec4 \
+	ipsec4-udp \
+	mip6-cn-20 \
+	mip6-ha-20 \
+	mip6-mn-20 \
+	default-addr-select \
+	dd \
+	pd \
+	tunnel \
+	natpt \
+	robust
+
+test tahi tiny check document document2 demo1 demo2 demo3:
+	@for subdir in ${SUBDIR}; do \
+		echo "===> $$subdir"; \
+		(cd $$subdir; ${MAKE} $@); \
+	done
+
+.include <bsd.subdir.mk>

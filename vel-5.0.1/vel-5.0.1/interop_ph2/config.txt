@@ -1,0 +1,141 @@
+#--------------------------------------------------#
+# COMMON configuration for all nodes and tests     #
+#--------------------------------------------------#
+PREFIX1		3ffe:501:ffff:100
+PREFIX2		3ffe:501:ffff:101
+PREFIX3		3ffe:501:ffff:102
+
+DUP_ADDR	fe80::1111
+
+#--------------------------------------------------#
+# TARGET NODE configuration                        #
+#--------------------------------------------------#
+
+#
+# LOGO YOUR DEVICE
+#
+
+# LOGO TYPE: host or router
+LOGO_TYPE		router
+LOGO_NAME		HOGE
+
+LOGO_IF1		fxp0
+LOGO_IF1_MAC		00:0d:60:cb:32:11
+
+# If LOGO_TYPE is router, you must uncomment IF2 definitions.
+LOGO_IF2	        ed1
+LOGO_IF2_MAC		00:90:fe:01:02:81
+
+#
+# TARGET-1
+#
+TAR1_NAME		OpenBSD
+TAR1_TYPE		router
+
+TAR1_IF1		fxp1
+TAR1_IF1_MAC		00:d0:b7:9a:58:57
+TAR1_IF2		fxp2
+TAR1_IF2_MAC		00:02:b3:26:d3:50
+TAR1_IF3		aue0
+TAR1_IF3_MAC		00:40:26:d2:b8:4e
+TAR1_IFTG		fxp0
+TAR1_IFTG_V4_ADDR	192.168.0.11
+
+#
+# TARGET-2
+#
+TAR2_NAME		NetBSD
+TAR2_TYPE		host
+
+TAR2_IF1		fxp1
+TAR2_IF1_MAC		00:02:b3:00:1a:6d
+TAR2_IF2		aue0
+TAR2_IF2_MAC		00:0d:0b:48:a8:72
+TAR2_IF3		aue1
+TAR2_IF3_MAC		00:0d:0b:48:c0:26
+TAR2_IFTG		fxp0
+TAR2_IFTG_V4_ADDR	192.168.0.12
+
+#
+# TARGET-3
+#
+TAR3_NAME		Linux
+TAR3_TYPE		router
+
+TAR3_IF1		aue0
+TAR3_IF1_MAC		00:90:cc:52:30:a0
+TAR3_IF2		aue1
+TAR3_IF2_MAC		00:90:cc:52:31:2a
+TAR3_IF3		ifhb1
+TAR3_IF3_MAC		00:00:00:00:10:10
+TAR3_IFTG		xl0
+TAR3_IFTG_V4_ADDR	192.168.0.13
+
+#
+# TARGET-4
+#
+TAR4_NAME		Linux
+TAR4_TYPE		host
+
+TAR4_IF1		eth1
+TAR4_IF1_MAC		00:02:B3:23:7A:29
+TAR4_IF2		eth2
+TAR4_IF2_MAC		00:0D:0B:48:A8:7F
+TAR4_IF3		eth3
+TAR4_IF3_MAC		00:40:26:D2:D5:A0
+TAR4_IFTG		eth0
+TAR4_IFTG_V4_ADDR	192.168.0.14
+
+
+#--------------------------------------------------#
+# REFERENCE NODE configuration			   #
+#--------------------------------------------------#
+REF1_NAME		FreeBSD
+
+REF1_IF1		fxp1
+REF1_IF1_MAC		00:02:b3:93:bf:7f
+REF1_IF2		de0
+REF1_IF2_MAC		00:90:cc:0f:d8:53
+
+REF1_IFTG		fxp0
+REF1_IFTG_V4_ADDR	192.168.0.101
+
+
+REF2_NAME		FreeBSD
+
+REF2_IF1		fxp1
+REF2_IF1_MAC		00:d0:b7:9a:6a:91
+REF2_IF2		de0
+REF2_IF2_MAC		00:90:cc:0f:d5:ad
+
+REF2_IFTG		fxp0
+REF2_IFTG_V4_ADDR	192.168.0.102
+
+
+#--------------------------------------------------#
+# PACKET CAPTURE NODE configuration		   #
+#--------------------------------------------------#
+
+DUMPER_NAME		FreeBSD
+
+#
+# interface name for capturing packets on Network 1
+#
+DUMPER_IF1		fxp1
+
+#
+# interface name for capturing packets on Network 2
+#
+DUMPER_IF2		de0
+
+#
+# interface name for capturing packets on Network 3
+#
+#DUMPER_IF3		aue0
+DUMPER_IF3		de0
+
+#
+# interface to control 
+#
+DUMPER_IFTG		fxp0
+DUMPER_IFTG_V4_ADDR	192.168.0.201

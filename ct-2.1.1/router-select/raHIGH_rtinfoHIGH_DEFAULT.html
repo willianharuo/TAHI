@@ -1,0 +1,395 @@
+<HTML>
+<HEAD>
+<TITLE>./raHIGH_rtinfoHIGH_DEFAULT.seq</TITLE>
+<LINK REV="made" HREF="mailto:hackers@FreeBSD.org">
+</HEAD>
+
+<BODY>
+
+<!-- INDEX BEGIN -->
+<!--
+
+<UL>
+
+	<LI><A HREF="#NAME">NAME</A>
+	<LI><A HREF="#TARGET">TARGET</A>
+	<LI><A HREF="#SYNOPSIS">SYNOPSIS</A>
+	<LI><A HREF="#TOPOLOGY">TOPOLOGY</A>
+	<LI><A HREF="#INITIALIZATION">INITIALIZATION</A>
+	<LI><A HREF="#TEST_PROCEDURE">TEST PROCEDURE</A>
+	<LI><A HREF="#JUDGEMENT">JUDGEMENT</A>
+	<LI><A HREF="#SEE_ALSO">SEE ALSO</A>
+</UL>
+-->
+<!-- INDEX END -->
+
+<P>
+<H1><A NAME="NAME">NAME</A></H1>
+<PRE>
+RA w/ Preference=HIGH vs.
+RA w/ Preference=LOW, Route Information Option(LinkANY:Preference=HIGH) 
+</PRE>
+
+<P>
+<HR>
+<H1><A NAME="TARGET">TARGET</A></H1>
+<PRE>
+Host
+</PRE>
+
+<P>
+<HR>
+<H1><A NAME="SYNOPSIS">SYNOPSIS</A></H1>
+<PRE>
+<A HREF="./raHIGH_rtinfoHIGH_DEFAULT.seq">raHIGH_rtinfoHIGH_DEFAULT.seq</A> [-tooloption ...] -pkt <A HREF="./RTINFO.def">RTINFO.def</A>
+</PRE>
+<BLOCKQUOTE>
+<PRE>
+-tooloption: v6eval tool option
+</PRE>
+</BLOCKQUOTE>
+
+<P>
+<HR>
+<H1><A NAME="TOPOLOGY">TOPOLOGY</A></H1>
+<BLOCKQUOTE>
+<PRE>
+                                     HOST10
+                                       |
+            ---------------+-----------+--- Link10
+                           |
+                          RT11       HOST9
+                           |           |
+            -------+-------+-----------+--- Link9
+                   |
+                   :
+                (SNIP)
+                   :                 HOST2
+                   |                   |
+            -------+-------+-----------+--- Link2
+                           |
+                          RT3        HOST1
+                           |           |
+            -------+-------+-------+---+--- Link1
+                   |               |
+                   RT2            RT1
+                   |               |
+            -------+-------+-------+------- Link0
+                           |
+                          NUT
+</PRE>
+</BLOCKQUOTE>
+<BLOCKQUOTE>
+<TABLE BORDER>
+<TR>
+<TD><TT>Link0</TT></TD>
+<TD><TT>global</TT></TD>
+<TD><TT>3ffe:501:ffff:100::/64</TT></TD>
+<TD><TT>Testing link</TT></TD>
+</TR>
+<TR>
+<TD><TT>Link1</TT></TD>
+<TD><TT>global</TT></TD>
+<TD><TT>3ffe:501:ffff:101::/64</TT></TD>
+<TD><TT>other link</TT></TD>
+</TR>
+<TR>
+<TD><TT>Link2</TT></TD>
+<TD><TT>global</TT></TD>
+<TD><TT>3ffe:501:ffff:102::/64</TT></TD>
+<TD><TT>other link</TT></TD>
+</TR>
+<TR>
+<TD><TT>Link3</TT></TD>
+<TD><TT>global</TT></TD>
+<TD><TT>3ffe:501:ffff:103::/64</TT></TD>
+<TD><TT>other link</TT></TD>
+</TR>
+<TR>
+<TD><TT>Link4</TT></TD>
+<TD><TT>global</TT></TD>
+<TD><TT>3ffe:501:ffff:104::/64</TT></TD>
+<TD><TT>other link</TT></TD>
+</TR>
+<TR>
+<TD><TT>Link5</TT></TD>
+<TD><TT>global</TT></TD>
+<TD><TT>3ffe:501:ffff:105::/64</TT></TD>
+<TD><TT>other link</TT></TD>
+</TR>
+<TR>
+<TD><TT>Link6</TT></TD>
+<TD><TT>global</TT></TD>
+<TD><TT>3ffe:501:ffff:106::/64</TT></TD>
+<TD><TT>other link</TT></TD>
+</TR>
+<TR>
+<TD><TT>Link7</TT></TD>
+<TD><TT>global</TT></TD>
+<TD><TT>3ffe:501:ffff:107::/64</TT></TD>
+<TD><TT>other link</TT></TD>
+</TR>
+<TR>
+<TD><TT>Link8</TT></TD>
+<TD><TT>global</TT></TD>
+<TD><TT>3ffe:501:ffff:108::/64</TT></TD>
+<TD><TT>other link</TT></TD>
+</TR>
+<TR>
+<TD><TT>Link9</TT></TD>
+<TD><TT>global</TT></TD>
+<TD><TT>3ffe:501:ffff:109::/64</TT></TD>
+<TD><TT>other link</TT></TD>
+</TR>
+<TR>
+<TD><TT>Link10</TT></TD>
+<TD><TT>global</TT></TD>
+<TD><TT>3ffe:501:ffff:110::/64</TT></TD>
+<TD><TT>other link</TT></TD>
+</TR>
+<TR>
+<TD ROWSPAN="3"><TT>RT1(Link0)</TT></TD>
+<TD><TT>global</TT></TD>
+<TD><TT>3ffe:501:ffff:100::a0a0</TT></TD>
+<TD ROWSPAN="3"><TT>Alternative router</TT></TD>
+</TR>
+<TR>
+<TD><TT>link-local</TT></TD>
+<TD><TT>fe80::200:ff:fe00:a0a0</TT></TD>
+</TR>
+<TR>
+<TD><TT>ether</TT></TD>
+<TD><TT>00:00:00:00:a0:a0</TT></TD>
+</TR>
+<TR>
+<TD ROWSPAN="3"><TT>RT2(Link0)</TT></TD>
+<TD><TT>global</TT></TD>
+<TD><TT>3ffe:501:ffff:100::a1a1</TT></TD>
+<TD ROWSPAN="3"><TT>Alternative router</TT></TD>
+</TR>
+<TR>
+<TD><TT>link-local</TT></TD>
+<TD><TT>fe80::200:ff:fe00:a1a1</TT></TD>
+</TR>
+<TR>
+<TD><TT>ether</TT></TD>
+<TD><TT>00:00:00:00:a1:a1</TT></TD>
+</TR>
+<TR>
+<TD><TT>RT3~11</TT></TD>
+<TD><TT>.....</TT></TD>
+<TD><TT>no data is required</TT></TD>
+<TD><TT>.....</TT></TD>
+</TR>
+<TR>
+<TD><TT>HOST1</TT></TD>
+<TD><TT>global</TT></TD>
+<TD><TT>3ffe:501:ffff:101::1</TT></TD>
+<TD><TT>Host on Link1</TT></TD>
+</TR>
+<TR>
+<TD><TT>HOST2</TT></TD>
+<TD><TT>global</TT></TD>
+<TD><TT>3ffe:501:ffff:102::1</TT></TD>
+<TD><TT>Host on Link2</TT></TD>
+</TR>
+<TR>
+<TD><TT>HOST3</TT></TD>
+<TD><TT>global</TT></TD>
+<TD><TT>3ffe:501:ffff:103::1</TT></TD>
+<TD><TT>Host on Link3</TT></TD>
+</TR>
+<TR>
+<TD><TT>HOST4</TT></TD>
+<TD><TT>global</TT></TD>
+<TD><TT>3ffe:501:ffff:104::1</TT></TD>
+<TD><TT>Host on Link4</TT></TD>
+</TR>
+<TR>
+<TD><TT>HOST5</TT></TD>
+<TD><TT>global</TT></TD>
+<TD><TT>3ffe:501:ffff:105::1</TT></TD>
+<TD><TT>Host on Link5</TT></TD>
+</TR>
+<TR>
+<TD><TT>HOST6</TT></TD>
+<TD><TT>global</TT></TD>
+<TD><TT>3ffe:501:ffff:106::1</TT></TD>
+<TD><TT>Host on Link6</TT></TD>
+</TR>
+<TR>
+<TD><TT>HOST7</TT></TD>
+<TD><TT>global</TT></TD>
+<TD><TT>3ffe:501:ffff:107::1</TT></TD>
+<TD><TT>Host on Link7</TT></TD>
+</TR>
+<TR>
+<TD><TT>HOST8</TT></TD>
+<TD><TT>global</TT></TD>
+<TD><TT>3ffe:501:ffff:108::1</TT></TD>
+<TD><TT>Host on Link8</TT></TD>
+</TR>
+<TR>
+<TD><TT>HOST9</TT></TD>
+<TD><TT>global</TT></TD>
+<TD><TT>3ffe:501:ffff:109::1</TT></TD>
+<TD><TT>Host on Link9</TT></TD>
+</TR>
+<TR>
+<TD><TT>HOST10</TT></TD>
+<TD><TT>global</TT></TD>
+<TD><TT>3ffe:501:ffff:110::1</TT></TD>
+<TD><TT>Host on Link10</TT></TD>
+</TR>
+</TABLE>
+</BLOCKQUOTE>
+
+<P>
+<HR>
+<H1><A NAME="INITIALIZATION">INITIALIZATION</A></H1>
+<BLOCKQUOTE>
+<PRE>
+Flush Default Router List
+Flush Routing Table
+Flush Neighbor Cache
+Flush Prefix List
+</PRE>
+</BLOCKQUOTE>
+
+<P>
+<HR>
+<H1><A NAME="TEST_PROCEDURE">TEST PROCEDURE</A></H1>
+<BLOCKQUOTE>
+<PRE>
+NUT        RT1              RT2  HOST[1~10]
+ |          |                |     |
+ ==========(INITIALIZE)===========
+ |          |                |     |
+ | Pref=HIGH|                |     |
+ |<---------+                |     | RA from RT1
+ |          |LinkANYPref=HIGH|     |
+ |          |       Pref=HIGH|     |
+ |<--------------------------+     | RA from RT2
+ |          |                |     |
+ |<---------#----------------------+ Echo Request from HOST1(via RT1) 
+ +---------(#)--------------(#)--->| Echo Reply   to   HOST1(via RT1 or RT2)(*1)
+ |          |                |     |
+ |<---------#----------------------+ Echo Request from HOST2(via RT1) 
+ +---------(#)--------------(#)--->| Echo Reply   to   HOST2(via RT1 or RT2)(*2)
+ |          |                |     |
+ |<---------#----------------------+ Echo Request from HOST3(via RT1) 
+ +---------(#)--------------(#)--->| Echo Reply   to   HOST3(via RT1 or RT2)(*3)
+ |          |                |     |
+ |<---------#----------------------+ Echo Request from HOST4(via RT1) 
+ +---------(#)--------------(#)--->| Echo Reply   to   HOST4(via RT1 or RT2)(*4)
+ |          |                |     |
+ |<---------#----------------------+ Echo Request from HOST5(via RT1) 
+ +---------(#)--------------(#)--->| Echo Reply   to   HOST5(via RT1 or RT2)(*5)
+ |          |                |     |
+ |<---------#----------------------+ Echo Request from HOST6(via RT1) 
+ +---------(#)--------------(#)--->| Echo Reply   to   HOST6(via RT1 or RT2)(*6)
+ |          |                |     |
+ |<---------#----------------------+ Echo Request from HOST7(via RT1) 
+ +---------(#)--------------(#)--->| Echo Reply   to   HOST7(via RT1 or RT2)(*7)
+ |          |                |     |
+ |<---------#----------------------+ Echo Request from HOST8(via RT1) 
+ +---------(#)--------------(#)--->| Echo Reply   to   HOST8(via RT1 or RT2)(*8)
+ |          |                |     |
+ |<---------#----------------------+ Echo Request from HOST9(via RT1) 
+ +---------(#)--------------(#)--->| Echo Reply   to   HOST9(via RT1 or RT2)(*9)
+ |          |                |     |
+ |<---------#----------------------+ Echo Request from HOST10(via RT1) 
+ +---------(#)--------------(#)--->| Echo Reply   to   HOST10(via RT1 or RT2)(*10)
+ |          |                |     |
+ |          |                |     | Check the ratio RT1:RT2(*11)
+</PRE>
+</BLOCKQUOTE>
+<P>
+<PRE>
+(INITIALIZATION)
+1. RT1 Sends RA w/ Preference=HIGH
+2. RT2 Sends RA w/ Preference=LOW, RouteInfoOption(LinkANY:Preference=HIGH)
+3. HOST1 Sends Echo Request
+4. NUT Sends Echo Reply to HOST1 via RT1 or RT2(*1)
+5. HOST2 Sends Echo Request
+6. NUT Sends Echo Reply to HOST2 via RT1 or RT2(*2)
+7. HOST3 Sends Echo Request
+8. NUT Sends Echo Reply to HOST3 via RT1 or RT2(*3)
+9. HOST4 Sends Echo Request
+10. NUT Sends Echo Reply to HOST4 via RT1 or RT2(*4)
+11. HOST5 Sends Echo Request
+12. NUT Sends Echo Reply to HOST5 via RT1 or RT2(*5)
+13. HOST6 Sends Echo Request
+14. NUT Sends Echo Reply to HOST6 via RT1 or RT2(*6)
+15. HOST7 Sends Echo Request
+16. NUT Sends Echo Reply to HOST7 via RT1 or RT2(*7)
+17. HOST8 Sends Echo Request
+18. NUT Sends Echo Reply to HOST8 via RT1 or RT2(*8)
+19. HOST9 Sends Echo Request
+20. NUT Sends Echo Reply to HOST9 via RT1 or RT2(*9)
+21. HOST10 Sends Echo Request
+22. NUT Sends Echo Reply to HOST10 via RT1 or RT2(*10)
+23. Check the ratio RT1:RT2(*11)
+</PRE>
+
+<P>
+<HR>
+<H1><A NAME="JUDGEMENT">JUDGEMENT</A></H1>
+<PRE>
+(*1)
+    PASS: HOST1 receives Echo Reply via RT1 or RT2
+</PRE>
+<PRE>
+(*2)
+    PASS: HOST2 receives Echo Reply via RT1 or RT2
+</PRE>
+<PRE>
+(*3)
+    PASS: HOST3 receives Echo Reply via RT1 or RT2
+</PRE>
+<PRE>
+(*4)
+    PASS: HOST4 receives Echo Reply via RT1 or RT2
+</PRE>
+<PRE>
+(*5)
+    PASS: HOST5 receives Echo Reply via RT1 or RT2
+</PRE>
+<PRE>
+(*6)
+    PASS: HOST6 receives Echo Reply via RT1 or RT2
+</PRE>
+<PRE>
+(*7)
+    PASS: HOST7 receives Echo Reply via RT1 or RT2
+</PRE>
+<PRE>
+(*8)
+    PASS: HOST8 receives Echo Reply via RT1 or RT2
+</PRE>
+<PRE>
+(*9)
+    PASS: HOST9 receives Echo Reply via RT1 or RT2
+</PRE>
+<PRE>
+(*10)
+    PASS: HOST10 receives Echo Reply via RT1 or RT2
+</PRE>
+<PRE>
+(*11)
+    Number of ICMP Echo Reply via RT1 = RepRT1
+    Number of ICMP Echo Reply via RT2 = RepRT2
+    PASS: (RepRT1:RepRT2 = n:10-n)  1<=n<=9
+</PRE>
+
+<P>
+<HR>
+<H1><A NAME="SEE_ALSO">SEE ALSO</A></H1>
+<PRE>
+<A HREF="./ROUTE.pm">ROUTE.pm</A>
+<A HREF="./RTINFO.def">RTINFO.def</A>
+</PRE>
+
+</BODY>
+
+</HTML>

@@ -1,0 +1,257 @@
+<HTML>
+<HEAD>
+<TITLE>sendNsBasicGlobLink - Verify that NUT send NSs</TITLE>
+<LINK REV="made" HREF="mailto:hackers@FreeBSD.org">
+</HEAD>
+
+<BODY>
+
+<!-- INDEX BEGIN -->
+<!--
+
+<UL>
+
+	<LI><A HREF="#NAME">NAME</A>
+	<LI><A HREF="#TARGET">TARGET</A>
+	<LI><A HREF="#SYNOPSIS">SYNOPSIS</A>
+	<LI><A HREF="#INITIALIZATION">INITIALIZATION</A>
+	<UL>
+
+		<LI><A HREF="#A_CASE_OF_A_HOST">A CASE OF A HOST</A>
+		<LI><A HREF="#A_CASE_OF_A_ROUTER">A CASE OF A ROUTER</A>
+	</UL>
+
+	<LI><A HREF="#TEST_PROCEDURE">TEST PROCEDURE</A>
+	<LI><A HREF="#JUDGMENT">JUDGMENT</A>
+	<LI><A HREF="#TERMINATION">TERMINATION</A>
+	<LI><A HREF="#NOTE">NOTE</A>
+	<LI><A HREF="#REFERENCE">REFERENCE</A>
+	<LI><A HREF="#SEE_ALSO">SEE ALSO</A>
+</UL>
+-->
+<!-- INDEX END -->
+
+<P>
+<H1><A NAME="NAME">NAME</A></H1>
+<P>
+sendNsBasicGlobLink - Verify that NUT send NSs (link ==&gt; global)
+
+<P>
+<HR>
+<H1><A NAME="TARGET">TARGET</A></H1>
+<P>
+Host and Router
+
+<P>
+<HR>
+<H1><A NAME="SYNOPSIS">SYNOPSIS</A></H1>
+<P>
+<PRE>  sendNsBasicGlobLink.seq [-tooloption ...] -p sendNsBasicGlobLink.def
+</PRE>
+<P>
+<HR>
+<H1><A NAME="INITIALIZATION">INITIALIZATION</A></H1>
+<P>
+<HR>
+<H2><A NAME="A_CASE_OF_A_HOST">A CASE OF A HOST</A></H2>
+<OL>
+  <LI>Set a global prefix (3ffe:501:ffff:100::/64) with RA.
+  <LI>Set NC state for TN to REACHABLE
+</OL>
+
+<P>
+<PRE>  TN                 NUT
+  ----------------------
+</PRE>
+<P>
+<PRE>  State: any (for TN, X)
+</PRE>
+<P>
+<PRE>  ==== multicast RA ===&gt;
+       src=X's link-local
+       dst=all-node
+       M=0, O=0,
+       Lifetime=600, ReachableTime=0, RetransTimer=0
+       w/ SLLA
+       Prefix:
+           F=1, A=1,
+           ValidLifetime=2592000, PreferredLifetime=604800
+           Prefix=3ffe:501:ffff:100::, PrefixLength=64
+</PRE>
+<P>
+<PRE>  Wait (3 sec.)
+        Ignoring DAD packets.
+</PRE>
+<P>
+<PRE>  State: any (for TN), STALE (for X)
+</PRE>
+<P>
+<PRE>  ==== echo-request ===&gt;
+       src=TN's global
+       dst:NUT's link-local
+</PRE>
+<P>
+<PRE>  ==== solicited NA ===&gt;
+       src=TN's global
+       dst=NUT's link-local
+       R=0, S=1, O=1
+       w/ TLLA
+</PRE>
+<P>
+<PRE>  State: REACHABLE (for TN), STALE (for X)
+</PRE>
+<P>
+<HR>
+<H2><A NAME="A_CASE_OF_A_ROUTER">A CASE OF A ROUTER</A></H2>
+<OL>
+  <LI>NUT must be configured its interface under test (Link0)
+      to have a global prefix of "3ffe:501:ffff:100::/64".
+  <LI>Set NC state for TN to REACHABLE
+</OL>
+
+<P>
+<PRE>  TN                 NUT
+  ----------------------
+</PRE>
+<P>
+<PRE>  State: any (for TN)
+</PRE>
+<P>
+<PRE>  ==== echo-request ===&gt;
+       src=TN's global
+       dst:NUT's link-local
+</PRE>
+<P>
+<PRE>  ==== solicited NA ===&gt;
+       src=TN's global
+       dst=NUT's link-local
+       R=0, S=1, O=1
+       w/ TLLA
+</PRE>
+<P>
+<PRE>  State: REACHABLE (for TN)
+</PRE>
+<P>
+<HR>
+<H1><A NAME="TEST_PROCEDURE">TEST PROCEDURE</A></H1>
+<P>
+<STRONG>sendNsBasicGlobLink</STRONG> verifies that NUT send valid NSs in both INCOMPLETE state and PROBE state.
+
+<PRE>
+  TN                               NUT
+  ------------------------------------
+<BR>
+  State: REACHABLE (for TN)
+<BR>
+  Wait (REACHABLE_TIME * MAX_RANDOM_FACTOR)
+<BR>
+  State: STALE (for TN)
+<BR>
+  ==== echo-request ===>
+       src=TN's global
+       dst=NUT's link-local
+<BR>
+  <=== <A HREF="#JDG1">Judgment #1</A>: echo-reply   ====
+       src=NUT's link
+       dst=TN's global
+       timeout: 2 sec
+<BR>
+  State: DELAY (for TN)
+<BR>
+  Wait (DELAY_FIRST_PROBE_TIME)
+<BR>
+  State: PROBE (for TN)
+<BR>
+  <=== <A HREF="#JDG2">Judgment #2</A>: unicast NS   ====
+       src=NUT's link-local or <A HREF="#NOTE1">global</A>
+       dst=TN's global
+       w/ or w/o SLLA
+       timeout: RETRANS_TIMER * MAX_UNICAST_SOLICIT
+<BR>
+  State: NONCE (for TN)
+<BR>
+  ==== echo-request ===>
+       src=TN's global
+       dst:NUT's link-local
+<BR>
+  State: INCOMPLETE (for TN)
+<BR>
+  <=== <A HREF="#JDG3">Judgment #3</A>: multicast NS ====
+       src=NUT's link-local
+       dst=sol-node[TN's global]
+       w/ SLLA
+       timeout: RETRANS_TIMER * MAX_MULTICAST_SOLICIT
+<BR>
+  State: NONCE (for TN)
+</PRE>
+
+<P>
+<HR>
+<H1><A NAME="JUDGMENT">JUDGMENT</A></H1>
+<PRE>
+<A NAME="JDG1"></A>
+  1. NUT must send an echo-reply:
+     src: link, dst: global
+<A NAME="JDG"></A>
+  2. NUT must send at the most three unicast NS:
+     src: link/<A HREF="#NOTE1">global</A>, dst: global, w/ or w/o SLLA
+<A NAME="JDG2"></A>
+  3. NUT must send at the most three multicast NS:
+     src: <A HREF="#REF">link(SHOULD)</A>, dst: sol-node[global], w/ SLLA
+</PRE>
+
+<P>
+<HR>
+<H1><A NAME="TERMINATION">TERMINATION</A></H1>
+<P>
+<PRE>  Send RA with RouterLifetime=0 to flush the Default Router List.
+</PRE>
+<P>
+<HR>
+<H1><A NAME="NOTE">NOTE</A></H1>
+<PRE>
+<A NAME="NOTE1"></A>
+  1. RFC2461 does not describe the case where a NS sends in PROBE state
+     The test judges "PASS" even if NUT sends an NS whose source
+     address is not link-local when PROBE state.
+<A NAME="NOTE2"></A>
+  2. The test does not invoke any remote command.
+</PRE>
+
+<P>
+<HR>
+<H1><A NAME="REFERENCE">REFERENCE</A></H1>
+<PRE>
+RFC2461
+<HR>
+7.2.2.  Sending Neighbor Solicitations
+<BR>
+   When a node has a unicast packet to send to a neighbor, but does not
+   know the neighbor's link-layer address, it performs address
+   resolution.  For multicast-capable interfaces this entails creating a
+   Neighbor Cache entry in the INCOMPLETE state and transmitting a
+   Neighbor Solicitation message targeted at the neighbor.  The
+   solicitation is sent to the solicited-node multicast address
+   corresponding to the target address.
+<BR>
+   <A NAME="REF"><B>If the source address of the packet prompting the solicitation is the
+   same as one of the addresses assigned to the outgoing interface, that
+   address SHOULD be placed in the IP Source Address of the outgoing
+   solicitation.</B></A>  Otherwise, any one of the addresses assigned to the
+   interface should be used.  Using the prompting packet's source
+   address when possible insures that the recipient of the Neighbor
+   Solicitation installs in its Neighbor Cache the IP address that is
+   highly likely to be used in subsequent return traffic belonging to
+   the prompting packet's "connection".
+</PRE>
+
+<P>
+<HR>
+<H1><A NAME="SEE_ALSO">SEE ALSO</A></H1>
+<P>
+<PRE>  perldoc V6evalTool
+  perldoc V6evalRemote
+</PRE>
+</BODY>
+
+</HTML>

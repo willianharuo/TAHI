@@ -1,0 +1,35 @@
+#
+# ndpd.conf
+#
+# LINK0
+#
+LINK0	AdvSendAdvertisement	1
+LINK0	MAXINTERVAL
+LINK0	MININTERVAL
+LINK0	AdvManagedFlag		0
+LINK0	AdvOtherConfigFlag	0
+LINK0	MTU
+LINK0	RTIME
+LINK0	RETRANS
+LINK0	CHLIM
+LINK0	RLTIME
+# interface Prefix prefix prefixlen AdvValid AdvOnflag AdvPrefer AdvAutoFlag
+LINK0	Prefix	3ffe:501:ffff:100::	64 VLTIME 1 PLTIME 1
+#
+# ed1
+#
+LINK1	AdvSendAdvertisement	1
+LINK1	MAXINTERVAL
+LINK1	MININTERVAL
+LINK1	AdvManagedFlag		0
+LINK1	AdvOtherConfigFlag	0
+LINK1	MTU
+LINK1	RTIME
+LINK1	RETRANS
+LINK1	CHLIM
+LINK1	RLTIME
+# interface Prefix prefix prefixlen AdvValid AdvOnflag AdvPrefer AdvAutoFlag
+LINK1	Prefix	3ffe:501:ffff:101::	64 VLTIME 1 PLTIME 1
+#
+# EOF
+#

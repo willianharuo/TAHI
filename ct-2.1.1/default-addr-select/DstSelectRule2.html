@@ -1,0 +1,174 @@
+<HTML>
+<HEAD>
+<TITLE>DstSelectRule2.seq - Destination Address Selection
+                       Check Rule 2</TITLE>
+<LINK REV="made" HREF="mailto:hackers@FreeBSD.org">
+</HEAD>
+
+<BODY>
+
+<!-- INDEX BEGIN -->
+<!--
+
+<UL>
+
+	<LI><A HREF="#NAME">NAME</A>
+	<LI><A HREF="#TARGET">TARGET</A>
+	<LI><A HREF="#SYNOPSIS">SYNOPSIS</A>
+	<LI><A HREF="#INITIALIZATION">INITIALIZATION</A>
+	<LI><A HREF="#TEST_PROCEDURE">TEST PROCEDURE</A>
+	<LI><A HREF="#JUDGEMENT">JUDGEMENT</A>
+	<LI><A HREF="#SEE_ALSO">SEE ALSO</A>
+</UL>
+-->
+<!-- INDEX END -->
+
+<P>
+<H1><A NAME="NAME">NAME</A></H1>
+<P>
+<PRE>  DstSelectRule2.seq - Destination Address Selection
+                       Check Rule 2(Prefer matching scopee)
+</PRE>
+<P>
+<PRE>  Rule 2: Prefer matching scope. 
+    If Scope(DA) = Scope(Source(DA)) and Scope(DB) &lt;&gt; Scope(Source(DB)), then prefer DA. 
+</PRE>
+<P>
+<PRE>  Source addresses used for this test are &quot;preferred address&quot;.
+</PRE>
+<P>
+<HR>
+<H1><A NAME="TARGET">TARGET</A></H1>
+<P>
+<PRE>  Host and Router
+</PRE>
+<P>
+<HR>
+<H1><A NAME="SYNOPSIS">SYNOPSIS</A></H1>
+<PRE>
+  <A HREF="./DstSelectRule2.seq">DstSelectRule2.seq</A> [-tooloption ...] -pkt <A HREF="./ADDR_SELECT.def">ADDR_SELECT.def</A>
+    -tooloption : v6eval tool option
+</PRE>
+
+<P>
+<HR>
+<H1><A NAME="INITIALIZATION">INITIALIZATION</A></H1>
+<P>
+<PRE>  None
+</PRE>
+<P>
+<HR>
+<H1><A NAME="TEST_PROCEDURE">TEST PROCEDURE</A></H1>
+<P>
+<PRE>  This TEST performs the following Check procedures for
+  every address group defined by Check 01 - *.
+    
+  *Check procedure
+  
+  1. Initialize :
+     1.1. Set IPv6 Default Route in NUT
+          (Default Router address = &lt;TN-Link0-LinkLocalAddress&gt;)
+     1.2. Set DNS setting in NUT
+     1.3. Add Candidate Source Addresses in NUT
+     1.4. Check Candidate Source Addresses by Ping6 (TN-&gt;NUT)
+  2. Send Ping6 from NUT to Destination(FQDN)
+     2.1. NUT send DNS query (question) (NUT-&gt;TN)
+     2.2. TN send DNS query (answer) (TN-&gt;NUT)
+     2.3. NUT send ICMPv6 echo request (NUT-&gt;TN)
+  3. Judgment :
+     if (recive packet's Destination &amp; Source Addresses)
+     = (expected Destination &amp; Source Addresses), Check pass
+  4. Cleanup :
+     4.1. Delete Candidate Source Addresses in NUT
+     4.2. Clear prefix list &amp; NCE &amp; default router list in NUT
+     4.3. Remove DNS setting in NUT
+</PRE>
+<P>
+<PRE>        NUT    TN  Default  DNS  Destination
+         |      |  Router    |     |
+         |      |      |     |     |
+         ======(INITIALIZE)=========
+         |      |      |     |     |
+         |&lt;-&lt;-&lt;-+      |     |     | Set IPv6 Default Route
+         |&lt;-&lt;-&lt;-+      |     |     | Set DNS setting
+         |&lt;-&lt;-&lt;-+      |     |     | Add Candidate Source Addresses
+         |      |      |     |     |
+         |&lt;------------+     |     | Echo Request to Candidate Source Addresses 1
+         +------------&gt;|     |     | Echo Reply
+         |      |      |     |     |
+         ======(INITIALIZE)=========
+         |      |      |     |     |
+         |&lt;-&lt;-&lt;-+      |     |     | Excute ping6 command
+         |      |      |     |     |
+         +------------------&gt;|     | DNS query question
+         &lt;-------------------+     | DNS query answer
+         +------------------------&gt;| Echo Request
+         |      |      |     |     |
+</PRE>
+<P>
+<PRE>  GS(Global Scope), OS(Organization Scope), SS(Site local Scope), LS(Link local Scope)
+  LLA(Link Local Address)
+</PRE>
+<P>
+<PRE>  Check 01:
+    DNS Address: 3ffe::9
+    Candidate Source Addresses: 3ffe::1(GS) or LLA(LS)
+    Destination Address List: fec0::2(SS) or 3fff::2(GS)
+    Result: 3fff::2 (src 3ffe::1) then fec0::2 (src 3ffe::1)
+</PRE>
+<P>
+<PRE>    Scope(3fff::2) = Scope(3ffe::1) and Scope(fec0::2) &lt;&gt; Scope(3ffe::1), then prefer 3fff::2
+</PRE>
+<P>
+<PRE>  Check 02:
+    DNS Address: fec0::9
+    Candidate Source Addresses: fec0::1(SS) or LLA(LS)
+    Destination Address List: 3fff::2(GS) or fec0::2(SS)
+    Result: fec0::2 (src fec0::1) then 3fff::2 (src fec0::1)
+</PRE>
+<P>
+<PRE>    Scope(fec0::2) = Scope(fec0::1) and Scope(3fff::2) &lt;&gt; Scope(fec0::1), then prefer fec0::2
+</PRE>
+<P>
+<PRE>  Check 03:
+    DNS Address: fec0::9
+    Candidate Source Addresses: fec0::1(SS) or LLA(LS)
+    Destination Address List: 3fff::2(GS) or fe80::2(LS)
+    Result: fe80::2 (src LLA) then 3fff::2 (src fec0::1)
+</PRE>
+<P>
+<PRE>    Scope(fe80::2) = Scope(LLA) and Scope(3fff::2) &lt;&gt; Scope(fec0::1), then prefer fe80::2
+</PRE>
+<P>
+<HR>
+<H1><A NAME="JUDGEMENT">JUDGEMENT</A></H1>
+<P>
+<PRE>  Check 01:
+    PASS: Receive Echo Request &amp; destination(source) = 3fff::2(3ffe::1)
+</PRE>
+<P>
+<PRE>  Check 02:
+    PASS: Receive Echo Request &amp; destination(source) = fec0::2(fec0::1)
+</PRE>
+<P>
+<PRE>  Check 03:
+    PASS: Receive Echo Request &amp; destination(source) = fe80::2(LLA)
+</PRE>
+<P>
+<PRE>  TEST
+    PASS: All Check = PASS
+</PRE>
+<P>
+<HR>
+<H1><A NAME="SEE_ALSO">SEE ALSO</A></H1>
+<P>
+<PRE>  perldoc V6evalTool
+</PRE>
+<PRE>
+  <A HREF="ADDR_SELECT.html">ADDR_SELECT.html</A> "Default Address Selection for IPv6" Test Common Utility<BR>
+  <A HREF="das_rules.html">das_rules.html</A> "Default Address Selection for IPv6" Rules
+</PRE>
+
+</BODY>
+
+</HTML>

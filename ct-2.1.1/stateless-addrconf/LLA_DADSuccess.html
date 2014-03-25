@@ -1,0 +1,257 @@
+<HTML>
+<HEAD>
+<TITLE>LLA_DADSuccess - check normal DAD process that should succeed</TITLE>
+<LINK REV="made" HREF="mailto:hackers@FreeBSD.org">
+</HEAD>
+
+<BODY>
+
+<!-- INDEX BEGIN -->
+<!--
+
+<UL>
+
+	<LI><A HREF="#NAME">NAME</A>
+	<LI><A HREF="#TARGET">TARGET</A>
+	<LI><A HREF="#SYNOPSIS">SYNOPSIS</A>
+	<LI><A HREF="#INITIALIZATION">INITIALIZATION</A>
+	<LI><A HREF="#TEST_PROCEDURE">TEST PROCEDURE</A>
+	<LI><A HREF="#JUDGEMENT">JUDGEMENT</A>
+	<LI><A HREF="#REFERENCE">REFERENCE</A>
+	<LI><A HREF="#SEE_ALSO">SEE ALSO</A>
+</UL>
+-->
+<!-- INDEX END -->
+
+<P>
+<H1><A NAME="NAME">NAME</A></H1>
+<P>
+LLA_DADSuccess - check normal DAD process that should succeed
+
+<P>
+<HR>
+<H1><A NAME="TARGET">TARGET</A></H1>
+<P>
+All Node
+
+<P>
+<HR>
+<H1><A NAME="SYNOPSIS">SYNOPSIS</A></H1>
+<P>
+LLA_DADSuccess.seq [-tooloption ...] -pkt &lt;packetdef&gt;
+[addrconf=&lt;addrconfname&gt;] 
+
+<P>
+<PRE>  -tooloption   : v6eval tool option
+  &lt;packetdef&gt;   : packet definition file (v6eval tool option)
+  &lt;addrconfname&gt;: how to configure address on NUT; boot/reboot
+</PRE>
+<PRE>
+ detail of v6eval tool option: see perldoc V6evalTool.pm, perldoc V6evalRemote.pm
+</PRE>
+
+<P>
+<HR>
+<H1><A NAME="INITIALIZATION">INITIALIZATION</A></H1>
+<PRE>
+ Reboot NUT or Initialize interface of NUT or Initialize IPv6 stack of NUT.
+</PRE>
+
+<P>
+<HR>
+<H1><A NAME="TEST_PROCEDURE">TEST PROCEDURE</A></H1>
+<DL>
+<DT><STRONG><A NAME="item_Test">Test for Unicast address configuration</A></STRONG><DD>
+<P>
+The following tests are prepared in this test package. See INDEX file.
+
+<P>
+<STRONG>Test for all node</STRONG>
+
+
+
+<P>
+<PRE>   NUT performs DAD for its Link-local unicast address made by stateless address autoconfiguration.
+</PRE>
+<P>
+<STRONG>Test sequence</STRONG>
+
+
+
+<P>
+<PRE>  TN                            NUT
+  ---------------------------------
+  Initialize NUT
+</PRE>
+<P>
+<PRE>  NUT configures address (reboot or interface initialization etc...)
+</PRE>
+<P>
+<PRE>  TN wait the DAD NS sent from NUT
+  &lt;=== Judgement #1: DAD NS =======
+        name: DADNS_from_NUT
+</PRE>
+<P>
+<PRE>  Wait for DupAddrDetectTransmits*RetransTimer
+</PRE>
+<P>
+<PRE>  Check if NUT's address is configured
+  ==== Action #1: DAD NS =========&gt;
+        name: DADNS_from_TN
+</PRE>
+<P>
+<PRE>  &lt;=== Judgement #2: DAD NA =======
+        name: DADNA_from_NUT 
+</PRE>
+</DL>
+<P>
+<HR>
+<H1><A NAME="JUDGEMENT">JUDGEMENT</A></H1>
+<DL>
+<DT><STRONG>Test for Link-local Unicast address autoconfiguration</STRONG><DD>
+<P>
+<STRONG>Test for all NODE</STRONG>
+
+
+
+<P>
+<STRONG>NUT performs Stateless Address Autoconfiguration(Link-local) on its interface</STRONG>
+
+
+
+<P>
+<PRE>   Judgement #1. NUT MUST transmit DAD NS for its autoconfigured Link-local address.
+        name: DADNS_from_NUT
+        src: ::0
+        dst: solnode[NUT's tentative Link-local]
+        TargetAddress: NUT's tentative Link-local
+</PRE>
+<P>
+<PRE>   Action #1. TN transmits DAD NS to check if NUT's address is configured
+        name: DADNS_from_TN
+        src: ::0
+        dst: solnode[NUT's Link-local]
+        TargetAddress: NUT's Link-local
+</PRE>
+<P>
+<PRE>   Judgement #2. NUT MUST transmit DAD NA for its autoconfigured  Link-local address.
+        name: DADNA_from_NUT, DADNA_from_NUT_woTLL
+        src: NUT's Link-local
+        dst: allnode
+        TargetAddress: NUT's Link-local
+        RFlag: 0 ( if NUT is a Router then 1)
+        SFlag: 0
+        OFlag: 1
+        TLLOPT: NUT's MAC address
+</PRE>
+</DL>
+<P>
+<HR>
+<H1><A NAME="REFERENCE">REFERENCE</A></H1>
+<PRE>
+RFC2462
+<HR>
+   (omit)
+<BR>
+5.3.  Creation of Link-Local Addresses
+<BR>
+   (omit)
+<BR>
+<A NAME="REF"><B>
+   A link-local address is formed by prepending the well-known link-
+   local prefix FE80::0 [ADDR-ARCH] (of appropriate length) to the
+   interface identifier</B></A>. If the interface identifier has a length of N
+   bits, the interface identifier replaces the right-most N zero bits of
+   the link-local prefix.  If the interface identifier is more than 118
+   bits in length, autoconfiguration fails and manual configuration is
+   required. Note that interface identifiers will typically be 64-bits
+   long and based on EUI-64 identifiers as described in [ADDR-ARCH].
+<BR>
+   A link-local address has an infinite preferred and valid lifetime; it
+   is never timed
+   out.
+<BR>
+5.4.  Duplicate Address Detection
+<BR>
+   <B>Duplicate Address Detection is performed on unicast addresses prior
+   to assigning them to an interface whose DupAddrDetectTransmits
+   variable is greater than zero</B>. Duplicate Address Detection MUST take
+   place on all unicast addresses, regardless of whether they are
+   obtained through stateful, stateless or manual configuration, with
+   the exception of the following cases:
+<BR>
+   (omit)
+<BR>
+5.4.3.  Receiving Neighbor Solicitation Messages
+<BR>
+   On receipt of a valid Neighbor Solicitation message on an interface,
+   node behavior depends on whether the target address is tentative or
+   not.  <B>If the target address is not tentative (i.e., it is assigned to
+   the receiving interface), the solicitation is processed as described
+   in [DISCOVERY]</B>.  If the target address is tentative, and the source
+   address is a unicast address, the solicitation's sender is performing
+   address resolution on the target; the solicitation should be silently
+   ignored.  Otherwise, processing takes place as described below. In
+   all cases, a node MUST NOT respond to a Neighbor Solicitation for a
+   tentative address.
+<BR>
+   (omit)
+<HR>
+RFC2461
+<HR>
+<BR>
+   (omit)
+<BR>
+7.2.4.  Sending Solicited Neighbor Advertisements
+<BR>
+   A node sends a Neighbor Advertisement in response to a valid Neighbor
+   Solicitation targeting one of the node's assigned addresses.  The
+   Target Address of the advertisement is copied from the Target Address
+   of the solicitation.  If the solicitation's IP Destination Address is
+   not a multicast address, the Target Link-Layer Address option MAY be
+   omitted; the neighboring node's cached value must already be current
+   in order for the solicitation to have been received.  If the
+   solicitation's IP Destination Address is a multicast address, the
+   Target Link-Layer option MUST be included in the advertisement.
+   Furthermore, if the node is a router, it MUST set the Router flag to
+   one; otherwise it MUST set the flag to zero.
+<BR>
+   If the Target Address is either an anycast address or a unicast
+   address for which the node is providing proxy service, or the Target
+   Link-Layer Address option is not included, the Override flag SHOULD
+   be set to zero.  Otherwise, the Override flag SHOULD be set to one.
+   Proper setting of the Override flag ensures that nodes give
+   preference to non-proxy advertisements, even when received after
+   proxy advertisements, and also ensures that the first advertisement
+   for an anycast address "wins".
+<BR>
+   <B>If the source of the solicitation is the unspecified address, the
+   node MUST set the Solicited flag to zero and multicast the
+   advertisement to the all-nodes address.</B>  Otherwise, the node MUST set
+   the Solicited flag to one and unicast the advertisement to the Source
+   Address of the solicitation.
+<BR>
+   If the Target Address is an anycast address the sender SHOULD delay
+   sending a response for a random time between 0 and
+   MAX_ANYCAST_DELAY_TIME seconds.
+   Because unicast Neighbor Solicitations are not required to include a
+   Source Link-Layer Address, it is possible that a node sending a
+   solicited Neighbor Advertisement does not have a corresponding link-
+   layer address for its neighbor in its Neighbor Cache.  In such
+   situations, a node will first have to use Neighbor Discovery to
+   determine the link-layer address of its neighbor (i.e, send out a
+   multicast Neighbor Solicitation).
+<BR>
+   (omit)
+</PRE>
+
+<P>
+<HR>
+<H1><A NAME="SEE_ALSO">SEE ALSO</A></H1>
+<PRE>
+ detail of v6eval tool option: see perldoc V6evalTool.pm, perldoc V6evalRemote.pm
+</PRE>
+
+</BODY>
+
+</HTML>

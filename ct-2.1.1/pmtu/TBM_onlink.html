@@ -1,0 +1,246 @@
+<HTML>
+<HEAD>
+<TITLE>acceptTooBigMesgOnlink - Verify changing Path MTU w/ received Too Big Message on a link</TITLE>
+<LINK REV="made" HREF="mailto:hackers@FreeBSD.org">
+</HEAD>
+
+<BODY>
+
+<!-- INDEX BEGIN -->
+<!--
+
+<UL>
+
+	<LI><A HREF="#NAME">NAME</A>
+	<LI><A HREF="#TARGET">TARGET</A>
+	<LI><A HREF="#SYNOPSIS">SYNOPSIS</A>
+	<LI><A HREF="#NETWORK_CONFIGURATION">NETWORK CONFIGURATION</A>
+	<LI><A HREF="#INITIALIZATION">INITIALIZATION</A>
+	<LI><A HREF="#TEST_PROCEDURE">TEST PROCEDURE</A>
+	<LI><A HREF="#JUDGMENT">JUDGMENT</A>
+	<LI><A HREF="#SEE_ALSO">SEE ALSO</A>
+</UL>
+-->
+<!-- INDEX END -->
+
+<P>
+<H1><A NAME="NAME">NAME</A></H1>
+<P>
+<PRE>        acceptTooBigMesgOnlink - Verify changing Path MTU w/ received Too Big Message on a link
+</PRE>
+<P>
+<HR>
+<H1><A NAME="TARGET">TARGET</A></H1>
+<P>
+<PRE>        Host
+</PRE>
+<P>
+<HR>
+<H1><A NAME="SYNOPSIS">SYNOPSIS</A></H1>
+<P>
+<PRE>        acceptTooBigMesgOnlink.seq [-tooloption ...] -p acceptTooBigMesgOnlink.def
+</PRE>
+<P>
+<HR>
+<H1><A NAME="NETWORK_CONFIGURATION">NETWORK CONFIGURATION</A></H1>
+<P>
+<PRE>        This test evaluate the behavior of NUT when it receive the ICMP
+        Packet Too Big Message.
+        In this test, NUT is a host and TN plays a Roll of Router and 
+        other host.
+        
+        Phisical Network configuration
+        
+        --------+---------------+----------
+                |               |
+               NUT              TN
+</PRE>
+<P>
+<PRE>        Logical Network Configuration
+</PRE>
+<P>
+<PRE>             HOST-B            NUT
+               |                |
+        -------+--------+-------+--------
+                        |
+                     Proxy-C
+                        |
+        --------+-------+----------------
+                |
+              HOST-A
+</PRE>
+<P>
+<PRE>        In this test, NUT receives variable Packet Too Big Message. 
+        - Decrease PMTU for A from 1500 to 1400
+        - Re-decrease PMTU for A from 1400 to 1304
+</PRE>
+<P>
+<HR>
+<H1><A NAME="INITIALIZATION">INITIALIZATION</A></H1>
+<P>
+<PRE>        The TN send a RA to assign global address prefix.
+</PRE>
+<P>
+<PRE>           TN          NUT
+           |            |
+        ---+------------+------
+</PRE>
+<P>
+<PRE>        ===multicast RA===&gt;
+        src=TN's link-local
+        dst=LinkLocal-all-node                                                  
+        M=0, O=0,
+        Lifetime=3600, ReachableTime=60000, RetransTimer=1005
+        Prefix:
+           L=1, A=1,                       
+           ValidLifetime=3600005, PreferredLifetime=3600005
+           Prefix=3ffe:501:ffff:100::, PrefixLength=64                      
+   
+          Wait (5 sec.)
+                 Ignoring DAD packets for global address.                 
+</PRE>
+<P>
+<HR>
+<H1><A NAME="TEST_PROCEDURE">TEST PROCEDURE</A></H1>
+<P>
+<PRE>         &quot;acceptTooBigMesgOnlink&quot; verify NUT's behavior when it receives 
+         ICMP Packet Too Big Mesg even though the destination address
+         is Link-Local Address.
+</PRE>
+<P>
+<PRE>           TN          NUT
+           |            |
+        ---+------------+------
+</PRE>
+<P>
+<PRE>        1. Confirm MTU (MTU=1500) ------------------------------
+        1.1
+        TN send Echo Request.  
+        TN(B) === echo request(1500) ===========&gt; NUT
+</PRE>
+<P>
+<PRE>        1.2
+        NUT send Echo Reply.
+        &lt;&lt; JUDGMENT 1 &gt;&gt;
+        TN(B) &lt;=== echo reply(1500) ============= NUT
+</PRE>
+<P>
+<PRE>        2. PKT TOO BIG (MTU=1400) ------------------------------
+        2.1
+        TN send Echo Request.  
+        TN(A) === echo request(1/2 MTU=1400) ===&gt; NUT
+        TN(A) === echo request(2/2 MTU= 156) ===&gt; NUT
+</PRE>
+<P>
+<PRE>        2.2
+        NUT send Echo Reply.
+</PRE>
+<P>
+<PRE>        TN(A) &lt;=== echo reply(1500) ============= NUT
+</PRE>
+<P>
+<PRE>        2.3
+        TN send ICMPv6 Too Big Mesg include MTU (1400).
+        
+        TN(C) == ICMPv6 Too Big Mesg(MTU=1400) =&gt; NUT
+</PRE>
+<P>
+<PRE>        2.4
+        TN send Echo Request.  
+        TN(A) === echo request(1/2 MTU=1400) ===&gt; NUT
+        TN(A) === echo request(2/2 MTU= 156) ===&gt; NUT
+</PRE>
+<P>
+<PRE>        2.5
+        NUT send Echo Reply 
+        &lt;&lt; JUDGMENT 2 &gt;&gt;
+        TN(B) &lt;=== echo reply(1400 1/2) ========= NUT
+        TN(B) &lt;=== echo reply( 156 2/2) ========= NUT
+</PRE>
+<P>
+<PRE>        3. Confirm MTU for B(MTU=1500) ------------------------------
+        3.1
+        TN send Echo Request.  
+        TN(B) ==== echo request(1500) ==========&gt; NUT
+</PRE>
+<P>
+<PRE>        3.2
+        NUT send Echo Reply.
+        &lt;&lt; JUDGMENT 3 &gt;&gt;
+        TN(B) &lt;==== echo reply(1500) ============ NUT
+</PRE>
+<P>
+<PRE>        4. PKT TOO BIG (MTU=1304) ------------------------------
+        4.1
+        TN send Echo Request.  
+        TN(A) === echo request(1304 1/2) =======&gt; NUT
+        TN(A) === echo request( 154 2/2) =======&gt; NUT
+</PRE>
+<P>
+<PRE>        4.2
+        NUT send Echo Reply.
+        TN(A) &lt;=== echo reply(1400) ============= NUT
+</PRE>
+<P>
+<PRE>        4.3
+        TN send ICMPv6 Too Big Mesg include MTU (1304).
+        TN(C) = ICMPv6 Too Big Mesg(MTU=1304) ==&gt; NUT
+</PRE>
+<P>
+<PRE>        4.4
+        TN send Echo Request.  
+        TN(A) === echo request(1304 1/2) =======&gt; NUT
+        TN(A) === echo request( 154 2/2) =======&gt; NUT
+</PRE>
+<P>
+<PRE>        4.5
+        NUT send Echo Reply 
+        &lt;&lt; JUDGMENT 4 &gt;&gt;
+        TN(A) &lt;=== echo reply(1304 1/2) ========= NUT
+        TN(A) &lt;=== echo reply( 154 2/2) ========= NUT
+</PRE>
+<P>
+<HR>
+<H1><A NAME="JUDGMENT">JUDGMENT</A></H1>
+<P>
+<PRE>        &lt;&lt; JUDGMENT 1 -PASS- &gt;&gt;
+                NUT send Echo Reply
+</PRE>
+<P>
+<PRE>                &quot;PASS&quot; means that NUT recognizes Link MTU is greater equal than 1500.
+                And replied packet was correct.
+</PRE>
+<P>
+<PRE>        &lt;&lt; JUDGMENT 2 -PASS- &gt;&gt;
+                NUT send Echo Reply
+</PRE>
+<P>
+<PRE>                &quot;PASS&quot; means that NUT set valid MTU in received Packet Too Big message.
+                And fragmented packets are correct.
+</PRE>
+<P>
+<PRE>        &lt;&lt; JUDGMENT 3 -PASS- &gt;&gt;
+                NUT send Echo Reply
+</PRE>
+<P>
+<PRE>                &quot;PASS&quot; means that NUT treats the MTU in Packet Too Big Message independently.
+                And fragmented packets are correct.
+</PRE>
+<P>
+<PRE>        &lt;&lt; JUDGMENT 4 -PASS- &gt;&gt;
+                NUT send Echo Reply
+</PRE>
+<P>
+<PRE>                &quot;PASS&quot; means that NUT re-set valid MTU in received Packet Too Big message .
+                And fragmented packets are correct.
+</PRE>
+<P>
+<HR>
+<H1><A NAME="SEE_ALSO">SEE ALSO</A></H1>
+<P>
+<PRE>        perldoc V6evalTool
+        perldoc V6evalRemote
+</PRE>
+</BODY>
+
+</HTML>

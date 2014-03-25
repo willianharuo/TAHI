@@ -1,0 +1,14 @@
+##
+## $Name: REL_2_1_1 $
+##
+## $TAHI: ct/ipsec/INDEX_host,v 1.9 2001/10/05 06:38:55 masaxmasa Exp $
+##
+##<seq>:<def>:[<opt>]:[<log>]:<desc>
+##
+&print:<B>Host Transport Mode</B>
+
+&print:Initialize for Host
+
+./HTR_SetAddress.seq:./HTR_common.def:::Set Global Address and Check (Host)
+#
+#########################################################################

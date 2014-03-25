@@ -1,0 +1,233 @@
+<HTML>
+<HEAD>
+<TITLE>ncStateByNs4Stale - Verifying State Machine: NS vs. STALE</TITLE>
+<LINK REV="made" HREF="mailto:hackers@FreeBSD.org">
+</HEAD>
+
+<BODY>
+
+<!-- INDEX BEGIN -->
+<!--
+
+<UL>
+
+	<LI><A HREF="#NAME">NAME</A>
+	<LI><A HREF="#TARGET">TARGET</A>
+	<LI><A HREF="#SYNOPSIS">SYNOPSIS</A>
+	<LI><A HREF="#INITIALIZATION">INITIALIZATION</A>
+	<UL>
+
+		<LI><A HREF="#Cache_a_LLA_of_TN">Cache a LLA of TN</A>
+		<LI><A HREF="#Cache_a_bogus_LLA">Cache a bogus LLA</A>
+	</UL>
+
+	<LI><A HREF="#TEST_PROCEDURE">TEST PROCEDURE</A>
+	<LI><A HREF="#JUDGMENT">JUDGMENT</A>
+	<LI><A HREF="#TERMINATION">TERMINATION</A>
+	<LI><A HREF="#NOTE">NOTE</A>
+	<LI><A HREF="#SEE_ALSO">SEE ALSO</A>
+</UL>
+-->
+<!-- INDEX END -->
+
+<P>
+<H1><A NAME="NAME">NAME</A></H1>
+<P>
+ncStateByNs4Stale - Verifying State Machine: NS vs. STALE
+
+<P>
+<HR>
+<H1><A NAME="TARGET">TARGET</A></H1>
+<P>
+Host and Router
+
+<P>
+<HR>
+<H1><A NAME="SYNOPSIS">SYNOPSIS</A></H1>
+<P>
+<PRE>  ncStateByNs4Stale.seq [-tooloption ...] -p ncStateByNs4Stale.def
+</PRE>
+<P>
+<HR>
+<H1><A NAME="INITIALIZATION">INITIALIZATION</A></H1>
+<OL>
+  <LI>Set the state of neighbor cache entry to REACHABLE.
+  <LI>Cache either <A HREF="#Cache_a_LLA_of_TN">TN's LLA</A>, or
+      <A HREF="#Cache_a_bogus_LLA">a bogus LLA</A>
+</OL>
+
+<P>
+<HR>
+<H2><A NAME="Cache_a_LLA_of_TN">Cache a LLA of TN</A></H2>
+<PRE>
+  TN                 NUT
+  ----------------------
+<BR>
+  State: NONCE (for TN)
+<BR>
+  ==== echo-request ===>
+        src=TN's link-local
+        dst=NUT's link-local
+<BR>
+  State: INCOMPLETE (for TN)
+<BR>
+  <=== multicast NS ====
+        src=NUT's link-local
+        dst=solicited-node[TN's link-local]
+        target=TN's link-local
+        w/ SLLA
+        timeout: RETRANS_TIMER * MAX_MULTICAST_SOLICIT
+<BR>
+  ==== solicited NA ===>
+        src=TN's link-local
+        dst=NUT's link-local
+        target=TN's link-local
+        <B>TLLA=TN's LLA</B>
+<BR>
+  State: REACHABLE (for TN)
+<BR>
+  <=== echo-reply ====
+        src=NUT's link-local
+        dst=TN's link-local
+        timeout: 2 sec
+<BR>
+  Wait (REACHABLE_TIME * MAX_RANDOM_FACTOR)
+<BR>
+  State: STALE (for TN)
+</PRE>
+
+<P>
+<HR>
+<H2><A NAME="Cache_a_bogus_LLA">Cache a bogus LLA</A></H2>
+<PRE>
+  TN                 NUT
+  ----------------------
+<BR>
+  State: NONCE (for TN)
+<BR>
+  ==== echo-request ===>
+        src=TN's link-local
+        dst=NUT's link-local
+<BR>
+  State: INCOMPLETE (for TN)
+<BR>
+  <=== multicast NS ====
+        src=NUT's link-local
+        dst=solicited-node[TN's link-local]
+        target=TN's link-local
+        w/ SLLA
+        timeout: RETRANS_TIMER * MAX_MULTICAST_SOLICIT
+<BR>
+  ==== solicited NA ===>
+        src=TN's link-local
+        dst=NUT's link-local
+        target=TN's link-local
+        <B>TLLA=a bogus LLA</B>
+<BR>
+  State: REACHABLE (for TN)
+<BR>
+  <=== echo-reply ====
+        src=NUT's link-local
+        dst=TN's link-local
+        timeout: 2 sec
+<BR>
+  Wait (REACHABLE_TIME * MAX_RANDOM_FACTOR)
+<BR>
+  State: STALE (for TN)
+</PRE>
+
+<P>
+<HR>
+<H1><A NAME="TEST_PROCEDURE">TEST PROCEDURE</A></H1>
+<P>
+<STRONG>ncStateByNs4Stale</STRONG> verifies that state transition in STALE state when receiving a NS.
+
+<PRE>
+  TN                 NUT
+  ----------------------
+<BR>
+  State: STALE (for TN)
+<BR>
+  ==== <A HREF="#JDG1">NS</A> ===>
+        src=TN's link-local
+        dst=NUT's link-local or solicited-node[NUT's link-local]
+        w/o or w/ SLLA
+<BR>
+  <A HREF="#JDG1">Judgment</A>: <A HREF="nd.html">Examining NUT's neighbor cache state</A>
+</PRE>
+
+<P>
+<HR>
+<H1><A NAME="JUDGMENT">JUDGMENT</A></H1>
+<A NAME="JDG1"></A>
+<PRE>
+<HR>
+7.2.3.  Receipt of Neighbor Solicitations
+<BR>
+   A valid Neighbor Solicitation that does not meet any the following
+   requirements MUST be silently discarded:
+<BR>
+    - The Target Address is a "valid" unicast or anycast address
+      assigned to the receiving interface [ADDRCONF],
+<BR>
+    - The Target Address is a unicast address for which the node is
+      offering proxy service, or
+<BR>
+    - The Target Address is a "tentative" address on which Duplicate
+      Address Detection is being performed [ADDRCONF].
+<BR>
+   If the Target Address is tentative, the Neighbor Solicitation should
+   be processed as described in [ADDRCONF].  Otherwise, the following
+   description applies.  If the Source Address is not the unspecified
+   address and, on link layers that have addresses, the solicitation
+   includes a Source Link-Layer Address option, then the recipient
+   SHOULD create or update the Neighbor Cache entry for the IP Source
+   Address of the solicitation.  If an entry does not already exist, the
+   node SHOULD create a new one and set its reachability state to STALE
+   as specified in Section 7.3.3.  <B>If an entry already exists, and the
+   cached link-layer address differs from the one in the received Source
+   Link-Layer option, the cached address should be replaced by the
+   received address and the entry's reachability state MUST be set to
+   STALE.</B>
+<HR>
+  ===============================+==========+=========+=================
+  NS                             |New State |LLA       Comments
+  ---------+-----------+---------+          |
+  Source IP|Destination|SLLA     |          |
+           |IP         |         |          |
+  =========+===========+=========+==========+=========+=================
+  TN's link Unicast     none      STALE      unchanged Not mentioned
+                                                       in RFC2461
+  ---------+-----------+---------+----------+---------+-----------------
+  TN's link Unicast     same      STALE      unchanged
+  ---------+-----------+---------+----------+---------+-----------------
+  TN's link Multicast   same      STALE      unchanged
+  =========+===========+=========+==========+=========+=================
+  TN's link Unicast     different STALE      changed
+  ---------+-----------+---------+----------+---------+-----------------
+  TN's link Multicast   different STALE      changed
+  =========+===========+=========+==========+=========+=================
+</PRE>
+
+<P>
+<HR>
+<H1><A NAME="TERMINATION">TERMINATION</A></H1>
+<P>
+<PRE>  N/A
+</PRE>
+<P>
+<HR>
+<H1><A NAME="NOTE">NOTE</A></H1>
+<P>
+<PRE>  The test does not invoke any remote command.
+</PRE>
+<P>
+<HR>
+<H1><A NAME="SEE_ALSO">SEE ALSO</A></H1>
+<P>
+<PRE>  perldoc V6evalTool
+  perldoc V6evalRemote
+</PRE>
+</BODY>
+
+</HTML>

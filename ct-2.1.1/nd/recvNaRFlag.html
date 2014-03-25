@@ -1,0 +1,428 @@
+<HTML>
+<HEAD>
+<TITLE>recvNaRFlag - Verifying that a IsRouter flag is modified by a NA</TITLE>
+<LINK REV="made" HREF="mailto:hackers@FreeBSD.org">
+</HEAD>
+
+<BODY>
+
+<!-- INDEX BEGIN -->
+<!--
+
+<UL>
+
+	<LI><A HREF="#NAME">NAME</A>
+	<LI><A HREF="#TARGET">TARGET</A>
+	<LI><A HREF="#SYNOPSIS">SYNOPSIS</A>
+	<LI><A HREF="#INITIALIZATION">INITIALIZATION</A>
+	<UL>
+
+		<LI><A HREF="#Cache_a_LLA_of_TN">Cache a LLA of TN</A>
+		<LI><A HREF="#Cache_a_bogus_LLA">Cache a bogus LLA</A>
+	</UL>
+
+	<LI><A HREF="#TEST_PROCEDURE">TEST PROCEDURE</A>
+	<LI><A HREF="#JUDGMENT">JUDGMENT</A>
+	<LI><A HREF="#TERMINATION">TERMINATION</A>
+	<LI><A HREF="#NOTE">NOTE</A>
+	<LI><A HREF="#REFERENCE">REFERENCE</A>
+	<LI><A HREF="#SEE_ALSO">SEE ALSO</A>
+</UL>
+-->
+<!-- INDEX END -->
+
+<P>
+<H1><A NAME="NAME">NAME</A></H1>
+<P>
+recvNaRFlag - Verifying that a IsRouter flag is modified by a NA
+
+<P>
+<HR>
+<H1><A NAME="TARGET">TARGET</A></H1>
+<P>
+Host only
+
+<P>
+<HR>
+<H1><A NAME="SYNOPSIS">SYNOPSIS</A></H1>
+<P>
+<PRE> recvNaRFlag .seq [-tooloption ...] -p recvNaRFlag.def
+</PRE>
+<P>
+<HR>
+<H1><A NAME="INITIALIZATION">INITIALIZATION</A></H1>
+<OL>
+  <LI>Set the state of neighbor cache entry to REACHABLE
+      whose IsRouter flag is true. 
+  <LI>Cache either <A HREF="#Cache_a_LLA_of_TN">TN's LLA</A> or
+      <A HREF="#Cache_a_bogus_LLA">a bogus LLA</A>
+</OL>
+
+<P>
+<HR>
+<H2><A NAME="Cache_a_LLA_of_TN">Cache a LLA of TN</A></H2>
+<PRE>
+  TN                 NUT
+  ----------------------
+<BR>
+  State: NONCE (for TN)
+<BR>
+  ==== unsolicited RA ===>
+       src=TN's link-local
+       dst=all-node
+       M=0, O=0
+       RouterLifetime=600
+       ReachableTime=0
+       RetransTimer=0
+       Prefix Option:
+           L=1, A=1
+	   ValidLifetime=2592000
+	   PreferredLifetime=604800
+           Prefix=3ffe:501:ffff:100::/64
+<BR>
+  <=== Ns for DAD ====
+       src=unspecified
+       dst=solicited-node[NUT's global]
+       target=NUT's global
+<BR>
+  State: INCOMPLETE (for TN)
+<BR>
+  <=== multicast NS ====
+       src=NUT's link-local
+       dst=solicited-node[TN's link-local]
+       target=TN's link-local
+       w/ SLLA
+       timeout=RETRANS_TIMER * MAX_MULTICAST_SOLICIT
+<BR>
+  ==== solicited NA ===>
+       src=TN's link-local
+       dst=NUT's link-local
+       R=1, S=1, O=1
+       target=TN's link-local
+       <B>TLLA=TN's LLA</B>
+<BR>
+  State: REACHABLE (for TN)
+</PRE>
+
+<P>
+<HR>
+<H2><A NAME="Cache_a_bogus_LLA">Cache a bogus LLA</A></H2>
+<PRE>
+  TN                 NUT
+  ----------------------
+<BR>
+  State: NONCE (for TN)
+<BR>
+  ==== unsolicited RA ===>
+       src=TN's link-local
+       dst=all-node
+       M=0, O=0
+       RouterLifetime=600
+       ReachableTime=0
+       RetransTimer=0
+       Prefix Option:
+           L=1, A=1
+	   ValidLifetime=2592000
+	   PreferredLifetime=604800
+           Prefix=3ffe:501:ffff:100::/64
+<BR>
+  <=== Ns for DAD ====
+       src=unspecified
+       dst=solicited-node[NUT's global]
+       target=NUT's global
+<BR>
+  State: INCOMPLETE (for TN)
+<BR>
+  <=== multicast NS ====
+       src=NUT's link-local
+       dst=solicited-node[TN's link-local]
+       target=TN's link-local
+       w/ SLLA
+       timeout=RETRANS_TIMER * MAX_MULTICAST_SOLICIT
+<BR>
+  ==== solicited NA ===>
+       src=TN's link-local
+       dst=NUT's link-local
+       R=1, S=1, O=1
+       target=TN's link-local
+       <B>TLLA=a bogus LLA</B>
+<BR>
+  State: REACHABLE (for TN)
+</PRE>
+
+<P>
+<HR>
+<H1><A NAME="TEST_PROCEDURE">TEST PROCEDURE</A></H1>
+<P>
+<STRONG>recvNaRFlag</STRONG> verifies that a IsRouter flag is modified by a NA. in REACHABLE state when
+receiving an NA.
+
+<PRE>
+  TN                 NUT
+  ----------------------
+<BR>
+  State: REACHABLE (for TN)
+<BR>
+  ==== <A HREF="#JDG1">NA</A> ===>
+       src=TN's link-local
+       dst=the NUT's link-local or all-node
+       R=0, S=0/1, O=0/1
+       Target=TN's link-local
+       w/ or w/o TLL
+<BR>
+  ==== echo-request ===>
+       src=off-link global, but LLA is TN's one
+       dst=NUT's global
+<BR>
+  <=== <A HREF="#JDG2">Judgment #2</A>: echo-reply ====
+       src=NUT's global
+       dst=off-link global, but LLA is TN's one
+
+<P>
+<HR>
+<H1><A NAME="JUDGMENT">JUDGMENT</A></H1>
+<A NAME="JDG1"></A>
+<PRE>
+  1. Modification of the IsRouter flag depend upon both
+     its neighbor cache state and a NS.
+<HR>
+  =========+================================+=================
+  Current  |NA received by NUT              |IsRouter flag
+  State    +---------------+-+--+-+---------+-------+---------
+           |Destination    |r| s|o|TLLA     |Current|New
+  =========+===============+=+==+=+=========+=======+=========
+  REACHABLE Unicast         0  0 0 none      1       <A HREF="#CHG">0</A>
+           +---------------+-+--+-+---------+-------+---------
+            Unicast         0  0 1 none      1       <A HREF="#CHG">0</A>
+           +---------------+-+--+-+---------+-------+---------
+            Unicast         0  1 0 none      1       <A HREF="#CHG">0</A>
+           +---------------+-+--+-+---------+-------+---------
+            Unicast         0  1 1 none      1       <A HREF="#CHG">0</A>
+           +===============+=+==+=+=========+=======+=========
+            Unicast         0  0 0 same      1       <A HREF="#CHG">0</A>
+           +---------------+-+--+-+---------+-------+---------
+            Unicast         0  0 1 same      1       <A HREF="#CHG">0</A>
+           +---------------+-+--+-+---------+-------+---------
+            Unicast         0  1 0 same      1       <A HREF="#CHG">0</A>
+           +---------------+-+--+-+---------+-------+---------
+            Unicast         0  1 1 same      1       <A HREF="#CHG">0</A>
+           +===============+=+==+=+=========+=======+=========
+            Unicast         0  0 0 different 1       <A HREF="#UNCHG">unchanged</A>
+           +---------------+-+--+-+---------+-------+---------
+            Unicast         0  0 1 different 1       <A HREF="#CHG">0</A>
+           +---------------+-+--+-+---------+-------+---------
+            Unicast         0  1 0 different 1       <A HREF="#UNCHG">unchanged</A>
+           +---------------+-+--+-+---------+-------+---------
+            Unicast         0  1 1 different 1       <A HREF="#CHG">0</A>
+           +===============+=+==+=+=========+=======+=========
+            *Multicast      0  0 0 *none     1       <A HREF="#INVALID">unchanged</A>
+                            <A HREF="#NOTE2">*invalid?</A>
+           +---------------+-+--+-+---------+-------+---------
+            *Multicast      0  0 1 *none     1       <A HREF="#INVALID">unchanged</A>
+                            <A HREF="#NOTE2">*invalid?</A>
+           +---------------+-+--+-+---------+-------+---------
+            *Multicast      0 *1 0 *none     1       <A HREF="#INVALID">unchanged</A>
+                            *invalid
+           +---------------+-+--+-+---------+-------+---------
+            *Multicast      0 *1 1 *none     1       <A HREF="#INVALID">unchanged</A>
+                            invalid
+           +===============+=+==+=+=========+=======+=========
+            Multicast       0  0 0 same      1       <A HREF="#CHG">0</A>
+           +---------------+-+--+-+---------+-------+---------
+            Multicast       0  0 1 same      1       <A HREF="#CHG">0</A>
+           +---------------+-+--+-+---------+-------+---------
+            *Multicast      0 *1 0 same      1       <A HREF="#INVALID">unchanged</A>
+                            *invalid
+           +---------------+-+--+-+---------+-------+---------
+            *Multicast      0 *1 1 same      1       <A HREF="#INVALID">unchanged</A>
+                            *invalid
+           +===============+=+==+=+=========+=======+=========
+            Multicast       0  0 0 different 1       <A HREF="#UNCHG">unchanged</A>
+           +---------------+-+--+-+---------+-------+---------
+            Multicast       0  0 1 different 1       <A HREF="#CHG">0</A>
+           +---------------+-+--+-+---------+-------+---------
+            *Multicast      0 *1 0 different 1       <A HREF="#INVALID">unchanged</A>
+                            *invalid
+           +---------------+-+--+-+---------+-------+---------
+            *Multicast      0 *1 1 different 1       <A HREF="#INVALID">unchanged</A>
+                            *invalid
+  =========+===============+=+==+=+=========+=======+=========
+<A NAME="JDG2"></A>
+  2. If a IsRouter flag is modified by rule, NUT will NOT throw
+     an echo-reply to the default router (i.e. TN).
+</PRE>
+
+<P>
+<HR>
+<H1><A NAME="TERMINATION">TERMINATION</A></H1>
+<P>
+<PRE>  Send RA with RouterLifetime=0 to clear the Default Router List.
+</PRE>
+<P>
+<HR>
+<H1><A NAME="NOTE">NOTE</A></H1>
+<PRE>
+  1. The test does not invoke any remote command.
+<BR>
+<A NAME="NOTE2"></A>
+  2. An implementation may update Rflag of an NCE when receiving
+     an multicast NA w/o TLL. The NA is not invalid as a receiver side,
+     whereas it is invalid as a sender side (please see the following).
+     In such case, this test judges "WARN" that never means the implementation
+     is wrong. The test intends to inform such behavior.
+<BR>
+<BLOCKQUOTE>
+Sender side:
+<HR>
+4.4.  Neighbor Advertisement Message Format
+<BR>
+   Possible options:
+<BR>
+      Target link-layer address
+                     The link-layer address for the target, i.e., the
+                     sender of the advertisement.  <B>This option MUST be
+                     included on link layers that have addresses when
+                     responding to multicast solicitations.</B>  When
+                     responding to a unicast Neighbor Solicitation this
+                     option SHOULD be included.
+<HR>
+Receiver side:
+<HR>
+7.1.2.  Validation of Neighbor Advertisements
+<BR>
+   A node MUST silently discard any received Neighbor Advertisement
+   messages that do not satisfy all of the following validity checks:
+<BR>
+      - The IP Hop Limit field has a value of 255, i.e., the packet
+        could not possibly have been forwarded by a router.
+<BR>
+      - If the message includes an IP Authentication Header, the message
+        authenticates correctly.
+<BR>
+      - ICMP Checksum is valid.
+<BR>
+      - ICMP Code is 0.
+<BR>
+      - ICMP length (derived from the IP length) is 24 or more octets.
+<BR>
+      - Target Address is not a multicast address.
+<BR>
+      - If the IP Destination Address is a multicast address the
+        Solicited flag is zero.
+<BR>
+      - All included options have a length that is greater than zero.
+<HR>
+</BLOCKQUOTE>
+</PRE>
+
+<P>
+<HR>
+<H1><A NAME="REFERENCE">REFERENCE</A></H1>
+RFC2461
+<HR>
+<PRE>
+7.2.5.  Receipt of Neighbor Advertisements
+<BR>
+   <A NAME="INVALID"><B>When a valid Neighbor Advertisement is received (either solicited or
+   unsolicited), the Neighbor Cache is searched for the target's entry.</B></A>
+   If no entry exists, the advertisement SHOULD be silently discarded.
+   There is no need to create an entry if none exists, since the
+   recipient has apparently not initiated any communication with the
+   target.
+<BR>
+   Once the appropriate Neighbor Cache entry has been located, the
+   specific actions taken depend on the state of the Neighbor Cache
+   entry, the flags in the advertisement and the actual link-layer
+   address supplied.
+<BR>
+     IF(State == INCOMPLETE) {
+         If the target's Neighbor Cache entry is in the INCOMPLETE state when
+         the advertisement is received, one of two things happens.  If the
+         link layer has addresses and no Target Link-Layer address option is
+         included, the receiving node should silently discard the received
+         advertisement.  Otherwise, the receiving node performs the following
+         steps:
+<BR>
+         - It records the link-layer address in the Neighbor Cache entry.
+<BR>
+         - If the advertisement's Solicited flag is set, the state of the
+           entry is set to REACHABLE, otherwise it is set to STALE.
+<BR>
+         - It sets the IsRouter flag in the cache entry based on the Router
+           flag in the received advertisement.
+<BR>
+         - It sends any packets queued for the neighbor awaiting address
+           resolution.
+<BR>
+         Note that the Override flag is ignored if the entry is in the
+         INCOMPLETE state.
+     } ELSIF(State != INCOMPLETE) {
+         If the target's Neighbor Cache entry is in any state other than
+         INCOMPLETE when the advertisement is received, processing becomes
+         quite a bit more complex.
+<BR>
+         IF(Override==0 && TLLA!=LLA) {
+             If the Override flag is clear and the supplied link-layer
+             address differs from that in the cache, then one of two
+             actions takes place:
+<BR>
+             <A NAME="UNCHG"><B>IF(REACHABLE) {
+                 if the state of the entry is REACHABLE, set it to STALE,
+                 but do not update the entry in any other way;
+             }</A></B> ELSE {
+                 otherwise, the received advertisement should be ignored
+                 and must not update the cache.
+             }
+         } ELSIF(Override==1 ||
+                 (Override==0 && TLLA==LLA) ||
+                 TLLA==NULL) {
+             If the Override flag is set, both the Override
+             flag is clear and the supplied link-layer address is the same as that
+             in the cache, or no Target Link-layer address option was supplied,
+             the received advertisement must update the Neighbor Cache entry as
+             follows:
+<BR>
+             - The link-layer address in the Target Link-Layer Address option
+               must be inserted in the cache (if one is supplied and is different
+               than the already recorded address).
+<BR>
+             - If the Solicited flag is set, the state of the entry must be set
+               to REACHABLE.  If the Solicited flag is zero and the link-layer
+               address was updated with a different address the state must be set
+               to STALE.  Otherwise, the entry's state remains unchanged.
+<BR>
+             An advertisement's Solicited flag should only be set if the
+             advertisement is a response to a Neighbor Solicitation.  Because
+             Neighbor Unreachability Detection Solicitations are sent to the
+             cached link-layer address, receipt of a solicited advertisement
+             indicates that the forward path is working.  Receipt of an
+             unsolicited advertisement, however, suggests that a neighbor has
+             urgent information to announce (e.g., a changed link-layer
+             address).  If the urgent information indicates a change from what
+             a node is currently using, the node should verify the reachability
+             of the (new) path when it sends the next packet.  There is no need
+             to update the state for unsolicited advertisements that do not
+             change the contents of the cache.
+<BR>
+             - <A NAME="CHG"><B>The IsRouter flag in the cache entry must be set based on the
+               Router flag in the received advertisement.</A></B>  In those cases where
+               the IsRouter flag changes from TRUE to FALSE as a result of this
+               update, the node must remove that router from the Default Router
+               List and update the Destination Cache entries for all destinations
+               using that neighbor as a router as specified in Section 7.3.3.
+               This is needed to detect when a node that is used as a router
+               stops forwarding packets due to being configured as a host.
+         }
+     }
+</PRE>
+
+<P>
+<HR>
+<H1><A NAME="SEE_ALSO">SEE ALSO</A></H1>
+<P>
+<PRE>  perldoc V6evalTool
+  perldoc V6evalRemote
+</PRE>
+</BODY>
+
+</HTML>

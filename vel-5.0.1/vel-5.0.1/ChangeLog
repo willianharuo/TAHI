@@ -1,0 +1,202 @@
+			      ChangeLog
+
+			     TAHI Project
+
+		      $Date: 2012/03/02 11:54:35 $
+			  
+2012-03-02  Shih-Kang Wang <bigsmile@cht.com.tw>
+	
+	* vel 5.0.1 release
+
+2012-03-02  Shih-Kang Wang <bigsmile@cht.com.tw>
+
+	* interop_ph2/make_scenario.pl
+	correct operator in mac2eui64() to meet RFC4291
+
+2009-03-30  Hiroki ENDO <Hiroki.Endou@jp.yokogawa.com>
+
+	* vel 5.0.0 release
+
+2009-03-30  Hiroki ENDO <Hiroki.Endou@jp.yokogawa.com>
+
+	* README
+	update the supported the Interoperability Specification version number
+	update the supported platforms
+
+	* interop_ph2/command.FreeBSD.txt
+	* interop_ph2/command.NetBSD.txt
+	* interop_ph2/command.OpenBSD.txt
+	* interop_ph2/command.KAME.txt
+	* interop_ph2/command.Linux.txt
+	* interop_ph2/command.USAGI.txt
+	add cleanup commands
+
+	* interop_ph2/config.txt
+	* interop_ph2/config.sample.txt
+	* interop_ph2/make_scenario.pl
+	add DUP_ADDR to specify an address to check Duplicate Address Deection
+
+	* interop_ph2/host.host.1_2_B.sc
+	* interop_ph2/host.router.1_2_D.sc
+	* interop_ph2/router.host.1_2_D.sc
+	* interop_ph2/router.router.1_2_F.sc
+	use a duplicate address specified in config.txt
+	correct procedure to enable interface
+
+	* interop_ph2/host.host.1_2_A.sc
+	* interop_ph2/host.router.1_2_C.sc
+	* interop_ph2/router.host.1_2_C.sc
+	* interop_ph2/router.router.1_2_E.sc
+	add a command to delete the link-local address to checck
+
+	* interop_ph2/router.router.1_6_B.sc
+	add a command to add the gateway to Network2
+
+2008-12-11  Hiroki ENDO <Hiroki.Endou@jp.yokogawa.com>
+
+	* vel 4.0.0 release
+	version number follows IPv6 Ready Logo Phase-2 IPv6 Core
+	Protocols Interoperability Test Specification version number.
+
+2008-12-10  Hiroki Endo <Hiroki.Endou@jp.yokogawa.com>
+
+	* lib/Tg/PzHostDef.yy
+	* lib/Tg/PzScenario.yy
+	* lib/Tg/TcHostDef.cc
+	* lib/Tg/TcScenario.cc
+	correct the definitions
+
+	* lib/Tg/TeServer.cc
+	* lib/Tg/TeServer.h
+	correct behavior to send reply to unregistered ExecCmd request
+
+	* interop_ph2/command.FreeBSD.txt
+	* interop_ph2/command.NetBSD.txt
+	* interop_ph2/command.KAME.txt
+	* interop_ph2/command.Linux.txt
+	* interop_ph2/command.USAGI.txt
+	change command syntax
+
+	* interop_ph2/command.OpenBSD.txt
+	support OpenBSD
+
+	* interop_ph2/host.router.1_4_A.sc
+	* interop_ph2/host.router.1_4_B.sc
+	* interop_ph2/router.host.1_4_A.sc
+	* interop_ph2/router.host.1_4_B.sc
+	add scenarios to support test scenario version 4.0.1
+
+	* interop_ph2/*.sc
+	add command to remove rtadvd pid file
+	add command to flush route to LOGO
+	add command to flush Prefix List
+	add command to flush Default Router List
+	remove unnecessary route
+	remove unnecessary anycast address
+
+2007-06-19  Yukiyo Akisada <Yukiyo.Akisada@jp.yokogawa.com>
+
+	* lib/Tg/TcSocket.h
+	correct the declaration of TcSocket::receiveBuffer()
+
+2006-03-03  Hiroki ENDO <Hiroki.Endou@jp.yokogawa.com>
+
+	* vel 1.0.4 release
+
+2006-03-03  Hiroki ENDO <Hiroki.Endou@jp.yokogawa.com>
+
+	* lib/Tg/PzHostDef.yy, lib/Tg/PzScenario.yy
+	modify literal expression to use single quotation
+	Thanks to Hideaki YOSHIFUJI <yoshfuji@linux-ipv6.org> for
+	submitting patch.
+
+	* interop_ph2/make_scenario.pl
+	speed up replace algorithm
+	Thanks a lot to Hideaki YOSHIFUJI <yoshfuji@linux-ipv6.org> for
+	submitting patch.
+
+	* interop_ph2/command.FreeBSD.txt
+	* interop_ph2/command.NetBSD.txt
+	* interop_ph2/command.KAME.txt
+	* interop_ph2/command.Linux.txt
+	* interop_ph2/command.USAGI.txt
+	export ping command from scenario file for PMTU Discovery test
+	fix style
+
+	* interop_ph2/host.host.cleanup.sc
+	* interop_ph2/host.router.cleanup.sc
+	* interop_ph2/router.host.cleanup.sc
+	* interop_ph2/router.router.cleanup.sc
+	clear Neighbor Cache Entry
+	remove anycast address
+	remove opposite node link-local address used in 1.2
+
+	* interop_ph2/host.host.*.sc
+	* interop_ph2/host.router.*.sc
+	* interop_ph2/router.host.*.sc
+	* interop_ph2/router.router.*.sc
+	support revision 2.8.0 of IPv6 Ready Phase 2 Test Interoperability
+	Specification Core Protocols
+	
+2005-12-16  Hiroki ENDO <Hiroki.Endou@jp.yokogawa.com>
+
+	* vel 1.0.3 release
+
+2005-12-16  Hiroki ENDO <Hiroki.Endou@jp.yokogawa.com>
+
+	* README
+	describe more information
+
+	* bin/vela/tgd.cc
+	disable IPv6 connection
+
+	* interop_ph2/{host.host,host.router,router.host,router.router}.*.sc
+	add topology figure to the beginning of scenario
+
+2005-11-25  Hiroki ENDO <Hiroki.Endou@jp.yokogawa.com>
+
+	* interop_ph2/{host.host.cleanup.sc,host.router.cleanup.sc,
+	router.host.cleanup.sc,router.router.cleanup.sc}
+	add cleanup scenario
+
+	* interop_ph2/make_scenario.pl
+	add subroutine definition
+
+	* interop_ph2/config.txt
+	remove obsolete description
+
+	* interop_ph2/command.{FreeBSD,Linux,NetBSD,USAGI}.txt
+	add new comment
+
+2005-09-07  Hiroki ENDO <Hiroki.Endou@jp.yokogawa.com>
+
+	* vel 1.0.2 release
+
+2005-09-07  Hiroki ENDO <Hiroki.Endou@jp.yokogawa.com>
+
+	* interop_ph2/make_scneario.pl
+	fix mac to eui64 conversion
+	(thanks Anthony <abaire@irisa.fr>)
+
+2005-08-31  Hiroki ENDO <Hiroki.Endou@jp.yokogawa.com>
+
+	* interop_ph2/make_scneario.pl
+	fix command file path
+	(thanks Anthony <abaire@irisa.fr>)
+
+	* lib/Tg/PzScenario.y
+	fix token
+	(thanks Anthony <abaire@irisa.fr>)
+
+2005-08-10  Hiroki ENDO <Hiroki.Endou@jp.yokogawa.com>
+
+	* vel 1.0.1 release
+
+2005-08-10  Hiroki ENDO <Hiroki.Endou@jp.yokogawa.com>
+
+	* lib/Tg/TgInfo.cc:
+	allow no conn statement definition
+
+2005-07-21  Hiroki ENDO <Hiroki.Endou@jp.yokogawa.com>
+
+	* vel 1.0 release

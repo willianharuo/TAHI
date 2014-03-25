@@ -1,0 +1,90 @@
+<HTML>
+<HEAD>
+<TITLE>ndStatus - Examining neighbor cache state</TITLE>
+<LINK REV="made" HREF="mailto:hackers@FreeBSD.org">
+</HEAD>
+
+<BODY>
+
+<!-- INDEX BEGIN -->
+<!--
+
+<UL>
+
+	<LI><A HREF="#NAME">NAME</A>
+	<LI><A HREF="#DESCRIPTION">DESCRIPTION</A>
+</UL>
+-->
+<!-- INDEX END -->
+
+<P>
+<H1><A NAME="NAME">NAME</A></H1>
+<P>
+<PRE>  ndStatus - Examining neighbor cache state
+</PRE>
+<P>
+<HR>
+<H1><A NAME="DESCRIPTION">DESCRIPTION</A></H1>
+<P>
+<PRE>  Start
+    |
+    |           Got a packet specified by @ignore_ip
+    |&lt;--------------------------------------------+
+    |                                             |
+  Wait (RETRANS_TIMER * MAX_*CAST_SOLICIT) -------+
+    |
+    |   Got a multicast NS
+    |   or a packet specified by @incomplete_ip
+    +---------------------------&gt; [INCOMPLETE]
+    |
+    |   Got an unicast NS
+    |   or a packet specified by @probe_ip
+    +---------------------------&gt; [PROBE]
+    |
+    |   Got otherwise
+    +---------------------------&gt; [ERROR]
+    |
+    |   Got a packet specified by @reply_ip
+    +---------------------------&gt; &lt;reachable_or_stale&gt;
+    |
+    | Timeout
+    |
+  Send an echo-request
+    |
+    |
+    |           Got a packet specified by @ignore_n
+    |&lt;--------------------------------------------+
+    |                                             |
+  Wait (2 sec) -----------------------------------+
+    |
+    |   Got a multicast NS
+    |   or a packet specified by @nonce_n
+    +---------------------------&gt; [NONCE]
+    |
+    |   Got otherwise, timeout
+    +---------------------------&gt; [ERROR]
+    |
+    | Got an echo-reply
+    |
+    |
+    + &lt;-------------------------- &lt;reachable_or_stale&gt;
+    |
+    |           Got a packet specified by @ignore_sr
+    |&lt;--------------------------------------------+
+    |                                             |
+  Wait (DELAY_FIRST_PROBE_TIME)-------------------+
+    |
+    |   Got an unicast NS
+    |   or a packet specified by @stale_sr
+    +---------------------------&gt; [STALE]
+    |
+    |   Got otherwise
+    +---------------------------&gt; [ERROR]
+    |
+    | Timeout
+    |
+  [REACHABLE]
+</PRE>
+</BODY>
+
+</HTML>

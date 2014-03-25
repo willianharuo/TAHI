@@ -1,0 +1,149 @@
+<HTML>
+<HEAD>
+<TITLE>hoplimit.seq - Verify that decrease hoplimt when the 
+	encapulating packet is forwarded</TITLE>
+<LINK REV="made" HREF="mailto:hackers@FreeBSD.org">
+</HEAD>
+
+<BODY>
+
+<!-- INDEX BEGIN -->
+<!--
+
+<UL>
+
+	<LI><A HREF="#NAME">NAME</A>
+	<LI><A HREF="#TARGET">TARGET</A>
+	<LI><A HREF="#SYNOPSIS">SYNOPSIS</A>
+	<LI><A HREF="#INITIALIZATION">INITIALIZATION</A>
+	<LI><A HREF="#TEST_PROCEDURE">TEST PROCEDURE</A>
+	<LI><A HREF="#JUDGMENT">JUDGMENT</A>
+	<LI><A HREF="#SEE_ALSO">SEE ALSO</A>
+</UL>
+-->
+<!-- INDEX END -->
+
+<P>
+<H1><A NAME="NAME">NAME</A></H1>
+<P>
+<PRE>        hoplimit.seq - Verify that decrease hoplimt when the 
+        encapulating packet is forwarded
+</PRE>
+<P>
+<HR>
+<H1><A NAME="TARGET">TARGET</A></H1>
+<P>
+<PRE>        Router
+</PRE>
+<P>
+<HR>
+<H1><A NAME="SYNOPSIS">SYNOPSIS</A></H1>
+<P>
+<PRE>        hoplimt.seq [-tooloption ...] -p 
+        hoplimit.def
+</PRE>
+<P>
+<HR>
+<H1><A NAME="INITIALIZATION">INITIALIZATION</A></H1>
+<PRE>
+	Before this test starts, run <A HREF="initialize.html">initialize.seq</A>.
+</PRE>
+
+<P>
+<HR>
+<H1><A NAME="TEST_PROCEDURE">TEST PROCEDURE</A></H1>
+<P>
+<PRE>        This test verifies that NUT decrease hoplimit when forward through tnnnel.
+        
+        Network Topology
+</PRE>
+<P>
+<PRE>        Link0
+        --------------------------
+            |               |
+           TN              NUT
+            |               |
+        --------------------------
+        Link1
+</PRE>
+<P>
+<PRE>        TN -- (Link0) -- NUT        TN -- (Link1) -- NUT
+</PRE>
+<P>
+<PRE>        ---------------------      ------------------------
+</PRE>
+<P>
+<PRE>        - encapsulation, and forwarding a packet
+        1.
+        ===================&gt;
+        ICMPv6 Echo Request
+                IPv6 Header
+                        src address : TN LINK0  IPv6 global address        
+                        dst address : Off-link IPv6 global address
+                        hoplimit : 64
+        
+        2.
+        In NUT, received ICMPv6 Echo Request packet is encapsulated, 
+        and forward IPv4 packet
+        
+        3.
+        &lt;&lt;JUDGMENT&gt;&gt;
+                                   &lt;===================
+        IPv4 packet encapsulating IPv6 packet
+                Outer Header (IPv4)
+                        src address : NUT Link1 IPv4 address
+                        dst address : Off-link IPv4 address
+                Inner Header (IPv6)
+                        src address : TN LINK0 IPv6 global address        
+                        dst address : Off-link IPv6 global address
+                        hoplimit : 63 (for ISDN router, 62)
+</PRE>
+<P>
+<PRE>        - decapsulation, and forwarding a packet
+        4.
+                                ===================&gt;
+        IPv4 packet encapsulating IPv6 packet
+                Outer Header (IPv4)     
+                        src address : Off-link IPv4 address
+                        dst address : NUT Link1 IPv4 address        
+                Inner Header (IPv6)     
+                        src address : Off-link IPv6 global address
+                        dst address : TN LINK0 IPv6 global address        
+                        hoplimit : 64
+</PRE>
+<P>
+<PRE>        5.
+        In NUT, received IPv4 packet is decapsulated, and forward 
+        ICMPv6 Echo Request packet.   
+        6.
+        &lt;&lt; JUDGMENT &gt;&gt;
+</PRE>
+<P>
+<PRE>        &lt;===================
+        ICMPv6 Echo Reply
+                IPv6 Header
+                        src address : Off-link IPv6 global address
+                        dst address : TN LINK0  IPv6 global address        
+                        hoplimit : 63 (for ISDN router, 62)
+</PRE>
+<P>
+<HR>
+<H1><A NAME="JUDGMENT">JUDGMENT</A></H1>
+<P>
+<PRE>        &lt;&lt; PASS &gt;&gt;
+                NUT decreased hoplimit 
+                
+</PRE>
+<P>
+<PRE>        &lt;&lt; FAIL &gt;&gt;      
+                NUT did not decrease hoplimit 
+</PRE>
+<P>
+<HR>
+<H1><A NAME="SEE_ALSO">SEE ALSO</A></H1>
+<P>
+<PRE>          perldoc V6evalTool
+</PRE>
+</BODY>
+
+</HTML>

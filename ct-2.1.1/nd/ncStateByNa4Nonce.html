@@ -1,0 +1,154 @@
+<HTML>
+<HEAD>
+<TITLE>ncStateByNa4Nonce - Verifying State Machine: NA vs. NONCE</TITLE>
+<LINK REV="made" HREF="mailto:hackers@FreeBSD.org">
+</HEAD>
+
+<BODY>
+
+<!-- INDEX BEGIN -->
+<!--
+
+<UL>
+
+	<LI><A HREF="#NAME">NAME</A>
+	<LI><A HREF="#TARGET">TARGET</A>
+	<LI><A HREF="#SYNOPSIS">SYNOPSIS</A>
+	<LI><A HREF="#INITIALIZATION">INITIALIZATION</A>
+	<LI><A HREF="#TEST_PROCEDURE">TEST PROCEDURE</A>
+	<LI><A HREF="#JUDGMENT">JUDGMENT</A>
+	<LI><A HREF="#TERMINATION">TERMINATION</A>
+	<LI><A HREF="#NOTE">NOTE</A>
+	<LI><A HREF="#SEE_ALSO">SEE ALSO</A>
+</UL>
+-->
+<!-- INDEX END -->
+
+<P>
+<H1><A NAME="NAME">NAME</A></H1>
+<P>
+ncStateByNa4Nonce - Verifying State Machine: NA vs. NONCE
+
+<P>
+<HR>
+<H1><A NAME="TARGET">TARGET</A></H1>
+<P>
+Host and Router
+
+<P>
+<HR>
+<H1><A NAME="SYNOPSIS">SYNOPSIS</A></H1>
+<P>
+<PRE>  ncStateByNa4Nonce.seq [-tooloption ...] -p ncStateByNa4Nonce.def
+</PRE>
+<P>
+<HR>
+<H1><A NAME="INITIALIZATION">INITIALIZATION</A></H1>
+<P>
+<PRE>  Clear NC state for TN.
+</PRE>
+<P>
+<HR>
+<H1><A NAME="TEST_PROCEDURE">TEST PROCEDURE</A></H1>
+<P>
+<STRONG>ncStateByNa4Nonce</STRONG> verifies that state transition for a NUT in NONCE state when receiving a
+NA.
+
+<PRE>
+  TN               NUT
+  ----------------------
+<BR>
+  State: NONCE (for TN)
+<BR>
+  ==== <A HREF="#JDG1">NA</A> ===>
+	src=TN's link-local
+	dst=NUT's  link-local or all-node
+	w/o or w/ TLLA
+	r=0, s=0/1, o=0/1
+<BR>
+  <A HREF="#JDG1">Judgment</A>: <A HREF="nd.html">Examining NUT's neighbor cache state</A>
+</PRE>
+
+<P>
+<HR>
+<H1><A NAME="JUDGMENT">JUDGMENT</A></H1>
+<A NAME="JDG1"></A>
+<PRE>
+Any NA should be ignored if no Neighbor Cache entry exists.
+<HR>
+7.2.5.  Receipt of Neighbor Advertisements
+<BR>
+   When a valid Neighbor Advertisement is received (either solicited or
+   unsolicited), the Neighbor Cache is searched for the target's entry.
+   <B>If no entry exists, the advertisement SHOULD be silently discarded.</B>
+   There is no need to create an entry if none exists, since the
+   recipient has apparently not initiated any communication with the
+   target.
+<HR>
+  ================================+===============+=============
+  NA                              |New State      |cached LLA
+  ---------------+-+--+-+---------+               |
+  Destination    |r| s|o|TLLA     |               |
+  ===============+=+==+=+=========+===============+=============
+  Unicast         0  0 0 none      NONCE           unchanged
+  ---------------+-+--+-+---------+---------------+-------------
+  Unicast         0  0 1 none      NONCE           unchanged
+  ---------------+-+--+-+---------+---------------+-------------
+  Unicast         0  1 0 none      NONCE           unchanged
+  ---------------+-+--+-+---------+---------------+-------------
+  Unicast         0  1 1 none      NONCE           unchanged
+  ===============+=+==+=+=========+===============+=============
+  Unicast         0  0 0 exist     NONCE           unchanged
+  ---------------+-+--+-+---------+---------------+-------------
+  Unicast         0  0 1 exist     NONCE           unchanged
+  ---------------+-+--+-+---------+---------------+-------------
+  Unicast         0  1 0 exist     NONCE           unchanged
+  ---------------+-+--+-+---------+---------------+-------------
+  Unicast         0  1 1 exist     NONCE           unchanged
+  ===============+=+==+=+=========+===============+=============
+  *Multicast      0  0 0 *none     NONCE           unchanged
+                  *invalid
+  ---------------+-+--+-+---------+---------------+-------------
+  *Multicast      0  0 1 *none     NONCE           unchanged
+                  *invalid
+  ---------------+-+--+-+---------+---------------+-------------
+  *Multicast      0 *1 0 *none     NONCE           unchanged
+                  *invalid
+  ---------------+-+--+-+---------+---------------+-------------
+  *Multicast      0 *1 1 *none     NONCE           unchanged
+                  *invalid
+  ===============+=+==+=+=========+===============+=============
+  Multicast       0  0 0 exist     NONCE           unchanged
+  ---------------+-+--+-+---------+---------------+-------------
+  Multicast       0  0 1 exist     NONCE           unchanged
+  ---------------+-+--+-+---------+---------------+-------------
+  *Multicast      0 *1 0 exist     NONCE           unchanged
+                  *invalid
+  ---------------+-+--+-+---------+---------------+-------------
+  *Multicast      0 *1 1 exist     NONCE           unchanged
+                  *invalid
+  ===============+=+==+=+=========+===============+=============
+</PRE>
+
+<P>
+<HR>
+<H1><A NAME="TERMINATION">TERMINATION</A></H1>
+<P>
+<PRE>  N/A
+</PRE>
+<P>
+<HR>
+<H1><A NAME="NOTE">NOTE</A></H1>
+<P>
+<PRE>  The test does not invoke any remote command.
+</PRE>
+<P>
+<HR>
+<H1><A NAME="SEE_ALSO">SEE ALSO</A></H1>
+<P>
+<PRE>  perldoc V6evalTool
+  perldoc V6evalRemote
+</PRE>
+</BODY>
+
+</HTML>

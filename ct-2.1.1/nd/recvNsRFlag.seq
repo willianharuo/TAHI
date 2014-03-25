@@ -1,0 +1,475 @@
+#!/usr/bin/perl
+#
+# Copyright (C) 1999, 2000, 2001, 2002, 2003 Yokogawa Electric Corporation,
+# IPA (Information-technology Promotion Agency, Japan).
+# All rights reserved.
+# 
+# Redistribution and use of this software in source and binary forms, with 
+# or without modification, are permitted provided that the following 
+# conditions and disclaimer are agreed and accepted by the user:
+# 
+# 1. Redistributions of source code must retain the above copyright 
+# notice, this list of conditions and the following disclaimer.
+# 
+# 2. Redistributions in binary form must reproduce the above copyright 
+# notice, this list of conditions and the following disclaimer in the 
+# documentation and/or other materials provided with the distribution.
+# 
+# 3. Neither the names of the copyrighters, the name of the project which 
+# is related to this software (hereinafter referred to as "project") nor 
+# the names of the contributors may be used to endorse or promote products 
+# derived from this software without specific prior written permission.
+# 
+# 4. No merchantable use may be permitted without prior written 
+# notification to the copyrighters. However, using this software for the 
+# purpose of testing or evaluating any products including merchantable 
+# products may be permitted without any notification to the copyrighters.
+# 
+# 
+# 
+# THIS SOFTWARE IS PROVIDED BY THE COPYRIGHTERS, THE PROJECT AND 
+# CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING 
+# BUT NOT LIMITED THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS 
+# FOR A PARTICULAR PURPOSE, ARE DISCLAIMED.  IN NO EVENT SHALL THE 
+# COPYRIGHTERS, THE PROJECT OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, 
+# INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES 
+# (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR 
+# SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) 
+# HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN 
+# CONTRACT,STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) 
+# ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF 
+# THE POSSIBILITY OF SUCH DAMAGE.
+#
+# $TAHI: ct/nd/recvNsRFlag.seq,v 1.22 2002/02/27 01:08:28 masaxmasa Exp $
+
+########################################################################
+BEGIN { $V6evalTool::TestVersion = '$Name: REL_2_1_1 $ '; }
+ 
+use V6evalTool;
+use nd;
+
+ndOptions(@ARGV);
+
+# The following generate debugging messages.
+$nd::debug=$ndOpt_v|$ndOpt_vv;
+
+# You can specifies debug options to a remote control program.
+# If you want to know more detail, please see the following:
+# - V6evalTool.pm: perldoc V6evalTool
+# - V6evalRemote.pm: perldoc V6evalRemote
+$nd::remote_debug="-o1" if $ndOpt_vv;
+
+$IF=Link0;
+$idx=0;
+
+$wait_echo=2;
+$wait_ns=$nd::DELAY_FIRST_PROBE_TIME +
+    ($nd::RETRANS_TIMER * $nd::MAX_SOLICIT) + 1;
+
+$exit_rtn=$V6evalTool::exitPass;
+
+#
+#
+#
+$type=$V6evalTool::NutDef{Type};
+if($type eq router) {
+    vLogHTML("This test is for the host only<BR>");
+    exit $V6evalTool::exitHostOnly;
+}
+
+$type=$V6evalTool::NutDef{Type};
+if($type ne host) {
+    vLogHTML(ndErrmsg("ERROR: $V6evalTool::NutDef{Type}: ".
+		      "Unknown target type<BR>"));
+    exit $V6evalTool::exitFail;
+}
+
+#
+#
+#
+$idx_ptn=0;
+$idx_lla=1;
+$idx_msg=2;
+
+#
+@def_unicast_ns_tn2nut=
+    (
+     unicast_ns_tn2nut,
+     same,
+     'unicast NS w/o SLL',
+     );
+
+#
+@def_unicast_ns_tn2nut_sll=
+    (
+     unicast_ns_tn2nut_sll,
+     same,
+     'unicast NS w/ SLL',
+     );
+
+#
+@def_multicast_ns_tn2nut=
+    (
+     multicast_ns_tn2nut,
+     same,
+     'multicast NS w/o SLL',
+     );
+
+#
+@def_multicast_ns_tn2nut_sll=
+    (
+     multicast_ns_tn2nut_sll,
+     same,
+     'multicast NS w/ SLL',
+     );
+
+#
+@def_unicast_ns_tn2nut_sll_diff=
+    (
+     unicast_ns_tn2nut_sll,
+     diff,
+     'unicast NS w/ SLL, diff. LLA',
+     );
+
+#
+@def_multicast_ns_tn2nut_sll_diff=
+    (
+     multicast_ns_tn2nut_sll,
+     diff,
+     'multicast NS w/ SLL, diff. LLA',
+     );
+
+#
+#
+#
+@defs=
+    (
+     \@def_unicast_ns_tn2nut,
+     \@def_unicast_ns_tn2nut_sll,
+     \@def_multicast_ns_tn2nut,
+     \@def_multicast_ns_tn2nut_sll,
+     \@def_unicast_ns_tn2nut_sll_diff,
+     \@def_multicast_ns_tn2nut_sll_diff,
+     );
+
+#
+#
+#
+vCapture($IF);
+
+#
+#
+#
+$idx=0;
+foreach(@defs) {
+    $ptn=@$_[$idx_ptn];
+    $lla=@$_[$idx_lla];
+    $msg=@$_[$idx_msg];
+    vLogHTML("<HR><FONT SIZE=\"+2\">*** $msg ***</FONT><BR>");
+    $s=check($ptn, $lla, $msg);
+    if($s eq unchanged) {
+	$result{$idx}=$V6evalTool::exitPass;
+	$exit_rtn=$V6evalTool::exitPass;
+        vLogHTML("<A NAME=\"T$idx\">OK: The target was in $s state</A><BR>");
+    } else {
+	$result{$idx}=$V6evalTool::exitFail;
+	$exit_rtn=$V6evalTool::exitFail;
+        vLogHTML("<A NAME=\"T$idx\">".ndErrmsg(NG)."</A><BR>");
+    }
+    $title{$idx}="<TD>$msg</TD><TD>exp:unchanged</TD><TD>result:$s</TD>";
+    $idx++;
+}
+$idx--;
+
+#
+#
+#
+vLogHTML("<FONT SIZE=\"+1\">Termination</FONT><BR>");
+clear();
+
+#
+#
+#
+@col=('PTN', 'EXP', 'RESULT');
+ndPrintSummaryHTML("*** Test Summary: NS vs. IsRouter flag ***", @col,
+                   %title, %result, $idx);
+
+#
+#
+#
+vLogHTML("*** EOT ***<BR>");
+exit $exit_rtn;
+
+#
+#
+#
+sub clear()
+{
+    $pktdesc{nd_unsol_ra_clrrtr}="Clear the Default Router List";
+    vSend($IF, nd_unsol_ra_clrrtr);
+}
+
+#
+#
+#
+sub check($$$)
+{
+    my($ptn, $lla, $msg)=@_;
+
+    #
+    #
+    #
+    vLogHTML("<FONT SIZE=\"+1\">Initialization</FONT><BR>");
+    #goto error if ndClearPrefix() != 0;
+    #goto error if ndClearDefr() != 0;
+    if($lla eq same) {
+	goto error if nd2ReachableByRa($IF) != 0;
+    } else {
+	goto error if nd2ReachableByRaZ($IF) != 0;
+    }
+
+    #
+    #
+    #
+    vLogHTML("<FONT SIZE=\"+1\">Test</FONT><BR>");
+    $pktdesc{$ptn}=
+	"Send $msg";
+    vSend($IF, $ptn);
+
+    #
+    #
+    #
+    $pktdesc{nd_echo_request_from_offlink}=
+	"Send echo-request from off-link src";
+    vSend($IF, nd_echo_request_from_offlink);
+
+    $pktdesc{nd_echo_reply_to_offlink}=
+	"Got echo-reply that was thrown to the default route";
+    %ret=vRecv($IF, $wait_echo, 0, 0, nd_echo_reply_to_offlink);
+
+    #
+    #
+    #
+    if($lla ne same) {
+	vLogHTML("Waif for unicast NSs if any.<BR>");
+	vRecv($IF, $wait_ns, 0, 0);
+    }
+
+    #
+    #
+    #
+    if($ret{status} == 0) {
+	return(unchanged);
+    } else {
+	vLogHTML("Never got echo-reply ".
+		 "that was thrown to the default router<BR>");
+	return(updated);
+    }
+
+  error:
+    return(ERROR);
+}
+
+########################################################################
+__END__
+
+=head1 NAME
+
+recvNsRFlag - Verifying that a IsRouter flag is not modified by a NS
+
+=head1 TARGET
+
+Host only
+
+=head1 SYNOPSIS
+
+  recvNsRFlag.seq [-tooloption ...] -p recvNsRFlag.def
+
+=head1 INITIALIZATION
+
+=begin html
+<OL>
+  <LI>Set the state of neighbor cache entry to REACHABLE
+      whose IsRouter flag is true. 
+  <LI>Cache either <A HREF="#Cache_a_LLA_of_TN">TN's LLA</A> or
+      <A HREF="#Cache_a_bogus_LLA">a bogus LLA</A>
+</OL>
+
+=head2 Cache a LLA of TN
+
+=begin html
+<PRE>
+  TN                 NUT
+  ----------------------
+  State: NONCE (for TN)
+<BR>
+  ==== unsolicited RA ===>
+       src=TN's link-local
+       dst=all-node
+       M=0, O=0
+       RouterLifetime=600
+       ReachableTime=0
+       RetransTimer=0
+       <B>SLLA=TN's LLA</B>
+       Prefix Option:
+           L=1, A=1
+	   ValidLifetime=2592000
+	   PreferredLifetime=604800
+           Prefix=3ffe:501:ffff:100::/64
+<BR>
+  State: STALE (for TN)
+<BR>
+  <=== Ns for DAD (if any) ====
+       src=unspecified
+       dst=solicited-node[NUT's global]
+       target=NUT's global
+<BR>
+  ==== NA ===>
+       src=TN's link-local
+       dst=NUT's link-local
+       R=1, S=1, O=1
+       target=TN's link-local
+       <B>TLLA=TN's LLA</B>
+<BR>
+  State: REACHABLE (for TN)
+</PRE>
+
+=end html
+
+=head2 Cache a bogus LLA
+
+=begin html
+<PRE>
+  TN                 NUT
+  ----------------------
+  State: NONCE (for TN)
+<BR>
+  ==== unsolicited RA ===>
+       src=TN's link-local
+       dst=all-node
+       M=0, O=0
+       RouterLifetime=600
+       ReachableTime=0
+       RetransTimer=0
+       <B>SLLA=a bogus LLA</B>
+       Prefix Option:
+           L=1, A=1
+	   ValidLifetime=2592000
+	   PreferredLifetime=604800
+           Prefix=3ffe:501:ffff:100::/64
+<BR>
+  State: STALE (for TN)
+<BR>
+  <=== Ns for DAD (if any) ====
+       src=unspecified
+       dst=solicited-node[NUT's global]
+       target=NUT's global
+<BR>
+  ==== NA ===>
+       src=TN's link-local
+       dst=NUT's link-local
+       R=1, S=1, O=1
+       target=TN's link-local
+       <B>TLLA=a bogus LLA</B>
+<BR>
+  State: REACHABLE (for TN)
+</PRE>
+
+=end html
+
+=head1 TEST PROCEDURE
+
+B<recvNsRFlag> verifies that a IsRouter flag is NOT modified by a NS.
+
+=begin html
+<PRE>
+  TN                 NUT
+  ----------------------
+<BR>
+  State: REACHABLE (for TN)
+<BR>
+  ==== <A HREF="#JDG1">NS</A> ===>
+       src=TN's link-local
+       dst=the NUT's link-local or solicited-node[NUT's link-local]
+       target=NUT's link-local
+       w/ or w/o SLL
+<BR>
+  State: REACHABLE or STALE (for TN)
+<BR>
+  ==== echo-request ===>
+       src=off-link global, but LLA is TN's one
+       dst=NUT's global
+<BR>
+  <=== <A HREF="#JDG2">Judgment #2</A>: echo-reply ====
+       src=NUT's global
+       dst=off-link global, but LLA is TN's one
+<BR>
+  State: REACHABLE or DELAY->PROBE (for TN)
+<BR>
+  <=== Ns for TN (if the state is PROBE) ====
+       src=NUT's link-local
+       dst=TN's link-local
+       target=TN's global
+<BR>
+  State: REACHABLE or NONCE (for TN)
+=end html
+
+=head1 JUDGMENT
+
+=begin html
+<A NAME="JDG1"></A>
+<PRE>
+1. IsRouter flag MUST NOT be modified
+<HR>
+7.2.3.  Receipt of Neighbor Solicitations
+<BR>
+   If a Neighbor Cache entry is created the IsRouter flag SHOULD be set
+   to FALSE.  This will be the case even if the Neighbor Solicitation is
+   sent by a router since the Neighbor Solicitation messages do not
+   contain an indication of whether or not the sender is a router.  In
+   the event that the sender is a router, subsequent Neighbor
+   Advertisement or Router Advertisement messages will set the correct
+   IsRouter value.  <B>If a Neighbor Cache entry already exists its
+   IsRouter flag MUST NOT be modified.</B>
+<HR>
+  ========================+=====================
+  Received NS             | a IsRouter flag
+  by NUT                  | of NUT's NCE
+  ------------+-----------+ ---------+----------
+  Dst         | SLLA      | Current  | New
+  ============+===========+==========+==========
+  unicast     | none      | 1        | unchanged
+  ------------+-----------+----------+----------
+  unicast     | same      | 1        | unchanged
+  ------------+-----------+----------+----------
+  multicast   | none      | 1        | unchanged
+  ------------+-----------+----------+----------
+  multicast   | same      | 1        | unchanged
+  ------------+-----------+----------+----------
+  unicast     | different | 1        | unchanged
+  ------------+-----------+----------+----------
+  multicast   | different | 1        | unchanged
+  ============+===========+==========+==========
+</PRE>
+
+=end html
+
+=for html <A NAME="JDG2"></A>
+
+  2. NUT sends an echo-reply that is thrown to
+     the default router (i.e. TN).
+
+=head1 TERMINATION
+
+  Send RA with RouterLifetime=0 to clear the Default Router List.
+
+=head1 NOTE
+
+  The command does not invoke any remote command.
+
+=head1 SEE ALSO
+
+  perldoc V6evalTool
+  perldoc V6evalRemote
+
+=cut

@@ -1,0 +1,502 @@
+//
+// Copyright (C) 2003 Yokogawa Electric Corporation, 
+// INTAP(Interoperability Technology Association
+// for Information Processing, Japan).  All rights reserved.
+// 
+// Redistribution and use of this software in source and binary forms, with 
+// or without modification, are permitted provided that the following 
+// conditions and disclaimer are agreed and accepted by the user:
+// 
+// 1. Redistributions of source code must retain the above copyright 
+// notice, this list of conditions and the following disclaimer.
+// 
+// 2. Redistributions in binary form must reproduce the above copyright 
+// notice, this list of conditions and the following disclaimer in the 
+// documentation and/or other materials provided with the distribution.
+// 
+// 3. Neither the names of the copyrighters, the name of the project which 
+// is related to this software (hereinafter referred to as "project") nor 
+// the names of the contributors may be used to endorse or promote products 
+// derived from this software without specific prior written permission.
+// 
+// 4. No merchantable use may be permitted without prior written 
+// notification to the copyrighters. However, using this software for the 
+// purpose of testing or evaluating any products including merchantable 
+// products may be permitted without any notification to the copyrighters.
+// 
+// 
+// 
+// THIS SOFTWARE IS PROVIDED BY THE COPYRIGHTERS, THE PROJECT AND 
+// CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING 
+// BUT NOT LIMITED THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS 
+// FOR A PARTICULAR PURPOSE, ARE DISCLAIMED.  IN NO EVENT SHALL THE 
+// COPYRIGHTERS, THE PROJECT OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, 
+// INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES 
+// (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR 
+// SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) 
+// HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN 
+// CONTRACT,STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) 
+// ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF 
+// THE POSSIBILITY OF SUCH DAMAGE.
+//
+// $TAHI: ct/pd/RRSolicit.def,v 1.3 2003/04/22 04:09:20 akisada Exp $
+//
+
+// Please comment out below, if you want to test for draft-troan-dhcpv6-opt-prefix-delegation-01.txt 
+//#define PD_DRAFT_VERSION	TROAN
+
+#include "./type.def"
+#include "./pd_common.def"
+
+//======================================================================
+
+_HETHER_define(_HETHER_tn2nut_count1,
+        ether(TNMACADDR1),
+        nutether()
+)
+_HETHER_define(_HETHER_nut2tn_count1,
+        nutether(),
+        ether(TNMACADDR1)
+)
+_TLLOPT_define(_TLLOPT_tn_count1, ether(TNMACADDR1))
+
+_HETHER_define(_HETHER_nut2tn_count1_solnode,  nutether(), _ETHER_SOLNODE_MCAST(v6ether(TNMACADDR1)))
+
+//
+
+_HETHER_define(_HETHER_tn2nut_count2,
+        ether(TNMACADDR2),
+        nutether()
+)
+_HETHER_define(_HETHER_nut2tn_count2,
+        nutether(),
+        ether(TNMACADDR2)
+)
+_TLLOPT_define(_TLLOPT_tn_count2, ether(TNMACADDR2))
+
+_HETHER_define(_HETHER_nut2tn_count2_solnode,  nutether(), _ETHER_SOLNODE_MCAST(v6ether(TNMACADDR2)))
+
+//
+// Neighbor Solicitation
+//
+
+FEM_icmp6_ns(
+        ns_count1,
+        _HETHER_nut2tn_count1_solnode,
+        {
+                _SRC(nutv6());
+                _DST(_IPV6_SOLNODE_MCAST(v6ether(TNMACADDR1)));
+                HopLimit = 255;
+        },
+        {
+                TargetAddress = v6ether(TNMACADDR1);
+                option = _SLLOPT_nut;
+        }
+)
+
+FEM_icmp6_ns(
+        ns_count2,
+        _HETHER_nut2tn_count2_solnode,
+        {
+                _SRC(nutv6());
+                _DST(_IPV6_SOLNODE_MCAST(v6ether(TNMACADDR2)));
+                HopLimit = 255;
+        },
+        {
+                TargetAddress = v6ether(TNMACADDR2);
+                option = _SLLOPT_nut;
+        }
+)
+
+//
+// Neighbor Advertisement
+//
+
+FEM_icmp6_na(
+        na_count1,
+        _HETHER_tn2nut_count1,
+        {
+                _SRC(v6ether(TNMACADDR1));
+                _DST(nutv6());
+                HopLimit = 255;
+        },
+        {
+                SFlag = 1;
+                OFlag = 1;
+                TargetAddress = v6ether(TNMACADDR1);
+                option = _TLLOPT_count1;
+        }
+)
+
+FEM_icmp6_na(
+        na_count2,
+        _HETHER_tn2nut_count2,
+        {
+                _SRC(v6ether(TNMACADDR2));
+                _DST(nutv6());
+                HopLimit = 255;
+        },
+        {
+                SFlag = 1;
+                OFlag = 1;
+                TargetAddress = v6ether(TNMACADDR2);
+                option = _TLLOPT_count2;
+        }
+)
+
+//
+// DHCPv6 Adv Msg
+//
+////////////////////////////////
+
+#if (PD_DRAFT_VERSION == TROAN) /* draft-troan-dhcpv6-opt-prefix-delegation-01.txt */
+#else /* default draft-ietf-dhc-dhcpv6-opt-prefix-delegation-00.txt */
+#if (CLIENT_DUID_TYPE == DUID_LLT)
+FEM_dhcp6_advertise(
+        dhcp_adv_count,
+        _HETHER_tn2nut_count,
+        {
+                _SRC(v6ether(TNMACADDR));
+                _DST(nutv6());
+        },
+        {
+                _SPORT(SERVER_RELAY_DHCP_PORT);
+                _DPORT(CLIENT_DHCP_PORT);
+        },
+        {
+                Identifier = DHCP_ID;
+                option     = opt_cid;
+                option     = opt_sid;
+                option     = opt_ia_pd_adv;
+        }
+)
+FEM_dhcp6_advertise(
+        dhcp_adv_count1,
+        _HETHER_tn2nut_count1,
+        {
+                _SRC(v6ether(TNMACADDR1));
+                _DST(nutv6());
+        },
+        {
+                _SPORT(SERVER_RELAY_DHCP_PORT);
+                _DPORT(CLIENT_DHCP_PORT);
+        },
+        {
+                Identifier = DHCP_ID;
+                option     = opt_cid;
+                option     = opt_sid_count1;
+                option     = opt_ia_pd_adv;
+        }
+)
+FEM_dhcp6_advertise(
+        dhcp_adv_count2,
+        _HETHER_tn2nut_count2,
+        {
+                _SRC(v6ether(TNMACADDR2));
+                _DST(nutv6());
+        },
+        {
+                _SPORT(SERVER_RELAY_DHCP_PORT);
+                _DPORT(CLIENT_DHCP_PORT);
+        },
+        {
+                Identifier = DHCP_ID;
+                option     = opt_cid;
+                option     = opt_sid_count2;
+                option     = opt_ia_pd_adv;
+        }
+)
+#else
+FEM_dhcp6_advertise(
+        dhcp_adv_count,
+        _HETHER_tn2nut_count,
+        {
+                _SRC(v6ether(TNMACADDR));
+                _DST(nutv6());
+        },
+        {
+                _SPORT(SERVER_RELAY_DHCP_PORT);
+                _DPORT(CLIENT_DHCP_PORT);
+        },
+        {
+                Identifier = DHCP_ID;
+                option     = opt_cid_ll;
+                option     = opt_sid;
+                option     = opt_ia_pd_adv;
+        }
+)
+FEM_dhcp6_advertise(
+        dhcp_adv_count1,
+        _HETHER_tn2nut_count1,
+        {
+                _SRC(v6ether(TNMACADDR1));
+                _DST(nutv6());
+        },
+        {
+                _SPORT(SERVER_RELAY_DHCP_PORT);
+                _DPORT(CLIENT_DHCP_PORT);
+        },
+        {
+                Identifier = DHCP_ID;
+                option     = opt_cid_ll;
+                option     = opt_sid_count1;
+                option     = opt_ia_pd_adv;
+        }
+)
+FEM_dhcp6_advertise(
+        dhcp_adv_count2,
+        _HETHER_tn2nut_count2,
+        {
+                _SRC(v6ether(TNMACADDR2));
+                _DST(nutv6());
+        },
+        {
+                _SPORT(SERVER_RELAY_DHCP_PORT);
+                _DPORT(CLIENT_DHCP_PORT);
+        },
+        {
+                Identifier = DHCP_ID;
+                option     = opt_cid_ll;
+                option     = opt_sid_count2;
+                option     = opt_ia_pd_adv;
+        }
+)
+#endif
+#endif
+
+
+//
+// DHCPv6 Request Msg
+//
+////////////////////////////////
+#if (PD_DRAFT_VERSION == TROAN) /* draft-troan-dhcpv6-opt-prefix-delegation-01.txt */
+#else /* default draft-ietf-dhc-dhcpv6-opt-prefix-delegation-00.txt */
+FEM_dhcp6_request(
+        dhcp_req_count,
+        _HETHER_nut2alldhcpagents,
+        {
+                _SRC(nutv6());
+                _DST(v6(_ALLDHCPAGENTS_MCAST_ADDR));
+        },
+        {
+                _SPORT(any);
+                _DPORT(SERVER_RELAY_DHCP_PORT);
+        },
+        {
+                Identifier = any;
+                option     = comb (opt_cid_any, opt_sid_count_any, opt_et_any, opt_ia_pd_req);
+        }
+)
+FEM_dhcp6_request(
+        dhcp_req_count_any,
+        _HETHER_nut2alldhcpagents,
+        {
+                _SRC(nutv6());
+                _DST(v6(_ALLDHCPAGENTS_MCAST_ADDR));
+        },
+        {
+                _SPORT(any);
+                _DPORT(SERVER_RELAY_DHCP_PORT);
+        },
+        {
+                Identifier = any;
+                option     = comb (opt_cid_any, opt_sid_count_any, opt_et_any, opt_or_any, opt_ia_pd_req);
+        }
+)
+FEM_dhcp6_request(
+        dhcp_req_count_any1,
+        _HETHER_nut2alldhcpagents,
+        {
+                _SRC(nutv6());
+                _DST(v6(_ALLDHCPAGENTS_MCAST_ADDR));
+        },
+        {
+                _SPORT(any);
+                _DPORT(SERVER_RELAY_DHCP_PORT);
+        },
+        {
+                Identifier = any;
+                option     = comb (opt_cid_any, opt_sid_count_any, opt_et_any, opt_ia_pd_req_null);
+        }
+)
+FEM_dhcp6_request(
+        dhcp_req_count_any2,
+        _HETHER_nut2alldhcpagents,
+        {
+                _SRC(nutv6());
+                _DST(v6(_ALLDHCPAGENTS_MCAST_ADDR));
+        },
+        {
+                _SPORT(any);
+                _DPORT(SERVER_RELAY_DHCP_PORT);
+        },
+        {
+                Identifier = any;
+                option     = comb (opt_cid_any, opt_sid_count_any, opt_et_any, opt_or_any, opt_ia_pd_req_null);
+        }
+)
+FEM_dhcp6_request(
+        dhcp_req_count_any3,
+        _HETHER_nut2alldhcpagents,
+        {
+                _SRC(nutv6());
+                _DST(v6(_ALLDHCPAGENTS_MCAST_ADDR));
+        },
+        {
+                _SPORT(any);
+                _DPORT(SERVER_RELAY_DHCP_PORT);
+        },
+        {
+                Identifier = any;
+                option     = comb (opt_cid_any, opt_sid_count_any, opt_ia_pd_req);
+        }
+)
+FEM_dhcp6_request(
+        dhcp_req_count_any4,
+        _HETHER_nut2alldhcpagents,
+        {
+                _SRC(nutv6());
+                _DST(v6(_ALLDHCPAGENTS_MCAST_ADDR));
+        },
+        {
+                _SPORT(any);
+                _DPORT(SERVER_RELAY_DHCP_PORT);
+        },
+        {
+                Identifier = any;
+                option     = comb (opt_cid_any, opt_sid_count_any, opt_or_any, opt_ia_pd_req);
+        }
+)
+FEM_dhcp6_request(
+        dhcp_req_count_any5,
+        _HETHER_nut2alldhcpagents,
+        {
+                _SRC(nutv6());
+                _DST(v6(_ALLDHCPAGENTS_MCAST_ADDR));
+        },
+        {
+                _SPORT(any);
+                _DPORT(SERVER_RELAY_DHCP_PORT);
+        },
+        {
+                Identifier = any;
+                option     = comb (opt_cid_any, opt_sid_count_any, opt_ia_pd_req_null);
+        }
+)
+FEM_dhcp6_request(
+        dhcp_req_count_any6,
+        _HETHER_nut2alldhcpagents,
+        {
+                _SRC(nutv6());
+                _DST(v6(_ALLDHCPAGENTS_MCAST_ADDR));
+        },
+        {
+                _SPORT(any);
+                _DPORT(SERVER_RELAY_DHCP_PORT);
+        },
+        {
+                Identifier = any;
+                option     = comb (opt_cid_any, opt_sid_count_any, opt_or_any, opt_ia_pd_req_null);
+        }
+)
+#endif
+
+//
+// DHCPv6 Reply Msg
+//
+////////////////////////////////
+
+#if (PD_DRAFT_VERSION == TROAN) /* draft-troan-dhcpv6-opt-prefix-delegation-01.txt */
+#else /* default draft-ietf-dhc-dhcpv6-opt-prefix-delegation-00.txt */
+#if (CLIENT_DUID_TYPE == DUID_LLT)
+FEM_dhcp6_reply(
+        dhcp_rep_count,
+        _HETHER_tn2nut_count,
+        {
+                _SRC(v6ether(TNMACADDR));
+                _DST(nutv6());
+        },
+        {
+                _SPORT(SERVER_RELAY_DHCP_PORT);
+                _DPORT(CLIENT_DHCP_PORT);
+        },
+        {
+                Identifier      = DHCP_ID;
+                option          = opt_cid;
+                option          = opt_sid_count;
+                option          = opt_pref;
+                option          = opt_ia_pd;
+        }
+)
+#else
+FEM_dhcp6_reply(
+        dhcp_rep_count,
+        _HETHER_tn2nut_count,
+        {
+                _SRC(v6ether(TNMACADDR));
+                _DST(nutv6());
+        },
+        {
+                _SPORT(SERVER_RELAY_DHCP_PORT);
+                _DPORT(CLIENT_DHCP_PORT);
+        },
+        {
+                Identifier      = DHCP_ID;
+                option          = opt_cid_ll;
+                option          = opt_sid_count;
+                option          = opt_pref;
+                option          = opt_ia_pd;
+        }
+)
+#endif
+#endif
+
+//
+// Server Identifier option
+//
+////////////////////////////////
+
+Opt_DHCPv6_SID opt_sid_count {
+        Code             = 2;
+        duid             = opt_sid_duid_llt_count;
+}
+
+DHCPv6_DUID_LLT_Ether opt_sid_duid_llt_count{
+        HardwareType     = HARDWARETYPE;
+        Time             = SID_DUID_TIME;
+        LinkLayerAddress = ether(TNMACADDR);
+}
+
+Opt_DHCPv6_SID opt_sid_count1 {
+        Code             = 2;
+        duid             = opt_sid_duid_llt_count1;
+}
+
+DHCPv6_DUID_LLT_Ether opt_sid_duid_llt_count1{
+        HardwareType     = HARDWARETYPE;
+        Time             = SID_DUID_TIME1;
+        LinkLayerAddress = ether(TNMACADDR1);
+}
+
+Opt_DHCPv6_SID opt_sid_count2 {
+        Code             = 2;
+        duid             = opt_sid_duid_llt_count2;
+}
+
+DHCPv6_DUID_LLT_Ether opt_sid_duid_llt_count2{
+        HardwareType     = HARDWARETYPE;
+        Time             = SID_DUID_TIME2;
+        LinkLayerAddress = ether(TNMACADDR2);
+}
+
+Opt_DHCPv6_SID opt_sid_count_any {
+        Code             = 2;
+        duid             = opt_sid_duid_llt_count_any;
+}
+
+DHCPv6_DUID_LLT_Ether opt_sid_duid_llt_count_any{
+        HardwareType     = any;
+        Time             = any;
+        LinkLayerAddress = any;
+}
+

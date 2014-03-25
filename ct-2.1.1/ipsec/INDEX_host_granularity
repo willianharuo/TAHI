@@ -1,0 +1,33 @@
+##
+## $Name: REL_2_1_1 $
+##
+## $TAHI: ct/ipsec/INDEX_host_granularity,v 1.2 2003/05/05 17:45:24 ozoe Exp $
+##
+##<seq>:<def>:[<opt>]:[<log>]:<desc>
+##
+
+#======================================================================
+&print:<B>Host Transport ESP Outbound</B>
+
+&print:Outbound  
+
+&print:IPsec ESP Transport Granularity Upper Protocol
+./HTR_E_Out_SelectUpperProtICMP.seq  :./HTR_E_SelectUpper.def:::Granularity Upper Protocol (ICMP)
+./HTR_E_Out_SelectUpperProtUDP.seq  :./HTR_E_SelectUpper.def:::Granularity Upper Protocol (UDP)
+./HTR_E_Out_SelectUpperProtTCP.seq  :./HTR_E_SelectUpper.def:::Granularity Upper Protocol (TCP)
+
+&print:IPsec ESP Transport Granularity Upper Protocol and Port
+./HTR_E_Out_SelectUpperProtUDPPort.seq  :./HTR_E_SelectUpper.def:::Granularity Upper Protocol (UDP Port)
+./HTR_E_Out_SelectUpperProtTCPPort.seq  :./HTR_E_SelectUpper.def:::Granularity Upper Protocol (TCP Port)
+
+&print:Inbound 
+
+&print:IPsec ESP Transport Granularity Upper Protocol
+./HTR_E_In_SelectUpperProtICMP.seq  :./HTR_E_SelectUpper.def:::Granularity Upper Protocol (ICMP)
+./HTR_E_In_SelectUpperProtUDP.seq  :./HTR_E_SelectUpper.def:::Granularity Upper Protocol (UDP)
+./HTR_E_In_SelectUpperProtTCP.seq  :./HTR_E_SelectUpper.def:::Granularity Upper Protocol (TCP)
+
+&print:IPsec ESP Transport Granularity Upper Protocol and Port
+./HTR_E_In_SelectUpperProtUDPPort.seq  :./HTR_E_SelectUpper.def:::Granularity Upper Protocol (UDP Port)
+./HTR_E_In_SelectUpperProtTCPPort.seq  :./HTR_E_SelectUpper.def:::Granularity Upper Protocol (TCP Port)
+

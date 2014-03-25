@@ -1,0 +1,149 @@
+<HTML>
+<HEAD>
+<TITLE>DH_Flood - Many Destination Options</TITLE>
+<LINK REV="made" HREF="mailto:hackers@FreeBSD.org">
+</HEAD>
+
+<BODY>
+
+<!-- INDEX BEGIN -->
+<!--
+
+<UL>
+
+	<LI><A HREF="#NAME">NAME</A>
+	<LI><A HREF="#TARGET">TARGET</A>
+	<LI><A HREF="#SYNOPSIS">SYNOPSIS</A>
+	<LI><A HREF="#INITIALIZATION">INITIALIZATION</A>
+	<LI><A HREF="#TEST_PROCEDURE">TEST PROCEDURE</A>
+	<LI><A HREF="#JUDGMENT">JUDGMENT</A>
+	<LI><A HREF="#SEE_ALSO">SEE ALSO</A>
+</UL>
+-->
+<!-- INDEX END -->
+
+<P>
+<H1><A NAME="NAME">NAME</A></H1>
+<P>
+<PRE>    DH_Flood - Many Destination Options
+</PRE>
+<P>
+<HR>
+<H1><A NAME="TARGET">TARGET</A></H1>
+<P>
+<PRE>    Host and Router
+</PRE>
+<P>
+<HR>
+<H1><A NAME="SYNOPSIS">SYNOPSIS</A></H1>
+<PRE>
+    <A HREF="./DH_Flood.seq">DH_Flood.seq</A> [-tooloption ...] -pkt <A HREF="./DH_Flood.def">DH_Flood.def</A>
+        -tooloption: v6eval tool option
+    </PRE>
+
+<P>
+<HR>
+<H1><A NAME="INITIALIZATION">INITIALIZATION</A></H1>
+<P>
+<PRE>    1. Check Link0 Link Local address Reachability
+    2. Check support of Destination Options
+</PRE>
+<P>
+<HR>
+<H1><A NAME="TEST_PROCEDURE">TEST PROCEDURE</A></H1>
+<P>
+<PRE>    1. Send Echo Request with 16 Destination Options Headers
+    2. Receive Echo Reply
+    3. Send Echo Request with 32 Destination Options Headers
+    4. Receive Echo Reply
+    5. Send Echo Request with 64 Destination Options Headers
+    6. Receive Echo Reply
+    7. Send Echo Request with 128 Destination Options Headers
+    8. Receive Echo Reply
+    9. Send Echo Request
+    11. Receive Echo Reply
+</PRE>
+<P>
+<PRE>    Echo Request with Destination Options Headers Data is:
+</PRE>
+<P>
+<PRE>        IPv6 Header
+            Version            = 6
+            Traffic Class      = 0
+            FlowLabel          = 0
+            PayloadLength      = 144, 272, 528, 1040
+            NextHeader         = 60 (Destination Option)
+            HopLimit           = 64
+            SourceAddress      = Tester Link Local Address
+            DestinationAddress = Target Link Local Address
+</PRE>
+<P>
+<PRE>        Destination Options
+            NextHeader         = 60 (Destination Options)
+            HeaderExtLength    = 0
+</PRE>
+<P>
+<PRE>            Opt_PadN
+                OptionType     = 1
+                OptDataLength  = 4
+                pad            = {0, 0, 0, 0}
+</PRE>
+<P>
+<PRE>        Destination Options
+            NextHeader         = 60 (Destination Option)
+            HeaderExtLength    = 0
+</PRE>
+<P>
+<PRE>            Opt_PadN
+                OptionType     = 1
+                OptDataLength  = 4
+                pad            = {0, 0, 0, 0}
+</PRE>
+<P>
+<PRE>                .
+                . (Total number of Destination Option is 16, 32, 64, 128)
+                .
+</PRE>
+<P>
+<PRE>        Destination Options
+            NextHeader         = 58 (ICMPv6)
+            HeaderExtLength    = 0
+</PRE>
+<P>
+<PRE>            Opt_PadN
+                OptionType     = 1
+                OptDataLength  = 4
+                pad            = {0, 0, 0, 0}
+</PRE>
+<P>
+<PRE>        ICMPv6 Echo Request
+            Type               = 128 (Echo Request)
+            Code               = 0
+            Checksum           = (auto)
+            Identifier         = 0
+            SequenceNumber     = 0
+            PayloadData        = {1, 2, 3, 4, 5, 6, 7, 8}
+</PRE>
+<P>
+<HR>
+<H1><A NAME="JUDGMENT">JUDGMENT</A></H1>
+<P>
+<PRE>    PASS : echo reply packet received for Destination Option completely,
+           and echo reply packet received.
+</PRE>
+<P>
+<PRE>    WARN : don't echo reply packet received for Destination Option completely,
+           but echo reply packet received.
+</PRE>
+<P>
+<PRE>    FAIL : don't received echo reply packet.
+</PRE>
+<P>
+<HR>
+<H1><A NAME="SEE_ALSO">SEE ALSO</A></H1>
+<P>
+<PRE>    perldoc V6evalTool
+</PRE>
+</BODY>
+
+</HTML>

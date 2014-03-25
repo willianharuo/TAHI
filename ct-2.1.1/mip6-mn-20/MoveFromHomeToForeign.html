@@ -1,0 +1,206 @@
+<HTML>
+<HEAD>
+<TITLE>MoveFromHomeToForeign - MN detects movement from home to foreign</TITLE>
+<LINK REV="made" HREF="mailto:hackers@FreeBSD.org">
+</HEAD>
+
+<BODY>
+
+<!-- INDEX BEGIN -->
+<!--
+
+<UL>
+
+	<LI><A HREF="#NAME">NAME</A>
+	<LI><A HREF="#TARGET">TARGET</A>
+	<LI><A HREF="#SYNOPSIS">SYNOPSIS</A>
+	<LI><A HREF="#TOPOLOGY">TOPOLOGY</A>
+	<LI><A HREF="#TEST_PROCEDURE">TEST PROCEDURE</A>
+	<LI><A HREF="#JUDGEMENT">JUDGEMENT</A>
+	<LI><A HREF="#REFERENCE">REFERENCE</A>
+</UL>
+-->
+<!-- INDEX END -->
+
+<P>
+<H1><A NAME="NAME">NAME</A></H1>
+<P>
+MoveFromHomeToForeign - MN detects movement from home to foreign
+
+<P>
+<HR>
+<H1><A NAME="TARGET">TARGET</A></H1>
+<PRE>
+Host
+</PRE>
+
+<P>
+<HR>
+<H1><A NAME="SYNOPSIS">SYNOPSIS</A></H1>
+<PRE>
+<A HREF="./MoveFromHomeToForeign.seq">MoveFromHomeToForeign.seq</A> [-tooloption ...] -pkt <A HREF="./MN_Common.def">MN_Common.def</A>
+</PRE>
+<BLOCKQUOTE>
+<PRE>
+-tooloption: v6eval tool option
+</PRE>
+</BLOCKQUOTE>
+
+<P>
+<HR>
+<H1><A NAME="TOPOLOGY">TOPOLOGY</A></H1>
+<PRE>
+                                      |
+                                      R       TN
+                                      |       |
+                              --------+-------+--------------- LinkZ
+</PRE>
+<BR><BR><BR>
+<PRE>
+                                      |
+                                      R2             NUT2
+                                      |               |
+                              --------+---------------+------- LinkY
+</PRE>
+<BR><BR><BR>
+<PRE>
+                                      |       |
+                                      HA2     R1     NUT1
+                                      |       |       |
+                              --------+-------+-------+------- LinkX
+</PRE>
+<BR><BR><BR>
+<PRE>
+                          |           |
+             NUT0        HA1          HA0
+              |           |           |
+Link0 --------+-----------+-----------+-----------------------
+</PRE>
+<BLOCKQUOTE>
+<TABLE BORDER>
+<TR>
+<TD><TT>Link0</TT></TD>
+<TD><TT>3ffe:501:ffff:100::/64</TT></TD>
+<TD><TT>home link</TT></TD>
+</TR>
+<TR>
+<TD><TT>LinkX</TT></TD>
+<TD><TT>3ffe:501:ffff:102::/64</TT></TD>
+<TD><TT>&nbsp;</TT></TD>
+</TR>
+<TR>
+<TD><TT>LinkY</TT></TD>
+<TD><TT>3ffe:501:ffff:103::/64</TT></TD>
+<TD><TT>&nbsp;</TT></TD>
+</TR>
+<TR>
+<TD><TT>LinkZ</TT></TD>
+<TD><TT>3ffe:501:ffff:104::/64</TT></TD>
+<TD><TT>&nbsp;</TT></TD>
+</TR>
+<TR>
+<TD><TT>HA0(Link0)</TT></TD>
+<TD><TT>3ffe:501:ffff:100:200:ff:fe00:a1a1/64</TT></TD>
+<TD><TT>&nbsp;</TT></TD>
+</TR>
+<TR>
+<TD><TT>HA1(Link0)</TT></TD>
+<TD><TT>3ffe:501:ffff:100:200:ff:fe00:a2a2/64</TT></TD>
+<TD><TT>&nbsp;</TT></TD>
+</TR>
+<TR>
+<TD><TT>HA2(LinkX)</TT></TD>
+<TD><TT>3ffe:501:ffff:102:200:ff:fe00:a3a3</TT></TD>
+<TD><TT>&nbsp;</TT></TD>
+</TR>
+<TR>
+<TD><TT>R1(LinkX)</TT></TD>
+<TD><TT>3ffe:501:ffff:102:200:ff:fe00:a4a4</TT></TD>
+<TD><TT>&nbsp;</TT></TD>
+</TR>
+<TR>
+<TD><TT>R2(LinkY)</TT></TD>
+<TD><TT>3ffe:501:ffff:103:200:ff:fe00:a5a5</TT></TD>
+<TD><TT>&nbsp;</TT></TD>
+</TR>
+<TR>
+<TD><TT>TN(LinkZ)</TT></TD>
+<TD><TT>3ffe:501:ffff:104:200:ff:fe00:a6a6</TT></TD>
+<TD><TT>&nbsp;</TT></TD>
+</TR>
+</TABLE>
+</BLOCKQUOTE>
+
+<P>
+<HR>
+<H1><A NAME="TEST_PROCEDURE">TEST PROCEDURE</A></H1>
+<P>
+<PRE>
+<B>MN detects movement from home to foreign</B>
+</PRE>
+<P>
+<PRE>
+       NUT0     HA0     R1
+        |       |       |
+        | <---- |       | RA
+        |       |       |
+       NUT1     |       |
+        |       |       |
+        | <------------ | RA
+        |       |       |
+        | ----> |       | Binding Update (*1)
+        | <---- |       | Binding Acknowledgement
+        |       |       |
+</PRE>
+
+<P>
+<HR>
+<H1><A NAME="JUDGEMENT">JUDGEMENT</A></H1>
+<PRE>
+(*1) PASS: HA0 receives Binding Update
+</PRE>
+
+<P>
+<HR>
+<H1><A NAME="REFERENCE">REFERENCE</A></H1>
+<PRE>
+<A HREF="./draft-ietf-mobileip-ipv6-20.txt">draft-ietf-mobileip-ipv6-20.txt</A>
+</PRE>
+<PRE>
+11.5 Movement
+<PRE>
+</PRE>
+11.5.1 Movement Detection
+<PRE>
+</PRE>
+   The primary movement detection mechanism for Mobile IPv6 defined in
+   this section uses the facilities of IPv6 Neighbor Discovery,
+   including Router Discovery and Neighbor Unreachability Detection.
+   The mobile node SHOULD supplement this mechanism with other
+   information whenever it is available to the mobile node (e.g., from
+   lower protocol layers).  The description here is based on the
+   conceptual model of the organization and data structures defined by
+   Neighbor Discovery [12].
+<PRE>
+</PRE>
+   Mobile nodes SHOULD use Router Discovery to discover new routers and
+   on-link subnet prefixes; a mobile node MAY send Router Solicitations,
+   or MAY wait for unsolicited (periodic) multicast Router
+   Advertisements, as specified for Router Discovery [12].  Based on
+   received Router Advertisements, a mobile node maintains an entry in
+   its Default Router List for each router, and an entry in its Prefix
+   List for each subnet prefix that it currently considers to be
+   on-link.  Each entry in these lists has an associated invalidation
+   timer value.  While away from home, a mobile node typically selects
+   one default router and one subnet prefix to use as the subnet prefix
+   in its primary care-of address.  A mobile node MAY also have
+   associated additional care-of addresses, using other subnet prefixes
+   from its Prefix List.  The method by which a mobile node selects and
+   forms a care-of address from the available subnet prefixes is
+   described in Section 11.5.2.  The mobile node registers its primary
+   care-of address with its home agent, as described in Section 11.7.1.
+</PRE>
+
+</BODY>
+
+</HTML>

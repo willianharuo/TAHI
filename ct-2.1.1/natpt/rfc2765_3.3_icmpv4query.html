@@ -1,0 +1,269 @@
+<HTML>
+<HEAD>
+<TITLE>rfc2765_3.3_icmpv4query.seq - Verify IPv6 <-> IPv4 header 
+        translation in accordance with RFC2765 [SIIT]</TITLE>
+<LINK REV="made" HREF="mailto:hackers@FreeBSD.org">
+</HEAD>
+
+<BODY>
+
+<!-- INDEX BEGIN -->
+<!--
+
+<UL>
+
+	<LI><A HREF="#NAME">NAME</A>
+	<LI><A HREF="#TARGET">TARGET</A>
+	<LI><A HREF="#SYNOPSIS">SYNOPSIS</A>
+	<LI><A HREF="#INITIALIZATION">INITIALIZATION</A>
+	<LI><A HREF="#TEST_PROCEDURE">TEST PROCEDURE</A>
+	<LI><A HREF="#JUDGMENT">JUDGMENT</A>
+	<LI><A HREF="#NOTE">NOTE</A>
+	<LI><A HREF="#REFERENCE">REFERENCE</A>
+	<LI><A HREF="#SEE_ALSO">SEE ALSO</A>
+</UL>
+-->
+<!-- INDEX END -->
+
+<P>
+<H1><A NAME="NAME">NAME</A></H1>
+<P>
+<PRE>        rfc2765_3.3_icmpv4query.seq - Verify IPv6 &lt;-&gt; IPv4 header 
+        translation in accordance with RFC2765 [SIIT]
+</PRE>
+<P>
+<HR>
+<H1><A NAME="TARGET">TARGET</A></H1>
+<P>
+<PRE>        Router
+</PRE>
+<P>
+<HR>
+<H1><A NAME="SYNOPSIS">SYNOPSIS</A></H1>
+<P>
+<PRE>        rfc2765_3.3_icmpv4query.seq [-tooloption ...] 
+        -p rfc2765_3.3_icmpv4query.def
+</PRE>
+<P>
+<HR>
+<H1><A NAME="INITIALIZATION">INITIALIZATION</A></H1>
+<PRE>
+	Before this test starts, run <A HREF="./initialize.html">initialize.seq</A>.
+</PRE>
+
+<P>
+<HR>
+<H1><A NAME="TEST_PROCEDURE">TEST PROCEDURE</A></H1>
+<P>
+<PRE>        This test verifies that NUT can translates ICMPv4 query messages
+        in accordance to RFC2765.
+        
+        Network Topology
+</PRE>
+<P>
+<PRE>        Link0
+        --------------------------
+            |               |
+           TN              NUT
+            |               |
+        --------------------------
+        Link1
+</PRE>
+<P>
+<PRE>        TN -- (Link0) -- NUT        NUT -- (Link1) -- TN
+        
+        ---------------------      ------------------------
+</PRE>
+<HR WIDTH=80%>
+
+<P>
+<PRE>        1.1.[1-2]
+                                   &lt;===================
+        ICMPv4 packet
+                IPv4 Header
+                        src address : TN LINK1 IPv4 address
+                        dst address : TN LINK0 IPv4 address
+                        DF = 1
+                ICMPv4 Echo Request/Reply (Type 8 and Type 0)
+</PRE>
+<P>
+<PRE>        1.2.[1-2]
+        &lt;&lt;JUDGMENT&gt;&gt;
+        &lt;===================
+        ICMPv6 packet
+                IPv6 Header
+                        src address : TN LINK1 IPv4 embedded IPv6 address
+                        dst address : TN LINK0 IPv4 embedded IPv6 address
+                ICMPv6 Echo Request/Reply (Type 128 and Type 129)
+</PRE>
+<HR WIDTH=80%>
+
+<P>
+<PRE>        2.1.[1-2]
+                                   &lt;===================
+        ICMPv4 packet
+                IPv4 Header
+                        src address : TN LINK1 IPv4 address
+                        dst address : TN LINK0 IPv4 address
+                        DF = 1
+                ICMPv4 Information Request/Reply (Type 15 and Type 16)
+        2.2.[1-2]
+        &lt;&lt;JUDGMENT&gt;&gt;
+                Packet is silently dropped
+</PRE>
+<HR WIDTH=80%>
+
+<P>
+<PRE>        3.1.[1-2]
+                                   &lt;===================
+        ICMPv4 packet
+                IPv4 Header
+                        src address : TN LINK1 IPv4 address
+                        dst address : TN LINK0 IPv4 address
+                        DF = 1
+                ICMPv4 Timestamp and Timestamp Reply (Type 13 and Type 14)
+        3.2.[1-2]
+        &lt;&lt;JUDGMENT&gt;&gt;
+                Packet is silently dropped
+</PRE>
+<HR WIDTH=80%>
+
+<P>
+<PRE>        4.1.[1-2]
+                                   &lt;===================
+        ICMPv4 packet
+                IPv4 Header
+                        src address : TN LINK1 IPv4 address
+                        dst address : TN LINK0 IPv4 address
+                        DF = 1
+                ICMPv4 Address Mask Request/Reply (Type 17 and Type 18)
+        4.2.[1-2]
+        &lt;&lt;JUDGMENT&gt;&gt;
+                Packet is silently dropped
+</PRE>
+<HR WIDTH=80%>
+
+<P>
+<PRE>        5.1.[1-2]
+                                   &lt;===================
+        ICMPv4 packet
+                IPv4 Header
+                        src address : TN LINK1 IPv4 address
+                        dst address : TN LINK0 IPv4 address
+                        DF = 1
+                ICMPv4 ICMP Router Advertisement (Type 9)
+        5.2.[1-2]
+        &lt;&lt;JUDGMENT&gt;&gt;
+                Packet is silently dropped
+</PRE>
+<HR WIDTH=80%>
+
+<P>
+<PRE>        6.1.[1-2]
+                                   &lt;===================
+        ICMPv4 packet
+                IPv4 Header
+                        src address : TN LINK1 IPv4 address
+                        dst address : TN LINK0 IPv4 address
+                        DF = 1
+                ICMPv4 ICMP Router Solicitation (Type 10)
+        6.2.[1-2]
+        &lt;&lt;JUDGMENT&gt;&gt;
+                Packet is silently dropped
+</PRE>
+<HR WIDTH=80%>
+
+<P>
+<PRE>        7.1.
+                                   &lt;===================
+        ICMPv4 packet
+                IPv4 Header
+                        src address : TN LINK1 IPv4 address
+                        dst address : TN LINK0 IPv4 address
+                        DF = 1
+                ICMPv4 Unknown ICMPv4 types
+        7.2.
+        &lt;&lt;JUDGMENT&gt;&gt;
+                Packet is silently dropped
+</PRE>
+<P>
+<HR>
+<H1><A NAME="JUDGMENT">JUDGMENT</A></H1>
+<P>
+<PRE>        &lt;&lt; PASS &gt;&gt;
+                NUT translates ICMPv4 echo request/reply to ICMPv6 echo 
+                request/reply and silently drops other ICMPv4 query types.
+                
+        &lt;&lt; FAIL &gt;&gt;      
+                NUT fails to translate ICMPv4 echo request/reply, or doesn't
+                drop other ICMPv4 query types. 
+</PRE>
+<P>
+<HR>
+<H1><A NAME="NOTE">NOTE</A></H1>
+<P>
+<HR>
+<H1><A NAME="REFERENCE">REFERENCE</A></H1>
+<P>
+<STRONG>RFC2765</STRONG>
+
+
+
+<P>
+3.3. Translating ICMPv4 Headers into ICMPv6 Headers
+
+<P>
+<PRE>   All ICMP messages that are to be translated require that the ICMP
+   checksum field be updated as part of the translation since ICMPv6,
+   unlike ICMPv4, has a pseudo-header checksum just like UDP and TCP.
+</PRE>
+<P>
+<PRE>   In addition all ICMP packets need to have the Type value translated
+   and for ICMP error messages the included IP header also needs
+   translation.
+</PRE>
+<P>
+<PRE>   The actions needed to translate various ICMPv4 messages are:
+</PRE>
+<P>
+<PRE>      ICMPv4 query messages:
+</PRE>
+<P>
+<PRE>        Echo and Echo Reply (Type 8 and Type 0)
+           Adjust the type to 128 and 129, respectively, and adjust the
+           ICMP checksum both to take the type change into account and
+           to include the ICMPv6 pseudo-header.
+</PRE>
+<P>
+<PRE>        Information Request/Reply (Type 15 and Type 16)
+           Obsoleted in ICMPv4.  Silently drop.
+</PRE>
+<P>
+<PRE>        Timestamp and Timestamp Reply (Type 13 and Type 14)
+           Obsoleted in ICMPv6.  Silently drop.
+</PRE>
+<P>
+<PRE>        Address Mask Request/Reply (Type 17 and Type 18)
+           Obsoleted in ICMPv6.  Silently drop.
+</PRE>
+<P>
+<PRE>        ICMP Router Advertisement (Type 9)
+           Single hop message.  Silently drop.
+</PRE>
+<P>
+<PRE>        ICMP Router Solicitation (Type 10)
+           Single hop message.  Silently drop.
+</PRE>
+<P>
+<PRE>        Unknown ICMPv4 types
+           Silently drop.
+</PRE>
+<P>
+<HR>
+<H1><A NAME="SEE_ALSO">SEE ALSO</A></H1>
+<P>
+<PRE>        perldoc V6evalTool
+</PRE>
+</BODY>
+
+</HTML>

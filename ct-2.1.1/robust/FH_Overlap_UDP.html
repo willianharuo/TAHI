@@ -1,0 +1,148 @@
+<HTML>
+<HEAD>
+<TITLE>FH_Overlap_UDP - UDP Fragment packets with Overlap data</TITLE>
+<LINK REV="made" HREF="mailto:hackers@FreeBSD.org">
+</HEAD>
+
+<BODY>
+
+<!-- INDEX BEGIN -->
+<!--
+
+<UL>
+
+	<LI><A HREF="#NAME">NAME</A>
+	<LI><A HREF="#TARGET">TARGET</A>
+	<LI><A HREF="#SYNOPSIS">SYNOPSIS</A>
+	<LI><A HREF="#INITIALIZATION">INITIALIZATION</A>
+	<LI><A HREF="#TEST_PROCEDURE">TEST PROCEDURE</A>
+	<LI><A HREF="#JUDGMENT">JUDGMENT</A>
+	<LI><A HREF="#SEE_ALSO">SEE ALSO</A>
+</UL>
+-->
+<!-- INDEX END -->
+
+<P>
+<H1><A NAME="NAME">NAME</A></H1>
+<P>
+<PRE>    FH_Overlap_UDP - UDP Fragment packets with Overlap data
+</PRE>
+<P>
+<HR>
+<H1><A NAME="TARGET">TARGET</A></H1>
+<P>
+<PRE>    Host and Router
+</PRE>
+<P>
+<HR>
+<H1><A NAME="SYNOPSIS">SYNOPSIS</A></H1>
+<PRE>
+    <A HREF="./FH_Overlap_UDP.seq">FH_Overlap_UDP.seq</A> [-tooloption ...] -pkt <A HREF="./FH_Overlap_UDP.def">FH_Overlap_UDP.def</A>
+        -tooloption: v6eval tool option
+    </PRE>
+
+<P>
+<HR>
+<H1><A NAME="INITIALIZATION">INITIALIZATION</A></H1>
+<P>
+<PRE>    1. Check Link0 Link Local address Reachability and UDP echo support.
+    2. Check support of Fragment Header
+</PRE>
+<P>
+<HR>
+<H1><A NAME="TEST_PROCEDURE">TEST PROCEDURE</A></H1>
+<P>
+<PRE>    1. Send 1st fragment packet
+    2. Send broken 2nd fragment packet
+    1. Send 2nd fragment packet
+    2. Wait 5 sec.
+</PRE>
+<P>
+<PRE>        +----------------+
+        |      IPv6      |
+        |     Header     |
+        +----------------+    +----------------+
+        |   UDP Header   |    |   UDP Header   |
+        +----------------+    +----------------+    +----------------+
+        |0000000000000000|    |0000000000000000|    |1111111111111111|
+        |0000000000000000|    |0000000000000000|    |1111111111111111|
+        |0000000000000000|    |0000000000000000|    |1111111111111111|
+        |0000000000000000|    +----------------+    |1111111111111111|
+        |0000000000000000|                          |1111111111111111|
+        |0000000000000000|                          |1111111111111111|
+        |0000000000000000|                          |1111111111111111|
+        +----------------+                          +----------------+
+</PRE>
+<P>
+<PRE>        [Original packet]     [1st frag. data]      [broken 2nd frag. data]
+</PRE>
+<P>
+<PRE>    1st fragment packet is:
+</PRE>
+<P>
+<PRE>        IPv6 Header
+            Version            = 6
+            Traffic Class      = 0
+            FlowLabel          = 0
+            PayloadLength      = 528
+            NextHeader         = 44 (Fragment Header)
+            HopLimit           = 64
+            SourceAddress      = Tester Link Local Address
+            DestinationAddress = Target Link Local Address
+</PRE>
+<P>
+<PRE>        Fragment Header
+            NextHeader         = 17 (UDP)
+            Reserved1          = 0
+            FragmentOffset     = 0
+            Reserved2          = 0
+            MFlag              = 1
+            Identification     = (random)
+</PRE>
+<P>
+<PRE>        Payload
+            data = substr(_PACKET_IPV6_NAME(udp_request), 40, 520)
+</PRE>
+<P>
+<PRE>    2nd fragment packet is:
+</PRE>
+<P>
+<PRE>        IPv6 Header
+            Version            = 6
+            Traffic Class      = 0
+            FlowLabel          = 0
+            PayloadLength      = 1032
+            NextHeader         = 44 (Fragment Header)
+            HopLimit           = 64
+            SourceAddress      = Tester Link Local Address
+            DestinationAddress = Target Link Local Address
+</PRE>
+<P>
+<PRE>        Fragment Header
+            NextHeader         = 17 (UDP)
+            Reserved1          = 0
+            FragmentOffset     = 1
+            Reserved2          = 0
+            MFlag              = 0
+            Identification     = (same as 1st fragment packet)
+</PRE>
+<P>
+<PRE>        Payload
+            data               = substr(_PACKET_IPV6_NAME(udp_request_1), 48, 1024)
+</PRE>
+<P>
+<HR>
+<H1><A NAME="JUDGMENT">JUDGMENT</A></H1>
+<P>
+<PRE>    PASS : don't received UDP packet, or correct UDP packet received.
+    FAIL : broken UDP packet received.
+</PRE>
+<P>
+<HR>
+<H1><A NAME="SEE_ALSO">SEE ALSO</A></H1>
+<P>
+<PRE>    perldoc V6evalTool
+</PRE>
+</BODY>
+
+</HTML>

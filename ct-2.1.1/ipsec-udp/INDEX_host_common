@@ -1,0 +1,22 @@
+##
+## $Name: REL_2_1_1 $
+##
+## $TINY: INDEX_host_common,v 1.1 2001/12/04 08:28:09 ozoe Exp $
+##
+##<seq>:<def>:[<opt>]:[<log>]:<desc>
+##
+
+&print:<B>Host Transport Common Outbound.</B>
+
+../ipsec/HTR_C_Out_descbc_SPD_discard_none.seq:./HTR_E_SPD_discard_none.def:-cpp="-include ./ipsecaddr.def"::Select SPD entry (policy=discard,none), ESP (DES-CBC)
+../ipsec/HTR_C_Out_3descbc_SPD_discard_none.seq:./HTR_E_SPD_discard_none.def:-cpp="-include ./ipsecaddr.def"::Select SPD entry (policy=discard,none), ESP (3DES-CBC)
+../ipsec/HTR_C_Out_rijndaelcbc_SPD_discard_none.seq:./HTR_E_SPD_discard_none.def:-cpp="-include ./ipsecaddr.def"::Select SPD entry (policy=discard,none), ESP(RIJNDAEL-CBC)
+
+&print:<B>Host Transport Common Inbound.</B>
+
+../ipsec/HTR_C_In_descbc_SPD_discard_none.seq:./HTR_E_SPD_discard_none.def:-cpp="-include ./ipsecaddr.def"::Select SPD entry (policy=discard,none), ESP (DES-CBC)
+../ipsec/HTR_C_In_3descbc_SPD_discard_none.seq:./HTR_E_SPD_discard_none.def:-cpp="-include ./ipsecaddr.def"::Select SPD entry (policy=discard,none), ESP (3DES-CBC)
+../ipsec/HTR_C_In_rijndaelcbc_SPD_discard_none.seq:./HTR_E_SPD_discard_none.def:-cpp="-include ./ipsecaddr.def"::Select SPD entry (policy=discard,none), ESP (RIJNDAEL-CBC)
+
+#
+#########################################################################

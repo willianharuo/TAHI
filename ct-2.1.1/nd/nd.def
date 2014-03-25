@@ -1,0 +1,649 @@
+// Copyright (C) 1999, 2000, 2001, 2002, 2003 Yokogawa Electric Corporation,
+// IPA (Information-technology Promotion Agency, Japan).
+// All rights reserved.
+// 
+// Redistribution and use of this software in source and binary forms, with 
+// or without modification, are permitted provided that the following 
+// conditions and disclaimer are agreed and accepted by the user:
+// 
+// 1. Redistributions of source code must retain the above copyright 
+// notice, this list of conditions and the following disclaimer.
+// 
+// 2. Redistributions in binary form must reproduce the above copyright 
+// notice, this list of conditions and the following disclaimer in the 
+// documentation and/or other materials provided with the distribution.
+// 
+// 3. Neither the names of the copyrighters, the name of the project which 
+// is related to this software (hereinafter referred to as "project") nor 
+// the names of the contributors may be used to endorse or promote products 
+// derived from this software without specific prior written permission.
+// 
+// 4. No merchantable use may be permitted without prior written 
+// notification to the copyrighters. However, using this software for the 
+// purpose of testing or evaluating any products including merchantable 
+// products may be permitted without any notification to the copyrighters.
+// 
+// 
+// 
+// THIS SOFTWARE IS PROVIDED BY THE COPYRIGHTERS, THE PROJECT AND 
+// CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING 
+// BUT NOT LIMITED THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS 
+// FOR A PARTICULAR PURPOSE, ARE DISCLAIMED.  IN NO EVENT SHALL THE 
+// COPYRIGHTERS, THE PROJECT OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, 
+// INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES 
+// (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR 
+// SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) 
+// HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN 
+// CONTRACT,STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) 
+// ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF 
+// THE POSSIBILITY OF SUCH DAMAGE.
+//
+// $TAHI: ct/nd/nd.def,v 1.12 2001/10/05 06:39:10 masaxmasa Exp $
+
+#ifndef _ND_DEF
+#define _ND_DEF
+
+//----------------------------------------------------------------------
+// echo-request
+//	TN(link-local) ==> NUT(link-local)
+//----------------------------------------------------------------------
+FEM_icmp6_echo_request(nd_echo_request, _HETHER_tn2nut,
+	{
+	 _SRC(tnv6());
+	 _DST(nutv6());},
+	{
+	 payload=nd_echo_data;
+	}
+)
+
+//----------------------------------------------------------------------
+// echo-reply
+//	NUT(link-local) ==> TN(link-local)
+//----------------------------------------------------------------------
+FEM_icmp6_echo_reply(nd_echo_reply, _HETHER_nut2tn,
+	{
+	 _SRC(nutv6());
+	 _DST(tnv6());
+	},
+	{
+	 payload=nd_echo_data;
+	}
+)
+
+//----------------------------------------------------------------------
+Payload nd_echo_data {
+	data=repeat(0xff,0x10);
+}
+
+//----------------------------------------------------------------------
+// multicast RA
+//      TN(link-local) ==> all-node
+//      m=0, o=0
+//      lifetime=600, reachableTime=0, retransTimer=0
+//      w/o SLLA
+//      w/  prefix
+//              l=1, a=1
+//              ValidLifetime=2592000, PreferredLifetime=604800;
+//----------------------------------------------------------------------
+FEM_icmp6_ra(nd_unsol_ra, _HETHER_tn2allnodes,
+        {
+         _SRC(tnv6());
+         _DST(v6(_ALLNODES_MCAST_ADDR));
+         HopLimit=255;
+        },
+        {
+         CurHopLimit=0;
+         MFlag=0;
+         OFlag=0;
+         LifeTime=600;
+         ReachableTime=0;
+         RetransTimer=0;
+         option=nd_prefixopt_a;
+        }
+)
+
+//----------------------------------------------------------------------
+// multicast RA
+//      TN(link-local) ==> all-node
+//      m=0, o=0
+//      lifetime=600, reachableTime=0, retransTimer=0
+//      w/ SLLA
+//      w/ prefix
+//              l=1, a=1
+//              ValidLifetime=2592000, PreferredLifetime=604800;
+//----------------------------------------------------------------------
+FEM_icmp6_ra(nd_unsol_ra_sll, _HETHER_tn2allnodes,
+        {
+         _SRC(tnv6());
+         _DST(v6(_ALLNODES_MCAST_ADDR));
+         HopLimit=255;
+        },
+        {
+         CurHopLimit=0;
+         MFlag=0;
+         OFlag=0;
+         LifeTime=600;
+         ReachableTime=0;
+         RetransTimer=0;
+	 option=_SLLOPT_tn;
+         option=nd_prefixopt_a;
+        }
+)
+
+//----------------------------------------------------------------------
+Opt_ICMPv6_Prefix nd_prefixopt_a {
+//      Type=3;
+//      Length=4;
+        PrefixLength=_GLOBAL0_UCAST_PRFXLEN;
+        LFlag=1;
+        AFlag=1;        
+//      Reserved1=ZERO; 
+        ValidLifetime=2592000;
+        PreferredLifetime=604800;
+//      Reserved2=ZERO; 
+        Prefix=v6(_GLOBAL0_UCAST_PRFX);
+}
+
+//----------------------------------------------------------------------
+// multicast RA
+//      TN(link-local) ==> all-node
+//      m=0, o=0
+//      lifetime=0, reachableTime=0, retransTimer=0
+//      w/o SLLA
+//      w/o prefix
+//----------------------------------------------------------------------
+FEM_icmp6_ra(nd_unsol_ra_clrrtr, _HETHER_tn2allnodes,
+        {
+         _SRC(tnv6());
+         _DST(v6(_ALLNODES_MCAST_ADDR));
+         HopLimit=255;
+        },
+        {
+         CurHopLimit=0;
+         MFlag=0;
+         OFlag=0;
+         LifeTime=0;
+         ReachableTime=0;
+         RetransTimer=0;
+        }
+)
+
+//----------------------------------------------------------------------
+// multicast NS for DAD
+//	unspecified ==> solnode[NUT's link-local]
+//	target=NUT(global)
+//	w/o SLLA
+//----------------------------------------------------------------------
+FEM_icmp6_ns(nd_dad_ns, _HETHER_src2dstsolnode,
+	{
+	 _SRC(v6(_UNSPEC_ADDR));
+	 _DST(_IPV6_SOLNODE_MCAST(nutv6()));
+	 HopLimit=255;
+	},
+	{
+	 TargetAddress=nut2v6(_GLOBAL0_UCAST_PRFX, _GLOBAL0_UCAST_PRFXLEN);
+	}
+)
+
+//----------------------------------------------------------------------
+// multicast NS w/ SLLA
+//	NUT(link-local) ==> TN(solnode[link-local])
+//	target=TN(link-local)
+//	w/ SLLA
+//----------------------------------------------------------------------
+FEM_icmp6_ns(nd_multicast_ns, _HETHER_nut2tnsolnode,
+	{
+	 _SRC(nutv6());
+	 _DST(_IPV6_SOLNODE_MCAST(tnv6()));
+	 HopLimit=255;
+	},
+	{
+	 TargetAddress=tnv6();
+	 option=_SLLOPT_nut;
+	}
+)
+
+//----------------------------------------------------------------------
+// unicast NS w/o SLLA
+//	NUT(link-local) ==> TN(link-local)
+//	target=TN(link-local)
+//----------------------------------------------------------------------
+FEM_icmp6_ns(nd_unicast_ns, _HETHER_nut2tn,
+	{
+	 _SRC(nutv6());
+	 _DST(tnv6());
+	 HopLimit=255;
+	},
+	{
+	 TargetAddress=tnv6();
+	}
+)
+
+//----------------------------------------------------------------------
+// unicast NS w/ SLLA
+//	NUT(link-local) ==> TN(link-local)
+//	target=TN(link-local)
+//	w/ SLLA
+//----------------------------------------------------------------------
+FEM_icmp6_ns(nd_unicast_ns_sll, _HETHER_nut2tn,
+	{
+	 _SRC(nutv6());
+	 _DST(tnv6());
+	 HopLimit=255;
+	},
+	{
+	 TargetAddress=tnv6();
+	 option=_SLLOPT_nut;
+	}
+)
+
+//----------------------------------------------------------------------
+// unicast NA w/o TLLA
+//	TN(link-local) ==> NUT(link-local)
+//	target=TN(link-local)
+//	r=0, s=1, o=0
+//	r=1, s=1, o=0
+//----------------------------------------------------------------------
+FEM_icmp6_na(nd_unicast_na_rSo, _HETHER_tn2nut,
+	{
+	 _SRC(tnv6());
+	 _DST(nutv6());
+	 HopLimit=255;
+	},
+	{
+	 RFlag=0;
+	 SFlag=1;
+	 OFlag=0;
+	 TargetAddress=tnv6();
+	}
+)
+
+//----------------------------------------------------------------------
+FEM_icmp6_na(nd_unicast_na_RSo, _HETHER_tn2nut,
+	{
+	 _SRC(tnv6());
+	 _DST(nutv6());
+	 HopLimit=255;
+	},
+	{
+	 RFlag=1;
+	 SFlag=1;
+	 OFlag=0;
+	 TargetAddress=tnv6();
+	}
+)
+
+//----------------------------------------------------------------------
+// unicast NA w/ TLLA
+//	TN(link-local) ==> NUT(link-local)
+//	target=TN(link-local)
+//	r=0, s=1, o=1 w/ TLLA
+//	r=1, s=1, o=1 w/ TLLA
+//----------------------------------------------------------------------
+FEM_icmp6_na(nd_unicast_na_rSO_tll, _HETHER_tn2nut,
+	{
+	 _SRC(tnv6());
+	 _DST(nutv6());
+	 HopLimit=255;
+	},
+	{
+	 RFlag=0;
+	 SFlag=1;
+	 OFlag=1;
+	 TargetAddress=tnv6();
+	 option=_TLLOPT_tn;
+	}
+)
+
+//----------------------------------------------------------------------
+FEM_icmp6_na(nd_unicast_na_RSO_tll, _HETHER_tn2nut,
+	{
+	 _SRC(tnv6());
+	 _DST(nutv6());
+	 HopLimit=255;
+	},
+	{
+	 RFlag=1;
+	 SFlag=1;
+	 OFlag=1;
+	 TargetAddress=tnv6();
+	 option=_TLLOPT_tn;
+	}
+)
+
+//----------------------------------------------------------------------
+_HETHER_define(nd_hether_z2allnode, ether(A9N_MAC_ADDR),
+	v62ethermulti(v6(_ALLNODES_MCAST_ADDR)))
+_HETHER_define(nd_hether_z2nut, ether(A9N_MAC_ADDR), nutether())
+_HETHER_define(nd_hether_nut2z, nutether(), ether(A9N_MAC_ADDR))
+_HETHER_define(nd_hether_nut2zsolnode, nutether(),
+	_ETHER_SOLNODE_MCAST(tnv6()))
+_TLLOPT_define(nd_tllopt_z, ether(A9N_MAC_ADDR))
+_SLLOPT_define(nd_sllopt_z, ether(A9N_MAC_ADDR))
+
+//----------------------------------------------------------------------
+// echo-request
+//	TN(link-local, but different LLA) ==> NUT(link-local)
+//----------------------------------------------------------------------
+FEM_icmp6_echo_request(nd_echo_request_from_z, nd_hether_z2nut,
+	{
+	 _SRC(tnv6());
+	 _DST(nutv6());
+	},
+	{
+	 payload=nd_echo_data_z;
+	}
+)
+
+//----------------------------------------------------------------------
+// echo-reply
+//	NUT(link-local) ==> TN(link-local, but different LLA)
+//----------------------------------------------------------------------
+FEM_icmp6_echo_reply(nd_echo_reply_to_z, nd_hether_nut2z,
+	{
+	 _SRC(nutv6());
+	 _DST(tnv6());
+	},
+	{
+	 payload=nd_echo_data_z;
+	}
+)
+
+//----------------------------------------------------------------------
+Payload nd_echo_data_z {
+	data=repeat(0xee,0x10);
+}
+
+//----------------------------------------------------------------------
+// echo-reply
+//	NUT(link-local) ==> TN(link-local, but different LLA)
+//----------------------------------------------------------------------
+FEM_icmp6_echo_reply(nd_echo_reply_to_z2, nd_hether_nut2z,
+	{
+	 _SRC(nutv6());
+	 _DST(tnv6());
+	},
+	{
+	 payload=nd_echo_data;
+	}
+)
+
+//----------------------------------------------------------------------
+// multicast RA
+//      TN(link-local, but different LLA) ==> all-node
+//      m=0, o=0
+//      lifetime=600, reachableTime=0, retransTimer=0
+//      w/o SLLA
+//      w/  prefix
+//              l=1, a=1
+//              ValidLifetime=2592000, PreferredLifetime=604800;
+//----------------------------------------------------------------------
+FEM_icmp6_ra(nd_unsol_ra_from_z, nd_hether_z2allnode,
+        {
+         _SRC(tnv6());
+         _DST(v6(_ALLNODES_MCAST_ADDR));
+         HopLimit=255;
+        },
+        {
+         CurHopLimit=0;
+         MFlag=0;
+         OFlag=0;
+         LifeTime=600;
+         ReachableTime=0;
+         RetransTimer=0;
+         option=nd_prefixopt_a;
+        }
+)
+
+//----------------------------------------------------------------------
+// multicast RA
+//      TN(link-local, but different LLA) ==> all-node
+//      m=0, o=0
+//      lifetime=600, reachableTime=0, retransTimer=0
+//      w/ SLLA
+//      w/ prefix
+//              l=1, a=1
+//              ValidLifetime=2592000, PreferredLifetime=604800;
+//----------------------------------------------------------------------
+FEM_icmp6_ra(nd_unsol_ra_sll_from_z, nd_hether_z2allnode,
+        {
+         _SRC(tnv6());
+         _DST(v6(_ALLNODES_MCAST_ADDR));
+         HopLimit=255;
+        },
+        {
+         CurHopLimit=0;
+         MFlag=0;
+         OFlag=0;
+         LifeTime=600;
+         ReachableTime=0;
+         RetransTimer=0;
+         option=nd_sllopt_z;
+         option=nd_prefixopt_a;
+        }
+)
+
+//----------------------------------------------------------------------
+// unicast NS w/o SLLA
+//	NUT(link-local) ==> TN(link-local, but different LLA)
+//----------------------------------------------------------------------
+FEM_icmp6_ns(nd_unicast_ns_to_z, nd_hether_nut2z,
+	{
+	 _SRC(nutv6());
+	 _DST(tnv6());
+	 HopLimit=255;
+	},
+	{
+	 TargetAddress=tnv6();
+	}
+)
+
+//----------------------------------------------------------------------
+// unicast NS w/ SLLA
+//	NUT(link-local) ==> TN(link-local, but different LLA)
+//	target=TN(link-local)
+//	w/ SLLA
+//----------------------------------------------------------------------
+FEM_icmp6_ns(nd_unicast_ns_sll_to_z, nd_hether_nut2z,
+	{
+	 _SRC(nutv6());
+	 _DST(tnv6());
+	 HopLimit=255;
+	},
+	{
+	 TargetAddress=tnv6();
+	 option=_SLLOPT_nut;
+	}
+)
+
+//----------------------------------------------------------------------
+// multicast NS w/ SLLA
+//	NUT(link-local) ==> TN(solnode[link-local], but different LLA)
+//	target=TN(link-local)
+//	w/ SLLA
+//----------------------------------------------------------------------
+FEM_icmp6_ns(nd_multicast_ns_to_z, nd_hether_nut2zsolnode,
+	{
+	 _SRC(nutv6());
+	 _DST(_IPV6_SOLNODE_MCAST(tnv6()));
+	 HopLimit=255;
+	},
+	{
+	 TargetAddress=tnv6();
+	 option=_SLLOPT_nut;
+	}
+)
+
+//----------------------------------------------------------------------
+// unicast NA w/ SLLA
+//	TN(link-local, but different LLA) ==> NUT(link-local)
+//	target=TN(link-local)
+//	r=0, s=1, o=1 w/ SLLA
+//	r=1, s=1, o=1 w/ SLLA
+//----------------------------------------------------------------------
+FEM_icmp6_na(nd_unicast_na_rSO_tll_from_z, nd_hether_z2nut,
+	{
+	 _SRC(tnv6());
+	 _DST(nutv6());
+	 HopLimit=255;
+	},
+	{
+	 RFlag=0;
+	 SFlag=1;
+	 OFlag=1;
+	 TargetAddress=tnv6();
+	 option=nd_tllopt_z;
+	}
+)
+
+//----------------------------------------------------------------------
+FEM_icmp6_na(nd_unicast_na_RSO_tll_from_z, nd_hether_z2nut,
+	{
+	 _SRC(tnv6());
+	 _DST(nutv6());
+	 HopLimit=255;
+	},
+	{
+	 RFlag=1;
+	 SFlag=1;
+	 OFlag=1;
+	 TargetAddress=tnv6();
+	 option=nd_tllopt_z;
+	}
+)
+
+//----------------------------------------------------------------------
+// unicast NA w/o TLLA
+//	NUT(link-local) ==> TN(link-local, but different LLA)
+//	target=NUT(link-local)
+//	r=0, s=1, o=0
+//	r=1, s=1, o=0
+//----------------------------------------------------------------------
+FEM_icmp6_na(nd_unicast_na_rSo_to_z, nd_hether_nut2z,
+	{
+	 _SRC(nutv6());
+	 _DST(tnv6());
+	 HopLimit=255;
+	},
+	{
+	 RFlag=0;
+	 SFlag=1;
+	 OFlag=0;
+	 TargetAddress=nutv6();
+	}
+)
+
+//----------------------------------------------------------------------
+FEM_icmp6_na(nd_unicast_na_RSo_to_z, nd_hether_nut2z,
+	{
+	 _SRC(nutv6());
+	 _DST(tnv6());
+	 HopLimit=255;
+	},
+	{
+	 RFlag=1;
+	 SFlag=1;
+	 OFlag=0;
+	 TargetAddress=nutv6();
+	}
+)
+
+//----------------------------------------------------------------------
+// unicast NA w/ TLLA
+//	NUT(link-local) ==> TN(link-local, but different LLA)
+//	target=nut(link-local)
+//	r=0, s=1, o=1 w/ TLLA
+//	r=1, s=1, o=1 w/ TLLA
+//----------------------------------------------------------------------
+FEM_icmp6_na(nd_unicast_na_rSO_tll_to_z, nd_hether_nut2z,
+	{
+	 _SRC(nutv6());
+	 _DST(tnv6());
+	 HopLimit=255;
+	},
+	{
+	 RFlag=0;
+	 SFlag=1;
+	 OFlag=1;
+	 TargetAddress=nutv6();
+	 option=_TLLOPT_nut;
+	}
+)
+
+//----------------------------------------------------------------------
+FEM_icmp6_na(nd_unicast_na_RSO_tll_to_z, nd_hether_nut2z,
+	{
+	 _SRC(nutv6());
+	 _DST(tnv6());
+	 HopLimit=255;
+	},
+	{
+	 RFlag=1;
+	 SFlag=1;
+	 OFlag=1;
+	 TargetAddress=nutv6();
+	 option=_TLLOPT_nut;
+	}
+)
+
+//----------------------------------------------------------------------
+// echo-request
+//	X(off-link global, but mac:TN) ==> NUT(global)
+//----------------------------------------------------------------------
+FEM_icmp6_echo_request(nd_echo_request_from_offlink, _HETHER_tn2nut,
+	{
+	 _SRC(v6merge(_GLOBAL9_UCAST_PRFX, _GLOBAL9_UCAST_PRFXLEN,
+			v6ether(A9N_MAC_ADDR)));
+         _DST(nut2v6(_GLOBAL0_UCAST_PRFX, _GLOBAL0_UCAST_PRFXLEN));
+	},
+	{
+	 payload=nd_echo_data_offlink;
+	}
+)
+
+//----------------------------------------------------------------------
+// echo-reply
+//	NUT(global) ==> X(off-link global, but mac: TN)
+//----------------------------------------------------------------------
+FEM_icmp6_echo_reply(nd_echo_reply_to_offlink, _HETHER_nut2tn,
+	{
+         _SRC(nut2v6(_GLOBAL0_UCAST_PRFX, _GLOBAL0_UCAST_PRFXLEN));
+	 _DST(v6merge(_GLOBAL9_UCAST_PRFX, _GLOBAL9_UCAST_PRFXLEN,
+			v6ether(A9N_MAC_ADDR)));
+	},
+	{
+	 payload=nd_echo_data_offlink;
+	}
+)
+
+//----------------------------------------------------------------------
+Payload nd_echo_data_offlink {
+	data=repeat(0xcc,0x10);
+}
+
+//----------------------------------------------------------------------
+_HETHER_define(nd_hether_nut2xsolnode, nutether(),
+        _ETHER_SOLNODE_MCAST(v6ether(A9N_MAC_ADDR)))
+
+//----------------------------------------------------------------------
+// multicast NS
+//      NUT(global) ==> X(solicited-node[global])
+//      target=XX(global, B)
+//      w/ SLLA
+//----------------------------------------------------------------------
+FEM_icmp6_ns(nd_multicast_ns_nut2xsolnode, nd_hether_nut2xsolnode,
+        {
+         _SRC(nut2v6(_GLOBAL0_UCAST_PRFX, _GLOBAL0_UCAST_PRFXLEN));
+         _DST(_IPV6_SOLNODE_MCAST(v6ether(A9N_MAC_ADDR)));
+         HopLimit=255;
+        },
+        {
+         TargetAddress=v6merge(_GLOBAL9_UCAST_PRFX, _GLOBAL9_UCAST_PRFXLEN,
+                                v6ether(A9N_MAC_ADDR));
+         option=_SLLOPT_nut;
+        }
+)
+
+//----------------------------------------------------------------------
+
+#endif // _ND_DEF //

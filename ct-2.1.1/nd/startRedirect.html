@@ -1,0 +1,115 @@
+<HTML>
+<HEAD>
+<TITLE>startRedirect - TBD</TITLE>
+<LINK REV="made" HREF="mailto:hackers@FreeBSD.org">
+</HEAD>
+
+<BODY>
+
+<!-- INDEX BEGIN -->
+<!--
+
+<UL>
+
+	<LI><A HREF="#NAME">NAME</A>
+	<LI><A HREF="#TARGET">TARGET</A>
+	<LI><A HREF="#SYNOPSIS">SYNOPSIS</A>
+	<LI><A HREF="#INITIALIZATION">INITIALIZATION</A>
+	<LI><A HREF="#TEST_PROCEDURE">TEST PROCEDURE</A>
+	<LI><A HREF="#JUDGMENT">JUDGMENT</A>
+	<LI><A HREF="#TERMINATION">TERMINATION</A>
+	<LI><A HREF="#NOTE">NOTE</A>
+	<LI><A HREF="#SEE_ALSO">SEE ALSO</A>
+</UL>
+-->
+<!-- INDEX END -->
+
+<P>
+<H1><A NAME="NAME">NAME</A></H1>
+<P>
+startRedirect - TBD
+
+<P>
+<HR>
+<H1><A NAME="TARGET">TARGET</A></H1>
+<P>
+<PRE>  Router Only
+</PRE>
+<P>
+<HR>
+<H1><A NAME="SYNOPSIS">SYNOPSIS</A></H1>
+<P>
+<PRE>  startRedirect.seq [-tooloption ...] -p startRedirect.def
+</PRE>
+<P>
+<HR>
+<H1><A NAME="INITIALIZATION">INITIALIZATION</A></H1>
+The initialization configures NUT as the followings:
+<UL>
+<LI>Assign "3ffe:501:ffff:108:200:ff:fe00:a0a0" to the i/f specified as Link0.
+<LI>Set the route 3ffe:501:ffff:109::/64  to R1's link-local (fe80::200:ff:fe00:a1a1)
+</UL>
+<PRE>
+        [NUT]
+          | 3ffe:501:ffff:100::ifid
+          | <B>3ffe:501:ffff:108:200:ff:fe00:a0a0</B>
+          | <B>route 3ffe:501:ffff:109::/64 to R1's link-local</B>
+          |                                                  3ffe:501:ffff:100/64
+  ---+----+----+------------------------------------+------- 3ffe:501:ffff:108/64
+     |         |                                    |
+     |         | 3ffe:501:ffff:100:200:ff:fe00:a1a1 | 3ffe:501:ffff:100:200:ff:fe00:a2a2
+     |         | 3ffe:501:ffff:108:200:ff:fe00:a1a1 | 3ffe:501:ffff:108:200:ff:fe00:a2a2
+    [TN]      [R1]                                 [H2]
+               |
+               |
+         ------+------ 3ffe:501:ffff:109/64
+               |
+               | 3ffe:501:ffff:109:200:ff:fe00:a3a3
+              [H3]
+</PRE>
+<OL> Initialization sequences:
+<LI>Set a global address (3ffe:501:ffff:108:200:ff:fe00:a0a0) on the NUT's interface.
+<LI>Wait for DAD NS if any.
+<LI>Set a route (3ffe:501:ffff:109::/64) to R1 's link-local address (fe80::200:ff:fe00:a1a1)
+    on the NUT's routing table.
+<LI>Wait for NSs if any.
+<LI>Send a solicited NA w/ SLL.
+    It is ok if the NUT does not create related neighbor cache entry
+    because the following tests create the neighbor cache by themselves.
+    Is is meaningless in almost case.
+</OL>
+
+<P>
+<HR>
+<H1><A NAME="TEST_PROCEDURE">TEST PROCEDURE</A></H1>
+<P>
+<PRE>  N/A
+</PRE>
+<P>
+<HR>
+<H1><A NAME="JUDGMENT">JUDGMENT</A></H1>
+<P>
+<PRE>  N/A
+</PRE>
+<P>
+<HR>
+<H1><A NAME="TERMINATION">TERMINATION</A></H1>
+<P>
+<PRE>  N/A
+</PRE>
+<P>
+<HR>
+<H1><A NAME="NOTE">NOTE</A></H1>
+<P>
+<PRE>  TBD
+</PRE>
+<P>
+<HR>
+<H1><A NAME="SEE_ALSO">SEE ALSO</A></H1>
+<P>
+<PRE>  perldoc V6evalTool
+  perldoc V6evalRemote
+</PRE>
+</BODY>
+
+</HTML>

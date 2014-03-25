@@ -1,0 +1,117 @@
+//
+// Copyright (C) 1999, 2000, 2001, 2002, 2003 Yokogawa Electric Corporation,
+// IPA (Information-technology Promotion Agency, Japan).
+// All rights reserved.
+// 
+// Redistribution and use of this software in source and binary forms, with 
+// or without modification, are permitted provided that the following 
+// conditions and disclaimer are agreed and accepted by the user:
+// 
+// 1. Redistributions of source code must retain the above copyright 
+// notice, this list of conditions and the following disclaimer.
+// 
+// 2. Redistributions in binary form must reproduce the above copyright 
+// notice, this list of conditions and the following disclaimer in the 
+// documentation and/or other materials provided with the distribution.
+// 
+// 3. Neither the names of the copyrighters, the name of the project which 
+// is related to this software (hereinafter referred to as "project") nor 
+// the names of the contributors may be used to endorse or promote products 
+// derived from this software without specific prior written permission.
+// 
+// 4. No merchantable use may be permitted without prior written 
+// notification to the copyrighters. However, using this software for the 
+// purpose of testing or evaluating any products including merchantable 
+// products may be permitted without any notification to the copyrighters.
+// 
+// 
+// 
+// THIS SOFTWARE IS PROVIDED BY THE COPYRIGHTERS, THE PROJECT AND 
+// CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING 
+// BUT NOT LIMITED THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS 
+// FOR A PARTICULAR PURPOSE, ARE DISCLAIMED.  IN NO EVENT SHALL THE 
+// COPYRIGHTERS, THE PROJECT OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, 
+// INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES 
+// (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR 
+// SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) 
+// HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN 
+// CONTRACT,STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) 
+// ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF 
+// THE POSSIBILITY OF SUCH DAMAGE.
+//
+// ADDRSTATE_dep_pre.def
+//
+// $TAHI: ct/stateless-addrconf/ADDRSTATE_dep_pref.def,v 1.9 2001/10/05 06:39:19 masaxmasa Exp $
+
+
+#define DADV6ADDR_0 v6merge(_GLOBAL0_UCAST_PRFX, _GLOBAL0_UCAST_PRFXLEN, nutv6())
+#define DADV6ADDR_1 v6merge(_GLOBAL1_UCAST_PRFX, _GLOBAL1_UCAST_PRFXLEN, nutv6())
+#define DADV6ADDR_SOLNODE          _IPV6_SOLNODE_MCAST(nutv6())
+#define DADV6ADDR_SOLNODE_ETHERDST _ETHER_SOLNODE_MCAST(nutv6())
+
+#define DADV6ADDR oneof(DADV6ADDR_0, DADV6ADDR_1)
+#include "BASIC_init.def"
+
+_HETHER_define(hether_nut2tentsolnode,
+	       nutether(), DADV6ADDR_SOLNODE_ETHERDST)
+_HETHER_define(hether_tn2tentsolnode,
+	       tnether(),  DADV6ADDR_SOLNODE_ETHERDST)
+
+// dadns_from_NUT
+//  Description: 
+//    DAD NS coming from NUT on DAD
+
+FEM_ADDRCONF_dadns(dadns_from_NUT, hether_nut2tentsolnode,
+                   DestinationAddress=DADV6ADDR_SOLNODE;
+		   ,
+                   TargetAddress=oneof(DADV6ADDR_0,DADV6ADDR_1);
+                   )
+
+
+//---- unsolicited RA send to NUT
+//------------------------------------------------------
+// Prefix                  GLOBAL0   GLOBAL1
+// PreferredLifetime[sec]    30        60
+// ValidLifetime[sec]        90       120
+//------------------------------------------------------
+
+_PRFXOPT_define(prefixopt_test0, v6(_GLOBAL0_UCAST_PRFX), _GLOBAL0_UCAST_PRFXLEN,
+		ValidLifetime=90;
+		PreferredLifetime=30;
+		)
+
+_PRFXOPT_define(prefixopt_test1, v6(_GLOBAL1_UCAST_PRFX), _GLOBAL1_UCAST_PRFXLEN,
+		ValidLifetime=120;
+		PreferredLifetime=60;
+		)
+
+FEM_ADDRCONF_ra(usolra, _HETHER_src2allnodes,
+		_SRC(v6src());
+		,
+		option=_SLLOPT_src;
+		option=prefixopt_test0;
+		option=prefixopt_test1;
+		)
+
+
+//---- echo request from NUT
+// in the case of KAME
+//    sleep 40
+//    ping6 -c 1 -i 1 -h 64 -s 2 -p 00 -I <ifname> 3ffe:501:ffff:102::1
+// makes the following packet
+
+FEM_icmp6_echo_request( echo_request, _HETHER_nut2tn,
+             {  _SRC(nut2v6(_GLOBAL1_UCAST_PRFX, _GLOBAL1_UCAST_PRFXLEN));
+                _DST(v6merge(_GLOBAL2_UCAST_PRFX, _GLOBAL2_UCAST_PRFXLEN,
+                             v6("::1"))); },
+             {  Identifier=any;
+		SequenceNumber=any;
+		payload=any; }
+)
+
+Payload apl {
+	data=0x00;
+	data=0x00;
+}
+
+//end

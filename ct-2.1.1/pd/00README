@@ -1,0 +1,76 @@
+				README of
+		IPv6 Conformance Test for Prefix Delegation
+
+			      TAHI Project
+
+		     $Date: 2003/04/23 07:44:27 $
+
+* First of all
+
+	This is a set of conformance tests for IPv6 prefix delegation
+	that is based upon draft-ietf-dhc-dhcpv6-opt-prefix-delegation-02.txt
+	and draft-ietf-dhc-dhcpv6-28.txt.
+
+* Test coverage
+
+	The test coverage is the followings:
+
+	----------------------------------+--------------------------------
+	                 	 	  | the NUT type is router		
+	                                  +--------------------------------
+	Category                       	  |  DHCP server  |  DHCP client
+	----------------------------------+--------------------------------
+	DR Solicitation                         none          done
+	RR initiated prefix delegation	 	none          done
+	Prefix Delegation reconfiguration       none          half done
+	Relay agent behaviour                   none          none
+	Security Considerations                 none          half done
+	----------------------------------+---------------+----------------
+
+        DR .. Delegating Router
+        RR .. Requesting Router
+
+* Invoking commands on NUT via serial line.
+
+	The following tests need to invoke commands on NUT with serial line.
+
+	----------------------------------+--------------------------------
+	Test Name			  Invoked Commands on NUT
+	----------------------------------+--------------------------------
+	---DR Solicitation---		  | ---
+	RRRSolicit			  | Set up prefix delegation
+	RRRSolicitRapid                   | Set up prefix delegation
+                                          | with Rapid Commit option
+	RRRAdvertisedPreference           | Set up prefix delegation
+	RRRAdvertisedStatusCode           | Set up prefix delegation
+	-RR initiated prefix delegation-  | ---
+	RRRenew                           | Set up prefix delegation
+	RRRelease                         | Set up prefix delegation
+	                                  | and stop dhcp process
+	RRRepliedStatusCode               | Set up prefix delegation
+	RRRepliedServerUnicast            | Set up prefix delegation
+	-Prefix Delegation reconfiguration| ---
+	RRReconfigure                     | Set up prefix delegation
+	-Relay agent behaviour            | ---
+	-Security Considerations--        | ---
+	RRDelayedAuthProto                | Set up prefix delegation 
+	                                  | with Delayed authenticaion protocol
+	RRRecfgKeyAuthProto               | Set up prefix delegation 
+	                                  | with Reconfigure Key authentication
+	                                  | protocol
+	----------------------------------+--------------------------------
+
+* How to run the tests
+
+	# vi /usr/local/v6eval/etc/tn.def
+	# vi /usr/local/v6eval/etc/nut.def
+	% cp -Rp /usr/local/v6eval/ct $SOMEWHERE
+	% cd $SOMEWHERE
+	% make test
+	% netscape index.html
+
+	If you know more about it,
+	please see /usr/local/v6eval/doc/INSTALL.ct.
+
+
+							[end of README]

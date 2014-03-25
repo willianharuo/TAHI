@@ -1,0 +1,14 @@
+#
+# $Name: REL_2_1_1 $
+#
+# $TAHI: ct/spec/INDEX_config,v 1.2 2001/10/05 06:39:17 masaxmasa Exp $
+#
+#<seq>:<def>:[<opt>]:[<log>]:<desc>
+#
+&print:Configuration Check
+
+########################################################################
+
+./PingToHost.seq:./PingToHost.def:::Configuration Check for Host
+./PingOverRouter.seq:./PingOverRouter.def:::Configuration Check for Router:2
+

@@ -1,0 +1,34 @@
+#
+# $Name: REL_2_1_1 $
+# INDEX file for Ume (Router)
+#
+#<seq>:<def>:[<opt>]:[<log>]:<desc>
+#
+&print:<font size=+1><B>Neighbor Discovery</B></font>
+&print:<B>- Sending NS</B>
+./sendNsBasicLocal.seq:./sendNsBasicLocal.def:::Verify that the NUT send NSs (link-local ==> link-local)
+./sendNsBasicGlobGlob.seq:./sendNsBasicGlobGlob.def:::Verify that the NUT send NSs (global ==> global)
+./sendNsBasicGlobLink.seq:./sendNsBasicGlobLink.def:::Verify that the NUT send NSs (link-local ==> global)
+./sendNsBasicLinkGlob.seq:./sendNsBasicLinkGlob.def:::Verify that the NUT send NSs (global ==> link-local)
+./sendMcastNS.seq:./sendMcastNS.def:::Sending a Multicast NS w/ Default Config.
+./sendUcastNS.seq:./sendUcastNS.def:::Sending an Unicast NS w/ Default Config.
+./adrsolvQueuOne.seq:./adrsolvQueuOne.def:::Verify an Address Resolution Queue (one entry for an address ?)
+./adrsolvQueuTwo.seq:./adrsolvQueuTwo.def:::Verify an Address Resolution Queue (more then one entry for an address ?)
+./adrsolvQueuMulti.seq:./adrsolvQueuMulti.def:::Verify an Address Resolution Queue (one entry per an address ?)
+#
+&print:<B>- Receiving NS</B>
+./recvNsBasic.seq:./recvNsBasic.def:::Receiving valid NSs
+./recvNsInvalid.seq:./recvNsInvalid.def:::Receiving invalid NSs
+./ncStateByNs4NoNce.seq:./ncStateByNs4NoNce.def:::NS vs. NONCE<br>Receiving NS while correspondent Neighbor Cache Entry is NONCE
+./ncStateByNs4Incomplete.seq:./ncStateByNs4Incomplete.def:::NS; NS vs. INCOMPLETE<br>Receiving NS while correspondent Neighbor Cache Entry is INCOMPLETE
+./ncStateByNs4Reachable.seq:./ncStateByNs4Reachable.def:::NS; NS vs. REACHABLE<br>Receiving NS while correspondent Neighbor Cache Entry is REACHABLE
+./ncStateByNs4Stale.seq:./ncStateByNs4Stale.def:::NS; NS vs. STALE<br>Receiving NS while correspondent Neighbor Cache Entry is STALE
+./ncStateByNs4Probe.seq:./ncStateByNs4Probe.def:::NS; NS vs. PROBE<br>Receiving NS while correspondent Neighbor Cache Entry is PROBE
+#
+&print:<B>- Receiving NA</B>
+./ncStateByNa4Nonce.seq:./ncStateByNa4Nonce.def:::NA vs. NONCE<br>Receiving NA while correspondent Neighbor Cache Entry is NONCE
+./ncStateByNa4Incomplete.seq:./ncStateByNa4Incomplete.def:::NA vs. INCOMPLETE<br>Receiving NA while correspondent Neighbor Cache Entry is INCOMPLETE
+./ncStateByNa4Reachable.seq:./ncStateByNa4Reachable.def:::NA vs. REACHABLE<br>Receiving NA while correspondent Neighbor Cache Entry is REACHABLE
+./ncStateByNa4Stale.seq:./ncStateByNa4Stale.def:::NA vs. STALE<br>Receiving NA while correspondent Neighbor Cache Entry is STALE
+./ncStateByNa4Probe.seq:./ncStateByNa4Probe.def:::NA vs. PROBE<br>Receiving NA while correspondent Neighbor Cache Entry is PROBE
+# EOF

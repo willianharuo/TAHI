@@ -1,0 +1,145 @@
+<HTML>
+<HEAD>
+<TITLE>ncStateByRs4Incomplete - Verifying State Machine: Rs vs. INCOMPLETE</TITLE>
+<LINK REV="made" HREF="mailto:hackers@FreeBSD.org">
+</HEAD>
+
+<BODY>
+
+<!-- INDEX BEGIN -->
+<!--
+
+<UL>
+
+	<LI><A HREF="#NAME">NAME</A>
+	<LI><A HREF="#TARGET">TARGET</A>
+	<LI><A HREF="#SYNOPSIS">SYNOPSIS</A>
+	<LI><A HREF="#INITIALIZATION">INITIALIZATION</A>
+	<LI><A HREF="#TEST_PROCEDURE">TEST PROCEDURE</A>
+	<LI><A HREF="#JUDGMENT">JUDGMENT</A>
+	<LI><A HREF="#TERMINATION">TERMINATION</A>
+	<LI><A HREF="#NOTE">NOTE</A>
+	<LI><A HREF="#REFERENCE">REFERENCE</A>
+	<LI><A HREF="#SEE_ALSO">SEE ALSO</A>
+</UL>
+-->
+<!-- INDEX END -->
+
+<P>
+<H1><A NAME="NAME">NAME</A></H1>
+<P>
+ncStateByRs4Incomplete - Verifying State Machine: Rs vs. INCOMPLETE
+
+<P>
+<HR>
+<H1><A NAME="TARGET">TARGET</A></H1>
+<P>
+<PRE>  Router Only
+</PRE>
+<P>
+<HR>
+<H1><A NAME="SYNOPSIS">SYNOPSIS</A></H1>
+<P>
+<PRE>  ncStateByRs4Incomplete.seq [-tooloption ...] -p ncStateByRs4Incomplete.def
+</PRE>
+<P>
+<HR>
+<H1><A NAME="INITIALIZATION">INITIALIZATION</A></H1>
+<P>
+Set the state of neighbor cache entry to INCOMPLETE.
+
+<P>
+<PRE>  TN               NUT
+  ----------------------
+</PRE>
+<P>
+<PRE>  State: NONCE (for TN)
+</PRE>
+<P>
+<PRE>  ==== echo-request ===&gt;
+        src=TN's link-local
+        dst=NUT's link-local
+</PRE>
+<P>
+<PRE>  State: INCOMPLETE (for TN)
+</PRE>
+<P>
+<HR>
+<H1><A NAME="TEST_PROCEDURE">TEST PROCEDURE</A></H1>
+<P>
+<STRONG>ncStateByRs4Incomplete</STRONG> verifies that state transition for a NUT in INCOMPLETE state when receiving
+a RS.
+
+<PRE>
+  TN               NUT
+  ----------------------
+<BR>
+  State: INCOMPLETE (for TN)
+<BR>
+  ==== <A HREF="#JDG1">RS</A> ===>
+<BR>
+  <A HREF="#JDG1">Judgment</A>: <A HREF="nd.html">Examining NUT's neighbor cache state</A>
+</PRE>
+
+<P>
+<HR>
+<H1><A NAME="JUDGMENT">JUDGMENT</A></H1>
+<P>
+<PRE>  ===============================+==========+=========+=================
+  NS                             |New State |LLA       Comments
+  ---------+-----------+---------+          |
+  Source IP|Destination|SLLA     |          |
+           |IP         |         |          |
+  =========+===========+=========+==========+=========+=================
+  TN's      all-router  none      NONCE or   unchanged not mentioned
+  link                            INCOMPLETE           by RFC2461
+  ---------+-----------+---------+----------+---------+-----------------
+  TN's      all-router  exist     STALE      updated
+  link
+  =========+===========+=========+==========+=========+=================
+</PRE>
+<P>
+<HR>
+<H1><A NAME="TERMINATION">TERMINATION</A></H1>
+<P>
+<PRE>  N/A
+</PRE>
+<P>
+<HR>
+<H1><A NAME="NOTE">NOTE</A></H1>
+<P>
+<PRE>  TBD
+</PRE>
+<P>
+<HR>
+<H1><A NAME="REFERENCE">REFERENCE</A></H1>
+<PRE>
+6.2.6.  Processing Router Solicitations
+<BR>
+   Router Solicitations in which the Source Address is the unspecified
+   address MUST NOT update the router's Neighbor Cache; solicitations
+   with a proper source address update the Neighbor Cache as follows. <B>If
+   the router already has a Neighbor Cache entry for the solicitation's
+   sender, the solicitation contains a Source Link-Layer Address option,
+   and the received link-layer address differs from that already in the
+   cache, the link-layer address SHOULD be updated in the appropriate
+   Neighbor Cache entry, and its reachability state MUST also be set to
+   STALE.</B>  If there is no existing Neighbor Cache entry for the
+   solicitation's sender, the router creates one, installs the link-
+   layer address and sets its reachability state to STALE as specified
+   in Section 7.3.3.  Whether or not a Source Link-Layer Address option
+   is provided, if a Neighbor Cache entry for the solicitation's sender
+   exists (or is created) the entry's IsRouter flag MUST be set to
+   FALSE.
+</PRE>
+
+<P>
+<HR>
+<H1><A NAME="SEE_ALSO">SEE ALSO</A></H1>
+<P>
+<PRE>  perldoc V6evalTool
+  perldoc V6evalRemote
+</PRE>
+</BODY>
+
+</HTML>

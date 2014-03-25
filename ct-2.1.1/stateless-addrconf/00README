@@ -1,0 +1,80 @@
+
+				README of
+       IPv6 Conformance Test for Stateless Address Autoconfiguration
+
+			      TAHI Project
+
+		     $Date: 2003/06/10 13:16:55 $
+
+* First of all
+
+	This is a set of conformance tests for IPv6 Stateless Address
+	Autoconfiguration that is based upon RFC2462 and RFC2461.
+
+* Test coverage
+
+	The test coverage is the followings:
+
+					
+                                     | the NUT type            |
+  Category                           | host       | router     | comments
+ ------------------------------------+------------+------------+----------------
+ 1.DAD                                                           (*1)
+   Stateless Address Configuration    almost done  almost done
+   Manual Address Configuration       almost done  almost done   (*2)
+ 2.Creation of Global and Site-local
+     address
+   Router Advertisement Processing    almost done   N/A          (*3)
+   Address Lifetime Expiry            almost done   N/A         
+ 3.Surprise                           half done     half done
+ ------------------------------------+------------+------------+----------------
+   (*1) except DupAddrDetectTransmits=0
+   (*2) new test set does not supoprt manual address configuration yet.
+	to run this test, please use legacy test.
+	for more detail of legacy test, see Lower Compatibility section.
+   (*3) except 
+         stateful address configuration (M,O flag)
+         ValidLifetime over 2H
+         PrefixOption with AH
+
+* How to run the tests
+
+	# vi /usr/local/v6eval/etc/tn.def
+	# vi /usr/local/v6eval/etc/nut.def
+	% cp -Rp /usr/local/v6eval/ct $SOMEWHERE
+	% cd $SOMEWHERE
+	% make test
+	% netscape index.html
+
+	If you know more about it,
+	please see /usr/local/v6eval/doc/INSTALL.ct.
+
+
+
+
+* Lower Compatibility
+	In ct-2.1.1 stateless address autoconfiguration tests are swapped by
+	newer test.
+	If you want to run newer tests, please type following command line.
+		% make test
+		or
+		% make tahi
+
+	If you want to run older tests, please type following command line.
+		% make legacy-test
+		or
+		% make legacy-tahi
+
+	From ct-2.1.1 the older tests(for legacy-test or legacy-tahi)
+	are out of support.
+	So we recommend using newer tests.
+	Please use following command.
+		% make test
+		or
+		% make tahi
+
+
+
+							[end of README]
+
+

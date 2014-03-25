@@ -1,0 +1,384 @@
+		Installing IPv6 Conformance Test Tool
+
+			     TAHI Project
+
+		     $Date: 2003/05/29 12:59:44 $
+
+
+
+Terminology
+===========
+
+Tester Node (TN)
+	A tester node for the conformance tests.
+
+Node Under Test (NUT)
+	A testee node for the conformance tests.
+
+Network Under Test
+	The network where the conformance tests are executed.
+
+Tester Interface
+	The network interface of TN
+	hooked up to the Network Under Test.
+
+Interface Under Test
+	The network interface of NUT
+	hooked up to the Network Under Test.
+
+
+
+Prerequisites
+=============
+
+Prerequisites for TN:
+	- The package supports FreeBSD 4.6 or higher.
+	- The package can also coexist with FreeBSD 4.X version of KAME.
+
+
+
+Installing the package onto TN (the case of FreeBSD 4.X-RELEASE)
+================================================================
+
+0. Install FreeBSD 4.X-RELEASE
+
+1. Extracting the package
+
+	% cd $SOMEWHERE
+	% tar zxvf v6eval-X.X.tar.gz
+
+2. Installing perl-related modules
+
+	The package requires the below-listed perl5 modules.
+
+		- Expect
+		- IO-Stty
+		- IO-Tty
+
+	you can install them from the package's ports directory.
+
+		# (cd /usr/ports/lang/p5-Expect; make install)
+
+3. Compiling & installing the tool
+
+	Install the Tool in /usr/local/v6eval directory.
+
+		% cd $SOMEWHERE/v6eval-X.X
+		% make
+		# make install
+
+4. Make bpf special device.
+
+		# cd /dev
+		# ./MAKEDEV bpf1 bpf2 bpf3 bpf4 bpf5 bpf6 bpf7
+		# chmod 660 bpf*
+
+	The user who executes conformance test need to belong in wheel group.
+
+5. Configure serial line
+
+		# touch /var/log/aculog
+		# chown uucp:dialer /var/log/aculog
+		# chmod 660 /var/log/aculog
+
+	The user who executes conformance test need to belong in dialer group.
+
+5. Interface configuration
+
+	At least, one interface used in testing, must be 'up' status.
+
+		/etc/rc.conf
+		----------------------------------------------------------------
+		ifconfig_<Link0_device>="up"
+		----------------------------------------------------------------
+
+
+
+Installing the package onto TN (the case of FreeBSD 5.X-RELEASE)
+================================================================
+
+0. Install FreeBSD 5.X-RELEASE
+
+1. Extracting the package
+
+	% cd $SOMEWHERE
+	% tar zxvf v6eval-X.X.tar.gz
+
+2. Installing perl-related modules
+
+	The package requires the below-listed perl5 modules.
+
+		- Expect
+		- IO-Stty
+		- IO-Tty
+
+	you can install them from the package's ports directory.
+
+		# (cd /usr/ports/lang/p5-Expect; make install)
+
+3. Compiling & installing the tool
+
+	Install the Tool in /usr/local/v6eval directory.
+
+		% cd $SOMEWHERE/v6eval-X.X
+		% make
+		# make install
+
+4. Configure bpf special device.
+
+	Add following script to the tail of /etc/rc.devfs
+
+		devfs ruleset 1
+
+		for bpf in bpf0 bpf1 bpf2 bpf3 bpf4 bpf5 bpf6 bpf7
+		do
+			devfs rule add path $bpf mode 0660
+		done
+
+		devfs rule show
+		devfs rule applyset
+
+	The user who executes conformance test need to belong in wheel group.
+
+5. Configure serial line
+
+		# touch /var/log/aculog
+		# chown uucp:dialer /var/log/aculog
+		# chmod 660 /var/log/aculog
+
+	The user who executes conformance test need to belong in dialer group.
+
+5. Interface configuration
+
+	At least, one interface used in testing, must be up status.
+
+		/etc/rc.conf
+		----------------------------------------------------------------
+		ifconfig_<Link0_device>="up"
+		----------------------------------------------------------------
+
+
+
+Configuration of TN
+===================
+
+1. Configuration of the network
+
+Hook up the Tester Interface of TN to the Network Under Test.
+Tester Interface of TN can be configured for IPv4 and for IPv6 as well.
+Hook up the Interface Under Test of NUT to the Network Under Test.
+Interface Under Test of NUT must be configured for IPv6, while it can be
+configured for IPv6 too.
+
+Make sure that any other nodes are not hooked up to the network
+because their packets would disturb the conformance tests.
+
+Example:
+
+	TN			NUT
+	 | Tester I/f: de0	 | I/f Under Test: de0
+	 |			 |
+        -+-----------------------+- Link0
+	     Network Under Test
+
+This document assumes that NUT is a host implementation.
+
+
+
+2. Software Configuration
+ 
+You must write two configuration files tn.def and nut.def in
+/usr/local/v6eval/etc/. There are sample files tn.def.sample and
+nut.def.sample in the directory.
+
+These files have the following format:
+	- Empty lines and lines starting with '#' are comments.
+	- Otherwise, a line is in the format "keyword arguments".
+
+(i) Format of tn.def
+
+tn.def defines information about TN.
+The file has the following entries:
+
+	LinkX		Specifies interface name and MAC address
+			of a Tester Interface:
+
+			Link0   de0     00:00:00:00:01:00
+			~~~~~   ~~~     ~~~~~~~~~~~~~~~~~
+			(1)    (2)      (3)
+
+			(1): a link name.
+			     Note that the current version of the Tool
+			     supports only "Link0" for (1), and does not accept
+			     any other entry.
+
+			(2): the EXACT name of a Tester Interface.
+
+			(3): a BOGUS ether source address of
+			     a Tester Interface.
+			     Note that (3) "00:00:00:00:01:00" must be
+			     different from the interface's MAC address.
+
+	RemoteCuPath	Specifies cu command path.
+
+			Default: /usr/bin/cu
+
+	RemoteDevice	Specifies the device to be used for remote control.
+
+			Default: cuaa0
+
+	RemoteDebug	Specifies debug level for remote control.
+
+			Default: 0
+
+	RemoteLog	Specifies log level for remote control.
+
+			Default: 0
+
+	RemoteSpeed	Specifies interval that characters are sent at.
+
+			Default: 0 (sec.)
+
+	RemoteLogout	Enable/disable logout
+			0: logout is omitted
+			1: do logout every remote command invocation
+
+			Default: 0
+
+	RemoteMethod	Enable/disable remote command invocation.
+			serial: enable it.
+			none:   disable it.
+
+			Default: serial
+
+
+(ii) Format of nut.def
+
+nut.def file defines information about NUT.
+The file has the following entries:
+
+	System		Specifies system type of NUT. The Tool
+			switches remote control methods by the entry 
+			but currently supports only "kame-freebsd" type.
+
+			Default: kame-freebsd
+
+	TargetName	Specifies system information of NUT such as 
+			version and CPU type, etc. This entry will be
+			displayed in test result file.
+
+			Default: null
+
+	HostName	Specifies the name of NUT.
+
+			Default: null
+
+	Type		Specifies NUT type.
+			Either "host" or "router" is acceptable.
+
+			It can not be omitted.
+
+	User		Specifies the account name of NUT's super user.
+
+			Default: root
+
+	Password	Specifies the password of NUT's super user.
+
+			Default: v6eval
+
+	LinkX		Specifies interface name and MAC address
+			of a Interface Under Test:
+
+			Link0   de0     00:00:00:00:01:00
+			~~~~~   ~~~     ~~~~~~~~~~~~~~~~~
+			(1)    (2)      (3)
+
+			(1): a link name.
+			     Note that the current version of the Tool
+			     supports only "Link0" for (1), and does not
+			     accept any other entry.
+
+			(2): the EXACT name of a Interface Under Test.
+
+			(3): The EXACT ether source address of
+			     a Interface Under Test.
+			     Note that (3) 00:00:00:00:01:00 must be same with
+			     the interface's MAC address.
+
+
+(iii) Customizing tn.def
+
+Copy sample tn.def to tn.def. Then, adjust Link0 entry
+in the file.
+
+	# cd /usr/local/v6eval/etc
+	# cp tn.def.sample tn.def
+	# vi tn.def
+
+For example, if TN has NE2000 compatible NIC for Tester Interface,
+you must set "ed0" instead of "de0".
+
+	sample: /usr/local/v6eval/etc/tn.def
+	================================================================
+	...
+	Link0 de0 00:00:00:00:01:00
+	...   ~~~ change i/f name to the exact one 
+	================================================================
+
+
+(iv) Customizing nut.def
+
+Copy sample nut.def to nut.def. Then, adjust Link0 entry in the file.
+
+	# cd /usr/local/v6eval/etc
+	# cp nut.def.sample nut.def
+	# vi nut.def
+
+For example, if TN has NE2000 compatible NIC for Interface
+Under Test, you must set "ed0" instead of "de0". Its MAC address
+must be set to the exact one too.
+
+	sample: /usr/local/v6eval/etc/nut.def
+	================================================================
+	...
+	Link0 de0 00:00:92:a7:6d:f5
+	...   ~~~ ~~~~~~~~~~~~~~~~~ Change i/f name and address
+	                            to the exact ones.
+	================================================================
+
+
+
+Running samples
+===============
+
+The package does not contain IPv6 Conformance Test, but only some of
+its samples. After running samples, you can see the report in the directory
+by Web Browser. Since they are samples, you do not have to worry even
+when you see the word "FAIL" in the report.
+
+	$ cd $SOMEWHERE/v6eval-X.X/sample
+	$ /usr/local/v6eval/bin/autorun INDEX
+	$ netscape index.html
+
+
+
+Have a problem?
+===============
+
+Can you execute following command?
+	$ tcpdump -i <Link0_device>
+
+Can you execute following command?
+	$ cu -l /dev/cuaa0
+
+	Can you see login prompt of NUT?
+
+
+
+Running Conformance Test
+========================
+
+To run IPv6 Conformance Test, please refer to INSTALL.ct.
+
+
+							[end of INSTALL]

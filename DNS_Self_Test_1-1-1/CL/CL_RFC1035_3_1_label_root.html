@@ -1,0 +1,296 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<title>CL_RFC1035_3_1_label_root - Label of root</title>
+<link rev="made" href="mailto:akisada@ifrit.64translator.com" />
+</head>
+
+<body style="background-color: white">
+
+<p><a name="__index__"></a></p>
+<!-- INDEX BEGIN -->
+<!--
+
+<ul>
+
+	<li><a href="#name">NAME</a></li>
+	<li><a href="#verification_points">VERIFICATION POINTS</a></li>
+	<li><a href="#target">TARGET</a></li>
+	<li><a href="#synopsis">SYNOPSIS</a></li>
+	<li><a href="#initialization">INITIALIZATION</a></li>
+	<li><a href="#test_procedure">TEST PROCEDURE</a></li>
+	<li><a href="#judgment">JUDGMENT</a></li>
+	<li><a href="#termination">TERMINATION</a></li>
+	<li><a href="#reference">REFERENCE</a></li>
+</ul>
+-->
+<!-- INDEX END -->
+
+<p>
+</p>
+<h1><a name="name">NAME</a></h1>
+<pre>
+        CL_RFC1035_3_1_label_root - Label of root</pre>
+<p>
+</p>
+<hr />
+<h1><a name="verification_points">VERIFICATION POINTS</a></h1>
+<pre>
+        Verify that a NUT transmits correct standard query for label of root</pre>
+<UL>
+	<DD><li>Since every domain name ends with the null label of
+	<DD>the root, a domain name is terminated by a length byte of zero.
+	</li>
+	</ul><p>
+</p>
+<hr />
+<h1><a name="target">TARGET</a></h1>
+<pre>
+        Client</pre>
+<p>
+</p>
+<hr />
+<h1><a name="synopsis">SYNOPSIS</a></h1>
+<PRE>
+	<A HREF="./CL_RFC1035_3_1_label_root.seq">CL_RFC1035_3_1_label_root.seq</A> [-tooloption ...]: KOI tool option
+	See also <A HREF="../DNSConfig.pm">DNSConfig.pm</A>
+</PRE><p>
+</p>
+<hr />
+<h1><a name="initialization">INITIALIZATION</a></h1>
+<ul>
+	<li><STRONG>Network Topology</STRONG></li> 
+	<PRE>
+        AP Server1(TN):A.example.com     DNS Server1(TN)
+          |3ffe:501:ffff:101::10           |3ffe:501:ffff:101::20
+          |192.168.1.10                    |192.168.1.20
+          |                                |
+Net-y   --+--------+-----------------------+-------- 3ffe:501:ffff:101::/64 
+                   |                                 192.168.1/24
+                   |
+                   |
+                 ROUTER1(TN)
+                   |3ffe:501:ffff:100::1
+                   |192.168.0.1
+                   |
+Net-z   --+--------+-------------------------------- 3ffe:501:ffff:100::/64 
+          |                                          192.168.0/24
+        DNS Client1(NUT)
+           3ffe:501:ffff:100:XXXX
+           192.168.0.10
+	<BR>
+	XXXX: EUI64 address
+	</PRE>
+	<p></p>
+	<li><STRONG>Setup</STRONG></li>
+	<PRE>
+	Set the DNS Server1(TN)'s address on NUT as above mentioned Network Topology.
+	</PRE>
+	<p></p>
+	<LI><STRONG>Pre-Sequence</STRONG></LI><p><PRE>
+	In order to send the query for A type of AP Server1(TN):A.example.com to the DNS Server1(TN), 
+	NUT is configured.
+	</PRE>
+	</UL><p>
+</p>
+<hr />
+<h1><a name="test_procedure">TEST PROCEDURE</a></h1>
+<pre>
+        This test sequence is following.</pre>
+<pre>
+    DNS Client1 (NUT)                        DNS Server1 (TN)
+        |                                              |
+        |---------------------------------------------&gt;|
+        |           1. Send standard query             |
+        |                                              |
+        v                                              v</pre>
+<pre>
+        1. NUT send standard query to TN.
+                  Judgment (Check *1)</pre>
+<UL>
+	<LI>Packet Description</LI><BR>
+	<BR>
+	<DD>1st Packet
+	<P></P>
+	<DD><TABLE border="1">
+	  <tbody>
+	    <tr>
+	      <td colspan="3">
+	      <center>1. Standard query from DNS Client1 (NUT) to DNS Server1 (TN) </center>
+	      </td>
+	    </tr>
+	    <tr>
+	      <td rowspan="2">IP Header</td>
+	      <td>Source Address</td>
+	      <td>NUT_NETZ</td>
+	    </tr>
+	    <tr>
+	      <td>Destination Address</td>
+	      <td>SV_NETY</td>
+	    </tr>
+	    <tr>
+	      <td colspan="1" rowspan="2">UDP Header<br>
+	      </td>
+	      <td>Src Port<br>
+	      </td>
+	      <td><i>any</i><br>
+	      </td>
+	    </tr>
+	    <tr>
+	      <td>Dst Port<br>
+	      </td>
+	      <td>53<br>
+ 	     </td>
+	    </tr>
+ 	   <tr>
+ 	     <td colspan="1" rowspan="13">DNS Header<br>
+ 	     </td>
+ 	     <td>ID</td>
+	      <td><i>any</i></td>
+	    </tr>
+	    <tr>
+	      <td>QR<br>
+	      </td>
+	      <td>0<br>
+	      </td>
+	    </tr>
+	    <tr>
+	      <td>OPCODE<br>
+	      </td>
+	      <td>0<br>
+	      </td>
+	    </tr>
+	    <tr>
+	      <td>AA<br>
+	      </td>
+	      <td><i>any</i><br>
+	      </td>
+	    </tr>
+	    <tr>
+	      <td>TC</td>
+	      <td>0</td>
+	    </tr>
+	    <tr>
+	      <td>RD</td>
+	      <td><i>any</i></td>
+	    </tr>
+	    <tr>
+	      <td>RA<br>
+	      </td>
+	      <td><i>any</i><br>
+	      </td>
+	    </tr>
+	    <tr>
+	      <td>Z<br>
+	      </td>
+	      <td>any<br>
+	      </td>
+	    </tr>
+	    <tr>
+	      <td>RCODE<br>
+	      </td>
+ 	     <td><i>any</i><br>
+	      </td>
+	    </tr>
+	    <tr>
+	      <td>QDCOUNT<br>
+	      </td>
+	      <td>1<br>
+	      </td>
+ 	   </tr>
+	    <tr>
+	      <td>ANCOUNT<br>
+	      </td>
+	      <td>0<br>
+	      </td>
+	    </tr>
+	    <tr>
+	      <td>NSCOUNT<br>
+	      </td>
+	      <td>0<br>
+	      </td>
+	    </tr>
+	    <tr>
+	      <td>ARCOUNT<br>
+	      </td>
+	      <td>any<br>
+	      </td>
+	    </tr>
+	    <tr>
+	      <td colspan="1" rowspan="3">DNS Question section<br>
+	      </td>
+	      <td>QNAME</td>
+	      <td>A.example.com<br>
+	      </td>
+	    </tr>
+	    <tr>
+	      <td>QTYPE<br>
+	      </td>
+	      <td>A (0x0001)<br>
+	      </td>
+	    </tr>
+	    <tr>
+	      <td>QCLASS<br>
+	      </td>
+	      <td><i>any</i><br>
+	      </td>
+	    </tr>
+	  </tbody>
+	</table>
+	<BR>
+	<DD>Exp.
+	<BR>
+	<DD><TABLE BORDER="1">
+		<TBODY>
+		<TR>
+			<TD>NUT_NETZ</TD>
+			<TD>DNS Client1's (NUT) Net-z address</TD>
+		</TR>
+		<TR>
+			<TD>SV_NETY</TD>
+			<TD>DNS Server1's (TN) Net-y address</TD>
+		</TR>
+		</TBODY>
+	</TABLE>
+	</UL><p>
+</p>
+<hr />
+<h1><a name="judgment">JUDGMENT</a></h1>
+<pre>
+        1. Standard query must be based on above Verification Points.
+          *In DNS Question section, QNAME field must include following data.</pre>
+<pre>
+        +--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+
+        | 0  0  0  0  0  0  0  1|           a           |
+        +--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+
+        | 0  0  0  0  0  1  1  1|           e           |
+        +--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+
+        |           x           |           a           |
+        +--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+
+        |           m           |           p           |
+        +--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+
+        |           l           |           e           |
+        +--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+
+        | 0  0  0  0  0  0  1  1|           c           |
+        +--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+
+        |           o           |           m           |
+        +--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+
+        | 0  0  0  0  0  0  0  0|                       
+        +--+--+--+--+--+--+--+--+</pre>
+<p>
+</p>
+<hr />
+<h1><a name="termination">TERMINATION</a></h1>
+<pre>
+        If NUT has cache function, clear the cache.</pre>
+<p>
+</p>
+<hr />
+<h1><a name="reference">REFERENCE</a></h1>
+<PRE>
+	RFC1035 DOMAIN NAMES - IMPLEMENTATION AND SPECIFICATION
+	3.1. Name space definitions
+</PRE>
+</body>
+
+</html>

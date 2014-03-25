@@ -1,0 +1,459 @@
+#!/usr/bin/perl
+#
+# Copyright (C) 2006 Yokogawa Electric Corporation.
+# All rights reserved.
+# 
+# Redistribution and use of this software in source and binary
+# forms, with or without modification, are permitted provided that
+# the following conditions and disclaimer are agreed and accepted
+# by the user:
+# 
+# 1. Redistributions of source code must retain the above copyright
+#    notice, this list of conditions and the following disclaimer.
+# 
+# 2. Redistributions in binary form must reproduce the above copyright
+#    notice, this list of conditions and the following disclaimer in
+#    the documentation and/or other materials provided with
+#    the distribution.
+# 
+# 3. Neither the names of the copyrighters, the name of the project
+#    which is related to this software (hereinafter referred to as
+#    "project") nor the names of the contributors may be used to
+#    endorse or promote products derived from this software without
+#    specific prior written permission.
+# 
+# 4. No merchantable use may be permitted without prior written
+#    notification to the copyrighters.
+# 
+# 5. The copyrighters, the project and the contributors may prohibit
+#    the use of this software at any time.
+# 
+# THIS SOFTWARE IS PROVIDED BY THE COPYRIGHTERS, THE PROJECT AND
+# CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING
+# BUT NOT LIMITED THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS
+# FOR A PARTICULAR PURPOSE, ARE DISCLAIMED.  IN NO EVENT SHALL THE
+# COPYRIGHTERS, THE PROJECT OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT,
+# INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
+# (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+# SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
+# HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT,
+# STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING
+# IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+# POSSIBILITY OF SUCH DAMAGE.
+#
+# $TAHI: ct-dns/dns/CL/CL_RFC3403_4_NAPTR_type.seq,v 1.1.1.1 2006/06/02 05:15:42 akisada Exp $
+# $Id: CL_RFC3403_4_NAPTR_type.seq,v 1.1.1.1 2006/06/02 05:15:42 akisada Exp $
+#
+######################################################################
+
+BEGIN {
+        $kCommon::TestVersion = '$Name: REL_1_1_1 $';
+        push( @INC, '/usr/local/koi/libdata' );
+        push( @INC, '..' );
+}
+
+END {
+}
+
+# use strict;
+use DNS;
+
+#------------------------------#
+# Query configuration          #
+#------------------------------#
+my $QueryConfig_1={ 
+#mode
+	'ModeRequiredTestMode' => 'client',
+	'ModeManualNoPause' => 'yes',
+#query
+	'Query0Mode' => 'dns',
+	'Query0Addr0' => $TN_NET1_NODE2_ADDR,
+	'Query0Protocol' => 'UDP',
+	'Query0AUS' => '',
+	'Query0KEY' => '',
+	'Query0Type' => 'NAPTR',
+	'Query0Class' => 'IN',
+	'Query0Value' => 'A.example.com',   
+};
+
+################################
+# configuration                #
+################################
+my @dns_session_config = ();
+my $dns_param          = { 'dns_session_config' => \@dns_session_config };
+
+$dns_session_config[0] = {
+        'TN_INTERFACE'   => 'Link0',
+        'TN_ADDR'        => $TN_NET1_NODE2_ADDR,
+        'TN_ADDR_PORT'   => $TN_SV_PORT,
+        'TN_ADDR_PROTO'  => 'UDP',
+        'TN_ADDR_FAMILY' => $ADDR_FAMILY,
+        'NUT_ADDR'       => $NUT_ADDR_0,
+        'NUT_ADDR_PORT'  => $NUT_SV_PORT
+};
+
+my @dns_session;
+my @dns_one_session;
+$dns_session[0] = {
+        'socket_ref'      => my $socket_ref,
+        'dns_one_session' => \@dns_one_session
+};
+
+my @exp_dns_msg_0 = ();
+
+$dns_one_session[0] = {
+        'gen_dns_msg' => undef,
+        'dec_dns_msg' => undef,
+        'exp_dns_msg' => \@exp_dns_msg_0
+};
+
+################################
+# expected packet definition   #
+################################
+#--------------------------
+# 1st ( NUT->TN(NS1) )
+#--------------------------
+$exp_dns_msg_0[0]->{'header'} = {
+        'id'      => undef,
+        'qr'      => 0,
+        'opcode'  => 0,
+        'aa'      => undef,
+        'tc'      => 0,
+        'rd'      => undef,
+        'ra'      => undef,
+        'z'       => undef,
+        'rcode'   => undef,
+        'qdcount' => 1,
+        'ancount' => 0,
+        'nscount' => 0,
+        'arcount' => undef,
+};
+
+$exp_dns_msg_0[0]->{'question'}->[0] = {
+        'qname'  => 'A.example.com.',
+        'qtype'  => 0x0023,
+        'qclass' => undef,
+};
+
+################################
+# start tests                  #
+################################
+
+my $ret = DNSStartConnect( $dns_param, \@dns_session );
+
+unless ( defined($ret) ) {
+        Debug_Print("ERROR:DNSStartConnect\n");
+        DNSExit($FAIL);
+}
+
+#------------------------------#
+# Send Query from Nut          #
+#------------------------------#
+my $remoteRet = DNSRemote("runquery.rmt",$QueryConfig_1);
+unless ( defined($remoteRet) ) {
+        Debug_Print("ERROR:DNSRemote\n");
+        DNSExit($FAIL);
+}
+
+#------------------------------#
+# 1st test (receive)           #
+#------------------------------#
+$ret = undef;
+$ret = DNSRecv(
+        1, 60,
+        $dns_session[0]->{'socket_ref'},
+        $dns_session[0]->{'dns_one_session'}->[0]
+);
+
+unless ( defined($ret) ) {
+        Debug_Print("ERROR: Can't receive DNS message\n");
+        DNSExit($FAIL);
+}
+
+#Print_Message( "=", ["Receive 1st message\n"] );
+
+#------------------------------#
+# Judgment (1st test)          #
+#------------------------------#
+Print_Message(
+        "#",
+        [
+                "Judgment (1st packet)\n",
+                "1. check Standard query format for NAPTR type.\n",
+        ]
+);
+
+my $recv_data = $dns_session[0]->{'dns_one_session'}->[0]->{'dec_dns_msg'}->[0];
+
+$ret = undef;
+$ret = JudgeDNSMsg( $recv_data, $exp_dns_msg_0[0] );
+
+unless ( defined($ret) ) {
+        DNSExit($FAIL);
+}
+
+Print_Message( "=", ["1st packet PASS\n"] );
+
+
+
+#NOTREACHED
+
+DNSExit($OK);
+__END__
+###########################################################
+
+=head1 NAME
+
+	CL_RFC3403_4_NAPTR_type - NAPTR type in standard query
+
+
+=head1 VERIFICATION POINTS
+
+	Verify that a NUT transmits correct standard query format for NAPTR type
+
+=begin html
+	<UL>
+	<DD><li>Header section format</li>
+	<PRE>
+	                                1  1  1  1  1  1
+	  0  1  2  3  4  5  6  7  8  9  0  1  2  3  4  5
+	+--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+
+	|                      ID                       |
+	+--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+
+	|QR|   Opcode  |AA|TC|RD|RA|   Z    |   RCODE   |
+	+--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+
+	|                    QDCOUNT                    |
+	+--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+
+	|                    ANCOUNT                    |
+	+--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+
+	|                    NSCOUNT                    |
+	+--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+
+	|                    ARCOUNT                    |
+	+--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+
+	<BR>
+	<b>QR : query (0)</b>
+	<b>Opcode : a standard query(QUERY) (0)</b>
+	<b>Z : Must be zero </b>
+	<b>QDCOUNT : 1 </b>
+	<b>ANCOUNT : 0 </b>
+	<b>NSCOUNT : 0 </b>
+	<b>ARCOUNT : 0 </b>
+	</PRE>
+	<DD><li>Question section format</li>
+	<PRE>
+	                                1  1  1  1  1  1
+	  0  1  2  3  4  5  6  7  8  9  0  1  2  3  4  5
+	+--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+
+	|                                               |
+	/                     QNAME                     /
+	/                                               /
+	+--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+
+	|                     QTYPE                     |
+	+--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+
+	|                     QCLASS                    |
+	+--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+
+	<BR>
+	<b>QNAME : A.example.com</b>
+	<b>QTYPE : NAPTR type (35)</b>
+	</PRE>
+	<DD><li>Answer section format</li>
+	<DD><b>Must be empty</b><BR><BR>
+	<DD><li>Authority section format</li>
+	<DD><b>Must be empty</b><BR><BR>
+	<DD><li>Additional section format</li>
+	<DD><b>Must be empty</b><BR><BR>
+	</ul> 
+
+=end html
+
+=head1 TARGET
+
+	Client
+
+=head1 SYNOPSIS
+
+=begin html
+<PRE>
+	<A HREF="./CL_RFC3403_4_NAPTR_type.seq">CL_RFC3403_4_NAPTR_type.seq</A> [-tooloption ...]: KOI tool option
+	See also <A HREF="../DNSConfig.pm">DNSConfig.pm</A>
+</PRE>
+
+=end html
+
+=head1 INITIALIZATION
+
+=begin html
+	<ul>
+	<li><STRONG>Network Topology</STRONG></li> 
+	<PRE>
+        AP Server1(TN):A.example.com     DNS Server1(TN)
+          |3ffe:501:ffff:101::10           |3ffe:501:ffff:101::20
+          |192.168.1.10                    |192.168.1.20
+          |                                |
+Net-y   --+--------+-----------------------+-------- 3ffe:501:ffff:101::/64 
+                   |                                 192.168.1/24
+                   |
+                   |
+                 ROUTER1(TN)
+                   |3ffe:501:ffff:100::1
+                   |192.168.0.1
+                   |
+Net-z   --+--------+-------------------------------- 3ffe:501:ffff:100::/64 
+          |                                          192.168.0/24
+        DNS Client1(NUT)
+           3ffe:501:ffff:100:XXXX
+           192.168.0.10
+	<BR>
+	XXXX: EUI64 address
+	</PRE>
+	<p></p>
+	<li><STRONG>Setup</STRONG></li>
+	<PRE>
+	Set the DNS Server1(TN)'s address on NUT as above mentioned Network Topology.
+	</PRE>
+	<p></p>
+	<LI><STRONG>Pre-Sequence</STRONG></LI><p><PRE>
+	In order to send the query for NAPTR type of AP Server1(TN):A.example.com to the DNS Server1(TN), 
+	NUT is configured.
+	</PRE>
+	</UL>
+
+=end html
+
+=head1 TEST PROCEDURE
+
+=begin html
+<PRE>
+	This test sequence is following.
+<BR>
+    DNS Client1 (NUT)                        DNS Server1 (TN)
+        |                                              |
+        |--------------------------------------------->|
+        |           1. Send standard query             |
+        |                                              |
+        v                                              v
+<BR>
+	1. NUT send standard query to TN.
+                  Judgment (Check *1)
+<ul>
+Packet Description
+	<table border="1">
+	  <tbody>
+	    <tr>
+	      <td colspan="3">
+	      <center>1. Standard query from DNS Client1 (NUT) to DNS Server1 (TN) </center>
+	      </td>
+	    </tr>
+	    <tr>
+	      <td rowspan="2">IP Header</td>
+	      <td>Source Address</td>
+	      <td>NUT_NETZ</td>
+	    </tr>
+	    <tr>
+	      <td>Destination Address</td>
+	      <td>SV1_NETY</td>
+	    </tr>
+	    <tr>
+	      <td colspan="1" rowspan="2">UDP Header </td>
+	      <td>Src Port</td>
+	      <td><i>any</i></td>
+	    </tr>
+	    <tr>
+	      <td>Dst Port</td>
+	      <td>53</td>
+	    </tr>
+ 	   <tr>
+ 	     <td colspan="1" rowspan="13">DNS Header </td>
+ 	     <td>ID</td>
+	      <td><i>any</i></td>
+	    </tr>
+	    <tr>
+	      <td>QR</td>
+	      <td>0</td>
+	    </tr>
+	    <tr>
+	      <td>OPCODE</td>
+	      <td>0</td>
+	    </tr>
+	    <tr>
+	      <td>AA</td>
+	      <td><i>any</i></td>
+	    </tr>
+	    <tr>
+	      <td>TC</td>
+	      <td>0</td>
+	    </tr>
+	    <tr>
+	      <td>RD</td>
+	      <td><i>any</i></td>
+	    </tr>
+	    <tr>
+	      <td>RA</td>
+	      <td><i>any</i></td>
+	    </tr>
+	    <tr>
+	      <td>Z</td>
+	      <td>any</td>
+	    </tr>
+	    <tr>
+	      <td>RCODE</td>
+ 	     <td><i>any</i></td>
+	    </tr>
+	    <tr>
+	      <td>QDCOUNT</td>
+	      <td>1</td>
+ 	   </tr>
+	    <tr>
+	      <td>ANCOUNT</td>
+	      <td>0</td>
+	    </tr>
+	    <tr>
+	      <td>NSCOUNT</td>
+	      <td>0</td>
+	    </tr>
+	    <tr>
+	      <td>ARCOUNT</td>
+	      <td>any</td>
+	    </tr>
+	    <tr>
+	      <td colspan="1" rowspan="3">DNS Question section </td>
+	      <td>QNAME</td>
+	      <td>A.example.com</td>
+	    </tr>
+	    <tr>
+	      <td>QTYPE</td>
+	      <td>NAPTR (0x0023)</td>
+	    </tr>
+	    <tr>
+	      <td>QCLASS</td>
+	      <td><i>any</i></td>
+	    </tr>
+	  </tbody>
+	</table>
+NUT_NETZ : DNS Client1(NUT)'s address
+SV1_NETY : DNS Server1(TN)'s address
+</ul>
+</PRE>
+
+=end html
+
+=head1 JUDGMENT
+
+	1. Standard query for NATPR type must be based on above Verification Points.
+
+=head1 TERMINATION
+
+	If NUT has cache function, clear the cache.
+
+=head1 REFERENCE
+
+=begin html
+<PRE>
+	RFC3403 Dynamic Delegation Discovery System (DDDS)
+                Part Three: The Domain Name System (DNS) Database
+	        4. NAPTR RR Format 
+</PRE>
+
+=end html
+
+=cut

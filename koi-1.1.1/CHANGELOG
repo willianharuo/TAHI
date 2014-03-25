@@ -1,0 +1,62 @@
+
+
+
+			CHANGELOG
+
+		$Date: 2007/08/30 05:53:33 $
+
+
+
+2007/08/30	Release 1.1.1
+	Official Release
+
+
+2007/08/10	Yukiyo Akisada
+	Use exit code (${exitNS})
+		- bin/remotes/freebsd-bind9/queryHTTP.rmt
+		- bin/remotes/freebsd-bind9/queryIQUERY.rmt
+		- bin/remotes/freebsd-bind9/queryRCDS.rmt
+		- bin/remotes/freebsd-bind9/querySIP.rmt
+		- bin/remotes/freebsd-bind9/querySTATUS.rmt
+		- bin/remotes/freebsd-bind9/queryTHTTP.rmt
+
+
+2007/07/20	Release 1.1
+	Official Release
+
+
+2007/07/13	Yukiyo Akisada
+	Add remote control scripts for NSD 3.X
+		- bin/remotes/freebsd-nsd
+
+	Rename remote control scripts for NSD 2.X
+		- bin/remotes/freebsd-nsd2
+
+	Fix exit code (${exitNS}) handling
+		- bin/autorun/autorun.pl
+		- libdata/kCommon/kCommon.pm
+		- libdata/kRemote/kRemote.pm
+
+
+2007/07/03	Yukiyo Akisada
+	Fix the use of NULL parser in UDP/DNS handling
+		- lib/kParser/kParser.{c,h}
+		- lib/kParser/kParserDNS.{c,h}
+		- libdata/kCommon/kCommon.pm
+		- libdata/kDNS/kDNS.pm
+
+	Fix link-local address handling
+		- lib/kDispatcher/kDispatcher.c
+
+
+2007/04/06	Yukiyo Akisada
+	Merge with koi-sip-1.1.0
+
+
+2006/03/28	Yukiyo Akisada
+	Add remote files for NSD
+		- bin/remotes/freebsd-nsd
+
+
+2006/02/27	Release 1.0
+	Official Release

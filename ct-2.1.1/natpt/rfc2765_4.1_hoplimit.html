@@ -1,0 +1,222 @@
+<HTML>
+<HEAD>
+<TITLE>rfc2765_4.1_hoplimit.seq - Verify IPv6 <-> IPv4 header 
+        translation in accordance with RFC2765 [SIIT]</TITLE>
+<LINK REV="made" HREF="mailto:hackers@FreeBSD.org">
+</HEAD>
+
+<BODY>
+
+<!-- INDEX BEGIN -->
+<!--
+
+<UL>
+
+	<LI><A HREF="#NAME">NAME</A>
+	<LI><A HREF="#TARGET">TARGET</A>
+	<LI><A HREF="#SYNOPSIS">SYNOPSIS</A>
+	<LI><A HREF="#INITIALIZATION">INITIALIZATION</A>
+	<LI><A HREF="#TEST_PROCEDURE">TEST PROCEDURE</A>
+	<LI><A HREF="#JUDGMENT">JUDGMENT</A>
+	<LI><A HREF="#NOTE">NOTE</A>
+	<LI><A HREF="#REFERENCE">REFERENCE</A>
+	<LI><A HREF="#SEE_ALSO">SEE ALSO</A>
+</UL>
+-->
+<!-- INDEX END -->
+
+<P>
+<H1><A NAME="NAME">NAME</A></H1>
+<P>
+<PRE>        rfc2765_4.1_hoplimit.seq - Verify IPv6 &lt;-&gt; IPv4 header 
+        translation in accordance with RFC2765 [SIIT]
+</PRE>
+<P>
+<HR>
+<H1><A NAME="TARGET">TARGET</A></H1>
+<P>
+<PRE>        Router
+</PRE>
+<P>
+<HR>
+<H1><A NAME="SYNOPSIS">SYNOPSIS</A></H1>
+<P>
+<PRE>         rfc2765_4.1_hoplimit.seq [-tooloption ...] 
+        -p rfc2765_3.1_hoplimit.def
+</PRE>
+<P>
+<HR>
+<H1><A NAME="INITIALIZATION">INITIALIZATION</A></H1>
+<PRE>
+	Before this test starts, run <A HREF="./initialize.html">initialize.seq</A>.
+</PRE>
+
+<P>
+<HR>
+<H1><A NAME="TEST_PROCEDURE">TEST PROCEDURE</A></H1>
+<P>
+<PRE>        This test verifies that NUT properly translates Hop Limit - 1 to 
+        TTL, or sends an ICMPv6 Time Exceeded.
+        
+        Network Topology
+</PRE>
+<P>
+<PRE>        Link0
+        --------------------------
+            |               |
+           TN              NUT
+            |               |
+        --------------------------
+        Link1
+</PRE>
+<P>
+<PRE>        TN -- (Link0) -- NUT        NUT -- (Link1) -- TN
+        
+        ---------------------      ------------------------
+</PRE>
+<HR WIDTH=80%>
+
+<P>
+<PRE>        1.1.
+        ===================&gt;
+        ICMPv6 Echo Request
+                IPv6 Header
+                        src address : TN LINK0 IPv4 embedded IPv6 address
+                        dst address : TN LINK1 IPv4 embedded IPv6 address
+                        Hop Limit = 255
+                ICMPv6 echo request
+         
+        1.2.
+        &lt;&lt;JUDGMENT&gt;&gt;
+                                   ===================&gt;
+        ICMPv4 Echo request
+                IPv4 Header
+                        src address : TN LINK0 IPv4 address
+                        dst address : TN LINK1 IPv4 address
+                        Don't Fragment = 1
+                        TTL = 254
+                ICMPv4 echo request
+</PRE>
+<HR WIDTH=80%>
+
+<P>
+<PRE>        2.1.
+        ===================&gt;
+        ICMPv6 Echo Request
+                IPv6 Header
+                        src address : TN LINK0 IPv4 embedded IPv6 address
+                        dst address : TN LINK1 IPv4 embedded IPv6 address
+                        Hop Limit = 64
+                ICMPv6 echo request
+         
+        2.2.
+        &lt;&lt;JUDGMENT&gt;&gt;
+                                   ===================&gt;
+        ICMPv4 Echo request
+                IPv4 Header
+                        src address : TN LINK0 IPv4 address
+                        dst address : TN LINK1 IPv4 address
+                        Don't Fragment = 1
+                        TTL = 63
+                ICMPv4 echo request
+</PRE>
+<HR WIDTH=80%>
+
+<P>
+<PRE>        3.1.
+        ===================&gt;
+        ICMPv6 Echo Request
+                IPv6 Header
+                        src address : TN LINK0 IPv4 embedded IPv6 address
+                        dst address : TN LINK1 IPv4 embedded IPv6 address
+                        Hop Limit = 2
+                ICMPv6 echo request
+         
+        3.2.
+        &lt;&lt;JUDGMENT&gt;&gt;
+                                   ===================&gt;
+        ICMPv4 Echo request
+                IPv4 Header
+                        src address : TN LINK0 IPv4 address
+                        dst address : TN LINK1 IPv4 address
+                        Don't Fragment = 1
+                        TTL = 1
+                ICMPv4 echo request
+</PRE>
+<HR WIDTH=80%>
+
+<P>
+<PRE>        4.1.
+        ===================&gt;
+        ICMPv6 Echo Request
+                IPv6 Header
+                        src address : TN LINK0 IPv4 embedded IPv6 address
+                        dst address : TN LINK1 IPv4 embedded IPv6 address
+                        Hop Limit = 1
+                ICMPv6 echo request
+         
+        4.2.
+        &lt;&lt;JUDGMENT&gt;&gt;
+        &lt;===================
+        ICMPv6 Time Exceeded
+                IPv6 Header
+                        src address : TN LINK0 IPv4 embedded IPv6 address
+                        dst address : TN LINK1 IPv4 embedded IPv6 address
+                ICMPv6 Time Exceeded
+                        Type = 3
+                        Code = 0 (hop limit exceeded in transit)
+                        data = ICMPv6 Echo Request
+</PRE>
+<P>
+<HR>
+<H1><A NAME="JUDGMENT">JUDGMENT</A></H1>
+<P>
+<PRE>        &lt;&lt; PASS &gt;&gt;
+                NUT translates ICMPv6 with Hop Limit = 255, 64, 2 to 
+                ICMPv4 with TTL = 254, 63, 1.
+                NUT responds to ICMPv6 Echo Request with TTL = 1
+                with an ICMPv6 Time Exceeded message.
+                
+        &lt;&lt; FAIL &gt;&gt;      
+                NUT doesn't translate Hop Limit properly, or doesn't 
+                respond with ICMPv6 Time Exceeded messages when 
+                Hop Limit = 1 on incoming packages.
+</PRE>
+<P>
+<HR>
+<H1><A NAME="NOTE">NOTE</A></H1>
+<P>
+<HR>
+<H1><A NAME="REFERENCE">REFERENCE</A></H1>
+<P>
+<STRONG>RFC2765</STRONG>
+
+
+
+<P>
+4.1. Translating IPv6 Headers into IPv4 Headers
+
+<P>
+<PRE>   If there is no IPv6 Fragment header the IPv4 header fields are set as
+   follows:
+</PRE>
+<P>
+<PRE>         Time to Live:
+                 Hop Limit value copied from IPv6 header.  Since the
+                 translator is a router, as part of forwarding the
+                 packet it needs to decrement either the IPv6 Hop
+                 Limit (before the translation) or the IPv4 TTL (after
+                 the translation).  As part of decrementing the TTL or
+                 Hop Limit the translator (as any router) needs to
+                 check for zero and send the ICMPv4 or ICMPv6 &quot;ttl
+                 exceeded&quot; error.
+</PRE>
+<P>
+<HR>
+<H1><A NAME="SEE_ALSO">SEE ALSO</A></H1>
+<P>
+<PRE>        perldoc V6evalTool
+</PRE>
+</BODY>
+
+</HTML>

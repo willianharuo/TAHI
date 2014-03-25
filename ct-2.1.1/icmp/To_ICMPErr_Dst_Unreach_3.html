@@ -1,0 +1,122 @@
+<HTML>
+<HEAD>
+<TITLE>To_ICMPErr_Dst_Unreach.seq - check Message Processing Rules</TITLE>
+<LINK REV="made" HREF="mailto:hackers@FreeBSD.org">
+</HEAD>
+
+<BODY>
+
+<!-- INDEX BEGIN -->
+<!--
+
+<UL>
+
+	<LI><A HREF="#NAME">NAME</A>
+	<LI><A HREF="#TARGET">TARGET</A>
+	<LI><A HREF="#SYNOPSIS">SYNOPSIS</A>
+	<LI><A HREF="#NETWORK_CONFIGURATION">NETWORK CONFIGURATION</A>
+	<LI><A HREF="#INITIALIZATION">INITIALIZATION</A>
+	<LI><A HREF="#TEST_PROCEDURE">TEST PROCEDURE</A>
+	<LI><A HREF="#JUDGMENT">JUDGMENT</A>
+	<LI><A HREF="#SEE_ALSO">SEE ALSO</A>
+</UL>
+-->
+<!-- INDEX END -->
+
+<P>
+<H1><A NAME="NAME">NAME</A></H1>
+<P>
+<PRE>        To_ICMPErr_Dst_Unreach.seq - check Message Processing Rules
+        (ICMPv6 Destination Unreachable)
+</PRE>
+<P>
+<HR>
+<H1><A NAME="TARGET">TARGET</A></H1>
+<P>
+<PRE>        Host/Router
+</PRE>
+<P>
+<HR>
+<H1><A NAME="SYNOPSIS">SYNOPSIS</A></H1>
+<P>
+<PRE>        To_ICMPErr_Dst_Unreach.seq [-tooloptions ...] -p To_ICMPErr_Dst_Unreach.def
+</PRE>
+<P>
+<HR>
+<H1><A NAME="NETWORK_CONFIGURATION">NETWORK CONFIGURATION</A></H1>
+<P>
+<PRE>        This test is On-Link Network Configuration test.
+</PRE>
+<P>
+<PRE>        Physical/Logical Network Configuration
+</PRE>
+<P>
+<PRE>        ---------------------------------------
+                |               |
+                NUT             TN
+</PRE>
+<P>
+<HR>
+<H1><A NAME="INITIALIZATION">INITIALIZATION</A></H1>
+<P>
+<PRE>        Make a Neighbor Cache Entry for TN's in NUT.
+</PRE>
+<P>
+<HR>
+<H1><A NAME="TEST_PROCEDURE">TEST PROCEDURE</A></H1>
+<P>
+<PRE>        This test verifies that the message processing rule,
+</PRE>
+<P>
+<PRE>        An ICMPv6 error message MUST NOT be sent as a result of
+        receiving an ICMPv6 error message.
+</PRE>
+<P>
+<PRE>        TN                      NUT
+</PRE>
+<P>
+<PRE>        ---------------------------
+</PRE>
+<P>
+<PRE>        1.
+        ======== echo request========&gt;
+                src address:    TN link-local address
+                dst address:    NUT link-local address
+        2.
+        &lt;======== echo reply ========
+                src address:    NUT link-local address
+                dst address:    TN link-local address
+        3.
+        === ICMPv6 Destination Unreachable ===&gt;
+                src address:    TN link-local address
+                dst address:    NUT link-local address
+                code:           address unreachable
+                with extension headers
+                Destination options header appears before hop-by-hop options
+                header.
+        4.
+        &lt;&lt; JUDGMENT &gt;&gt;
+        &lt;=== No packets ===
+                or
+        &lt;=== ICMPv6 Parameter Problem ===
+</PRE>
+<P>
+<HR>
+<H1><A NAME="JUDGMENT">JUDGMENT</A></H1>
+<P>
+<PRE>        &lt;&lt; PASS &gt;&gt;
+                NUT don't send ICMPv6 Parameter Problem.
+</PRE>
+<P>
+<PRE>        &lt;&lt; FAIL &gt;&gt;
+                NUT send ICMPv6 Parameter Problem.
+</PRE>
+<P>
+<HR>
+<H1><A NAME="SEE_ALSO">SEE ALSO</A></H1>
+<P>
+<PRE>        perldoc V6evalTool
+</PRE>
+</BODY>
+
+</HTML>

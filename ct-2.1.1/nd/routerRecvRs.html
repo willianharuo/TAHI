@@ -1,0 +1,192 @@
+<HTML>
+<HEAD>
+<TITLE>routerRecvRs - Verifying that NUT responds valid RSs</TITLE>
+<LINK REV="made" HREF="mailto:hackers@FreeBSD.org">
+</HEAD>
+
+<BODY>
+
+<!-- INDEX BEGIN -->
+<!--
+
+<UL>
+
+	<LI><A HREF="#NAME">NAME</A>
+	<LI><A HREF="#TARGET">TARGET</A>
+	<LI><A HREF="#SYNOPSIS">SYNOPSIS</A>
+	<LI><A HREF="#INITIALIZATION">INITIALIZATION</A>
+	<LI><A HREF="#TEST_PROCEDURE">TEST PROCEDURE</A>
+	<LI><A HREF="#JUDGMENT">JUDGMENT</A>
+	<LI><A HREF="#TERMINATION">TERMINATION</A>
+	<LI><A HREF="#NOTE">NOTE</A>
+	<LI><A HREF="#REFERENCE">REFERENCE</A>
+	<LI><A HREF="#SEE_ALSO">SEE ALSO</A>
+</UL>
+-->
+<!-- INDEX END -->
+
+<P>
+<H1><A NAME="NAME">NAME</A></H1>
+<P>
+routerRecvRs - Verifying that NUT responds valid RSs
+
+<P>
+<HR>
+<H1><A NAME="TARGET">TARGET</A></H1>
+<P>
+<PRE>  Router Only
+</PRE>
+<P>
+<HR>
+<H1><A NAME="SYNOPSIS">SYNOPSIS</A></H1>
+<P>
+<PRE>  routerRecvRs.seq [-tooloption ...] -p routerRecvRs.def
+</PRE>
+<P>
+<HR>
+<H1><A NAME="INITIALIZATION">INITIALIZATION</A></H1>
+<P>
+<PRE>  Clear NC state for TN.
+</PRE>
+<P>
+<HR>
+<H1><A NAME="TEST_PROCEDURE">TEST PROCEDURE</A></H1>
+<P>
+<STRONG>routerRecvRs</STRONG> verifies that NUT responds valid RSs and ignores invalid RSs.
+
+<PRE>
+  TN               NUT
+  ----------------------
+  State: NONCE (for TN)
+<BR>
+  ==== valid/invalid RS ===>
+<BR>
+  <=== RA ====
+<BR>
+  Wait for MIN_DELAY_BETWEEN_RAS sec.
+</PRE>
+
+<P>
+<HR>
+<H1><A NAME="JUDGMENT">JUDGMENT</A></H1>
+<PRE>
+  1. NUT must send a valid RA when received a valid RS.
+<BR>
+  ========================================+=================
+  RS				          | Expected RA
+  ========================================+=================
+  RS w/o SLL, src=unspecific	          | sending RA
+  ----------------------------------------+-----------------
+  RS w/o SLL, src=link-local	          | sending RA
+  ----------------------------------------+-----------------
+  RS w/ SLL,  src=link-local	          | sending RA
+  ----------------------------------------+-----------------
+  RS w/o SLL, hop *limit!=255 (INVALID)	  | NOT sending RA
+  ----------------------------------------+-----------------
+  RS w/o SLL, *invalid checksum	(INVALID) | NOT sending RA
+  ----------------------------------------+-----------------
+  RS w/o SLL, *icmp code!=0( INVALID)	  | NOT sending RA
+  ----------------------------------------+-----------------
+  RS *w/ SLL,  *src=unspecified (INVALID) | NOT sending RA
+  ========================================+=================
+<BR>
+  2. NUT sends the following RA that was configured by
+     <A HREF="startDefaultRA.html">the previous test</A>.
+<BR>
+  3. The received RA may have
+     - Source link-layer address option
+     - MUT option
+     - Prefix option
+</PRE>
+
+<P>
+<HR>
+<H1><A NAME="TERMINATION">TERMINATION</A></H1>
+<P>
+<PRE>  N/A
+</PRE>
+<P>
+<HR>
+<H1><A NAME="NOTE">NOTE</A></H1>
+<P>
+<PRE>  N/A
+</PRE>
+<P>
+<HR>
+<H1><A NAME="REFERENCE">REFERENCE</A></H1>
+<PRE>
+RFC2461
+<HR>
+4.3.  Neighbor Solicitation Message Format
+   IP Fields:
+<BR>
+      Source Address
+                     Either an address assigned to the interface from
+                     which this message is sent or (if Duplicate Address
+                     Detection is in progress [ADDRCONF]) the
+                     unspecified address.
+<BR>
+      Destination Address
+                     Either the solicited-node multicast address
+                     corresponding to the target address, or the target
+                     address.
+<BR>
+      Hop Limit      <B>255</B>
+<BR>
+      Authentication Header
+                     If a Security Association for the IP Authentication
+                     Header exists between the sender and the
+                     destination address, then the sender SHOULD include
+                     this header.
+<BR>
+   ICMP Fields:
+<BR>
+      Type           135
+<BR>
+      Code           0
+<BR>
+      Checksum       The ICMP checksum.  See [ICMPv6].
+<BR>
+      Reserved       This field is unused.  It MUST be initialized to
+                     zero by the sender and MUST be ignored by the
+                     receiver.
+<BR>
+      Target Address
+                     The IP address of the target of the solicitation.
+                     It MUST NOT be a multicast address.
+<BR>
+   Possible options:
+<BR>
+      Source link-layer address
+                     The link-layer address for the sender.  <B>MUST NOT be
+                     included when the source IP address is the
+                     unspecified address</B>.  Otherwise, on link layers
+                     that have addresses this option MUST be included in
+                     multicast solicitations and SHOULD be included in
+                     unicast solicitations.
+<BR>
+<HR>
+6.2.6.  Processing Router Solicitations
+<BR>
+   In addition to sending periodic, unsolicited advertisements, a router
+   sends advertisements in response to valid solicitations received on
+   an advertising interface.  <B>A router MAY choose to unicast the
+   response directly to the soliciting host's address (if the
+   solicitation's source address is not the unspecified address), but
+   the usual case is to multicast the response to the all-nodes group.</B>
+   In the latter case, the interface's interval timer is reset to a new
+   random value, as if an unsolicited advertisement had just been sent
+   (see Section 6.2.4).
+<HR>
+</PRE>
+
+<P>
+<HR>
+<H1><A NAME="SEE_ALSO">SEE ALSO</A></H1>
+<P>
+<PRE>  perldoc V6evalTool
+  perldoc V6evalRemote
+</PRE>
+</BODY>
+
+</HTML>

@@ -1,0 +1,344 @@
+<HTML>
+<HEAD>
+<TITLE>hostRecvRaURD - Verifying that NUD updates DRL</TITLE>
+<LINK REV="made" HREF="mailto:hackers@FreeBSD.org">
+</HEAD>
+
+<BODY>
+
+<!-- INDEX BEGIN -->
+<!--
+
+<UL>
+
+	<LI><A HREF="#NAME">NAME</A>
+	<LI><A HREF="#TARGET">TARGET</A>
+	<LI><A HREF="#SYNOPSIS">SYNOPSIS</A>
+	<LI><A HREF="#INITIALIZATION">INITIALIZATION</A>
+	<LI><A HREF="#TEST_PROCEDURE">TEST PROCEDURE</A>
+	<LI><A HREF="#JUDGMENT">JUDGMENT</A>
+	<LI><A HREF="#TERMINATION">TERMINATION</A>
+	<LI><A HREF="#NOTE">NOTE</A>
+	<LI><A HREF="#REFERENCE">REFERENCE</A>
+	<LI><A HREF="#SEE_ALSO">SEE ALSO</A>
+</UL>
+-->
+<!-- INDEX END -->
+
+<P>
+<H1><A NAME="NAME">NAME</A></H1>
+<P>
+hostRecvRaURD - Verifying that NUD updates DRL
+
+<P>
+<HR>
+<H1><A NAME="TARGET">TARGET</A></H1>
+<P>
+Host only
+
+<P>
+<HR>
+<H1><A NAME="SYNOPSIS">SYNOPSIS</A></H1>
+<P>
+<PRE>  hostRecvRaURD.seq [-tooloption ...] -p hostRecvRaURD.def
+</PRE>
+<P>
+<HR>
+<H1><A NAME="INITIALIZATION">INITIALIZATION</A></H1>
+<OL>
+  <LI>Set NC state for TN, Y and Z to STALEs.
+  <LI>Give a global prefix, 3ffe:501:ffff:100::/64 with their RAs
+</OL>
+<PRE>
+  TN                 NUT
+  ----------------------
+<BR>
+  State: NONCE (for TN, Y, Z)
+<BR>
+  ==== unsolicited RA ===>
+       src=TN's link-local
+       dst=all-node
+       M=0, O=0
+       RouterLifetime=600
+       ReachableTime=0
+       RetransTimer=0
+       w/ SLLA
+       Prefix Option:
+           L=1, A=1
+           ValidLifetime=2592000
+           PreferredLifetime=604800
+           Prefix=3ffe:501:ffff:100::/64
+<BR>
+  ==== unsolicited RA ===>
+       src=Y's link-local
+       dst=all-node
+       M=0, O=0
+       RouterLifetime=600
+       ReachableTime=0
+       RetransTimer=0
+       w/ SLLA
+       Prefix Option:
+           L=1, A=1
+           ValidLifetime=2592000
+           PreferredLifetime=604800
+           Prefix=3ffe:501:ffff:100::/64
+<BR>
+  ==== unsolicited RA ===>
+       src=Z's link-local
+       dst=all-node
+       M=0, O=0
+       RouterLifetime=600
+       ReachableTime=0
+       RetransTimer=0
+       w/ SLLA
+       Prefix Option:
+           L=1, A=1
+           ValidLifetime=2592000
+           PreferredLifetime=604800
+           Prefix=3ffe:501:ffff:100::/64
+<BR>
+  State: STALE (for TN, Y, Z)
+<BR>
+  <=== Ns for DAD (if any) ====
+       src=unspecified
+       dst=solicited-node[NUT's global, prefix=3ffe:501:ffff:100::/64]
+       target=NUT's global
+       Wait (3 sec)
+<BR>
+  ==== solicited NA ===>
+        src=TN's link-local
+        dst=NUT's link-local
+        R=1, S=1, O=1
+        target=TN's link-local
+        TLLA=TN's LLA
+<BR>
+  ==== solicited NA ===>
+        src=Y's link-local
+        dst=NUT's link-local
+        R=1, S=1, O=1
+        target=Y's link-local
+        TLLA=Y's LLA
+<BR>
+  ==== solicited NA ===>
+        src=Z's link-local
+        dst=NUT's link-local
+        R=1, S=1, O=1
+        target=Z's link-local
+        TLLA=Z's LLA
+<BR>
+  State: REACHABLE (for TN, Y, Z)
+<BR>
+  Wait (REACHABLE_TIME * MAX_RANDOM_FACTOR)
+<BR>
+  State: STALE (for TN, Y, Z)
+</PRE>
+
+<P>
+<HR>
+<H1><A NAME="TEST_PROCEDURE">TEST PROCEDURE</A></H1>
+<BR>
+<B>hostRecvRaURD</B> verifies the followings:
+<UL>
+  <LI>The Default Router List must hold at the least two entries.
+  <LI>Routers that are reachable or probably reachable should be preferred
+      over routers whose reachability is unknown or suspect.
+  <LI>When no routers on the Default Router List are known to be reachable
+      or probably reachable, routers should be selected in a round-robin
+      fashion.
+</UL>
+<PRE>
+  TN               NUT
+  ----------------------
+<BR>
+  State: STALE (for TN, Y, Z)
+<BR>
+  ==== echo-request ===>
+       src=off-link global, but LLA is the W's one
+       dst=NUT's global
+<BR>
+  <=== <A HREF="#JDG1">Judgment #1</A>: echo-reply ====
+       src=NUT's global
+       dst=off-link global, but LLA is TN's one
+<BR>
+  State: DELAY (for TN), STALE (for Y, Z)
+<BR>
+  Wait (DELAY_FIRST_PROBE_TIME + (RETRANS_TIMER * $MAX_UNICAST_SOLICIT))
+      for the entry of the Default Router List to be unreachable.
+<BR>
+  State: NONCE (for TN), STALE (for Y, Z)
+<BR>
+  ==== echo-request ===>
+       src=off-link global, but LLA is the W's one
+       dst=NUT's global
+<BR>
+  <=== <A HREF="#JDG2">Judgment #2</A>: echo-reply ====
+       src=NUT's global
+       dst=off-link global, but LLA is Y's one
+<BR>
+  State: NONCE (for TN), DELAY (for Y), STALE (for Z)
+<BR>
+  Wait (DELAY_FIRST_PROBE_TIME + (RETRANS_TIMER * $MAX_UNICAST_SOLICIT))
+      for the entry of the Default Router List to be unreachable.
+<BR>
+  State: NONCE (for TN, Y), STALE (for Z)
+<BR>
+  ==== echo-request ===>
+       src=off-link global, but LLA is the W's one
+       dst=NUT's global
+<BR>
+  <=== <A HREF="#JDG3">Judgment #3</A>: echo-reply ====
+       src=NUT's global
+       dst=off-link global, but LLA is Z's one
+<BR>
+  State: NONCE (for TN, Y), DELAY (for Z)
+<BR>
+  Wait (DELAY_FIRST_PROBE_TIME + (RETRANS_TIMER * $MAX_UNICAST_SOLICIT))
+      for the entry of the Default Router List to be unreachable.
+<BR>
+  State: NONCE (for all)
+<BR>
+  ==== echo-request ===>
+       src=off-link global, but LLA is the W's one
+       dst=NUT's global
+<BR>
+  State: INCOMPLETE (for TN), NONCE (for Y, Z)
+<BR>
+  <=== <A HREF="#JDG4">Judgment #4</A>: multicast NS ====
+       src=NUT's global
+       dst=solicited-node[TN's link-local]
+       target=TN's link-local
+       w/ SLLA
+<BR>
+  Wait (RETRANS_TIMER * $MAX_MULTICAST_SOLICIT)
+<BR>
+  State: NONCE (for all)
+<BR>
+  ==== echo-request ===>
+       src=off-link global, but LLA is the W's one
+       dst=NUT's global
+<BR>
+  State: INCOMPLETE (for Y), NONCE (for TN, Z)
+<BR>
+  <=== <A HREF="#JDG4">Judgment #4</A>: multicast NS ====
+       src=NUT's global
+       dst=solicited-node[Y's link-local]
+       target=Y's link-local
+       w/ SLLA
+<BR>
+  Wait (RETRANS_TIMER * $MAX_MULTICAST_SOLICIT)
+<BR>
+  State: NONCE (for all)
+<BR>
+  ==== echo-request ===>
+       src=off-link global, but LLA is the W's one
+       dst=NUT's global
+<BR>
+  State: INCOMPLETE (for Z), NONCE (for TN, Y)
+<BR>
+  <=== <A HREF="#JDG4">Judgment #4</A>: multicast NS ====
+       src=NUT's global
+       dst=solicited-node[Z's link-local]
+       target=Z's link-local
+       w/ SLLA
+<BR>
+  Wait (RETRANS_TIMER * $MAX_MULTICAST_SOLICIT)
+<BR>
+  State: NONCE (for all)
+</PRE>
+
+<P>
+<HR>
+<H1><A NAME="JUDGMENT">JUDGMENT</A></H1>
+<A NAME="JDG1"></A>
+
+<P>
+<PRE>  1. NUT must throw an echo-reply to the default router (i.e. NUT).
+</PRE>
+<A NAME="JDG2"></A>
+
+<P>
+<PRE>  2. NUT must throw an echo-reply to the default router (i.e. Y).
+</PRE>
+<A NAME="JDG3"></A>
+
+<P>
+<PRE>  3. NUT must throw an echo-reply to the default router (i.e. Z).
+</PRE>
+<A NAME="JDG4"></A>
+
+<P>
+<PRE>  4. Routers should be selected in a round-robin fashion.
+</PRE>
+<P>
+<HR>
+<H1><A NAME="TERMINATION">TERMINATION</A></H1>
+<P>
+<PRE>  Send RAs to clear the Default Router List:
+  - RA (src=TN) with RouterLifetime=0
+  - RA (src=Y)  with RouterLifetime=0
+  - RA (src=Z)  with RouterLifetime=0
+</PRE>
+<P>
+<HR>
+<H1><A NAME="NOTE">NOTE</A></H1>
+<P>
+<PRE>  1. The test does not invoke any remote command:
+</PRE>
+<P>
+<HR>
+<H1><A NAME="REFERENCE">REFERENCE</A></H1>
+RFC2461
+<HR>
+<PRE>
+6.3.4.  Processing Received Router Advertisements
+<BR>
+   To limit the storage needed for the Default Router List, a host MAY
+   choose not to store all of the router addresses discovered via
+   advertisements.  However, <B>a host MUST retain at least two router
+   addresses and SHOULD retain more.</B>  Default router selections are made
+   whenever communication to a destination appears to be failing.  Thus,
+   the more routers on the list, the more likely an alternative working
+   router can be found quickly (e.g., without having to wait for the
+   next advertisement to arrive).
+<HR>
+6.3.6.  Default Router Selection
+<BR>
+   The policy for selecting routers from the Default Router List is as
+   follows:
+<BR>
+     1) <B>Routers that are reachable or probably reachable (i.e., in any
+        state other than INCOMPLETE) SHOULD be preferred over routers
+        whose reachability is unknown or suspect (i.e., in the
+        INCOMPLETE state, or for which no Neighbor Cache entry exists).
+        An implementation may choose to always return the same router or
+        cycle through the router list in a round-robin fashion as long
+        as it always returns a reachable or a probably reachable router
+        when one is available.</B>
+<BR>
+     2) <B>When no routers on the list are known to be reachable or
+        probably reachable, routers SHOULD be selected in a round-robin
+        fashion, so that subsequent requests for a default router do not
+        return the same router until all other routers have been
+        selected.</B>
+<BR>
+        Cycling through the router list in this case ensures that all
+        available routers are actively probed by the Neighbor
+        Unreachability Detection algorithm.  A request for a default
+        router is made in conjunction with the sending of a packet to a
+        router, and the selected router will be probed for reachability
+        as a side effect.
+<BR>
+     3) If the Default Router List is empty, assume that all
+        destinations are on-link as specified in Section 5.2.
+</PRE>
+
+<P>
+<HR>
+<H1><A NAME="SEE_ALSO">SEE ALSO</A></H1>
+<P>
+<PRE>  perldoc V6evalTool
+  perldoc V6evalRemote
+</PRE>
+</BODY>
+
+</HTML>

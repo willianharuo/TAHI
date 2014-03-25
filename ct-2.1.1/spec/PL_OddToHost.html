@@ -1,0 +1,153 @@
+<HTML>
+<HEAD>
+<TITLE>PL_OddToHost - check IPv6 Header Payload Length is Odd</TITLE>
+<LINK REV="made" HREF="mailto:hackers@FreeBSD.org">
+</HEAD>
+
+<BODY>
+
+<!-- INDEX BEGIN -->
+<!--
+
+<UL>
+
+	<LI><A HREF="#NAME">NAME</A>
+	<LI><A HREF="#TARGET">TARGET</A>
+	<LI><A HREF="#SYNOPSIS">SYNOPSIS</A>
+	<LI><A HREF="#INITIALIZATION">INITIALIZATION</A>
+	<LI><A HREF="#TEST_PROCEDURE">TEST PROCEDURE</A>
+	<LI><A HREF="#JUDGMENT">JUDGMENT</A>
+	<LI><A HREF="#REFERENCE">REFERENCE</A>
+	<LI><A HREF="#SEE_ALSO">SEE ALSO</A>
+</UL>
+-->
+<!-- INDEX END -->
+
+<P>
+<H1><A NAME="NAME">NAME</A></H1>
+<P>
+<PRE>  PL_OddToHost - check IPv6 Header Payload Length is Odd
+</PRE>
+<P>
+<HR>
+<H1><A NAME="TARGET">TARGET</A></H1>
+<P>
+<PRE>  Host and Router
+</PRE>
+<P>
+<HR>
+<H1><A NAME="SYNOPSIS">SYNOPSIS</A></H1>
+<PRE>
+  <A HREF="./PL_OddToHost.seq">PL_OddToHost.seq</A> [-tooloption ...] -pkt <A HREF="./PL_OddToHost.def">PL_OddToHost.def</A>
+    -tooloption : v6eval tool option
+</PRE>
+
+<P>
+<HR>
+<H1><A NAME="INITIALIZATION">INITIALIZATION</A></H1>
+<P>
+<PRE>  None
+</PRE>
+<P>
+<HR>
+<H1><A NAME="TEST_PROCEDURE">TEST PROCEDURE</A></H1>
+<P>
+<PRE>  Tester                      Target
+    |                           |
+    |--------------------------&gt;|
+    |   Echo Request            |
+    |                           |
+    |                           |
+    |&lt;--------------------------|
+    |   Neighbor Solicitation   |
+    |                           |
+    |                           |
+    |--------------------------&gt;|
+    |   Neighbor Advertisement  |
+    |                           |
+    |                           | 
+    |&lt;--------------------------|
+    |   Echo Reply              |
+    |                           |
+    |                           |
+    v                           v
+</PRE>
+<P>
+<PRE>  1. Send Echo Request
+  2. Wait Echo Reply or NS
+  3. If NS received then send NA, and wait Echo Reply again
+  4. Receive Echo Reply
+</PRE>
+<P>
+<PRE>  Echo Request Data is:
+</PRE>
+<P>
+<PRE>        IPv6 Header
+            Version            = 6
+            Traffic Class      = 0
+            FlowLabel          = 0
+            PayloadLength      = 15
+            NextHeader         = 58 (ICMP)
+            SourceAddress      = Tester Link Local Address
+            DestinationAddress = Target Link Local Address
+</PRE>
+<P>
+<PRE>        ICMP Echo Request
+            Type           = 128 (Echo Request)
+            Code           = 0
+            Checksum       = (auto)
+            Identifier     = 0xffff
+            SequenceNumber = 1
+            PayloadData    = {1,2,3,4,5,6,7}
+</PRE>
+<P>
+<HR>
+<H1><A NAME="JUDGMENT">JUDGMENT</A></H1>
+<P>
+<PRE>  PASS: Echo Reply Received
+</PRE>
+<P>
+<PRE>        IPv6 Header
+            Version             = 6
+            Traffic Class       = 0
+            FlowLabel           = 0
+            PayloadLength       = 15
+            NextHeader          = 58 (ICMP)
+            SourceAddress       = Target Link Local Address
+            Destination Address = Tester Link Local Address
+</PRE>
+<P>
+<PRE>        ICMP Echo Reply
+            Type           = 129 (Echo Reply)
+            Code           = 0
+            Checksum       = (auto)
+            Identifier     = 0xffff (same as Echo Request)
+            SequenceNumber = 1 (same as Echo Request)
+            PayloadData    = {1,2,3,4,5,6,7} (same as Echo Request)
+</PRE>
+<P>
+<HR>
+<H1><A NAME="REFERENCE">REFERENCE</A></H1>
+<P>
+RFC2460
+
+<P>
+3. IPv6 Header Format
+
+<P>
+<PRE>   Payload Length       16-bit unsigned integer.  Length of the IPv6
+                        payload, i.e., the rest of the packet following
+                        this IPv6 header, in octets.  (Note that any
+                        extension headers [section 4] present are
+                        considered part of the payload, i.e., included
+                        in the length count.)
+</PRE>
+<P>
+<HR>
+<H1><A NAME="SEE_ALSO">SEE ALSO</A></H1>
+<P>
+<PRE>  perldoc V6evalTool
+</PRE>
+</BODY>
+
+</HTML>

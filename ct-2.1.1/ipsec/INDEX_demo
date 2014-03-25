@@ -1,0 +1,83 @@
+##
+## $Name: REL_2_1_1 $
+##
+## $TAHI: ct/ipsec/INDEX_demo,v 1.2 2001/10/05 06:38:55 masaxmasa Exp $
+##
+##<seq>:<def>:[<opt>]:[<log>]:<desc>
+##
+##################################
+&print:<B>Host Transport Mode</B>
+
+&print:Initialize for Host
+./HTR_SetAddress.seq:./HTR_common.def:::Set Global Address and Check (Host)
+
+###AH
+&print:<B>Host Transport AH Outbound</B>
+&print:Host Transport AH Outbound with authentication
+./HTR_A_Out_hmacmd5.seq:./HTR_A_hmacmd5.def:::Outbound AH packet (HMAC-MD5)
+
+&print:<B>Host Transport AH Inbound</B>
+&print:Host Transport AH Inbound with authentication
+./HTR_A_In_hmacmd5.seq:./HTR_A_hmacmd5.def:::Inbound AH packet (HMAC-MD5)
+
+&print:Host Transport AH Inbound, Detect modification of packet with AH
+./HTR_A_In_DM_IPv6H_src.seq  :./HTR_A_DM_IPv6H.def:::Detect modification of IPv6 header IP src address with AH
+./HTR_A_In_DM_DSTH_opttype.seq   :./HTR_A_DM_DSTH_opttype.def:::Detect modification of DstOpt header option type before AH
+./HTR_A_In_DM_DSTH_optdata.seq   :./HTR_A_DM_DSTH2_optdata.def::HTR_A_In_DM_DSTH_optdata_afterAH.html:Detect modification of DstOpt header option data after AH
+
+###ESP
+&print:<B>Host Transport ESP Outbound</B>
+&print:ESP Outbound without authentication
+./HTR_E_Out_descbc.seq:./HTR_E_descbc.def:::Outbound ESP packet (DES-CBC)
+
+&print:ESP Outbound Padding
+./HTR_E_Out_Padding_descbc.seq:./HTR_E_Padding_descbc.def:::Outbound Padding (DES-CBC)
+
+&print:<B>Host Transport ESP Inbound</B>
+&print:ESP Inbound without authentication
+./HTR_E_In_descbc.seq:./HTR_E_descbc.def:::Inbound ESP packet (DES-CBC)
+./HTR_E_In_EncryptKey.seq:./HTR_E_EncryptKey.def:::Inbound ESP packet (Invalid Encryption Key)
+
+&print:ESP Inbound Padding
+./HTR_E_In_Padding_descbc.seq:./HTR_E_Padding_descbc.def:::Inbound Padding (DES-CBC)
+./HTR_E_In_PadLen255.seq:./HTR_E_PadLen255.def:::Padding Length is 255 (max)
+
+
+##################################
+&print:<B>Router Tunnel Mode</B>
+
+&print:Initialize for Router
+./RTU_SetAddress.seq:./RTU_common.def:::Set Global Address and Check (Router):2
+
+###AH
+&print:<B>Router Tunnel AH Outbound</B>
+&print:Router Tunnel AH Outbound with authentication
+./RTU_A_Out_hmacmd5.seq:./RTU_A_hmacmd5.def:::Outbound AH packet (HMAC-MD5):2
+
+&print:<B>Router Tunnel AH Inbound</B>
+&print:Router Tunnel AH Inbound with authentication
+./RTU_A_In_hmacmd5.seq:./RTU_A_hmacmd5.def:::Inbound AH packet (HMAC-MD5):2
+
+&print:Router Tunnel AH Inbound, Detect modification of packet with AH
+./RTU_A_In_DM_IPv6H_src.seq  :./RTU_A_DM_IPv6H.def:::Detect modification of IPv6 header IP src address with AH:2
+./RTU_A_In_DM_DSTH_opttype.seq   :./RTU_A_DM_DSTH_opttype.def:::Detect modification of DstOpt header option type before AH:2
+./RTU_A_In_DM_DSTH_optdata.seq   :./RTU_A_DM_DSTH_optdata.def:::Detect modification of DstOpt header option data before AH:2
+
+###ESP
+&print:<B>Router Tunnel ESP Outbound</B>
+&print:ESP Outbound without authentication
+./RTU_E_Out_descbc.seq:./RTU_E_descbc.def:::Outbound ESP packet (DES-CBC):2
+
+&print:ESP Outbound Padding
+./RTU_E_Out_Padding_descbc.seq:./RTU_E_Padding_descbc.def:::Outbound Padding (DES-CBC):2
+
+&print:<B>Router Tunnel ESP Inbound</B>
+&print:ESP Inbound without authentication
+./RTU_E_In_descbc.seq:./RTU_E_descbc.def:::Inbound ESP packet (DES-CBC):2
+./RTU_E_In_EncryptKey.seq:./RTU_E_EncryptKey.def:::Inbound ESP packet (Invalid Encryption Key):2
+
+&print:ESP Inbound Padding
+./RTU_E_In_Padding_descbc.seq:./RTU_E_Padding_descbc.def:::Inbound Padding (DES-CBC):2
+./RTU_E_In_PadLen255.seq:./RTU_E_PadLen255.def:::Padding Length is 255 (max):2
+
+###END

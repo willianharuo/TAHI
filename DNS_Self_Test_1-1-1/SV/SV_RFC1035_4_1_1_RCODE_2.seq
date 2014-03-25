@@ -1,0 +1,699 @@
+#!/usr/bin/perl
+#
+# Copyright (C) 2006 Yokogawa Electric Corporation.
+# All rights reserved.
+# 
+# Redistribution and use of this software in source and binary
+# forms, with or without modification, are permitted provided that
+# the following conditions and disclaimer are agreed and accepted
+# by the user:
+# 
+# 1. Redistributions of source code must retain the above copyright
+#    notice, this list of conditions and the following disclaimer.
+# 
+# 2. Redistributions in binary form must reproduce the above copyright
+#    notice, this list of conditions and the following disclaimer in
+#    the documentation and/or other materials provided with
+#    the distribution.
+# 
+# 3. Neither the names of the copyrighters, the name of the project
+#    which is related to this software (hereinafter referred to as
+#    "project") nor the names of the contributors may be used to
+#    endorse or promote products derived from this software without
+#    specific prior written permission.
+# 
+# 4. No merchantable use may be permitted without prior written
+#    notification to the copyrighters.
+# 
+# 5. The copyrighters, the project and the contributors may prohibit
+#    the use of this software at any time.
+# 
+# THIS SOFTWARE IS PROVIDED BY THE COPYRIGHTERS, THE PROJECT AND
+# CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING
+# BUT NOT LIMITED THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS
+# FOR A PARTICULAR PURPOSE, ARE DISCLAIMED.  IN NO EVENT SHALL THE
+# COPYRIGHTERS, THE PROJECT OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT,
+# INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
+# (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+# SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
+# HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT,
+# STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING
+# IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+# POSSIBILITY OF SUCH DAMAGE.
+#
+# $TAHI: ct-dns/dns/SV/SV_RFC1035_4_1_1_RCODE_2.seq,v 1.1.1.1 2006/06/02 05:15:44 akisada Exp $
+# $Id: SV_RFC1035_4_1_1_RCODE_2.seq,v 1.1.1.1 2006/06/02 05:15:44 akisada Exp $
+#
+######################################################################
+
+BEGIN {
+        $kCommon::TestVersion = '$Name: REL_1_1_1 $';
+        push( @INC, '/usr/local/koi/libdata' );
+        push( @INC, '..' );
+}
+
+END {
+}
+
+# use strict;
+use DNS;
+
+#------------------------------#
+# NUT configuration            #
+#------------------------------#
+my $NutConfigA={ 
+##mode
+	              'ModeRequiredTestMode' => 'nonrecursive',
+	              'ModeSetNamedConf' => 'yes',
+	              'ModeSetNamedRoot' => 'yes',
+	             };
+
+
+my $NutConfigB={ 
+##mode
+	              'ModeRequiredTestMode' => 'nonrecursive',
+	              'ModeSetNamedRoot' => 'yes',
+##named.root
+		       'RootZone0Name' => '.',
+		       'RootZone0Ttl' => 3600000,
+		       'RootZone0Class' => 'IN',
+		       'RootZone0Type' => 'NS',
+		       'RootZone0Value' => 'A.ROOT.NET.',
+		       'RootZone1Name' => 'A.ROOT.NET.',
+		       'RootZone1Ttl' => 3600000,
+		       'RootZone1Class' => 'IN',
+		       'RootZone1Type' => ($ADDR_TYPE == 0x001c) ? 'AAAA' : 'A',
+		       'RootZone1Value' => $TN_NET1_NODE2_ADDR,
+	             };
+
+my $remoteRet = DNSRemote("setconfig.rmt",$NutConfigA);
+unless ( defined($remoteRet) ) {
+        Debug_Print("ERROR:DNSRemote\n");
+        DNSExit($FAIL);
+}
+
+
+#------------------------------#
+# configuration                #
+#------------------------------#
+my @dns_session_config = ();
+my $dns_param          = { 'dns_session_config' => \@dns_session_config };
+
+$dns_session_config[0] = {
+        'TN_INTERFACE'   => 'Link0',
+        'TN_ADDR'        => $TN_NET0_NODE2_ADDR,
+        'TN_ADDR_PORT'   => $TN_CL_PORT,
+        'TN_ADDR_PROTO'  => 'UDP',
+        'TN_ADDR_FAMILY' => $ADDR_FAMILY,
+        'NUT_ADDR'       => $NUT_ADDR_0,
+        'NUT_ADDR_PORT'  => $NUT_SV_PORT,
+};
+
+#--------------------
+# DNS Server1
+#--------------------
+my @dns_session   = ();
+my @gen_dns_msg_0 = ();
+my @exp_dns_msg_0 = ();
+
+$dns_session[0] = {
+        'socket_ref'      => undef,
+        'dns_one_session' => [
+                {
+                        'gen_dns_msg' => \@gen_dns_msg_0,
+                        'dec_dns_msg' => undef,
+                        'exp_dns_msg' => \@exp_dns_msg_0,
+                }
+        ]
+};
+
+#--------------------------
+# Send packet definition
+#--------------------------
+#------------------
+# 1st message()
+#------------------
+#------------------
+# Client1(TN) -> NUT
+#------------------
+$gen_dns_msg_0[0]->{'header'} = {
+        'id'      => 0x1000,
+        'qr'      => 0,
+        'opcode'  => 0,
+        'aa'      => 0,
+        'tc'      => 0,
+        'rd'      => 1,
+        'ra'      => 0,
+        'z'       => 0,
+        'rcode'   => 0,
+        'qdcount' => 1,
+        'ancount' => 0,
+        'nscount' => 0,
+        'arcount' => 0,
+};
+
+$gen_dns_msg_0[0]->{'question'}->[0] = {
+        'qname'  => Gen_DNS_Name('A.example.com'),
+        'qtype'  => 0x0001,
+        'qclass' => 0x0001,
+};
+
+#--------------------------
+# Expect packet definition
+#--------------------------
+#------------------
+# 2nd message
+#------------------
+$exp_dns_msg_0[0]->{'header'} = {
+        'id'      => 0x1000,
+        'qr'      => 1,
+        'opcode'  => 0,
+        'aa'      => undef,
+        'tc'      => 0,
+        'rd'      => 1,
+        'ra'      => undef,
+        'z'       => 0,
+        'rcode'   => 2,
+        'qdcount' => 1,
+        'ancount' => 0,
+        'nscount' => 0,
+        'arcount' => 0,
+};
+
+$exp_dns_msg_0[0]->{'question'}->[0] = {
+        'qname'  => 'A.example.com.',
+        'qtype'  => 0x0001,
+        'qclass' => 0x0001,
+};
+
+################################
+# start tests                  #
+################################
+
+my $ret = DNSStartConnect( $dns_param, \@dns_session );
+unless ( defined($ret) ) {
+        Debug_Print("ERROR:DNSStartConnect\n");
+        DNSExit($FAIL);
+}
+
+#------------------------------#
+# 1st packet (send)            #
+#------------------------------#
+$ret = undef;
+$ret = DNSSend(
+        1,
+        $dns_session[0]->{'socket_ref'},
+        $dns_session[0]->{'dns_one_session'}->[0]
+);
+
+unless ( defined($ret) ) {
+        Debug_Print("ERROR: Can't send DNS message\n");
+        DNSExit($FAIL);
+}
+#Print_Message( "=", ["Send 1st message\n"] );
+
+#------------------------------#
+# 2nd packet (receive@NS2)     #
+#------------------------------#
+$ret = undef;
+$ret = DNSRecv(
+        1, 60,
+        $dns_session[0]->{'socket_ref'},
+        $dns_session[0]->{'dns_one_session'}->[0]
+);
+
+unless ( defined($ret) ) {
+        Debug_Print("ERROR: Can't receive DNS message\n");
+        DNSExit($FAIL);
+}
+#Print_Message( "=", ["Receive 2nd message\n"] );
+
+#------------------------------#
+# Judgment (2nd packet)        #
+#------------------------------#
+Print_Message(
+        "#",
+        [
+                "Judgment (2nd packet)\n",
+                "2. Received standard query response including RCODE=2.\n",
+        ]
+);
+
+my $recv_data = $dns_session[0]->{'dns_one_session'}->[0]->{'dec_dns_msg'}->[0];
+
+$ret = undef;
+$ret = JudgeDNSMsg( $recv_data, $exp_dns_msg_0[0] );
+
+unless ( defined($ret) ) {
+        DNSExit($FAIL);
+}
+
+Print_Message( "=", ["2nd packet PASS\n"] );
+
+##restore named.root
+
+$remoteRet = undef;
+$remoteRet = DNSRemote("setconfig.rmt",$NutConfigB);
+unless ( defined($remoteRet) ) {
+        Debug_Print("ERROR:DNSRemote\n");
+        DNSExit($FAIL);
+}
+
+
+
+
+
+DNSExit($OK);
+__END__
+
+######################################################################
+
+=head1 NAME
+
+	SV_RFC1035_4_1_1_RCODE_2 - Server failure (RCODE=2)
+
+=head1 VERIFICATION POINTS
+
+	Verify that a NUT transmits Server failure (RCODE=2).
+
+
+	RCODE           Response code - this 4 bit field is set as part of
+	                responses.  The values have the following
+	                interpretation:
+	
+	                0               No error condition
+	
+	                1               Format error - The name server was
+	                                unable to interpret the query.
+	
+	                2               Server failure - The name server was
+	                                unable to process this query due to a
+	                                problem with the name server.
+	
+	                3               Name Error - Meaningful only for
+	                                responses from an authoritative name
+ 	                               server, this code signifies that the
+	                                domain name referenced in the query does
+	                                not exist.
+		
+	                4               Not Implemented - The name server does
+	                                not support the requested kind of query.
+
+	                5               Refused - The name server refuses to
+	                                perform the specified operation for
+	                                policy reasons.  For example, a name
+	                                server may not wish to provide the
+	                                information to the particular requester,
+	                                or a name server may not wish to perform
+	                                a particular operation (e.g., zone
+	                                transfer) for particular data.
+
+=head1 TARGET
+
+	Authoritative Server
+
+=head1 SYNOPSIS
+
+=begin html
+<PRE>
+	<A HREF="./SV_RFC1035_4_1_1_RCODE_2.seq.seq">SV_RFC1035_4_1_1_RCODE_2.seq.seq</A> [-tooloption ...]: KOI tool option
+	See also <A HREF="../DNSConfig.pm">DNSConfig.pm</A>
+</PRE>
+
+=end html
+
+=head1 INITIALIZATION
+
+=begin html
+	<UL>
+	<DD><LI><STRONG>Network Topology</STRONG></LI> 
+	<PRE>
+        AP Server1 (TN)
+          |3ffe:501:ffff:101::10
+          |192.168.1.10
+          |
+Net-y   --+--------+-------------------------- 3ffe:501:ffff:101::/64 
+                   |                           192.168.1/24
+                   |
+                   |
+                 Router (TN)
+                   |3ffe:501:ffff:100::1
+                   |192.168.0.1
+                   |
+                   |
+Net-z   --+--------+-----------------+-------- 3ffe:501:ffff:100::/64 
+          |                          |          192.168.0/24
+          |                          |
+        DNS Server1 (NUT)            DNS Client1 (TN)
+           3ffe:501:ffff:100::XXXX     3ffe:501:ffff:100::20 
+           192.168.0.10                192.168.0.20
+	<BR>
+	XXXX: EUI64
+	</PRE>
+	<DD><LI><STRONG>Setup</STRONG></LI><BR>
+	<BR>
+	<DD>Set the DNS Server1's (NUT) address as above mentioned Network Topology.<BR>
+	<DD>Configure the Server1's (NUT) zone file to response query from TN.<BR>
+	<BR>
+	<DD>Example of root server list:</BR>
+	<BR>
+	<DD>&nbsp;&nbsp;For IPv4:
+	<PRE>
+.                       3600000         IN      NS      A.ROOT.NET.
+A.ROOT.NET.             3600000                 A       192.168.1.20
+	</PRE>
+	<DD>&nbsp;&nbsp;For IPv6:
+	<PRE>
+.                       3600000         IN      NS      A.ROOT.NET.
+A.ROOT.NET.             3600000                 AAAA    3ffe:501:ffff:101::20
+	</UL>
+
+=end html
+
+=head1 TEST PROCEDURE
+
+	This test sequence is following.
+
+    DNS Client1 (TN)                       DNS Server1 (NUT)
+        |                                      |
+        |------------------------------------->|
+        |   1. Send standard query             |
+        |       QNAME=A.example.com            |
+        |       QTYPE=A                        |
+        |                                      |
+        |<-------------------------------------|
+        |   2. Standard query response         |
+        |       Server failure                 |
+        |                                      |
+        v                                      v
+
+	1. TN send standard query QNAME=A.example.com, QTYPE=A  to NUT.
+	2. NUT reply query response to TN (Judgment *2)
+
+=begin html
+	<UL>
+	<DD><LI>Packet Description</LI><BR>
+	<BR>
+	<DD>1st packet.
+	<P></P>
+	<DD><TABLE BORDER="1">
+		<TBODY>
+		<TR>
+			<TD COLSPAN="3">
+			<CENTER>Standard query from DNS Client1 (TN) to Server1 (NUT) </CENTER>
+			</TD>
+		</TR>
+		<TR>
+			<TD ROWSPAN="2">IP Header</TD>
+			<TD>Source Address</TD>
+			<TD>CL1_NETZ</TD>
+		</TR>
+		<TR>
+			<TD>Destination Address</TD>
+			<TD>NUT_NETZ</TD>
+		</TR>
+		<TR>
+			<TD COLSPAN="1" ROWSPAN="2">UDP Header</TD>
+			<TD>Src Port</TD>
+			<TD>2000</TD>
+		</TR>
+		<TR>
+			<TD>Dst Port</TD>
+			<TD>53</TD>
+		</TR>
+		<TR>
+			<TD COLSPAN="1" ROWSPAN="13">DNS Header</TD>
+			<TD>ID</TD>
+			<TD>0x1000</TD>
+		</TR>
+		<TR>
+			<TD>QR</TD>
+			<TD>0</TD>
+		</TR>
+		<TR>
+			<TD>OPCODE</TD>
+			<TD>0</TD>
+		</TR>
+		<TR>
+			<TD>AA</TD>
+			<TD>0</TD>
+		</TR>
+		<TR>
+			<TD>TC</TD>
+			<TD>0</TD>
+		</TR>
+		<TR>
+			<TD>RD</TD>
+			<TD>1</TD>
+		</TR>
+		<TR>
+			<TD>RA</TD>
+			<TD>0</TD>
+		</TR>
+		<TR>
+			<TD>Z</TD>
+			<TD>0</TD>
+		</TR>
+		<TR>
+			<TD>RCODE</TD>
+			<TD>0</TD>
+		</TR>
+		<TR>
+			<TD>QDCOUNT</TD>
+			<TD>1</TD>
+		</TR>
+		<TR>
+			<TD>ANCOUNT</TD>
+			<TD>0</TD>
+		</TR>
+		<TR>
+			<TD>NSCOUNT</TD>
+			<TD>0</TD>
+		</TR>
+		<TR>
+			<TD>ARCOUNT</TD>
+			<TD>0</TD>
+		</TR>
+		<TR>
+			<TD COLSPAN="1" ROWSPAN="3">DNS Question section</TD>
+			<TD>QNAME</TD>
+			<TD>A.example.com</TD>
+		</TR>
+		<TR>
+			<TD>QTYPE</TD>
+			<TD>A (0x0001)</TD>
+		</TR>
+		<TR>
+			<TD>QCLASS</TD>
+			<TD>IN (0x0001)</TD>
+		</TR>
+		</TBODY>
+	</TABLE>
+	<BR>
+	<DD>2nd packet.
+	<P></P>
+	<DD><TABLE BORDER="1">
+		<TBODY>
+		<TR>
+			<TD COLSPAN="3">
+			<CENTER>Standard query response from DNS Server1 (NUT) to Client1 (TN)</CENTER>
+			</TD>
+		</TR>
+		<TR>
+			<TD ROWSPAN="2">IP Header</TD>
+			<TD>Source Address</TD>
+			<TD>NUT_NETZ</TD>
+		</TR>
+		<TR>
+			<TD>Destination Address</TD>
+			<TD>CL1_NETZ</TD>
+		</TR>
+		<TR>
+			<TD COLSPAN="1" ROWSPAN="2">UDP Header</TD>
+			<TD>Src Port</TD>
+			<TD>53</TD>
+		</TR>
+		<TR>
+			<TD>Dst Port</TD>
+			<TD>2000</TD>
+		</TR>
+		<TR>
+			<TD COLSPAN="1" ROWSPAN="13">DNS Header</TD>
+			<TD>ID</TD>
+			<TD>0x1000</TD>
+		</TR>
+		<TR>
+			<TD>QR</TD>
+			<TD>1</TD>
+		</TR>
+		<TR>
+			<TD>OPCODE</TD>
+			<TD>0</TD>
+		</TR>
+		<TR>
+			<TD>AA</TD>
+			<TD>0</TD>
+		</TR>
+		<TR>
+			<TD>TC</TD>
+			<TD>0</TD>
+		</TR>
+		<TR>
+			<TD>RD</TD>
+			<TD>1</TD>
+		</TR>
+		<TR>
+			<TD>RA</TD>
+			<TD>any</TD>
+		</TR>
+		<TR>
+			<TD>Z</TD>
+			<TD>0</TD>
+		</TR>
+		<TR>
+			<TD>RCODE</TD>
+			<TD>2</TD>
+		</TR>
+		<TR>
+			<TD>QDCOUNT</TD>
+			<TD>1</TD>
+		</TR>
+		<TR>
+			<TD>ANCOUNT</TD>
+			<TD>0</TD>
+		</TR>
+		<TR>
+			<TD>NSCOUNT</TD>
+			<TD>0</TD>
+		</TR>
+		<TR>
+			<TD>ARCOUNT</TD>
+			<TD>0</TD>
+		</TR>
+		<TR>
+			<TD COLSPAN="1" ROWSPAN="3">DNS Question section</TD>
+			<TD>QNAME</TD>
+			<TD>A.example.com</TD>
+		</TR>
+		<TR>
+			<TD>QTYPE</TD>
+			<TD>A (0x0001)</TD>
+		</TR>
+		<TR>
+			<TD>QCLASS</TD>
+			<TD>IN (0x0001)</TD>
+		</TR>
+<!--
+		<TR>
+			<TD COLSPAN="1" ROWSPAN="6">DNS Answer section</TD>
+			<TD>NAME</TD>
+			<TD>any</TD>
+		</TR>
+		<TR>
+			<TD>TYPE</TD>
+			<TD>any</TD>
+		</TR>
+		<TR>
+			<TD>CLASS</TD>
+			<TD>any</TD>
+		</TR>
+		<TR>
+			<TD>TTL</TD>
+			<TD>any</TD>
+		</TR>
+		<TR>
+			<TD>RDLENGTH</TD>
+			<TD>any</TD>
+		</TR>
+		<TR>
+			<TD>ADDRESS</TD>
+			<TD>any</TD>
+		</TR>
+		<TR>
+			<TD COLSPAN="1" ROWSPAN="6">DNS Authority section</TD>
+			<TD>NAME</TD>
+			<TD>any</TD>
+		</TR>
+		<TR>
+			<TD>TYPE</TD>
+			<TD>any</TD>
+		</TR>
+		<TR>
+			<TD>CLASS</TD>
+			<TD>any</TD>
+		</TR>
+		<TR>
+			<TD>TTL</TD>
+			<TD>any</TD>
+		</TR>
+		<TR>
+			<TD>RDLENGTH</TD>
+			<TD>any</TD>
+		</TR>
+		<TR>
+			<TD>NSDNAME</TD>
+			<TD>any</TD>
+		</TR>
+		<TR>
+			<TD COLSPAN="1" ROWSPAN="6">DNS Additional section</TD>
+			<TD>NAME</TD>
+			<TD>any</TD>
+		</TR>
+		<TR>
+			<TD>TYPE<BR>
+			</TD>
+			<TD>any</TD>
+		</TR>
+		<TR>
+			<TD>CLASS</TD>
+			<TD>any</TD>
+		</TR>
+		<TR>
+			<TD>TTL</TD>
+			<TD>any</TD>
+		</TR>
+		<TR>
+			<TD>RDLENGTH</TD>
+			<TD>any</TD>
+		</TR>
+		<TR>
+			<TD>ADDRESS</TD>
+			<TD>any</TD>
+		</TR>
+-->
+		</TBODY>
+	</TABLE>
+	<BR>
+	<BR>
+	<DD>Exp.
+	<BR>
+	<DD><TABLE BORDER="1">
+		<TBODY>
+		<TR>
+			<TD>NUT_NETZ</TD>
+			<TD>DNS Server1's (NUT) Net-z address</TD>
+		</TR>
+		<TR>
+			<TD>CL1_NETZ</TD>
+			<TD>DNS Client1's (TN) Net-z address</TD>
+		</TR>
+		</TBODY>
+	</TABLE>
+	</UL>
+
+=end html
+
+=head1 JUDGMENT
+
+	2. Received standard query response including RCODE=2.
+
+=head1 TERMINATION
+
+	None
+
+=head1 REFERENCE
+
+	RFC1035 DOMAIN NAMES - IMPLEMENTATION AND SPECIFICATION
+	4.1.1. Header section format
+
+=cut

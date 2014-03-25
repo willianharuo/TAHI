@@ -1,0 +1,66 @@
+		   README of DNS Conformance Test Package
+
+			Yokogawa Electric Corporation
+
+			$Date: 2006/06/02 05:15:40 $
+
+Introduction of the Package
+===========================
+
+These packeges are the DNS Conformance Test Program Package written by 
+Yokogawa Electric Corporation. Not all IPv6 conformance tests developed 
+referring to IPv6 related RFCs are included in this Package.
+
+The tests run on the DNS Conformance Test Tool Package "koi" and "v6eval".
+that are written by TAHI project. 
+
+These packages "koi" and "v6eval" are obtained at the following site:
+	http://www.tahi.org/
+
+
+Copyright
+=========
+
+Please refer to the COPYRIGHT file for copyright notice.
+
+
+Install and Run 
+===============
+
+Complete installation instructions can be found in the INSTALL.ct file.
+
+
+Contact Points
+==============
+
+o Yokogawa Electric Corporation
+	For more information about Yokogawa Electric Corporation, please visit the our site:
+		http://www.yokogawa.co.jp/
+
+o TAHI Project
+	For more information about TAHI project, please visit the TAHI project site:
+		http://www.tahi.org/
+ 
+	To contact us, please e-mail to:
+		contact@tahi.org
+
+
+Acknowledgments
+===============
+
+We deeply thank the following projects for their great support to us:
+	WIDE Project	(http://www.wide.ad.jp/)
+
+The tests have ran for the following implementations.
+We also thank people who have given us the opportunities.
+
+	All of participants and organizers in
+
+		(in alphabetical order):
+
+		- ETSI plugtests
+		- TAHI IPv6 Interoperability Test Event
+
+NOTE: If your want to run the test for the above implementations,
+      you must configure them to fit testing environment.
+							[End of README]

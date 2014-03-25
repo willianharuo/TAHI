@@ -1,0 +1,147 @@
+RFC2766
+=======
+
+4.1 Use of DNS-ALG
+
+   The DNS-ALG on the NAT-PT device
+   would modify DNS Queries for A records going into the V6 domain as
+   follows: (Note that a TCP/UDP DNS packet is recognised by the fact
+   that its source or destination port number is 53)
+
+      a) For Node Name to Node Address Query requests:  Change the Query
+         type from "A" to "AAAA" or "A6".
+      b) For Node address to Node name query requests:  Replace the
+         string "IN-ADDR.ARPA" with the string "IP6.INT".  Replace the
+         V4 address octets (in reverse order) preceding the string "IN-
+         ADDR.ARPA" with the corresponding V6 address (if there exists a
+         map) octets in reverse order.
+
+   In the opposite direction, when a DNS response traverses from the DNS
+   server on the V6 network to the V4 node, the DNS-ALG once again
+   intercepts the DNS packet and would:
+
+      a) Translate DNS responses for "AAAA" or "A6" records into "A"
+         records, (only translate "A6" records when the name has
+         completely been resolved)
+      b) Replace the V6 address resolved by the V6 DNS with the V4
+         address internally assigned by the NAT-PT router.
+
+   The TTL values on all DNS resource records (RRs) passing through
+   NAT-PT SHOULD be set to 0 so that DNS servers/clients do not cache
+   temporarily assigned RRs. Note, however, that due to some buggy DNS
+   client implementations a value of 1 might in some cases work better.
+   The TTL values should be left unchanged for statically mapped
+   addresses.
+
+6. FTP Application Level Gateway (FTP-ALG) Support
+
+   Because an FTP control session carries, in its payload, the IP
+   address and TCP port information for the data session, an FTP-ALG is
+   required to provide application level transparency for this popular
+   Internet application.
+
+   In the FTP application running on a legacy V4 node, arguments to the
+   FTP PORT command and arguments in PASV response(successful) include
+   an IP V4 address and a TCP port, both represented in ASCII as
+   h1,h2,h3,h4,p1,p2. However, [FTP-IPV6] suggests EPRT and EPSV command
+   extensions to FTP, with an intent to eventually retire the use of
+   PORT and PASV commands. These extensions may be used on a V4 or V6
+   node. FTP-ALG, facilitating transparent FTP between V4 and V6 nodes,
+   works as follows.
+
+6.1 Payload modifications for V4 originated FTP sessions
+
+   A V4 host may or may not have the EPRT and EPSV command extensions
+   implemented in its FTP application. If a V4 host originates the FTP
+   session and uses PORT or PASV command, the FTP-ALG will translate
+   these commands into EPRT and EPSV commands respectively prior to
+   forwarding to the V6 node. Likewise, EPSV response from V6 nodes will
+   be translated into PASV response prior to forwarding to V4 nodes.
+   The format of EPRT and EPSV commands and EPSV response may be
+   specified as follows[FTP-IPV6].
+
+      EPRT<space><d><net-prt><d><net-addr><d><tcp-port><d>
+      EPSV<space><net-prt>
+            (or)
+      EPSV<space>ALL
+
+      Format of EPSV response(Positive): 229 <text indicating
+      extended passive mode> (<d><d><d><tcp-port><d>)
+
+   PORT command from a V4 node is translated into EPRT command, by
+   setting the protocol <net-prt> field to AF #2 (IPV6) and translating
+   the V4 host Address (represented as h1,h2,h3,h4) into its NAT-PT
+   assigned V6 address in string notation, as defined in [V6ADDR] in the
+   <net-addr> field.  TCP port represented by p1,p2 in PORT command must
+   be specified as a decimal <tcp-port> in the EPRT command. Further,
+   <tcp-port> translation may also be required in the case of NAPT-PT.
+   PASV command from a V4 node is be translated into a EPSV command with
+   the <net-prt> argument set to AF #2.  EPSV response from a V6 node is
+   translated into PASV response prior to forwarding to the target V4
+   host.
+
+   If a V4 host originated the FTP session and was using EPRT and EPSV
+   commands, the FTP-ALG will simply translate the parameters to these
+   commands, without altering the commands themselves. The protocol
+   Number <net-prt> field will be translated from AF #1 to AF #2.
+   <net-addr> will be translated from the V4 address in ASCII to its
+   NAT-PT assigned V6 address in string notation as defined in [V6ADDR].
+   <tcp-port> argument in EPSV response requires translation only in the
+   case of NAPT-PT.
+
+6.2 Payload modifications for V6 originated FTP sessions
+
+   If a V6 host originates the FTP session, however, the FTP-ALG has two
+   approaches to pursue. In the first approach, the FTP-ALG will leave
+   the command strings "EPRT" and "EPSV" unaltered and simply translate
+   the <net-prt>, <net-addr> and <tcp-port> arguments from V6 to its
+   NAT-PT (or NAPT-PT) assigned V4 information. <tcp-port> is translated
+   only in the case of NAPT-PT. Same goes for EPSV response from V4
+   node. This is the approach we recommend to ensure forward support for
+   RFC 2428.  However, with this approach, the V4 hosts are mandated to
+   have their FTP application upgraded to support EPRT and EPSV
+   extensions to allow access to V4 and V6 hosts, alike.
+
+   In the second approach, the FTP-ALG will translate the command
+   strings "EPRT" and "EPSV" and their parameters from the V6 node into
+   their equivalent NAT-PT assigned V4 node info and attach to "PORT"
+   and "PASV" commands prior to forwarding to V4 node.  Likewise, PASV
+   response from V4 nodes is translated into EPSV response prior to
+   forwarding to the target V6 nodes.  However, the FTP-ALG would be
+   unable to translate the command "EPSV<space>ALL" issued by V6 nodes.
+   In such a case, the V4 host, which receives the command, may return
+   an error code indicating unsupported function. This error response
+   may cause many RFC 2428 compliant FTP applications to simply fail,
+   because EPSV support is mandated by RFC 2428. The benefit of this
+   approach, however, is that is does not impose any FTP upgrade
+   requirements on V4 hosts.
+
+6.3 Header updates for FTP control packets
+
+   All the payload translations considered in the previous sections are
+   based on ASCII encoded data.  As a result, these translations may
+   result in a change in the size of packet.
+
+   If the new size is the same as the previous, only the TCP checksum
+   needs adjustment as a result of the payload translation.  If the new
+   size is different from the previous, TCP sequence numbers should also
+   be changed to reflect the change in the length of the FTP control
+   session payload. The IP packet length field in the V4 header or the
+   IP payload length field in the V6 header should also be changed to
+   reflect the new payload size. A table is used by the FTP-ALG to
+   correct the TCP sequence and acknowledgement numbers in the TCP
+   header for control packets in both directions.
+
+   The table entries should have the source address, source data port,
+   destination address and destination data port for V4 and V6 portions
+   of the session, sequence number delta for outbound control packets
+   and sequence number delta for inbound control packets.
+
+   The sequence number for an outbound control packet is increased by
+   the outbound sequence number delta, and the acknowledgement number
+   for the same outbound packet is decreased by the inbound sequence
+   number delta.  Likewise, the sequence number for an inbound packet is
+   increased by the inbound sequence number delta and the
+   acknowledgement number for the same inbound packet is decreased by
+   the outbound sequence number delta.
+

@@ -1,0 +1,1493 @@
+//
+// Copyright (C) 2003 Yokogawa Electric Corporation, 
+// INTAP(Interoperability Technology Association
+// for Information Processing, Japan).  All rights reserved.
+// 
+// Redistribution and use of this software in source and binary forms, with 
+// or without modification, are permitted provided that the following 
+// conditions and disclaimer are agreed and accepted by the user:
+// 
+// 1. Redistributions of source code must retain the above copyright 
+// notice, this list of conditions and the following disclaimer.
+// 
+// 2. Redistributions in binary form must reproduce the above copyright 
+// notice, this list of conditions and the following disclaimer in the 
+// documentation and/or other materials provided with the distribution.
+// 
+// 3. Neither the names of the copyrighters, the name of the project which 
+// is related to this software (hereinafter referred to as "project") nor 
+// the names of the contributors may be used to endorse or promote products 
+// derived from this software without specific prior written permission.
+// 
+// 4. No merchantable use may be permitted without prior written 
+// notification to the copyrighters. However, using this software for the 
+// purpose of testing or evaluating any products including merchantable 
+// products may be permitted without any notification to the copyrighters.
+// 
+// 
+// 
+// THIS SOFTWARE IS PROVIDED BY THE COPYRIGHTERS, THE PROJECT AND 
+// CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING 
+// BUT NOT LIMITED THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS 
+// FOR A PARTICULAR PURPOSE, ARE DISCLAIMED.  IN NO EVENT SHALL THE 
+// COPYRIGHTERS, THE PROJECT OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, 
+// INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES 
+// (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR 
+// SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) 
+// HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN 
+// CONTRACT,STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) 
+// ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF 
+// THE POSSIBILITY OF SUCH DAMAGE.
+//
+// OFFLINK_GLOBAL_ADDRESS               Off-Link host's Global Address
+// TN_GLOBAL_ADDRESS                    TN's Global Address
+//
+// $TAHI: ct/router-select/RTINFO.def,v 1.10 2003/04/22 04:26:45 akisada Exp $
+//
+
+
+#include "ROUTE.def"
+
+#ifndef ROUTER_LT
+#define ROUTER_LT 0
+#endif
+
+
+//#####################################################################
+//##  ROUTER 1
+//#####################################################################
+
+#define RA_RT1_LINK1_RTINFO( \
+        pNAME, \
+        DefPref, \
+        RtPref, \
+        RT_Life \
+) \
+FEM_icmp6_ra ( \
+        pNAME, \
+        _HETHER_tn2nut_RT1, \
+                { \
+                _SRC(rt1_lla); \
+                _DST(v6(_LLOCAL_ALLNODES_MCAST_ADDR)); \
+                HopLimit=255; \
+        }, \
+                { \
+                Preference=DefPref; \
+                LifeTime=ROUTER_LT; \
+                CurHopLimit=64; \
+                ReachableTime=20000; \
+                RetransTimer=1005; \
+                option=_SLLOPT_tn_RT1; \
+                option=prefix_ra; \
+		option=rtinfo_rt1_link1_##DefPref##RtPref##RT_Life; \
+        } \
+) \
+Opt_ICMPv6_RouteInfo rtinfo_rt1_link1_##DefPref##RtPref##RT_Life { \
+	Preference	= RtPref; \
+	RouteLifetime	= RT_Life; \
+	Prefix		= v6(_GLOBAL1_UCAST_PRFX); \
+}
+
+
+#define RA_RT1_LINK2_RTINFO( \
+        pNAME, \
+        DefPref, \
+        RtPref, \
+        RT_Life \
+) \
+FEM_icmp6_ra ( \
+        pNAME, \
+        _HETHER_tn2nut_RT1, \
+                { \
+                _SRC(rt1_lla); \
+                _DST(v6(_LLOCAL_ALLNODES_MCAST_ADDR)); \
+                HopLimit=255; \
+        }, \
+                { \
+                Preference=DefPref; \
+                LifeTime=ROUTER_LT; \
+                CurHopLimit=64; \
+                ReachableTime=20000; \
+                RetransTimer=1005; \
+                option=_SLLOPT_tn_RT1; \
+                option=prefix_ra; \
+		option=rtinfo_rt1_link2_##DefPref##RtPref##RT_Life; \
+        } \
+) \
+Opt_ICMPv6_RouteInfo rtinfo_rt1_link2_##DefPref##RtPref##RT_Life { \
+	Preference	= RtPref; \
+	RouteLifetime	= RT_Life; \
+	Prefix		= v6(_GLOBAL2_UCAST_PRFX); \
+}
+
+
+#define RA_RT1_LINK1_RTINFOwPXLENGTH( \
+        pNAME, \
+        DefPref, \
+        RtPref, \
+        RT_Life, \
+        PreLen \
+) \
+FEM_icmp6_ra ( \
+        pNAME, \
+        _HETHER_tn2nut_RT1, \
+                { \
+                _SRC(rt1_lla); \
+                _DST(v6(_LLOCAL_ALLNODES_MCAST_ADDR)); \
+                HopLimit=255; \
+        }, \
+                { \
+                Preference=DefPref; \
+                LifeTime=ROUTER_LT; \
+                CurHopLimit=64; \
+                ReachableTime=20000; \
+                RetransTimer=1005; \
+                option=_SLLOPT_tn_RT1; \
+                option=prefix_ra; \
+		option=rtinfo_rt1_link1_##DefPref##RtPref##RT_Life##PreLen; \
+        } \
+) \
+Opt_ICMPv6_RouteInfo rtinfo_rt1_link1_##DefPref##RtPref##RT_Life##PreLen { \
+	Preference	= RtPref; \
+	RouteLifetime	= RT_Life; \
+	Prefix		= v6(_GLOBAL1_UCAST_PRFX); \
+	PrefixLength	= PreLen; \
+}
+
+#define RA_RT1_LINK1_RTINFOwLENGTH( \
+        pNAME, \
+        DefPref, \
+        RtPref, \
+        RT_Life, \
+        PreLen, \
+        Len \
+) \
+FEM_icmp6_ra ( \
+        pNAME, \
+        _HETHER_tn2nut_RT1, \
+                { \
+                _SRC(rt1_lla); \
+                _DST(v6(_LLOCAL_ALLNODES_MCAST_ADDR)); \
+                HopLimit=255; \
+        }, \
+                { \
+                Preference=DefPref; \
+                LifeTime=ROUTER_LT; \
+                CurHopLimit=64; \
+                ReachableTime=20000; \
+                RetransTimer=1005; \
+                option=_SLLOPT_tn_RT1; \
+                option=prefix_ra; \
+		option=rtinfo_rt1_link1_##Len##DefPref##RtPref##RT_Life##PreLen; \
+        } \
+) \
+Opt_ICMPv6_RouteInfo rtinfo_rt1_link1_##Len##DefPref##RtPref##RT_Life##PreLen { \
+	Preference	= RtPref; \
+	Length          = Len; \
+	RouteLifetime	= RT_Life; \
+	Prefix		= v6(_GLOBAL1_UCAST_PRFX); \
+	PrefixLength	= PreLen; \
+}
+
+#define RA_RT1_LINKANY_RTINFO( \
+        pNAME, \
+        DefPref, \
+        RtPref, \
+        RT_Life \
+) \
+FEM_icmp6_ra ( \
+        pNAME, \
+        _HETHER_tn2nut_RT1, \
+                { \
+                _SRC(rt2_lla); \
+                _DST(v6(_LLOCAL_ALLNODES_MCAST_ADDR)); \
+                HopLimit=255; \
+        }, \
+                { \
+                Preference=DefPref; \
+                LifeTime=ROUTER_LT; \
+                CurHopLimit=64; \
+                ReachableTime=20000; \
+                RetransTimer=1005; \
+                option=_SLLOPT_tn_RT1; \
+                option=prefix_ra; \
+		option=rtinfo_rt1_linkANY_##DefPref##RtPref##RT_Life; \
+        } \
+) \
+Opt_ICMPv6_RouteInfo rtinfo_rt1_linkANY_##DefPref##RtPref##RT_Life { \
+	Preference	= RtPref; \
+	RouteLifetime	= RT_Life; \
+	Prefix		= v6("::"); \
+	PrefixLength	= 0; \
+}
+
+#define RA_RT1_LINKANY_RTINFO_OVRIDE( \
+        pNAME, \
+        DefPref, \
+        RTR_Life, \
+        RtPref, \
+        RT_Life \
+) \
+FEM_icmp6_ra ( \
+        pNAME, \
+        _HETHER_tn2nut_RT1, \
+                { \
+                _SRC(rt2_lla); \
+                _DST(v6(_LLOCAL_ALLNODES_MCAST_ADDR)); \
+                HopLimit=255; \
+        }, \
+                { \
+                Preference=DefPref; \
+                LifeTime=RTR_Life; \
+                CurHopLimit=64; \
+                ReachableTime=20000; \
+                RetransTimer=1005; \
+                option=_SLLOPT_tn_RT1; \
+                option=prefix_ra; \
+		option=rtinfo_rt1_linkANY_##DefPref##RTR_Life##RtPref##RT_Life; \
+        } \
+) \
+Opt_ICMPv6_RouteInfo rtinfo_rt1_linkANY_##DefPref##RTR_Life##RtPref##RT_Life { \
+	Preference	= RtPref; \
+	RouteLifetime	= RT_Life; \
+	Prefix		= v6("::"); \
+	PrefixLength	= 0; \
+}
+
+//#####################################################################
+//## ROUTER 2
+//#####################################################################
+
+#define RA_RT2_LINK1_RTINFO( \
+        pNAME, \
+        DefPref, \
+        RtPref, \
+        RT_Life \
+) \
+FEM_icmp6_ra ( \
+        pNAME, \
+        _HETHER_tn2nut_RT2, \
+                { \
+                _SRC(rt2_lla); \
+                _DST(v6(_LLOCAL_ALLNODES_MCAST_ADDR)); \
+                HopLimit=255; \
+        }, \
+                { \
+                Preference=DefPref; \
+                LifeTime=ROUTER_LT; \
+                CurHopLimit=64; \
+                ReachableTime=20000; \
+                RetransTimer=1005; \
+                option=_SLLOPT_tn_RT2; \
+                option=prefix_ra; \
+		option=rtinfo_rt2_link1_##DefPref##RtPref##RT_Life; \
+        } \
+) \
+Opt_ICMPv6_RouteInfo rtinfo_rt2_link1_##DefPref##RtPref##RT_Life { \
+	Preference	= RtPref; \
+	RouteLifetime	= RT_Life; \
+	Prefix		= v6(_GLOBAL1_UCAST_PRFX); \
+}
+
+
+
+
+
+#define RA_RT2_LINK2_RTINFO( \
+        pNAME, \
+        DefPref, \
+        RtPref, \
+        RT_Life \
+) \
+FEM_icmp6_ra ( \
+        pNAME, \
+        _HETHER_tn2nut_RT2, \
+                { \
+                _SRC(rt2_lla); \
+                _DST(v6(_LLOCAL_ALLNODES_MCAST_ADDR)); \
+                HopLimit=255; \
+        }, \
+                { \
+                Preference=DefPref; \
+                LifeTime=ROUTER_LT; \
+                CurHopLimit=64; \
+                ReachableTime=20000; \
+                RetransTimer=1005; \
+                option=_SLLOPT_tn_RT2; \
+                option=prefix_ra; \
+		option=rtinfo_rt2_link2_##DefPref##RtPref##RT_Life; \
+        } \
+) \
+Opt_ICMPv6_RouteInfo rtinfo_rt2_link2_##DefPref##RtPref##RT_Life { \
+	Preference	= RtPref; \
+	RouteLifetime	= RT_Life; \
+	Prefix		= v6(_GLOBAL2_UCAST_PRFX); \
+}
+
+
+#define RA_RT2_LINK1_RTINFOwPXLENGTH( \
+        pNAME, \
+        DefPref, \
+        RtPref, \
+        RT_Life, \
+        PreLen \
+) \
+FEM_icmp6_ra ( \
+        pNAME, \
+        _HETHER_tn2nut_RT2, \
+                { \
+                _SRC(rt2_lla); \
+                _DST(v6(_LLOCAL_ALLNODES_MCAST_ADDR)); \
+                HopLimit=255; \
+        }, \
+                { \
+                Preference=DefPref; \
+                LifeTime=ROUTER_LT; \
+                CurHopLimit=64; \
+                ReachableTime=20000; \
+                RetransTimer=1005; \
+                option=_SLLOPT_tn_RT2; \
+                option=prefix_ra; \
+		option=rtinfo_rt2_link1_##DefPref##RtPref##RT_Life##PreLen; \
+        } \
+) \
+Opt_ICMPv6_RouteInfo rtinfo_rt2_link1_##DefPref##RtPref##RT_Life##PreLen { \
+	Preference	= RtPref; \
+	RouteLifetime	= RT_Life; \
+	Prefix		= v6(_GLOBAL1_UCAST_PRFX); \
+	PrefixLength	= PreLen; \
+}
+
+
+#define RA_RT2_LINK1_RTINFOwLENGTH( \
+        pNAME, \
+        DefPref, \
+        RtPref, \
+        RT_Life, \
+        PreLen, \
+        Len \
+) \
+FEM_icmp6_ra ( \
+        pNAME, \
+        _HETHER_tn2nut_RT2, \
+                { \
+                _SRC(rt2_lla); \
+                _DST(v6(_LLOCAL_ALLNODES_MCAST_ADDR)); \
+                HopLimit=255; \
+        }, \
+                { \
+                Preference=DefPref; \
+                LifeTime=ROUTER_LT; \
+                CurHopLimit=64; \
+                ReachableTime=20000; \
+                RetransTimer=1005; \
+                option=_SLLOPT_tn_RT2; \
+                option=prefix_ra; \
+		option=rtinfo_rt2_link1_##Len##DefPref##RtPref##RT_Life##PreLen; \
+        } \
+) \
+Opt_ICMPv6_RouteInfo rtinfo_rt2_link1_##Len##DefPref##RtPref##RT_Life##PreLen { \
+	Length	        = Len; \
+	Preference	= RtPref; \
+	RouteLifetime	= RT_Life; \
+	Prefix		= v6(_GLOBAL1_UCAST_PRFX); \
+	PrefixLength	= PreLen; \
+}
+
+
+#define RA_RT2_LINKANY_RTINFO( \
+        pNAME, \
+        DefPref, \
+        RtPref, \
+        RT_Life \
+) \
+FEM_icmp6_ra ( \
+        pNAME, \
+        _HETHER_tn2nut_RT2, \
+                { \
+                _SRC(rt2_lla); \
+                _DST(v6(_LLOCAL_ALLNODES_MCAST_ADDR)); \
+                HopLimit=255; \
+        }, \
+                { \
+                Preference=DefPref; \
+                LifeTime=ROUTER_LT; \
+                CurHopLimit=64; \
+                ReachableTime=20000; \
+                RetransTimer=1005; \
+                option=_SLLOPT_tn_RT2; \
+                option=prefix_ra; \
+		option=rtinfo_rt2_linkANY_##DefPref##RtPref##RT_Life; \
+        } \
+) \
+Opt_ICMPv6_RouteInfo rtinfo_rt2_linkANY_##DefPref##RtPref##RT_Life { \
+	Preference	= RtPref; \
+	RouteLifetime	= RT_Life; \
+	Prefix		= v6("::"); \
+	PrefixLength	= 0; \
+}
+
+#define RA_RT2_LINKANY_RTINFO_OVRIDE( \
+        pNAME, \
+        DefPref, \
+        RTR_Life, \
+        RtPref, \
+        RT_Life \
+) \
+FEM_icmp6_ra ( \
+        pNAME, \
+        _HETHER_tn2nut_RT2, \
+                { \
+                _SRC(rt2_lla); \
+                _DST(v6(_LLOCAL_ALLNODES_MCAST_ADDR)); \
+                HopLimit=255; \
+        }, \
+                { \
+                Preference=DefPref; \
+                LifeTime=RTR_Life; \
+                CurHopLimit=64; \
+                ReachableTime=20000; \
+                RetransTimer=1005; \
+                option=_SLLOPT_tn_RT2; \
+                option=prefix_ra; \
+		option=rtinfo_rt2_linkANY_##DefPref##RT_Life##RtPref##RT_Life; \
+        } \
+) \
+Opt_ICMPv6_RouteInfo rtinfo_rt2_linkANY_##DefPref##RT_Life##RtPref##RT_Life { \
+	Preference	= RtPref; \
+	RouteLifetime	= RT_Life; \
+	Prefix		= v6("::"); \
+	PrefixLength	= 0; \
+}
+
+//#####################################################################
+//#####################################################################
+
+//
+// Router Advertisement 
+// TN  (link local ddress)--> NUT (all node multicast  address)
+//
+
+
+//######################################
+// Router1 to Link1
+//######################################
+
+RA_RT1_LINK1_RTINFO (
+	ra_RT1_link1_MED_RTINFO_MED_60,
+	0,
+	0,
+	60
+)
+
+RA_RT1_LINK1_RTINFO (
+	ra_RT1_link1_MED_RTINFO_HIGH_60,
+	0,
+	1,
+	60
+)
+
+RA_RT1_LINK1_RTINFO (
+	ra_RT1_link1_LOW_RTINFO_LOW_40,
+	3,
+	3,
+	40
+)
+
+RA_RT1_LINK1_RTINFO (
+	ra_RT1_link1_HIGH_RTINFO_HIGH_20,
+	1,
+	1,
+	20
+)
+
+RA_RT1_LINK1_RTINFO (
+	ra_RT1_link1_HIGH_RTINFO_HIGH_60,
+	1,
+	1,
+	60
+)
+
+RA_RT1_LINK1_RTINFO (
+	ra_RT1_link1_MED_RTINFO_LOW_60,
+	0,
+	3,
+	60
+)
+
+RA_RT1_LINK1_RTINFO (
+	ra_RT1_link1_MED_RTINFO_UNSPEC_60,
+	0,
+	2,
+	60
+)
+
+RA_RT1_LINK1_RTINFO (
+	ra_RT1_link1_LOW_RTINFO_HIGH_60,
+	3,
+	1,
+	60
+)
+
+RA_RT1_LINK1_RTINFO (
+	ra_RT1_link1_LOW_RTINFO_MED_60,
+	3,
+	0,
+	60
+)
+
+RA_RT1_LINK1_RTINFO (
+	ra_RT1_link1_LOW_RTINFO_LOW_60,
+	3,
+	3,
+	60
+)
+
+RA_RT1_LINK1_RTINFO (
+	ra_RT1_link1_HIGH_RTINFO_UNSPEC_60,
+	1,
+	2,
+	60
+)
+
+RA_RT1_LINK1_RTINFO (
+	ra_RT1_link1_LOW_RTINFO_UNSPEC_60,
+	3,
+	2,
+	60
+)
+
+RA_RT1_LINK1_RTINFO (
+	ra_RT1_link1_HIGH_RTINFO_HIGH_0,
+	1,
+	1,
+	0
+)
+
+//#### PrefixLength != 64 ####
+
+RA_RT1_LINK1_RTINFOwPXLENGTH (
+	ra_RT1_link1_MED_RTINFO_MED_60_48,
+	0,
+	0,
+	60,
+	48
+)
+
+RA_RT1_LINK1_RTINFOwPXLENGTH (
+	ra_RT1_link1_HIGH_RTINFO_HIGH_60_48,
+	1,
+	1,
+	60,
+	48
+)
+
+RA_RT1_LINK1_RTINFOwPXLENGTH (
+	ra_RT1_link1_MED_RTINFO_MED_60_96,
+	0,
+	0,
+	60,
+	96
+)
+
+RA_RT1_LINK1_RTINFOwPXLENGTH (
+	ra_RT1_link1_LOW_RTINFO_LOW_60_96,
+	3,
+	3,
+	60,
+	96
+)
+
+//#### incorrect Length ####
+
+RA_RT1_LINK1_RTINFOwLENGTH (
+	ra_RT1_link1_LOW_RTINFO_HIGH_60_48_1,
+	3, // Default Pref LOW
+	1, // Route Pref HIGH
+	60, // Route Life Time
+	48, // Prefix Len
+	1  // Length
+)
+
+RA_RT1_LINK1_RTINFOwLENGTH (
+	ra_RT1_link1_LOW_RTINFO_HIGH_60_96_2,
+	3, // Default Pref LOW
+	1, // Route Pref HIGH
+	60, // Route Life Time
+	96, // Prefix Len
+	2  // Length
+)
+
+
+//######################################
+// Router1 to Link2
+//######################################
+
+
+RA_RT1_LINK2_RTINFO (
+	ra_RT1_link2_MED_RTINFO_MED_60,
+	0,
+	0,
+	60
+)
+
+RA_RT1_LINK2_RTINFO (
+	ra_RT1_link2_MED_RTINFO_HIGH_60,
+	0,
+	1,
+	60
+)
+
+RA_RT1_LINK2_RTINFO (
+	ra_RT1_link2_MED_RTINFO_LOW_60,
+	0,
+	3,
+	60
+)
+
+RA_RT1_LINK2_RTINFO (
+	ra_RT1_link2_MED_RTINFO_UNSPEC_60,
+	0,
+	2,
+	60
+)
+
+
+//######################################
+// Router1 to LinkANY
+//######################################
+
+//#### HIGH ####
+
+RA_RT1_LINKANY_RTINFO (
+	ra_RT1_linkANY_HIGH_RTINFO_HIGH_60,
+	1,
+	1,
+	60
+)
+
+RA_RT1_LINKANY_RTINFO (
+	ra_RT1_linkANY_HIGH_RTINFO_MED_60,
+	1,
+	0,
+	60
+)
+
+RA_RT1_LINKANY_RTINFO (
+	ra_RT1_linkANY_HIGH_RTINFO_LOW_60,
+	1,
+	3,
+	60
+)
+
+RA_RT1_LINKANY_RTINFO (
+	ra_RT1_linkANY_HIGH_RTINFO_UNSPEC_60,
+	1,
+	2,
+	60
+)
+
+
+//#### LOW ####
+
+RA_RT1_LINKANY_RTINFO (
+	ra_RT1_linkANY_LOW_RTINFO_MED_60,
+	3,
+	0,
+	60
+)
+
+RA_RT1_LINKANY_RTINFO (
+	ra_RT1_linkANY_LOW_RTINFO_HIGH_60,
+	3,
+	1,
+	60
+)
+
+RA_RT1_LINKANY_RTINFO (
+	ra_RT1_linkANY_LOW_RTINFO_LOW_60,
+	3,
+	3,
+	60
+)
+
+RA_RT1_LINKANY_RTINFO (
+	ra_RT1_linkANY_LOW_RTINFO_UNSPEC_60,
+	3,
+	2,
+	60
+)
+
+//#### Lifetime=0 ####
+
+RA_RT1_LINKANY_RTINFO (
+	ra_RT1_linkANY_HIGH_RTINFO_HIGH_0,
+	1,
+	1,
+	0
+)
+
+//#### Default Override ####
+
+RA_RT1_LINKANY_RTINFO_OVRIDE (
+	ra_RT1_linkANY_LOW_40_RTINFO_HIGH_20,
+	3,  // Default Pref LOW
+	40, // Router Lifetime
+	1,  // Route Pref HIGH
+	20  // Route Lifetime
+)
+
+RA_RT1_LINKANY_RTINFO_OVRIDE (
+	ra_RT1_linkANY_LOW_20_RTINFO_HIGH_40,
+	3,  // Default Pref  LOW
+	20, // Router Lifetime
+	1,  // Route Pref HIGH
+	40  // Route Lifetime
+)
+
+//######################################
+// Router1 to Link1,2
+//######################################
+
+FEM_icmp6_ra (
+        ra_2RtInfo_RT1_HL,
+	_HETHER_tn2nut_RT1,
+                {
+                _SRC(rt1_lla);
+                _DST(v6(_LLOCAL_ALLNODES_MCAST_ADDR));
+                HopLimit=255;
+        },
+                {
+                option=_SLLOPT_tn_RT1;
+                option=prefix_ra;
+		option=rtinfo_1_H;
+		option=rtinfo_2_L;
+        }
+)
+
+FEM_icmp6_ra (
+        ra_16RtInfo_RT1_HL,
+	_HETHER_tn2nut_RT1,
+                {
+                _SRC(rt1_lla);
+                _DST(v6(_LLOCAL_ALLNODES_MCAST_ADDR));
+                HopLimit=255;
+        },
+                {
+                option=_SLLOPT_tn_RT1;
+                option=prefix_ra;
+		option=rtinfo_1_H;
+		option=rtinfo_2_L;
+		option=rtinfo_3_H;
+		option=rtinfo_4_L;
+		option=rtinfo_5_H;
+		option=rtinfo_6_L;
+		option=rtinfo_7_H;
+		option=rtinfo_8_L;
+		option=rtinfo_9_H;
+		option=rtinfo_10_L;
+		option=rtinfo_11_H;
+		option=rtinfo_12_L;
+		option=rtinfo_13_H;
+		option=rtinfo_14_L;
+		option=rtinfo_15_H;
+		option=rtinfo_16_L;
+        }
+)
+
+FEM_icmp6_ra (
+        ra_2RtInfo_RT1_MM,
+	_HETHER_tn2nut_RT1,
+                {
+                _SRC(rt1_lla);
+                _DST(v6(_LLOCAL_ALLNODES_MCAST_ADDR));
+                HopLimit=255;
+        },
+                {
+                option=_SLLOPT_tn_RT1;
+                option=prefix_ra;
+		option=rtinfo_1_M;
+		option=rtinfo_2_M;
+        }
+)
+
+FEM_icmp6_ra (
+        ra_16RtInfo_RT1_MM,
+	_HETHER_tn2nut_RT1,
+                {
+                _SRC(rt1_lla);
+                _DST(v6(_LLOCAL_ALLNODES_MCAST_ADDR));
+                HopLimit=255;
+        },
+                {
+                option=_SLLOPT_tn_RT1;
+                option=prefix_ra;
+		option=rtinfo_1_M;
+		option=rtinfo_2_M;
+		option=rtinfo_3_M;
+		option=rtinfo_4_M;
+		option=rtinfo_5_M;
+		option=rtinfo_6_M;
+		option=rtinfo_7_M;
+		option=rtinfo_8_M;
+		option=rtinfo_9_M;
+		option=rtinfo_10_M;
+		option=rtinfo_11_M;
+		option=rtinfo_12_M;
+		option=rtinfo_13_M;
+		option=rtinfo_14_M;
+		option=rtinfo_15_M;
+		option=rtinfo_16_M;
+        }
+)
+
+
+//######################################
+// Router2 to Link1
+//######################################
+
+//#### MED ####
+
+RA_RT2_LINK1_RTINFO (
+	ra_RT2_link1_MED_RTINFO_MED_60,
+	0,
+	0,
+	60
+)
+
+RA_RT2_LINK1_RTINFO (
+	ra_RT2_link1_MED_RTINFO_HIGH_60,
+	0,
+	1,
+	60
+)
+
+RA_RT2_LINK1_RTINFO (
+	ra_RT2_link1_LOW_RTINFO_LOW_40,
+	0,
+	0,
+	40
+)
+
+RA_RT2_LINK1_RTINFO (
+	ra_RT2_link1_HIGH_RTINFO_HIGH_20,
+	1,
+	1,
+	20
+)
+
+RA_RT2_LINK1_RTINFO (
+	ra_RT2_link1_MED_RTINFO_LOW_60,
+	0,
+	3,
+	60
+)
+
+RA_RT2_LINK1_RTINFO (
+	ra_RT2_link1_MED_RTINFO_UNSPEC_60,
+	0,
+	2,
+	60
+)
+
+//#### LOW ####
+
+RA_RT2_LINK1_RTINFO (
+	ra_RT2_link1_LOW_RTINFO_MED_60,
+	3,
+	0,
+	60
+)
+
+RA_RT2_LINK1_RTINFO (
+	ra_RT2_link1_LOW_RTINFO_HIGH_60,
+	3,
+	1,
+	60
+)
+
+RA_RT2_LINK1_RTINFO (
+	ra_RT2_link1_LOW_RTINFO_LOW_60,
+	3,
+	3,
+	60
+)
+
+RA_RT2_LINK1_RTINFO (
+	ra_RT2_link1_LOW_RTINFO_UNSPEC_60,
+	3,
+	2,
+	60
+)
+
+//#### HIGH ####
+
+RA_RT2_LINK1_RTINFO (
+	ra_RT2_link1_HIGH_RTINFO_UNSPEC_60,
+	1,
+	2,
+	60
+)
+
+RA_RT2_LINK1_RTINFO (
+	ra_RT2_link1_HIGH_RTINFO_HIGH_60,
+	1,
+	1,
+	60
+)
+
+//#### Lifetime=0 ####
+
+RA_RT2_LINK1_RTINFO (
+	ra_RT2_link1_HIGH_RTINFO_HIGH_0,
+	1,
+	1,
+	0
+)
+
+//#### PrefixLength != 64 ####
+
+RA_RT2_LINK1_RTINFOwPXLENGTH (
+	ra_RT2_link1_MED_RTINFO_MED_60_48,
+	0,
+	0,
+	60,
+	48
+)
+
+RA_RT2_LINK1_RTINFOwPXLENGTH (
+	ra_RT2_link1_HIGH_RTINFO_HIGH_60_48,
+	1,
+	1,
+	60,
+	48
+)
+
+RA_RT2_LINK1_RTINFOwPXLENGTH (
+	ra_RT2_link1_MED_RTINFO_MED_60_96,
+	0,
+	0,
+	60,
+	96
+)
+
+RA_RT2_LINK1_RTINFOwPXLENGTH (
+	ra_RT2_link1_LOW_RTINFO_LOW_60_96,
+	3,
+	3,
+	60,
+	96
+)
+
+//#### incorrect Length ####
+
+RA_RT2_LINK1_RTINFOwLENGTH (
+	ra_RT2_link1_LOW_RTINFO_HIGH_60_48_1,
+	3, // Default Pref LOW
+	1, // Route Pref HIGH
+	60, // Route Life Time
+	48, // Prefix Len
+	1  // Length
+)
+
+RA_RT2_LINK1_RTINFOwLENGTH (
+	ra_RT2_link1_LOW_RTINFO_HIGH_60_96_2,
+	3, // Default Pref LOW
+	1, // Route Pref HIGH
+	60, // Route Life Time
+	96, // Prefix Len
+	2  // Length
+)
+
+//######################################
+// Router2 to Link2
+//######################################
+
+RA_RT2_LINK2_RTINFO (
+	ra_RT2_link2_MED_RTINFO_MED_60,
+	0,
+	0,
+	60
+)
+
+RA_RT2_LINK2_RTINFO (
+	ra_RT2_link2_MED_RTINFO_HIGH_60,
+	0,
+	1,
+	60
+)
+
+RA_RT2_LINK2_RTINFO (
+	ra_RT2_link2_MED_RTINFO_LOW_60,
+	0,
+	3,
+	60
+)
+
+RA_RT2_LINK2_RTINFO (
+	ra_RT2_link2_MED_RTINFO_UNSPEC_60,
+	0,
+	2,
+	60
+)
+
+
+//######################################
+// Router2 to LinkANY
+//######################################
+
+//#### HIGH ####
+
+RA_RT2_LINKANY_RTINFO (
+	ra_RT2_linkANY_HIGH_RTINFO_HIGH_60,
+	1,
+	1,
+	60
+)
+
+RA_RT2_LINKANY_RTINFO (
+	ra_RT2_linkANY_HIGH_RTINFO_MED_60,
+	1,
+	0,
+	60
+)
+
+RA_RT2_LINKANY_RTINFO (
+	ra_RT2_linkANY_HIGH_RTINFO_LOW_60,
+	1,
+	3,
+	60
+)
+
+RA_RT2_LINKANY_RTINFO (
+	ra_RT2_linkANY_HIGH_RTINFO_UNSPEC_60,
+	1,
+	2,
+	60
+)
+
+
+//#### LOW ####
+
+RA_RT2_LINKANY_RTINFO (
+	ra_RT2_linkANY_LOW_RTINFO_MED_60,
+	3,
+	0,
+	60
+)
+
+RA_RT2_LINKANY_RTINFO (
+	ra_RT2_linkANY_LOW_RTINFO_HIGH_60,
+	3,
+	1,
+	60
+)
+
+RA_RT2_LINKANY_RTINFO (
+	ra_RT2_linkANY_LOW_RTINFO_LOW_60,
+	3,
+	3,
+	60
+)
+
+RA_RT2_LINKANY_RTINFO (
+	ra_RT2_linkANY_LOW_RTINFO_UNSPEC_60,
+	3,
+	2,
+	60
+)
+
+//#### Lifetime=0 ####
+
+RA_RT2_LINKANY_RTINFO (
+	ra_RT2_linkANY_HIGH_RTINFO_HIGH_0,
+	1,
+	1,
+	0
+)
+
+//#### Default Override ####
+
+RA_RT2_LINKANY_RTINFO_OVRIDE (
+	ra_RT2_linkANY_LOW_40_RTINFO_HIGH_20,
+	3,  // Default Pref  LOW
+	40, // Router Lifetime
+	1,  // Route Pref  HIGH
+	20  // Route Lifetime
+)
+
+RA_RT2_LINKANY_RTINFO_OVRIDE (
+	ra_RT2_linkANY_LOW_20_RTINFO_HIGH_40,
+	3,  // Default Pref  LOW
+	20, // Router Lifetime
+	1,  // Route Pref  HIGH
+	40  // Route Lifetime
+)
+
+//######################################
+// Router2 to Link1,2
+//######################################
+
+FEM_icmp6_ra (
+        ra_2RtInfo_RT2_HL,
+	_HETHER_tn2nut_RT2,
+                {
+                _SRC(rt2_lla);
+                _DST(v6(_LLOCAL_ALLNODES_MCAST_ADDR));
+                HopLimit=255;
+        },
+                {
+                option=_SLLOPT_tn_RT2;
+                option=prefix_ra;
+		option=rtinfo_1_H;
+		option=rtinfo_2_L;
+        }
+)
+
+FEM_icmp6_ra (
+        ra_16RtInfo_RT2_HL,
+	_HETHER_tn2nut_RT2,
+                {
+                _SRC(rt2_lla);
+                _DST(v6(_LLOCAL_ALLNODES_MCAST_ADDR));
+                HopLimit=255;
+        },
+                {
+                option=_SLLOPT_tn_RT2;
+                option=prefix_ra;
+		option=rtinfo_1_H;
+		option=rtinfo_2_L;
+		option=rtinfo_3_H;
+		option=rtinfo_4_L;
+		option=rtinfo_5_H;
+		option=rtinfo_6_L;
+		option=rtinfo_7_H;
+		option=rtinfo_8_L;
+		option=rtinfo_9_H;
+		option=rtinfo_10_L;
+		option=rtinfo_11_H;
+		option=rtinfo_12_L;
+		option=rtinfo_13_H;
+		option=rtinfo_14_L;
+		option=rtinfo_15_H;
+		option=rtinfo_16_L;
+        }
+)
+
+
+FEM_icmp6_ra (
+        ra_2RtInfo_RT2_MM,
+	_HETHER_tn2nut_RT2,
+                {
+                _SRC(rt2_lla);
+                _DST(v6(_LLOCAL_ALLNODES_MCAST_ADDR));
+                HopLimit=255;
+        },
+                {
+                option=_SLLOPT_tn_RT2;
+                option=prefix_ra;
+		option=rtinfo_1_M;
+		option=rtinfo_2_M;
+        }
+)
+
+
+FEM_icmp6_ra (
+        ra_16RtInfo_RT2_MM,
+	_HETHER_tn2nut_RT2,
+                {
+                _SRC(rt2_lla);
+                _DST(v6(_LLOCAL_ALLNODES_MCAST_ADDR));
+                HopLimit=255;
+        },
+                {
+                option=_SLLOPT_tn_RT2;
+                option=prefix_ra;
+		option=rtinfo_1_M;
+		option=rtinfo_2_M;
+		option=rtinfo_3_M;
+		option=rtinfo_4_M;
+		option=rtinfo_5_M;
+		option=rtinfo_6_M;
+		option=rtinfo_7_M;
+		option=rtinfo_8_M;
+		option=rtinfo_9_M;
+		option=rtinfo_10_M;
+		option=rtinfo_11_M;
+		option=rtinfo_12_M;
+		option=rtinfo_13_M;
+		option=rtinfo_14_M;
+		option=rtinfo_15_M;
+		option=rtinfo_16_M;
+        }
+)
+
+
+//#############################################
+//## Route Information Option
+//#############################################
+
+//#### MED #####
+
+Opt_ICMPv6_RouteInfo rtinfo_1_M {
+	Preference	= 0;	// MED
+	RouteLifetime	= 60;
+	Prefix		= v6(_GLOBAL1_UCAST_PRFX);
+}
+Opt_ICMPv6_RouteInfo rtinfo_2_M {
+	Preference	= 0;	// MED
+	RouteLifetime	= 60;
+	Prefix		= v6(_GLOBAL2_UCAST_PRFX);
+}
+Opt_ICMPv6_RouteInfo rtinfo_3_M {
+	Preference	= 0;	// MED
+	RouteLifetime	= 60;
+	Prefix		= v6(_GLOBAL3_UCAST_PRFX);
+}
+Opt_ICMPv6_RouteInfo rtinfo_4_M {
+	Preference	= 0;	// MED
+	RouteLifetime	= 60;
+	Prefix		= v6(_GLOBAL4_UCAST_PRFX);
+}
+Opt_ICMPv6_RouteInfo rtinfo_5_M {
+	Preference	= 0;	// MED
+	RouteLifetime	= 60;
+	Prefix		= v6(_GLOBAL5_UCAST_PRFX);
+}
+Opt_ICMPv6_RouteInfo rtinfo_6_M {
+	Preference	= 0;	// MED
+	RouteLifetime	= 60;
+	Prefix		= v6(_GLOBAL6_UCAST_PRFX);
+}
+Opt_ICMPv6_RouteInfo rtinfo_7_M {
+	Preference	= 0;	// MED
+	RouteLifetime	= 60;
+	Prefix		= v6(_GLOBAL7_UCAST_PRFX);
+}
+Opt_ICMPv6_RouteInfo rtinfo_8_M {
+	Preference	= 0;	// MED
+	RouteLifetime	= 60;
+	Prefix		= v6(_GLOBAL8_UCAST_PRFX);
+}
+Opt_ICMPv6_RouteInfo rtinfo_9_M {
+	Preference	= 0;	// MED
+	RouteLifetime	= 60;
+	Prefix		= v6(_GLOBAL9_UCAST_PRFX);
+}
+Opt_ICMPv6_RouteInfo rtinfo_10_M {
+	Preference	= 0;	// MED
+	RouteLifetime	= 60;
+	Prefix		= v6(_GLOBAL10_UCAST_PRFX);
+}
+Opt_ICMPv6_RouteInfo rtinfo_11_M {
+	Preference	= 0;	// MED
+	RouteLifetime	= 60;
+	Prefix		= v6(_GLOBAL11_UCAST_PRFX);
+}
+Opt_ICMPv6_RouteInfo rtinfo_12_M {
+	Preference	= 0;	// MED
+	RouteLifetime	= 60;
+	Prefix		= v6(_GLOBAL12_UCAST_PRFX);
+}
+Opt_ICMPv6_RouteInfo rtinfo_13_M {
+	Preference	= 0;	// MED
+	RouteLifetime	= 60;
+	Prefix		= v6(_GLOBAL13_UCAST_PRFX);
+}
+Opt_ICMPv6_RouteInfo rtinfo_14_M {
+	Preference	= 0;	// MED
+	RouteLifetime	= 60;
+	Prefix		= v6(_GLOBAL14_UCAST_PRFX);
+}
+Opt_ICMPv6_RouteInfo rtinfo_15_M {
+	Preference	= 0;	// MED
+	RouteLifetime	= 60;
+	Prefix		= v6(_GLOBAL15_UCAST_PRFX);
+}
+Opt_ICMPv6_RouteInfo rtinfo_16_M {
+	Preference	= 0;	// MED
+	RouteLifetime	= 60;
+	Prefix		= v6(_GLOBAL16_UCAST_PRFX);
+}
+Opt_ICMPv6_RouteInfo rtinfo_17_M {
+	Preference	= 0;	// MED
+	RouteLifetime	= 60;
+	Prefix		= v6(_GLOBAL17_UCAST_PRFX);
+}
+
+//##### HIGH ######
+
+Opt_ICMPv6_RouteInfo rtinfo_1_H {
+	Preference	= 1;	// HIGH
+	RouteLifetime	= 60;
+	Prefix		= v6(_GLOBAL1_UCAST_PRFX);
+}
+Opt_ICMPv6_RouteInfo rtinfo_2_H {
+	Preference	= 1;	// HIGH
+	RouteLifetime	= 60;
+	Prefix		= v6(_GLOBAL2_UCAST_PRFX);
+}
+Opt_ICMPv6_RouteInfo rtinfo_3_H {
+	Preference	= 1;	// HIGH
+	RouteLifetime	= 60;
+	Prefix		= v6(_GLOBAL3_UCAST_PRFX);
+}
+Opt_ICMPv6_RouteInfo rtinfo_4_H {
+	Preference	= 1;	// HIGH
+	RouteLifetime	= 60;
+	Prefix		= v6(_GLOBAL4_UCAST_PRFX);
+}
+Opt_ICMPv6_RouteInfo rtinfo_5_H {
+	Preference	= 1;	// HIGH
+	RouteLifetime	= 60;
+	Prefix		= v6(_GLOBAL5_UCAST_PRFX);
+}
+Opt_ICMPv6_RouteInfo rtinfo_6_H {
+	Preference	= 1;	// HIGH
+	RouteLifetime	= 60;
+	Prefix		= v6(_GLOBAL6_UCAST_PRFX);
+}
+Opt_ICMPv6_RouteInfo rtinfo_7_H {
+	Preference	= 1;	// HIGH
+	RouteLifetime	= 60;
+	Prefix		= v6(_GLOBAL7_UCAST_PRFX);
+}
+Opt_ICMPv6_RouteInfo rtinfo_8_H {
+	Preference	= 1;	// HIGH
+	RouteLifetime	= 60;
+	Prefix		= v6(_GLOBAL8_UCAST_PRFX);
+}
+Opt_ICMPv6_RouteInfo rtinfo_9_H {
+	Preference	= 1;	// HIGH
+	RouteLifetime	= 60;
+	Prefix		= v6(_GLOBAL9_UCAST_PRFX);
+}
+Opt_ICMPv6_RouteInfo rtinfo_10_H {
+	Preference	= 1;	// HIGH
+	RouteLifetime	= 60;
+	Prefix		= v6(_GLOBAL10_UCAST_PRFX);
+}
+Opt_ICMPv6_RouteInfo rtinfo_11_H {
+	Preference	= 1;	// HIGH
+	RouteLifetime	= 60;
+	Prefix		= v6(_GLOBAL11_UCAST_PRFX);
+}
+Opt_ICMPv6_RouteInfo rtinfo_12_H {
+	Preference	= 1;	// HIGH
+	RouteLifetime	= 60;
+	Prefix		= v6(_GLOBAL12_UCAST_PRFX);
+}
+Opt_ICMPv6_RouteInfo rtinfo_13_H {
+	Preference	= 1;	// HIGH
+	RouteLifetime	= 60;
+	Prefix		= v6(_GLOBAL13_UCAST_PRFX);
+}
+Opt_ICMPv6_RouteInfo rtinfo_14_H {
+	Preference	= 1;	// HIGH
+	RouteLifetime	= 60;
+	Prefix		= v6(_GLOBAL14_UCAST_PRFX);
+}
+Opt_ICMPv6_RouteInfo rtinfo_15_H {
+	Preference	= 1;	// HIGH
+	RouteLifetime	= 60;
+	Prefix		= v6(_GLOBAL15_UCAST_PRFX);
+}
+Opt_ICMPv6_RouteInfo rtinfo_16_H {
+	Preference	= 1;	// HIGH
+	RouteLifetime	= 60;
+	Prefix		= v6(_GLOBAL16_UCAST_PRFX);
+}
+Opt_ICMPv6_RouteInfo rtinfo_17_H {
+	Preference	= 1;	// HIGH
+	RouteLifetime	= 60;
+	Prefix		= v6(_GLOBAL17_UCAST_PRFX);
+}
+
+//#### LOW #####
+
+Opt_ICMPv6_RouteInfo rtinfo_1_L {
+	Preference	= 3;	// LOW
+	RouteLifetime	= 60;
+	Prefix		= v6(_GLOBAL1_UCAST_PRFX);
+}
+Opt_ICMPv6_RouteInfo rtinfo_2_L {
+	Preference	= 3;	// LOW
+	RouteLifetime	= 60;
+	Prefix		= v6(_GLOBAL2_UCAST_PRFX);
+}
+Opt_ICMPv6_RouteInfo rtinfo_3_L {
+	Preference	= 3;	// LOW
+	RouteLifetime	= 60;
+	Prefix		= v6(_GLOBAL3_UCAST_PRFX);
+}
+Opt_ICMPv6_RouteInfo rtinfo_4_L {
+	Preference	= 3;	// LOW
+	RouteLifetime	= 60;
+	Prefix		= v6(_GLOBAL4_UCAST_PRFX);
+}
+Opt_ICMPv6_RouteInfo rtinfo_5_L {
+	Preference	= 3;	// LOW
+	RouteLifetime	= 60;
+	Prefix		= v6(_GLOBAL5_UCAST_PRFX);
+}
+Opt_ICMPv6_RouteInfo rtinfo_6_L {
+	Preference	= 3;	// LOW
+	RouteLifetime	= 60;
+	Prefix		= v6(_GLOBAL6_UCAST_PRFX);
+}
+Opt_ICMPv6_RouteInfo rtinfo_7_L {
+	Preference	= 3;	// LOW
+	RouteLifetime	= 60;
+	Prefix		= v6(_GLOBAL7_UCAST_PRFX);
+}
+Opt_ICMPv6_RouteInfo rtinfo_8_L {
+	Preference	= 3;	// LOW
+	RouteLifetime	= 60;
+	Prefix		= v6(_GLOBAL8_UCAST_PRFX);
+}
+Opt_ICMPv6_RouteInfo rtinfo_9_L {
+	Preference	= 3;	// LOW
+	RouteLifetime	= 60;
+	Prefix		= v6(_GLOBAL9_UCAST_PRFX);
+}
+Opt_ICMPv6_RouteInfo rtinfo_10_L {
+	Preference	= 3;	// LOW
+	RouteLifetime	= 60;
+	Prefix		= v6(_GLOBAL10_UCAST_PRFX);
+}
+Opt_ICMPv6_RouteInfo rtinfo_11_L {
+	Preference	= 3;	// LOW
+	RouteLifetime	= 60;
+	Prefix		= v6(_GLOBAL11_UCAST_PRFX);
+}
+Opt_ICMPv6_RouteInfo rtinfo_12_L {
+	Preference	= 3;	// LOW
+	RouteLifetime	= 60;
+	Prefix		= v6(_GLOBAL12_UCAST_PRFX);
+}
+Opt_ICMPv6_RouteInfo rtinfo_13_L {
+	Preference	= 3;	// LOW
+	RouteLifetime	= 60;
+	Prefix		= v6(_GLOBAL13_UCAST_PRFX);
+}
+Opt_ICMPv6_RouteInfo rtinfo_14_L {
+	Preference	= 3;	// LOW
+	RouteLifetime	= 60;
+	Prefix		= v6(_GLOBAL14_UCAST_PRFX);
+}
+Opt_ICMPv6_RouteInfo rtinfo_15_L {
+	Preference	= 3;	// LOW
+	RouteLifetime	= 60;
+	Prefix		= v6(_GLOBAL15_UCAST_PRFX);
+}
+Opt_ICMPv6_RouteInfo rtinfo_16_L {
+	Preference	= 3;	// LOW
+	RouteLifetime	= 60;
+	Prefix		= v6(_GLOBAL16_UCAST_PRFX);
+}
+Opt_ICMPv6_RouteInfo rtinfo_17_L {
+	Preference	= 3;	// LOW
+	RouteLifetime	= 60;
+	Prefix		= v6(_GLOBAL17_UCAST_PRFX);
+}
+

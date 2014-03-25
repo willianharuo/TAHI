@@ -1,0 +1,262 @@
+<HTML>
+<HEAD>
+<TITLE>hostRecvRaRFlag - Verifying that a RA sets a IsRouter flag true</TITLE>
+<LINK REV="made" HREF="mailto:hackers@FreeBSD.org">
+</HEAD>
+
+<BODY>
+
+<!-- INDEX BEGIN -->
+<!--
+
+<UL>
+
+	<LI><A HREF="#NAME">NAME</A>
+	<LI><A HREF="#TARGET">TARGET</A>
+	<LI><A HREF="#SYNOPSIS">SYNOPSIS</A>
+	<LI><A HREF="#INITIALIZATION">INITIALIZATION</A>
+	<UL>
+
+		<LI><A HREF="#Cache_a_LLA_of_TN">Cache a LLA of TN</A>
+		<LI><A HREF="#Cache_a_bogus_LLA">Cache a bogus LLA</A>
+	</UL>
+
+	<LI><A HREF="#TEST_PROCEDURE">TEST PROCEDURE</A>
+	<LI><A HREF="#JUDGMENT">JUDGMENT</A>
+	<LI><A HREF="#TERMINATION">TERMINATION</A>
+	<LI><A HREF="#NOTE">NOTE</A>
+	<LI><A HREF="#SEE_ALSO">SEE ALSO</A>
+</UL>
+-->
+<!-- INDEX END -->
+
+<P>
+<H1><A NAME="NAME">NAME</A></H1>
+<P>
+hostRecvRaRFlag - Verifying that a RA sets a IsRouter flag true
+
+<P>
+<HR>
+<H1><A NAME="TARGET">TARGET</A></H1>
+<P>
+Host only
+
+<P>
+<HR>
+<H1><A NAME="SYNOPSIS">SYNOPSIS</A></H1>
+<P>
+<PRE>  hostRecvRaRFlag.seq [-tooloption ...] -p hostRecvRaRFlag.def
+</PRE>
+<P>
+<HR>
+<H1><A NAME="INITIALIZATION">INITIALIZATION</A></H1>
+<OL>
+  <LI> Create an neighbor cache entry for TN where a IsRouter flag is FALSE.
+  <LI> Set its state to REACHABLE.
+  <LI> Cache either <A HREF="#Cache_a_LLA_of_TN">TN's LLA</A> or
+       <A HREF="#Cache_a_bogus_LLA">a bogus LLA</A>.
+</OL>
+
+<P>
+<HR>
+<H2><A NAME="Cache_a_LLA_of_TN">Cache a LLA of TN</A></H2>
+<PRE>
+  TN                 NUT
+  ----------------------
+  State: NONCE (for TN)
+<BR>
+  ==== echo-request ===>
+        src=TN's link-local
+        dst=NUT's link-local
+<BR>
+  State: INCOMPLETE (for TN)
+<BR>
+  <=== multicast NS ====
+        src:NUT's link-local
+        dst:solicited-node[TN's link-local]
+        target=TN's link-local
+        SLLA=NUT's LLA
+        timeout: RETRANS_TIMER * MAX_MULTICAST_SOLICIT
+<BR>
+  ==== solicited NA ===>
+        src:TN's link
+        dst:NUT's link-local
+        R=0, S=1, O=1
+        target=TN's link-local
+        TLLA=<B>TN's LLA</B>
+<BR>
+  State: REACHABLE (for TN)
+</PRE>
+
+<P>
+<HR>
+<H2><A NAME="Cache_a_bogus_LLA">Cache a bogus LLA</A></H2>
+<PRE>
+  TN                 NUT
+  ----------------------
+  State: NONCE (for TN)
+<BR>
+  ==== echo-request ===>
+        src=TN's link-local
+        dst=NUT's link-local
+<BR>
+  State: INCOMPLETE (for TN)
+<BR>
+  <=== multicast NS ====
+        src:NUT's link-local
+        dst:solicited-node[TN's link-local]
+        target=TN's link-local
+        SLLA=NUT's LLA
+        timeout: RETRANS_TIMER * MAX_MULTICAST_SOLICIT
+<BR>
+  ==== solicited NA ===>
+        src:TN's link
+        dst:NUT's link-local
+        R=0, S=1, O=1
+        target=TN's link-local
+        TLLA=<B>a bogus LLA (0:0:0:0:a9:a9)</B>
+<BR>
+  State: REACHABLE (for TN)
+</PRE>
+
+<P>
+<HR>
+<H1><A NAME="TEST_PROCEDURE">TEST PROCEDURE</A></H1>
+<P>
+<STRONG>hostRecvRaRFlag</STRONG> verifies that a RA sets a IsRouter flag true.
+
+<PRE>
+  TN                 NUT
+  ----------------------
+<BR>
+  State: REACHABLE (for TN), NONCE(for X)
+<BR>
+  ==== unsolicited RA</A> ===>
+       src=X's link-local
+       dst=all-node
+       M=0, O=0
+       RouterLifetime=10
+       ReachableTime=0
+       RetransTimer=0
+       w/ SLLA
+       Prefix Option:
+           L=1, A=1
+           ValidLifetime=2592000
+           PreferredLifetime=604800
+           Prefix=3ffe:501:ffff:100::/64
+<BR>
+  State: REACHABLE (for TN), STALE(for X)
+<BR>
+  ==== solicited NA ===>
+        src:X's link
+        dst:NUT's link-local
+        R=1, S=1, O=1
+        target=X's link-local
+        w/ TLLA
+<BR>
+  Wait for 2 sec to ignore DAD NS
+<BR>
+  State: REACHABLE (for TN, X)
+<BR>
+  ==== echo-request ===>
+       src=off-link global, but LLA is X's one
+       dst=NUT's global
+<BR>
+  <=== <A HREF="#JDG1">Judgment #1</A>: echo-reply ====
+       src=NUT's global
+       dst=off-link global, but LLA is X's one
+<BR>
+  ==== <A HREF="#JDG2">unsolicited RA</A> ===>
+       src=TN's link-local
+       dst=all-node
+       M=0, O=0
+       RouterLifetime=600
+       ReachableTime=0
+       RetransTimer=0
+       w/ or w/o SLLA
+       Prefix Option:
+           L=1, A=1
+           ValidLifetime=2592000
+           PreferredLifetime=604800
+           Prefix=3ffe:501:ffff:100::/64
+<BR>
+  State: REACHABLE/STALE (for TN), REACHABLE (for X)
+<BR>
+  Wait (10 sec) for X's router lifetime to be expired
+<BR>
+  ==== echo-request ===>
+       src=off-link global, but LLA is TN's one
+       dst=NUT's global
+<BR>
+  <=== <A HREF="#JDG3">Judgment #3</A>: echo-reply ====
+       src=NUT's global
+       dst=off-link global, but LLA is TN's one
+<BR>
+  State: REACHABLE/DELAY (for TN), REACHABLE (for X)
+</PRE>
+
+<P>
+<HR>
+<H1><A NAME="JUDGMENT">JUDGMENT</A></H1>
+<PRE>
+  1. <A NAME="JDG1">NUT throw an echo-reply to the default router (i.e. X).</A>
+<BR>
+  2. <A NAME="JDG2">RA set IsRouter flag.</A>
+<HR>
+6.3.4.  Processing Received Router Advertisements
+<BR>
+   After extracting information from the fixed part of the Router
+   Advertisement message, the advertisement is scanned for valid
+   options.  <A NAME="SLL"><B>If the advertisement contains a Source Link-Layer Address
+   option the link-layer address SHOULD be recorded in the Neighbor
+   Cache entry for the router (creating an entry if necessary) and the
+   IsRouter flag in the Neighbor Cache entry MUST be set to TRUE.</B></A>
+   <A NAME="NOSLL"><B>If no Source Link-Layer Address is included, but a corresponding Neighbor
+   Cache entry exists, its IsRouter flag MUST be set to TRUE.</A></B>  The
+   IsRouter flag is used by Neighbor Unreachability Detection to
+   determine when a router changes to being a host (i.e., no longer
+   capable of forwarding packets).  If a Neighbor Cache entry is created
+   for the router its reachability state MUST be set to STALE as
+   specified in Section 7.3.3.  If a cache entry already exists and is
+   updated with a different link-layer address the reachability state
+   MUST also be set to STALE.
+<HR>
+  ============+===========+===============================
+  RA received by the NUT  | NUT's Neighbor Cache State
+  ------------+-----------+---------+---------------------
+  Destination | SLLA      | Current | New
+  ============+===========+=========+=====================
+  all-node    | none      | 0       | <A HREF="#NOSLL">1</A>
+  ------------+-----------+---------+---------------------
+  all-node    | same      | 0       | <A HREF="#SLL">1</A>
+  ------------+-----------+---------+---------------------
+  all-node    | different | 0       | <A HREF="#SLL">1</A>
+  ============+===========+=========+=====================
+<BR>
+  3. <A NAME="JDG3"></A>NUT throw an echo-reply to NUT instead of X.</A>
+</PRE>
+
+<P>
+<HR>
+<H1><A NAME="TERMINATION">TERMINATION</A></H1>
+<P>
+<PRE>  Send the following RAs to clear the Default Router List:
+  - RA (src: TN) with RouterLifetime=0
+  - RA (src: X)  with RouterLifetime=0
+</PRE>
+<P>
+<HR>
+<H1><A NAME="NOTE">NOTE</A></H1>
+<P>
+<PRE>  The test does not invoke any remote command.
+</PRE>
+<P>
+<HR>
+<H1><A NAME="SEE_ALSO">SEE ALSO</A></H1>
+<P>
+<PRE>  perldoc V6evalTool
+  perldoc V6evalRemote
+</PRE>
+</BODY>
+
+</HTML>

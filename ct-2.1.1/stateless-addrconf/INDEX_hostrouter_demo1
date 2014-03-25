@@ -1,0 +1,131 @@
+### $Name: REL_2_1_1 $
+###
+### Copyright (C) 1999, 2000, 2001, 2002, 2003 Yokogawa Electric Corporation,
+### IPA (Information-technology Promotion Agency, Japan).
+### All rights reserved.
+### 
+### Redistribution and use of this software in source and binary forms, with 
+### or without modification, are permitted provided that the following 
+### conditions and disclaimer are agreed and accepted by the user:
+### 
+### 1. Redistributions of source code must retain the above copyright 
+### notice, this list of conditions and the following disclaimer.
+### 
+### 2. Redistributions in binary form must reproduce the above copyright 
+### notice, this list of conditions and the following disclaimer in the 
+### documentation and/or other materials provided with the distribution.
+### 
+### 3. Neither the names of the copyrighters, the name of the project which 
+### is related to this software (hereinafter referred to as "project") nor 
+### the names of the contributors may be used to endorse or promote products 
+### derived from this software without specific prior written permission.
+### 
+### 4. No merchantable use may be permitted without prior written 
+### notification to the copyrighters. However, using this software for the 
+### purpose of testing or evaluating any products including merchantable 
+### products may be permitted without any notification to the copyrighters.
+### 
+### 
+### 
+### THIS SOFTWARE IS PROVIDED BY THE COPYRIGHTERS, THE PROJECT AND 
+### CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING 
+### BUT NOT LIMITED THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS 
+### FOR A PARTICULAR PURPOSE, ARE DISCLAIMED.  IN NO EVENT SHALL THE 
+### COPYRIGHTERS, THE PROJECT OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, 
+### INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES 
+### (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR 
+### SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) 
+### HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN 
+### CONTRACT,STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) 
+### ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF 
+### THE POSSIBILITY OF SUCH DAMAGE.
+###
+### INDEX_hostrouter_demo1
+###   autorun INDEX for stateless-addrconf test (Test for a Host and Router)
+###   for Test Event version
+###
+### $TAHI: ct/stateless-addrconf/INDEX_hostrouter_demo1,v 1.6 2002/01/07 02:15:03 hoshino Exp $
+
+######################################################################
+&print:1. Test for a Host and Router
+&print:1.1 Duplicate Address Detection
+&print:1.1.1 Stateless Address Configuration
+
+&print:1.1.1.1 DAD is performed on NUT by Stateless Link-local address autoconfiguration
+&#./DADSendNS_DADPostSendNS.seq   :LLOCAL.def                :addrconf=boot    sd=qP       :DADSendNS_Stless_LLOCAL.html:DAD is performed on NUT by Stateless Link-local address autoconfiguration
+
+&print:1.1.1.2 DAD Success when NUT received no packet on Stateless Link-local address autoconfiguration
+&#./DADSuccess_DADPostSendNS.seq  :LLOCAL.def                :addrconf=boot send=none sd=qP :DADSuccess_Stless_LLOCAL.html:DAD Success when NUT received no packet on Stateless Link-local address autoconfiguration
+
+&print:1.1.1.3 DAD Fail when NUT received Not-Invalid NS in random delaying phase
+&#./DADFail_DADPreSendNS.seq      :LLOCAL_valNS_SameMacAddr.def      :addrconf=boot sd=P  :DADFail_DADPreSendNS_Stless_LLOCAL_valNS_SameMacAddr.html:DAD Fail when NUT received Valid NS in random delaying phase on Stateless Link-local address autoconfiguration (This test may be FAIL randomly.)
+
+&print:1.1.1.4 DAD Fail when NUT received Not-Invalid NS
+&#./DADFail_DADPostSendNS.seq     :LLOCAL_valNS_DiffMacAddr.def      :addrconf=boot sd=P  :DADFail_Stless_LLOCAL_valNS_DiffMacAddr.html:DAD Fail when NUT received Valid NS (src MAC addr != MAC addr of NUT) on Stateless Link-local address autoconfiguration
+./DADFail_DADPostSendNS.seq     :LLOCAL_valNS_SameMacAddr.def      :addrconf=boot sd=P  :DADFail_Stless_LLOCAL_valNS_SameMacAddr.html:DAD Fail when NUT received Valid NS (src MAC addr == MAC addr of NUT) on Stateless Link-local address autoconfiguration
+
+### Surprise test
+&#./DADFail_DADPostSendNS.seq     :LLOCAL_supNS_prfxopt.def          :addrconf=boot dadsuccess=WARN sd=P :DADFail_Stless_LLOCAL_supNS_prfxopt.html:DAD Fail when NUT received Surprise NS (Prefix Option) on Stateless Link-local address autoconfiguration (Surprise test)
+
+&print:1.1.1.5 DAD Fail when NUT received Not-Invalid NA
+&#./DADFail_DADPostSendNS.seq     :LLOCAL_valNA_DiffMacAddr.def      :addrconf=boot sd=P  :DADFail_Stless_LLOCAL_valNA_DiffMacAddr.html:DAD Fail when NUT received Valid NA (src MAC addr != MAC addr of NUT) on Stateless Link-local address autoconfiguration
+&#./DADFail_DADPostSendNS.seq     :LLOCAL_valNA_SameMacAddr.def      :addrconf=boot sd=P  :DADFail_Stless_LLOCAL_valNA_SameMacAddr.html:DAD Fail when NUT received Valid NA (src MAC addr == MAC addr of NUT) on Stateless Link-local address autoconfiguration
+./DADFail_DADPostSendNS.seq     :LLOCAL_irregNA_notllopt.def       :addrconf=boot sd=P  :DADFail_Stless_LLOCAL_irregNA_notllopt.html:DAD Fail when NUT received NA (No TLL option) on Stateless Link-local address autoconfiguration
+&#./DADFail_DADPostSendNS.seq     :LLOCAL_unspecNA_dst_solnode.def   :addrconf=boot sd=P  :DADFail_Stless_LLOCAL_unspecNA_dst_solnode.html:DAD Fail when NUT received NA (dst addr == solicited node multicast) on Stateless Link-local address autoconfiguration
+
+### Surprise test
+&#./DADFail_DADPostSendNS.seq     :LLOCAL_supNA_ManyOptions.def      :addrconf=boot sd=P  :DADFail_Stless_LLOCAL_supNA_ManyOptions.html:DAD Fail when NUT received Surprise NA (Many Options)  on Stateless Link-local address autoconfiguration (Surprise test)
+
+
+&print:1.1.1.6 DAD Success when NUT received invalid or irregular NS
+./DADSuccess_DADPostSendNS.seq  :LLOCAL_invalNS_dst_allnodes.def   :addrconf=boot sd=P  :DADSuccess_Stless_LLOCAL_invalNS_dst_allnodes.html:DAD Success when NUT received Invalid NS (Dst addr is Allnodes) on Stateless Link-local address autoconfiguration
+&#./DADSuccess_DADPostSendNS.seq  :LLOCAL_invalNS_dst_tentative.def  :addrconf=boot sd=P  :DADSuccess_Stless_LLOCAL_invalNS_dst_tentative.html:DAD Success when NUT received Invalid NS (Dst addr is Tentative) on Stateless Link-local address autoconfiguration
+&#./DADSuccess_DADPostSendNS.seq  :LLOCAL_invalNS_hoplimit.def       :addrconf=boot sd=P  :DADSuccess_Stless_LLOCAL_invalNS_hoplimit.html:DAD Success when NUT received Invalid NS (Hoplimit != 255) on Stateless Link-local address autoconfiguration
+./DADSuccess_DADPostSendNS.seq  :LLOCAL_invalNS_sllopt.def         :addrconf=boot sd=P  :DADSuccess_Stless_LLOCAL_invalNS_sllopt.html:DAD Success when NUT received Invalid NS (Include SLL opt) on Stateless Link-local address autoconfiguration
+./DADSuccess_DADPostSendNS.seq  :LLOCAL_irregNS_src_ucast.def      :addrconf=boot sd=P  :DADSuccess_Stless_LLOCAL_irregNS_src_ucast.html:DAD Success when NUT received NS (Src addr is Unicast) on Stateless Link-local address autoconfiguration
+
+&print:1.1.1.7 DAD Success when NUT received invalid or irregular NA
+&#./DADSuccess_DADPostSendNS.seq  :LLOCAL_invalNA_hoplimit.def       :addrconf=boot sd=P  :DADSuccess_Stless_LLOCAL_invalNA_hoplimit.html:DAD Success when NUT received Invalid NA (Hoplimit != 255) on Stateless Link-local address autoconfiguration
+&#./DADSuccess_DADPostSendNS.seq  :LLOCAL_invalNA_sflag1.def         :addrconf=boot sd=P  :DADSuccess_Stless_LLOCAL_invalNA_sflag1.html:DAD Success when NUT received Invalid NA (S flag == 1) on Stateless Link-local address autoconfiguration
+&#./DADSuccess_DADPostSendNS.seq  :LLOCAL_unspecNA_dst_ucast.def     :addrconf=boot sd=P  :DADSuccess_Stless_LLOCAL_unspecNA_dst_ucast.html:DAD Success when NUT received NA (Dst addr is unicast) on Stateless Link-local address autoconfiguration
+
+
+
+&print:1.1.2 Manual Address Configuration
+#######Link-local address
+
+&print:1.1.2.1 DAD is performed on NUT by Manual Link-local address configuration
+&#./DADSendNS_DADPostSendNS.seq   :LLOCAL0A0N.def    :addrconf=manual+_LLOCAL0A0N_UCAST init=DADSuccess_boot sd=P:DADSendNS_Manual_LLOCAL.html:DAD is performed on NUT by Manual Link-local address configuration
+
+&print:1.1.2.2 DAD Success when NUT received no packet on Manual Link-local address configuration
+&#./DADSuccess_DADPostSendNS.seq  :LLOCAL0A0N.def    :addrconf=manual+_LLOCAL0A0N_UCAST init=DADSuccess_boot send=none sd=P:DADSuccess_Manual_LLOCAL.html:DAD Success when NUT received no packet on Manual Link-local address configuration
+
+#######Global address
+&print:1.1.2.3 DAD is performed on NUT by Manual Global address configuration
+&#./DADSendNS_DADPostSendNS.seq   :GLOBAL0A0N.def                      :addrconf=manual+_GLOBAL0A0N_UCAST init=DADSuccess_boot sd=P          :DADSendNS_Manual_GLOBAL.html:DAD is performed on NUT by Manual Global address configuration
+
+&print:1.1.2.4 DAD Success when NUT received no packet on Manual Global address configuration
+&#./DADSuccess_DADPostSendNS.seq  :GLOBAL0A0N.def                      :addrconf=manual+_GLOBAL0A0N_UCAST init=DADSuccess_boot send=none sd=P:DADSuccess_Manual_GLOBAL.html:DAD Success when NUT received no packet on Manual Global address configuration
+
+&print:1.1.2.5 DAD Fail when NUT received Not-Invalid NS
+&#./DADFail_DADPostSendNS.seq     :GLOBAL0A0N_valNS_SameMacAddr.def    :addrconf=manual+_GLOBAL0A0N_UCAST init=DADSuccess_boot sd=P  :DADFail_Manual_GLOBAL_valNS_SameMacAddr.html:DAD Fail when NUT received Valid NS (src MAC addr == MAC addr of NUT) on Manual Global address configuration
+
+&print:1.1.2.6 DAD Fail when NUT received Not-Invalid NA
+&#./DADFail_DADPostSendNS.seq     :GLOBAL0A0N_valNA_SameMacAddr.def    :addrconf=manual+_GLOBAL0A0N_UCAST init=DADSuccess_boot sd=P  :DADFail_Manual_GLOBAL_valNA_SameMacAddr.html:DAD Fail when NUT received Valid NA (src MAC addr == MAC addr of NUT) on Manual Global address configuration
+##./DADFail_DADPostSendNS.seq    :GLOBAL0A0N_unspecNA_dst_solnode.def :addrconf=manual+_GLOBAL0A0N_UCAST init=DADSuccess_boot sd=P  :DADFail_Manual_GLOBAL_unspecNA_dst_solnode.html:DAD Fail when NUT received NA (dst addr == slicited node multicast) on Manual Global address configuration
+
+&print:1.1.2.7 DAD Success when NUT received invalid NS
+&#./DADSuccess_DADPostSendNS.seq  :GLOBAL0A0N_invalNS_dst_allnodes.def  :addrconf=manual+_GLOBAL0A0N_UCAST init=DADSuccess_boot sd=P:DADSuccess_Manual_GLOBAL_invalNS_dst_allnodes.html:DAD Success when NUT received Invalid NS (Dst addr is Allnodes) on Manual Global address configuration
+&#./DADSuccess_DADPostSendNS.seq  :GLOBAL0A0N_invalNS_dst_tentative.def :addrconf=manual+_GLOBAL0A0N_UCAST init=DADSuccess_boot sd=P:DADSuccess_Manual_GLOBAL_invalNS_dst_tentative.html:DAD Success when NUT received Invalid NS (Dst addr is Tentative) on Manual Global address configuration
+
+&print:1.1.2.8 DAD Success when NUT received invalid NA
+&print:No test
+
+&print:1.1.2.9 DAD is not performed on NUT by Anycast address configuration
+&#./DADSendNS_DADPostSendNS.seq   :LLOCAL0A0N_ACAST.def :addrconf=manual+_LLOCAL0A0N_ACAST init=DADSuccess_boot sd=P:DADSendNS_ACAST_LLOCAL.html:DAD is not performed on NUT by Manual Link-local Anycast address configuration
+&#./DADSendNS_DADPostSendNS.seq   :GLOBAL0A0N_ACAST.def :addrconf=manual+_GLOBAL0A0N_ACAST init=DADSuccess_boot sd=P:DADSendNS_ACAST_GLOBAL.html:DAD is not performed on NUT by Manual Global Anycast address configuration
+
+
+######################################################################
+
+

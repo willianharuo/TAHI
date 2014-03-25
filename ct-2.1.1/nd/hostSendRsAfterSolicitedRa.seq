@@ -1,0 +1,385 @@
+#!/usr/bin/perl
+#
+# Copyright (C) 1999, 2000, 2001, 2002, 2003 Yokogawa Electric Corporation,
+# IPA (Information-technology Promotion Agency, Japan).
+# All rights reserved.
+# 
+# Redistribution and use of this software in source and binary forms, with 
+# or without modification, are permitted provided that the following 
+# conditions and disclaimer are agreed and accepted by the user:
+# 
+# 1. Redistributions of source code must retain the above copyright 
+# notice, this list of conditions and the following disclaimer.
+# 
+# 2. Redistributions in binary form must reproduce the above copyright 
+# notice, this list of conditions and the following disclaimer in the 
+# documentation and/or other materials provided with the distribution.
+# 
+# 3. Neither the names of the copyrighters, the name of the project which 
+# is related to this software (hereinafter referred to as "project") nor 
+# the names of the contributors may be used to endorse or promote products 
+# derived from this software without specific prior written permission.
+# 
+# 4. No merchantable use may be permitted without prior written 
+# notification to the copyrighters. However, using this software for the 
+# purpose of testing or evaluating any products including merchantable 
+# products may be permitted without any notification to the copyrighters.
+# 
+# 
+# 
+# THIS SOFTWARE IS PROVIDED BY THE COPYRIGHTERS, THE PROJECT AND 
+# CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING 
+# BUT NOT LIMITED THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS 
+# FOR A PARTICULAR PURPOSE, ARE DISCLAIMED.  IN NO EVENT SHALL THE 
+# COPYRIGHTERS, THE PROJECT OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, 
+# INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES 
+# (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR 
+# SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) 
+# HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN 
+# CONTRACT,STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) 
+# ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF 
+# THE POSSIBILITY OF SUCH DAMAGE.
+#
+# $TAHI: ct/nd/hostSendRsAfterSolicitedRa.seq,v 1.23 2002/02/27 01:08:26 masaxmasa Exp $
+
+########################################################################
+BEGIN { $V6evalTool::TestVersion = '$Name: REL_2_1_1 $ '; }
+ 
+use V6evalTool;
+use nd;
+
+ndOptions(@ARGV);
+
+# The following generate debugging messages.
+$nd::debug=$ndOpt_v|$ndOpt_vv;
+
+# You can specifies debug options to a remote control program.
+# If you want to know more detail, please see the following:
+# - V6evalTool.pm: perldoc V6evalTool
+# - V6evalRemote.pm: perldoc V6evalRemote
+$nd::remote_debug="-o1" if $ndOpt_vv;
+
+$IF=Link0;
+
+$ra_interval=1;
+$wait_reboot=600;
+$wait_dad_rs=120;
+$wait_rs = $nd::MAX_RTR_SOLICITATION_DELAY +
+    ($nd::RTR_SOLICITATION_INTERVAL * $nd::MAX_RTR_SOLICITATIONS);
+
+@valid_ras=(
+	    ra_tn2allnode,
+	    ra_tn2allnode_sll,
+	    );
+
+@title_valid_ras=(
+		  "RA w/o SLLA",
+		  "RA w/ SLLA",
+		  );
+
+@invalid_ras=(
+	      ra_tn2allnode_invalid_src,
+	      ra_tn2allnode_invalid_hoplimit,
+ 	      ra_tn2allnode_invalid_chksum,
+	      ra_tn2allnode_invalid_icmpcode,
+	      );
+
+@title_invalid_ras=(
+		    "RA, src!=link-local (INVALID)",
+		    "RA, hop limit != 255 (INVALID)",
+		    "RA, invalid checksum (INVALID)",
+		    "RA, icmp code != 0 (INVALID)",
+		    );
+#
+#
+#
+$exit_rtn=$V6evalTool::exitPass;
+
+#
+#
+#
+$type=$V6evalTool::NutDef{Type};
+if($type eq router) {
+    vLogHTML("This test is for the host only<BR>");
+    exit $V6evalTool::exitHostOnly;
+}
+
+$type=$V6evalTool::NutDef{Type};
+if($type ne host) {
+    vLogHTML(ndErrmsg("ERROR: $V6evalTool::NutDef{Type}: ".
+		      "Unknown target type<BR>"));
+    exit $V6evalTool::exitFail;
+}
+
+#
+#
+#
+$idx=0;
+$i=0;
+foreach(@valid_ras) {
+    vLogHTML("<HR><FONT SIZE=\"+2\">*** $title_valid_ras[$i] ***</FONT><BR>");
+    $title{$idx}="<TD>$title_valid_ras[$i]</TD><TD>exp:accepted</TD>";
+    if(waitRsAfterRa($_) == 0) {
+	$title{$idx}.="<TD>result:accepted</TD>";
+	$result{$idx}=$V6evalTool::exitPass;
+	vLogHTML("<A NAME=\"T$idx\">*** OK ***</A><BR>");
+    } else {
+	$title{$idx}.="<TD>result:ignored</TD>";
+	$exit_rtn=$V6evalTool::exitFail;
+	$result{$idx}=$V6evalTool::exitFail;
+	vLogHTML("<A NAME=\"T$idx\">".ndErrmsg("*** NG ***")."</A><BR>");
+    }
+    $idx++;
+    $i++;
+}
+
+#
+#
+#
+$i=0;
+foreach(@invalid_ras) {
+    vLogHTML("<HR><FONT SIZE=\"+2\">".
+	     "*** $title_invalid_ras[$i] ***</FONT><BR>");
+    $title{$idx}="<TD>$title_invalid_ras[$i]</TD><TD>exp:ignored</TD>";
+    if(waitRsAfterRa($_) != 0) {
+	$title{$idx}.="<TD>result:ignored</TD>";
+	$result{$idx}=$V6evalTool::exitPass;
+	vLogHTML("<A NAME=\"T$idx\">*** OK ***</A><BR>");
+    } else {
+	$title{$idx}.="<TD>result:accepted</TD>";
+	$exit_rtn=$V6evalTool::exitFail;
+	$result{$idx}=$V6evalTool::exitFail;
+	vLogHTML("<A NAME=\"T$idx\">".ndErrmsg("*** NG ***")."</A><BR>");
+    }
+    $idx++;
+    $i++;
+}
+$idx--;
+
+#
+#
+#
+vLogHTML("<FONT SIZE=\"+1\">Termination</FONT><BR>");
+clear();
+
+#
+#
+#
+@col=('PTN', 'EXP', 'RESULT');
+ndPrintSummaryHTML("*** Test Summary: receiving solicited RA vs. ".
+		   "sending RS ***", @col,
+                   %title, %result, $idx);
+
+#
+#
+#
+vLogHTML("*** EOT ***<BR>");
+exit $exit_rtn;
+
+sub waitRsAfterRa($)
+{
+    my($ra) = @_;
+    my($i, $timer, $interval);
+
+#
+#
+#
+    vLogHTML("<FONT SIZE=\"+1\">Initialization</FONT><BR>");
+    vLogHTML("Trying to reboot NUT<BR>");
+    goto error if ndRebootAsync() != 0;
+    vCapture($IF);
+    vClear($IF);
+
+#
+#
+#
+    vLogHTML("<FONT SIZE=\"+1\">Test</FONT><BR>");
+
+    $pktdesc{rs_unspc2allrouter}='Got RS: rs_unspc2allrouter';
+    $pktdesc{rs_nut2allrouter}='Got RS: rs_nut2allrouter';
+    $pktdesc{rs_nut2allrouter_sll}='Got RS: rs_nut2allrouter_sll';
+    $pktdesc{dad_ns}='Got DAD NS, but ignored';
+
+    $timer=$wait_reboot;
+    while(1) {
+	vLogHTML("Wait for RS ($timer sec)<BR>");
+	%ret=vRecv($IF, $timer, 0, 0,
+		   rs_unspc2allrouter,
+		   rs_nut2allrouter,
+		   rs_nut2allrouter_sll,
+		   dad_ns,
+		   );
+	goto error if $ret{status} != 0;
+	last if $ret{recvFrame} ne dad_ns;
+
+	# Got DAD NS, but ignored
+	$timer=$wait_dad_rs;
+    }
+
+#
+#
+#
+    $pktdesc{$ra}="Send RA: $ra";
+    %ret=vSend($IF, $ra);
+#
+#
+#
+    vLogHTML("Wait for RS ($wait_rs sec)<BR>");
+    %ret=vRecv($IF, $wait_rs, $ret{sentTime1}, 0,
+	       rs_unspc2allrouter,
+	       rs_nut2allrouter,
+	       rs_nut2allrouter_sll,
+	       );
+    if($ret{status} == 0) {
+	vLogHTML("Read out RSs<BR>");
+	vRecv($IF, $wait_rs, 0, 0);
+	return(1);
+    }
+    vLogHTML("Not received RS<BR>");
+    return(0);
+
+error:
+    vLogHTML(vErrmsg(%ret)."<BR>");
+    vLogHTML(ndErrmsg("NG<BR>"));
+    exit $V6evalTool::exitFail;
+}
+
+sub clear()
+{
+    $pktdesc{ra_tn2allnode_clrrtr}="Clear Default Router List";
+    vSend($IF, ra_tn2allnode_clrrtr);
+}
+########################################################################
+__END__
+
+=head1 NAME
+
+hostSendRsAfterSolicitedRa - Verifying that NUT does not send an RS
+after receiving a solicited RA
+
+=head1 TARGET
+
+Host only
+
+=head1 SYNOPSIS
+
+  hostSendRsAfterSolicitedRa.seq [-tooloption ...]
+                                    -p hostSendRsAfterSolicitedRa.def
+
+=head1 INITIALIZATION
+
+  Reboot NUT.
+
+=head1 TEST PROCEDURE
+
+B<hostSendRsAfterUnsolicitedRa> verifies that NUT does not send a RS
+After receiving a solicited RA.
+
+=head2 After receiving a valid RA
+
+=begin html
+<PRE>
+<BR>
+  TN                     NUT
+  --------------------------
+<BR>
+  <=== <A HREF="#JDG1">Judgment #1</A>: RS ====
+       src=unspecified or NUT's link-local
+       dst=all-router
+       w/o or w/ SLLA
+<BR>
+  ==== <A HREF=#JDG2>Valid RA</A> ===>
+       src=link-local
+       dst=all-node
+       w/ or w/o SLLA
+       timeout=600 sec.
+<BR>
+  <A HREF="#JDG2">Judgment #2</A>: NUT does NOT captures any packet from NUT within 4 sec.
+<BR>
+</PRE>
+
+=end html
+
+=head2 After receiving an invalid RA
+
+=begin html
+<PRE>
+<BR>
+  TN                     NUT
+  --------------------------
+<BR>
+  <=== <A HREF="#JDG1">Judgment #1</A>: RS ====
+       src=unspecified or NUT's link-local
+       dst=all-router
+       w/o or w/ SLLA
+       timeout=600 sec.
+<BR>
+  ==== <A HREF=#JDG2>Invalid RA</A> ===>
+<BR>
+  <A HREF="#JDG2">Judgment #2</A>: NUT captures at the least one <A HREF="#JDG1">RS from NUT</A> within 4 sec.
+<BR>
+</PRE>
+
+=end html
+
+=head1 JUDGMENT
+
+=begin html
+<PRE>
+<A NAME="JDG1">1. NUT sends a valid RS:</A>
+<BR>
+     A) src=unspecified, dst=all-router, w/o SLLA
+     B) src=NUT's link-local, dst=all-router, w/o SLLA
+     C) src=NUT's link-local, dst=all-router, w/ SLLA
+<BR>
+<A NAME="JDG2">2. Sending RSs</A>
+<HR>
+6.3.7.  Sending Router Solicitations
+<BR>
+   <B>Once the host sends a Router Solicitation, and receives a valid
+   Router Advertisement with a non-zero Router Lifetime, the host MUST
+   desist from sending additional solicitations on that interface, until
+   the next time one of the above events occurs.</B>  Moreover, a host
+   SHOULD send at least one solicitation in the case where an
+   advertisement is received prior to having sent a solicitation.
+   Unsolicited Router Advertisements may be incomplete (see Section
+   6.2.3); solicited advertisements are expected to contain complete
+   information.
+<HR>
+                 TABLE. Received a solicited RA vs. Sending a RS
+  =============================================================+=========
+  Received unsolicited RA by NUT                               | Send RS
+  -----------+----------+-------+-------------------+----------+ by the
+  Src        | Dst      | SLLA  | Other             | Validity | NUT ?
+  ===========+==========+=======+===================+==========+=========
+  link-local | all-node | none  |                   | valid    | no
+  -----------+----------+-------+-------------------+----------+---------
+  link-local | all-node | exist |                   | valid    | no
+  -----------+----------+-------+-------------------+----------+---------
+  *global    | all-node | none  |                   | invalid  | yes
+  -----------+----------+-------+-------------------+----------+---------
+  link-local | all-node | none  | *hop limit=2      | invalid  | yes
+  -----------+----------+-------+-------------------+----------+---------
+  link-local | all-node | none  | *invalid checksum | invalid  | yes
+  -----------+----------+-------+-------------------+----------+---------
+  link-local | all-node | none  | *icmp code=1      | invalid  | yes
+  ===========+==========+=======+===================+==========+=========
+</PRE>
+
+=end html
+
+=head1 TERMINATION
+
+  Send RA with RouterLifetime=0 to clear the Default Router List.
+
+=head1 NOTE
+
+  The test invokes the following command:
+  - reboot
+
+=head1 SEE ALSO
+
+  perldoc V6evalTool
+  perldoc V6evalRemote
+
+=cut

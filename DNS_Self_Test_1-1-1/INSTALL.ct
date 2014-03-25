@@ -1,0 +1,588 @@
+
+
+
+                 Installing DNS Conformance Test Package
+
+                              TAHI Project
+
+                      $Date: 2006/06/23 08:21:16 $
+
+
+
+Terminology
+===========
+
+Tester Node (TN)
+        A tester node for the conformance tests.
+
+Node Under Test (NUT)
+        A testee node for the conformance tests.
+
+Network Under Test
+        The network where the conformance tests are executed.
+
+Tester Interface
+        The network interface of TN hooked up to the Network Under Test.
+
+Interface Under Test
+        The network interface of NUT hooked up to the Network Under Test.
+
+
+
+Prerequisites
+=============
+
+Prerequisites for TN:
+
+        - The package supports
+                FreeBSD 5.4-RELEASE or higher
+                FreeBSD 6.0-RELEASE or higher
+
+        - It is mandatory to install transport layer protocol test tool
+          platform "koi" that is also written by TAHI project.
+          For more information, please refer to README (in koi package).
+
+        - And it is also mandatory to install IPv6 Conformance Test Platform
+          "v6eval" that is also written by TAHI project. For more information,
+          please refer to 00README.v6eval (in v6eval package).
+
+
+
+Installing the package onto TN
+==============================
+
+0. Before Starting
+
+        Make sure that you completed installing "koi" and "v6eval" package.
+
+1. Installing koi
+        Please refer to README (in koi package) for about koi information.
+
+2. Installing v6eval
+        Please refer to INSATALL.v6eval (in v6eval package) for about v6eval
+        information.
+
+3. Extracting DNS test package
+
+        % tar zxvf DNS_Self_Test_X-X-X.tgz
+
+
+
+Configuration
+=============
+
+1. Physical Configurations
+
+1.1. Network Under Test
+
+Hook up the Tester Interface of TN to the Network Under Test.
+Tester Interface of TN can be configured for IPv4 and for IPv6 as well.
+
+Hook up the Interface Under Test of NUT to the Network Under Test.
+Interface Under Test of NUT must be configured for IPv6, while it can
+be configured for IPv4 too.
+
+Make sure that any other nodes are not hooked up to the network
+because their packets would disturb the conformance tests.
+
+        Example:
+
+                TN                      NUT
+                 |the Tester I/f: em0    |the I/f Under Test: fxp0
+                 |                       |
+                 |                       |
+                -+-----------------------+- Link0
+                  the Network Under Test
+
+more specific Network configurations are described in each
+test specification.
+
+1.2. Serial line
+
+If you want to manual test, Please ignore this section.
+
+If you want to run automatic test, you can select the way from two methods.
+One is a method of using ssh in the network configuration described by 1.1,
+and another is a method of using serial line.
+
+If you want to use serial line,
+connect both COM ports of TN and NUT with
+a Null-modem cable (or a RS232C cross cable).
+
+        Example:
+
+           COM1            COM1
+        TN -------------------- NUT
+                serial line
+               (Null-modem cable)
+
+The following Null-modem cable is required to connect TN and NUT
+if a cable is DSUB-9 pins.
+
+        1 DCD ********** open ********* 1 DCD
+
+        2 RXD ------------------------- 3 TXD
+        3 TXD ------------------------- 2 RSD
+
+        4 DTR ------------------------- 6 DSR
+        6 DSR ------------------------- 4 DTR
+
+        5 GND ------------------------- 5 GND
+
+        7 RTS ------------------------- 8 CTS
+        8 CTS ------------------------- 7 RTS
+
+        9 CE  ********** open ********* 9 CE
+
+For details, please read "Serial Communications" of the handbook of FreeBSD:
+        http://www.freebsd.org/handbook/
+
+1.3. physical wiring image
+
+        Example:
+
+        if you want to run manual test for host as NUT
+
+                  TN (tester)                       NUT (host)
+                 +------------+ Ether cross cable  +------------+
+        intranet |      [em0] +--------------------+[fxp0]      |
+        ---------+[ed0]       |                    |            |
+                 +------------+                    +------------+
+
+
+
+2. Configuration of NUT
+
+2.0. Basic Configuration of NUT
+
+2.0.1. DNS Client
+
+        - one network interface used in testing, must be 'up' status.
+          and NUT have IPv4 or IPv6 address based on EUI64 (MAC address base).
+
+        - enable IPv6 support on NUT
+          NUT can receive RA, and make Grobal address from RA.
+
+        - if you want to run automatic test,
+          NUT's super user can login using ssh or serial line.
+
+        - if you want to run automatic test using ssh,
+          NUT can not send DNS query using ssh.
+
+        - default route for IPv4 or IPv6
+
+2.0.2. DNS Server
+
+        - one network interface used in testing, must be 'up' status.
+          and NUT have IPv4 or IPv6 address based on EUI64 (MAC address base).
+
+        - enable IPv6 support on NUT
+          NUT can receive RA, and make Grobal address from RA.
+
+        - if you want to run automatic test,
+          NUT's super user can login using ssh or serial line.
+
+        - if you want to run automatic test using ssh,
+          NUT can not send DNS query using ssh.
+
+        - configure DNS Root Name Server, default route for IPv4 or IPv6
+
+2.1. Example (FreeBSD 5.4-RELEASE)
+
+2.1.1. /etc/rc.conf
+
+At least, you msut need add the following line to your rc.conf.
+
+        Example for IPv4: /etc/rc.conf
+        ==========================================================
+        ifconfig_fxp0="inet 192.168.0.10 netmask 255.255.255.0"
+        ifconfig_fxp0_alias0="inet 192.168.0.11 netmask 255.255.255.255"
+        defaultrouter="192.168.0.1"
+        ==========================================================
+
+        Example for IPv6: /etc/rc.conf
+        ==========================================================
+        ipv6_enable="YES"
+        ipv6_ifconfig_fxp0="3ffe:501:ffff:100::10 prefixlen 64"
+        ipv6_ifconfig_fxp0_alias0="3ffe:501:ffff:100::11 prefixlen 64"
+        ipv6_defaultrouter="3ffe:501:ffff:100::1"
+        ==========================================================
+
+2.1.2. Account of the super user (If you want to run automatic test)
+
+It is set as a prerequisite for NUT that TN has the following account:
+
+        - user-name: root
+        - password: v6eval
+        - login shell: /bin/csh
+        - prompt: #
+
+2.1.3. Account of the user (If you want to run automatic test using ssh)
+
+It is set as a prerequisite for NUT that TN has the following account:
+
+        - user-name: tahi
+        - password: v6eval
+        - login group: wheel
+        - login shell: /bin/sh
+        - prompt: >
+
+2.1.4. SSH configuration (If you want to run automatic test using ssh)
+
+2.1.4.1. /etc/ssh/sshd_config
+
+You must add the following line to your /etc/ssh/sshd_config.
+
+        Example : /etc/ssh/sshd_config
+        ==========================================================
+        UseDNS  no
+        ==========================================================
+
+2.1.4.2. /etc/hosts
+
+At least, it is necessary to add the following lines to your /etc/hosts
+to prevent reverse lookup.
+
+        Example for IPv4: /etc/hosts
+        ==========================================================
+        192.168.0.1   tester
+        192.168.0.20  tester
+        192.168.0.30  tester
+        192.168.0.31  tester
+        192.168.0.32  tester
+        ==========================================================
+
+        Example for IPv6: /etc/hosts
+        ==========================================================
+        3ffe:501:ffff:100::1  tester
+        3ffe:501:ffff:100::20  tester
+        3ffe:501:ffff:100::30  tester
+        3ffe:501:ffff:100::31  tester
+        3ffe:501:ffff:100::32  tester
+        ==========================================================
+
+2.1.5 Serial line configuration (If you want to run automatic test using serial
+line)
+
+2.1.5.1. /etc/ttys
+
+If you want to automatic test using serial line,
+TN requires you to log into NUT as a super user.
+To log into NUT, modify /etc/ttys.
+
+        Example: /etc/ttys
+        ==========================================================
+        --- ttys.orig   Fri Oct 12 13:32:01 2001
+        +++ ttys        Fri Oct 12 13:32:54 2001
+        @@ -42,6 +42,7 @@
+         ttyv8  "/usr/X11R6/bin/xdm -nodaemon"  xterm   off secure
+         # Serial terminals
+         # The 'dialup' keyword identifies dialin lines to login, fingerd etc.
+        +cuaa0  "/usr/libexec/getty std.9600"   vt100   on  secure
+         ttyd0  "/usr/libexec/getty std.9600"   dialup  off secure
+         ttyd1  "/usr/libexec/getty std.9600"   dialup  off secure
+         ttyd2  "/usr/libexec/getty std.9600"   dialup  off secure
+        ==========================================================
+
+NOTE:   The cuaa* drivers are safer than the ttyd* drivers
+        because the cuaa* drivers can work with a Null-modem cable
+        that drops CD signals.
+
+        For more information, please read "Serial Communications"
+        of the handbook of FreeBSD:
+                http://www.freebsd.org/handbook/
+
+
+2.1.6 DNS Root Name Server list for DNS Server test
+(FreeBSD 5.4-RELEASE with BIND9.3.2)
+
+You must add only the following lines to your /etc/namedb/named.root.
+
+        Example for IPv4: /etc/namedb/named.root
+        ==========================================================
+        .                3600000  IN  NS    A.ROOT.NET
+        A.ROOT.NET.      3600000      A     192.168.1.20
+        ==========================================================
+
+        Example for IPv6: /etc/namedb/named.root
+        ==========================================================
+        .                3600000  IN  NS    A.ROOT.NET
+        A.ROOT.NET.      3600000      AAAA  3ffe:501:ffff:101::20
+        ==========================================================
+
+
+
+3. Configuration of TN
+
+First, Please read README (in koi package) and
+INSATALL.v6eval (in v6eval package).
+
+3.1. Example (FreeBSD 5.4-RELEASE)
+
+3.1.1. Disable name server service
+
+Disable name server service not to response dns query from NUT, it is mandatory.
+
+3.1.2. Default route
+
+It is recommended to remove IPv4 default route, though it is not mandatory.
+
+3.1.3. Assign address
+
+You must add the following lines in rc.conf at least.
+
+        Configuration example for IPv4 : /etc/rc.conf
+        ==========================================================
+        ifconfig_em0="inet 192.168.0.1 netmask 255.255.255.0"
+        ifconfig_em0_alias0="inet 192.168.0.20 netmask 255.255.255.255"
+        ifconfig_em0_alias1="inet 192.168.0.30 netmask 255.255.255.255"
+        ifconfig_em0_alias2="inet 192.168.0.31 netmask 255.255.255.255"
+        ifconfig_em0_alias3="inet 192.168.0.32 netmask 255.255.255.255"
+        ifconfig_em0_alias4="inet 192.168.1.10 netmask 255.255.255.255"
+        ifconfig_em0_alias5="inet 192.168.1.11 netmask 255.255.255.255"
+        ifconfig_em0_alias6="inet 192.168.1.20 netmask 255.255.255.255"
+        ifconfig_em0_alias7="inet 192.168.1.30 netmask 255.255.255.255"
+        ifconfig_em0_alias8="inet 192.168.1.40 netmask 255.255.255.255"
+        ifconfig_em0_alias9="inet 192.168.1.50 netmask 255.255.255.255"
+        ==========================================================
+
+        Configuration example for IPv6 : /etc/rc.conf
+        ==========================================================
+        ipv6_enable="YES"
+        ipv6_ifconfig_em0="3ffe:501:ffff:100::1 prefixlen 64"
+        ipv6_ifconfig_em0_alias0="3ffe:501:ffff:100::20 prefixlen 64"
+        ipv6_ifconfig_em0_alias1="3ffe:501:ffff:100::30 prefixlen 64"
+        ipv6_ifconfig_em0_alias2="3ffe:501:ffff:100::31 prefixlen 64"
+        ipv6_ifconfig_em0_alias3="3ffe:501:ffff:100::32 prefixlen 64"
+        ipv6_ifconfig_em0_alias4="3ffe:501:ffff:101::10 prefixlen 64"
+        ipv6_ifconfig_em0_alias5="3ffe:501:ffff:101::11 prefixlen 64"
+        ipv6_ifconfig_em0_alias6="3ffe:501:ffff:101::20 prefixlen 64"
+        ipv6_ifconfig_em0_alias7="3ffe:501:ffff:101::30 prefixlen 64"
+        ipv6_ifconfig_em0_alias8="3ffe:501:ffff:101::40 prefixlen 64"
+        ipv6_ifconfig_em0_alias9="3ffe:501:ffff:101::50 prefixlen 64"
+        ==========================================================
+
+3.1.4. /usr/local/koi/etc/tn.def
+
+Prepare tn.def file. Then, adjust Link0 entry in the file.
+
+         # cd /usr/local/koi/etc
+         # cp tn.def.sample tn.def
+         # vi tn.def
+
+        "Link0" entry MUST have:
+                - the EXACT name of Tester Interface.
+
+        Example for manual : /usr/local/koi/etc/tn.def
+        ==========================================================
+        #RemoteMethod    ssh
+        #RemoteTarget    192.168.0.10
+        #RemoteCommand   cu
+        #RemoteCommand   serial
+        #RemoteTarget    cuaa0
+        Link0   em0
+        ==========================================================
+
+        Example for automatic test using ssh (IPv4 test):
+        /usr/local/koi/etc/tn.def
+        ==========================================================
+        RemoteMethod    ssh
+        RemoteTarget    192.168.0.10
+        #RemoteCommand   cu
+        #RemoteCommand   serial
+        #RemoteTarget    cuaa0
+        Link0   em0
+        ==========================================================
+
+        Example for automatic test using serial (IPv4 test):
+        /usr/local/koi/etc/tn.def
+        ==========================================================
+        #RemoteMethod    ssh
+        #RemoteTarget    192.168.0.10
+        RemoteCommand   cu
+        #RemoteCommand   serial
+        RemoteTarget    cuaa0
+        Link0   em0
+        ==========================================================
+
+3.1.5. /usr/local/koi/etc/nut.def
+
+Prepare tn.def file. Then, adjust Link0 entry in the file.
+
+         # cd /usr/local/koi/etc
+         # cp nut.def.sample nut.def
+         # vi nut.def
+
+        "System" entry MUST be a system type of NUT
+        (ex. "manual" for manual test).
+
+        "UserID" entry MUST be a name of a user account of NUT.
+
+        "UserPassword" entry MUST be a password of a user account of NUT.
+
+        "UserPrompt" entry MUST be a prompt of a user account of NUT.
+
+        "RootID" entry MUST be a name of a super user account of NUT.
+
+        "RootPassword" entry MUST be a password of a super user account of NUT.
+
+        "RootPrompt" entry MUST be a prompt of a super user account of NUT.
+
+        "LoginPrompt" entry MUST be a login prompt of of NUT.
+
+        "PasswordPrompt" entry MUST be a password prompt of NUT.
+
+        "Link0" entry MUST have:
+                - the EXACT name of the Interface Under Test.
+
+
+        Example for manual : /usr/local/koi/etc/nut.def
+        ==========================================================
+        System          manual
+        #UserID          tahi
+        #UserPassword    v6eval
+        #UserPrompt      >
+        #RootID          root
+        #RootPassword    v6eval
+        #RootPrompt      #
+        #LoginPrompt     ^[L|l]ogin
+        #PasswordPrompt  ^[P|p]assword:
+        Link0   fxp0
+        ==========================================================
+
+        Example for automatic test using ssh : /usr/local/koi/etc/nut.def
+        ==========================================================
+        System          freebsd-bind9
+        UserID          tahi
+        UserPassword    v6eval
+        UserPrompt      >
+        RootID          root
+        RootPassword    v6eval
+        RootPrompt      #
+        LoginPrompt     ^[L|l]ogin
+        PasswordPrompt  ^[P|p]assword:
+        Link0   fxp0
+        ==========================================================
+
+        Example for automatic test using serial : /usr/local/koi/etc/nut.def
+        ==========================================================
+        System          freebsd-bind9
+        #UserID          tahi
+        #UserPassword    v6eval
+        #UserPrompt      >
+        RootID          root
+        RootPassword    v6eval
+        RootPrompt      #
+        LoginPrompt     ^[L|l]ogin:
+        PasswordPrompt  ^[P|p]assword:
+        Link0   fxp0
+        ==========================================================
+
+3.1.6. /usr/local/v6eval/etc/tn.def
+
+Copy sample tn.def to tn.def. Then, adjust Link0 entry in the file.
+
+        After install v6eval, please setup configuration file
+        # cd /usr/local/v6eval/etc
+        # cp tn.def.sample tn.def
+        # vi tn.def
+
+        "Link0" entry MUST have:
+                - the EXACT name of Tester Interface.
+                - a EXACT MAC address.
+
+        # diff -u tn.def.sample tn.def
+        --- tn.def.sample       Wed Jan 18 17:13:25 2006
+        +++ tn.def      Fri Jun 23 17:15:46 2006
+        @@ -18,7 +18,7 @@
+         
+         #linkname      interface       BOGUS ether source address
+         #              name            of the Tester Interface
+        -Link0          de0             00:00:00:00:01:00
+        +Link0          em0             AA:AA:AA:AA:AA:AA
+         #Link1         de1             00:00:00:00:01:01
+         #Link2         de2             00:00:00:00:01:02
+         #Link3         de4             00:00:00:00:01:03
+                        ^^^             ^^^^^^^^^^^^^^^^^
+                         |                  |
+                         +-- TN I/F name    + MAC address of TN I/F
+
+3.2. /usr/local/v6eval/etc/nut.def
+
+Copy sample nut.def to nut.def. Then, adjust Link0 entry in the file.
+
+        # cd /usr/local/v6eval/etc
+        # cp nut.def.sample nut.def
+        # vi nut.def
+
+        "Link0" entry MUST have:
+                - the EXACT name of the Interface Under Test.
+                - the EXACT MAC address of the Interface Under Test.
+
+        # diff -u nut.def.sample nut.def
+        --- nut.def.sample      Wed Jan 18 17:13:25 2006
+        +++ nut.def     Fri Jun 23 17:17:20 2006
+        @@ -25,7 +25,7 @@
+ 
+         #linkname      interface       The EXACT ether source address
+         #              name            of the Interface Under Test
+        -Link0          fxp0            00:00:92:a7:6d:f5
+        +Link0          fxp0            BB:BB:BB:BB:BB:BB
+         #Link1         fxp1            00:00:92:a7:6d:f6
+         #Link2         de0             00:c0:f6:b0:aa:ef
+         #Link3         de1             00:00:92:a7:6d:f8
+                        ^^^             ^^^^^^^^^^^^^^^^^
+                         |                   |
+                         +-- NUT I/F name    + MAC address of NUT I/F
+
+3.6. adjust test parameter
+
+Some of test can adjust it's test parameter.
+Please see $SOMEWHERE/DNS_Self_Test_X-X-X/DNSConfig.pm.
+
+Run the Tests
+=============
+
+        % cd $SOMEWHERE/DNS_Self_Test_X-X-X
+Test requires root privilege to run, because it is listening 53 port.
+        % su
+        # make clean
+
+if you want to modify parameter (you can use IPv4 or IPv6 to modify this file).
+        % vi DNSConfig.pm
+
+if NUT is a Client
+
+        # make client
+
+if NUT is a Server
+
+        # make server
+
+Manual test:
+When TN need something operation to NUT, TN show you message each step,
+how operate NUT. Then you operate NUT as that message. When all tests are
+completed, you can see the test results at $SOMEWHERE/DNS_Self_Test_X-X-X/index.html.
+
+Automatic test:
+It will take a few hours to run the tests. When all tests are completed,
+you can see the test results at $SOMEWHERE/DNS_Self_Test_X-X-X/index.html.
+
+
+HINT:   To see the test results with Netscape, follow the next steps:
+        1. Install ethereal of ports/net.
+        2. Register application in Netscape:
+                MIME Type: application/x-tcpdump
+                Extension: dump
+                Action/Application: ethereal -r %s
+
+if you want to part of test, execute following command.
+
+        % cd $SOMEWHERE/DNS_Self_Test_X-X-X
+        % su
+        # make clean
+        # make AROPT="-s 17 -e 20" client
+                      ^|^^^ ^^^^^+ end test No. which you want
+                       + start test No. which you want
+
+                                                        [End of INSTALL]

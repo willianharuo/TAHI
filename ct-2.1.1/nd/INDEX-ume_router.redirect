@@ -1,0 +1,14 @@
+#
+# $Name: REL_2_1_1 $
+#
+&print:<font size=+1><B>3.  Redirect</B></font>
+#
+&print:<B>- Sending Redirect</B>
+./startRedirect.seq:./startRedirect.def:::Setup env #1 for redirect tests (please ignore)
+./routerSendRedirectOfflink.seq:./routerSendRedirectOfflink.def:::Redirect to a better router
+./routerSendRedirectOnlink.seq:./routerSendRedirectOnlink.def:::Redirect to a host
+./stopRedirect.seq:/dev/null:::Clear env #1 for redirect tests (please ignore)
+./startRedirect2.seq:./startRedirect2.def:::Setup env #2 for redirect tests (please ignore)
+./routerSendRedirectOfflink2.seq:./routerSendRedirectOfflink2.def:::Redirect to the better router
+./stopRedirect2.seq:/dev/null:::Clear env #2 for redirect tests (please ignore)
+# EOF

@@ -1,0 +1,324 @@
+#!/usr/bin/perl
+#
+# Copyright (C) 1999, 2000, 2001, 2002, 2003 Yokogawa Electric Corporation,
+# IPA (Information-technology Promotion Agency, Japan).
+# All rights reserved.
+# 
+# Redistribution and use of this software in source and binary forms, with 
+# or without modification, are permitted provided that the following 
+# conditions and disclaimer are agreed and accepted by the user:
+# 
+# 1. Redistributions of source code must retain the above copyright 
+# notice, this list of conditions and the following disclaimer.
+# 
+# 2. Redistributions in binary form must reproduce the above copyright 
+# notice, this list of conditions and the following disclaimer in the 
+# documentation and/or other materials provided with the distribution.
+# 
+# 3. Neither the names of the copyrighters, the name of the project which 
+# is related to this software (hereinafter referred to as "project") nor 
+# the names of the contributors may be used to endorse or promote products 
+# derived from this software without specific prior written permission.
+# 
+# 4. No merchantable use may be permitted without prior written 
+# notification to the copyrighters. However, using this software for the 
+# purpose of testing or evaluating any products including merchantable 
+# products may be permitted without any notification to the copyrighters.
+# 
+# 
+# 
+# THIS SOFTWARE IS PROVIDED BY THE COPYRIGHTERS, THE PROJECT AND 
+# CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING 
+# BUT NOT LIMITED THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS 
+# FOR A PARTICULAR PURPOSE, ARE DISCLAIMED.  IN NO EVENT SHALL THE 
+# COPYRIGHTERS, THE PROJECT OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, 
+# INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES 
+# (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR 
+# SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) 
+# HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN 
+# CONTRACT,STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) 
+# ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF 
+# THE POSSIBILITY OF SUCH DAMAGE.
+#
+# $TAHI: ct/ipsec/RTU_E_Out_3descbc_hmacsha1.seq,v 1.6 2003/05/05 19:37:42 ozoe Exp $
+#
+######################################################################
+BEGIN {
+    unshift(@INC, '../ipsec/');
+    $V6evalTool::TestVersion = '$Name: REL_2_1_1 $ ';
+}
+
+use V6evalTool;
+use IPSEC;
+
+%pktdesc = (
+            ### TBD
+);
+$IF0 = Link0;
+$IF1 = Link1;
+
+#----- check NUT type
+
+ipsecCheckNUT(router);
+
+#----- set SAD,SPD
+vLogHTML("<FONT SIZE=3>*** Target initialization phase ***</FONT><BR>");
+
+ipsecClearAll();
+
+## HOST1 vs NUT
+ipsecSetSAD(
+	"src=$IPSEC::IPsecAddr{IPSEC_NUT_NET0_ADDR}" ,
+	"dst=$IPSEC::IPsecAddr{IPSEC_SG1_NET2_ADDR}" ,
+	"spi=0x1000" ,
+	"mode=tunnel" ,
+	"direction=out" ,
+	"protocol=esp" ,
+	"ealgo=3des-cbc" ,
+	"ealgokey=TAHITEST89ABCDEFGHIJKLMN" ,
+	"eauth=hmac-sha1" ,
+	"eauthkey=TAHITEST89ABCDEF0123" ,
+	"nsrc=$IPSEC::IPsecAddr{IPSEC_NET1_ADDR}" ,
+	"ndst=$IPSEC::IPsecAddr{IPSEC_NET4_ADDR}" ,
+	);
+
+ipsecSetSPD(
+	"tsrc=$IPSEC::IPsecAddr{IPSEC_NUT_NET0_ADDR}" ,
+	"tdst=$IPSEC::IPsecAddr{IPSEC_SG1_NET2_ADDR}" ,
+	"src=$IPSEC::IPsecAddr{IPSEC_NET1_ADDR}" ,
+	"dst=$IPSEC::IPsecAddr{IPSEC_NET4_ADDR}" ,
+	"upperspec=any" ,
+	"direction=out" ,
+	"protocol=esp" ,
+	"mode=tunnel" ,
+	);
+
+ipsecEnable();
+
+#======================================================================
+vLogHTML("<FONT SIZE=3>*** Target testing phase ***<FONT><BR>");
+vCapture($IF0);
+vCapture($IF1);
+
+#           NET1     NET0     NET2    NET4
+#  HOST1_NET1 -- NUT -- Router -- SG1 -- HOST1_NET4
+#                  ====tunnel=====>
+
+($stat, %ret) = ipsecForwardEncap($IF1, $IF0, 
+    'echo_reply_from_host1_net1_to_host1_net4_on_net1',
+    'esptun_to_sg1_net2_echo_reply_from_host1_net1_to_host1_net4_on_net0');
+
+if ($stat ne 'GOT_PACKET') {
+    vLogHTML('TN received no encapsulated packet from NUT<BR>');
+    ipsecExitFail();
+}
+
+vLogHTML("TN received encapsulated packet from NUT to SG1.<BR>");
+ipsecExitPass();
+
+
+######################################################################
+__END__
+
+=head1 NAME
+
+  RTU_E_Out_3descbc_hmacsha1 - Router Tunnel Mode ESP Outbound 3DES-CBC with HMAC-SHA1 authentication
+
+=head1 TARGET
+
+  Router
+
+=head1 SYNOPSIS
+
+=begin html
+<PRE>
+  <A HREF="./RTU_E_Out_3descbc_hmacsha1.seq">RTU_E_Out_3descbc_hmacsha1.seq</A> [-tooloption ...] -pkt <A HREF="./RTU_E_3descbc_hmacsha1.def">RTU_E_3descbc_hmacsha1.def</A>
+    -tooloption : v6eval tool option
+  See also <A HREF="./RTU_E_common.def">RTU_E_common.def</A> and <A HREF="./RTU_common.def">RTU_common.def</A>
+</PRE>
+
+=end html
+
+=head1 INITIALIZATION
+
+=begin html
+<P>
+For details of Network Topology, see <A HREF="00README">00README</A>
+</P>
+<P>
+Set NUT's SAD and SPD as following:
+</P>
+<PRE>
+                           (Link0) (Link1)
+            NET4   NET2      NET0   NET1
+  HOST1_NET4 -- SG1 -- Router -- NUT -- HOST1_NET1
+                 <====tunnel=======
+</PRE>
+<P>
+Security Association Database (SAD)
+</P>
+<TABLE border="1">
+  <TR>
+    <TD>source address</TD>
+    <TD>NUT_NET0</TD></TR>
+  <TR>
+    <TD>destination address</TD>
+    <TD>SG1_NET2</TD></TR>
+  <TR>
+    <TD>SPI</TD>
+    <TD>0x1000</TD></TR>
+  <TR>
+    <TD>mode</TD>
+    <TD>tunnel</TD></TR>
+  <TR>
+    <TD>protocol</TD>
+    <TD>ESP</TD></TR>
+  <TR>
+    <TD>ESP algorithm</TD>
+    <TD>3DES-CBC</TD></TR>
+  <TR>
+    <TD>ESP algorithm key</TD>
+    <TD>TAHITEST89ABCDEFGHIJKLMN</TD></TR>
+  <TR>
+    <TD>ESP authentication</TD>
+    <TD>HMAC-SHA1</TD></TR>
+  <TR>
+    <TD>ESP authentication key</TD>
+    <TD>TAHITEST89ABCDEF0123</TD></TR>
+</TABLE>
+<P>
+Security Policy Database (SPD)
+</P>
+<TABLE border="1">
+  <TR>
+    <TD>tunnel source address</TD>
+    <TD>NUT_NET0</TD></TR>
+  <TR>
+    <TD>tunnel destination address</TD>
+    <TD>SG1_NET2</TD></TR>
+  <TR>
+    <TD>source address</TD>
+    <TD>NET1</TD></TR>
+  <TR>
+    <TD>destination address</TD>
+    <TD>NET4</TD></TR>
+  <TR>
+    <TD>upper spec</TD>
+    <TD>any</TD></TR>
+  <TR>
+    <TD>direction</TD>
+    <TD>out</TD></TR>
+  <TR>
+    <TD>protocol</TD>
+    <TD>ESP</TD></TR>
+  <TR>
+    <TD>mode</TD>
+    <TD>tunnel</TD></TR>
+</TABLE>
+
+=end html
+
+=head1 TEST PROCEDURE
+
+=begin html
+<PRE>
+ Tester                      Target                      Tester
+              (Link0)                     (Link1)
+   |                           |                           |
+   |                           |<--------------------------|
+   |                           |      ICMP Echo Reply      |
+   |                           |                           |
+   |<--------------------------|                           |
+   |      ICMP Echo Reply      |                           |
+   |        (with ESP)         |                           |
+   |                           |                           |
+   |                           |                           |
+   v                           v                           v
+</PRE>
+<OL>
+  <LI>Send ICMP Echo Reply to Link1
+  <LI>Receive ICMP Echo Reply with ESP from Link0
+</OL>
+<P>
+ICMP Echo Reply to Link1
+</P>
+<TABLE border="1">
+  <TR>
+    <TD>IP Header</TD>
+    <TD>Source Address</TD>
+    <TD>HOST1_NET1</TD></TR>
+  <TR>
+    <TD></TD>
+    <TD>Destination Address</TD>
+    <TD>HOST1_NET4</TD></TR>
+  <TR>
+    <TD>ICMP</TD>
+    <TD>Type</TD>
+    <TD>129 (Echo Reply)</TD></TR>
+</TABLE>
+<P>
+ICMP Echo Reply with ESP from Link0
+</P>
+<TABLE border="1">
+  <TR>
+    <TD>IP Header</TD>
+    <TD>Source Address</TD>
+    <TD>NUT_NET0</TD></TR>
+  <TR>
+    <TD></TD>
+    <TD>Destination Address</TD>
+    <TD>SG1_NET2</TD></TR>
+  <TR>
+    <TD>ESP</TD>
+    <TD>SPI</TD>
+    <TD>0x1000</TD></TR>
+  <TR>
+    <TD></TD>
+    <TD>Algorithm</TD>
+    <TD>3DES-CBC</TD></TR>
+  <TR>
+    <TD></TD>
+    <TD>Key</TD>
+    <TD>TAHITEST89ABCDEFGHIJKLMN/TD></TR>
+  <TR>
+    <TD></TD>
+    <TD>Authentication Algorithm</TD>
+    <TD>HAMC-SHA1</TD></TR>
+  <TR>
+    <TD></TD>
+    <TD>Authentication Key</TD>
+    <TD>TAHITEST89ABCDEF0123</TD></TR>
+  <TR>
+    <TD>IP Header</TD>
+    <TD>Source Address</TD>
+    <TD>HOST1_NET1</TD></TR>
+  <TR>
+    <TD></TD>
+    <TD>Destination Address</TD>
+    <TD>HOST1_NET4</TD></TR>
+  <TR>
+    <TD>ICMP</TD>
+    <TD>Type</TD>
+    <TD>129 (Echo Reply)</TD></TR>
+</TABLE>
+
+
+=end html
+
+=head1 JUDGMENT
+
+  PASS: ICMP Echo Reply with ESP received
+
+=head1 SEE ALSO
+
+  perldoc V6evalTool
+
+=begin html
+<PRE>
+  <A HREF="./IPSEC.html">IPSEC.html</A> IPsec Test Common Utility
+</PRE>
+
+=end html
+
+=cut
+

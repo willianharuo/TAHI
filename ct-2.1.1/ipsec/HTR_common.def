@@ -1,0 +1,796 @@
+//
+// Copyright (C) 1999, 2000, 2001, 2002, 2003 Yokogawa Electric Corporation,
+// IPA (Information-technology Promotion Agency, Japan).
+// All rights reserved.
+// 
+// Redistribution and use of this software in source and binary forms, with 
+// or without modification, are permitted provided that the following 
+// conditions and disclaimer are agreed and accepted by the user:
+// 
+// 1. Redistributions of source code must retain the above copyright 
+// notice, this list of conditions and the following disclaimer.
+// 
+// 2. Redistributions in binary form must reproduce the above copyright 
+// notice, this list of conditions and the following disclaimer in the 
+// documentation and/or other materials provided with the distribution.
+// 
+// 3. Neither the names of the copyrighters, the name of the project which 
+// is related to this software (hereinafter referred to as "project") nor 
+// the names of the contributors may be used to endorse or promote products 
+// derived from this software without specific prior written permission.
+// 
+// 4. No merchantable use may be permitted without prior written 
+// notification to the copyrighters. However, using this software for the 
+// purpose of testing or evaluating any products including merchantable 
+// products may be permitted without any notification to the copyrighters.
+// 
+// 
+// 
+// THIS SOFTWARE IS PROVIDED BY THE COPYRIGHTERS, THE PROJECT AND 
+// CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING 
+// BUT NOT LIMITED THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS 
+// FOR A PARTICULAR PURPOSE, ARE DISCLAIMED.  IN NO EVENT SHALL THE 
+// COPYRIGHTERS, THE PROJECT OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, 
+// INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES 
+// (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR 
+// SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) 
+// HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN 
+// CONTRACT,STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) 
+// ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF 
+// THE POSSIBILITY OF SUCH DAMAGE.
+//
+// $Name: REL_2_1_1 $
+//
+// $TAHI: ct/ipsec/HTR_common.def,v 1.17 2003/06/05 12:49:28 ozoe Exp $
+//
+#ifndef IPSEC_HTR_COMMON_DEF
+#define IPSEC_HTR_COMMON_DEF
+
+#include "./ipsecaddr.def"
+
+#if (IPSEC_IPVERSION == 4)
+
+#define vX(x)	v4(x)
+#define FEM_icmpX_echo_request		FEM_icmp4_echo_request
+#define FEM_icmpX_echo_reply		FEM_icmp4_echo_reply
+#define FEM_icmpX_echo_request_exth	FEM_icmp4_echo_request_exth
+#define FEM_icmpX_echo_reply_exth	FEM_icmp4_echo_reply_exth
+#define _HDR_IPVX_NAME			_HDR_IPV4_NAME
+#define _ICMPVX_NAME			_ICMPV4_NAME
+
+#ifndef IPSEC_ECHO_DATA
+#define IPSEC_ECHO_DATA echo_data24
+#endif
+
+#else /* default V6 */
+
+#define vX(x)	v6(x)
+#define FEM_icmpX_echo_request		FEM_icmp6_echo_request
+#define FEM_icmpX_echo_reply		FEM_icmp6_echo_reply
+#define FEM_icmpX_echo_request_exth	FEM_icmp6_echo_request_exth
+#define FEM_icmpX_echo_reply_exth	FEM_icmp6_echo_reply_exth
+#define _HDR_IPVX_NAME			_HDR_IPV6_NAME
+#define _ICMPVX_NAME			_ICMPV6_NAME
+
+#ifndef IPSEC_ECHO_DATA
+#define IPSEC_ECHO_DATA echo_data8
+#endif
+
+#endif
+
+//======================================================================
+
+_HETHER_define(hether_router2nut,
+	ether(IPSEC_ROUTER_NET3_MAC_ADDR),
+	nutether()
+)
+
+_HETHER_define(hether_nut2router,
+	nutether(),
+	ether(IPSEC_ROUTER_NET3_MAC_ADDR)
+)
+
+_HETHER_define(_HETHER_router2allnodes,
+	ether(IPSEC_ROUTER_NET3_MAC_ADDR),
+	v62ethermulti(v6(_ALLNODES_MCAST_ADDR))
+)
+
+//======================================================================
+//
+// RA
+//
+
+#if (IPSEC_IPVERSION == 4)
+#else
+FEM_icmp6_ra(
+        ra_to_nut,
+        _HETHER_router2allnodes,
+        {
+                HopLimit = 255;
+                _SRC(v6(IPSEC_ROUTER_NET3_LINK_ADDR));
+                _DST(v6(_ALLNODES_MCAST_ADDR));
+        },
+        {
+		CurHopLimit=64;
+                LifeTime = 1800;
+//		ReachableTime=60000;
+//		RetransTimer=1005;
+                option   = opt_sll_router;
+                option   = opt_mtu_1500;
+                option   = opt_prefixinformation_router;
+        }
+)
+
+Opt_ICMPv6_SLL opt_sll_router {
+        LinkLayerAddress = ether(IPSEC_ROUTER_NET3_MAC_ADDR);
+}
+
+Opt_ICMPv6_MTU opt_mtu_1500 {
+        MTU = 1500;
+}
+
+Opt_ICMPv6_Prefix opt_prefixinformation_router {
+        LFlag             = 1;
+        AFlag             = 1;
+        ValidLifetime     = 2592000;
+        PreferredLifetime = 604800;
+        Prefix            = v6(IPSEC_NET3_PREFIX);
+}
+#endif
+
+//
+// NS or ARP Request
+//
+
+#if (IPSEC_IPVERSION == 4)
+FEM_hdr_arp(
+	ns_to_router,
+        _HETHER_nut2broadcast,
+        {
+                Operation=1;
+                SenderHAddr=nutether();
+                SenderPAddr=v4(IPSEC_NUT_NET3_ADDR);
+                TargetHAddr=any; // not only 00:00:00:00:00:00
+                                 // but also ff:ff:ff:ff:ff:ff (same as ether_src)
+                                 // is allowed
+                TargetPAddr=v4(IPSEC_ROUTER_NET3_ADDR);
+        }
+)
+// This is dummy packet format for IPv4
+FEM_hdr_arp(
+	ns_to_router_linkaddr,
+        _HETHER_nut2broadcast,
+        {
+                Operation=1;
+		SenderHAddr=tnether();
+                SenderPAddr=v4(IPSEC_NUT_NET3_ADDR);
+                TargetHAddr=any; // not only 00:00:00:00:00:00
+                                 // but also ff:ff:ff:ff:ff:ff (same as ether_src)
+                                 // is allowed
+                TargetPAddr=v4(IPSEC_ROUTER_NET3_ADDR);
+        }
+)
+
+#else
+_HETHER_define(hether_nut2routersolnode,
+	nutether(),
+	oneof(_ETHER_SOLNODE_MCAST(v6(IPSEC_ROUTER_NET3_ADDR)),
+	      ether(IPSEC_ROUTER_NET3_MAC_ADDR) )
+)
+
+FEM_icmp6_ns(
+	ns_to_router,
+	hether_nut2routersolnode,
+	{
+		_SRC(oneof(v6merge(IPSEC_NET3_PREFIX, IPSEC_NET3_PREFIX_LEN, nutv6()), nutv6()));
+		_DST(oneof(v6(IPSEC_ROUTER_NET3_ADDR), _IPV6_SOLNODE_MCAST(v6(IPSEC_ROUTER_NET3_ADDR))));
+		HopLimit = 255;
+	},
+	{
+		TargetAddress = v6(IPSEC_ROUTER_NET3_ADDR);
+		option = _SLLOPT_nut;
+	}
+)
+
+FEM_icmp6_ns(
+	ns_to_router_linkaddr,
+	hether_nut2routersolnode,
+	{
+		_SRC(oneof(v6merge(IPSEC_NET3_PREFIX, IPSEC_NET3_PREFIX_LEN, nutv6()), nutv6()));
+		_DST(oneof(v6(IPSEC_ROUTER_NET3_LINK_ADDR), _IPV6_SOLNODE_MCAST(v6(IPSEC_ROUTER_NET3_LINK_ADDR))));
+		HopLimit = 255;
+	},
+	{
+		TargetAddress = v6(IPSEC_ROUTER_NET3_LINK_ADDR);
+		option = _SLLOPT_nut;
+	}
+)
+#endif
+
+//
+// NA or ARP Reply
+//
+
+#if (IPSEC_IPVERSION == 4)
+FEM_hdr_arp(
+	na_from_router,
+        hether_router2nut,
+        {
+                Operation=2;
+                SenderHAddr=ether(IPSEC_ROUTER_NET3_MAC_ADDR);
+                SenderPAddr=v4(IPSEC_ROUTER_NET3_ADDR);
+                TargetHAddr=nutether();
+                TargetPAddr=v4(IPSEC_NUT_NET3_ADDR);
+        }
+)
+#else
+_TLLOPT_define(tllopt_router, ether(IPSEC_ROUTER_NET3_MAC_ADDR))
+
+FEM_icmp6_na(
+	na_from_router,
+	hether_router2nut,
+	{
+		_SRC(v6(IPSEC_ROUTER_NET3_ADDR));
+		_DST(v6merge(IPSEC_NET3_PREFIX, IPSEC_NET3_PREFIX_LEN, nutv6()));
+		HopLimit = 255;
+	},
+	{
+		RFlag = 1;
+		SFlag = 1;
+		OFlag = 1;
+		TargetAddress = v6(IPSEC_ROUTER_NET3_ADDR);
+		option = tllopt_router;
+	}
+)
+
+FEM_icmp6_na(
+	na_from_router_linkaddr,
+	hether_router2nut,
+	{
+		_SRC(v6(IPSEC_ROUTER_NET3_LINK_ADDR));
+		_DST(v6merge(IPSEC_NET3_PREFIX, IPSEC_NET3_PREFIX_LEN, nutv6()));
+		HopLimit = 255;
+	},
+	{
+		RFlag = 1;
+		SFlag = 1;
+		OFlag = 1;
+		TargetAddress = v6(IPSEC_ROUTER_NET3_LINK_ADDR);
+		option = tllopt_router;
+	}
+)
+#endif
+
+//======================================================================
+//
+// Echo Request from Router
+//
+
+#if (IPSEC_IPVERSION == 4)
+FEM_icmp4_echo_request(
+	echo_request_from_router,
+	hether_router2nut,
+	{
+		_SRC(v4(IPSEC_ROUTER_NET3_ADDR));
+		_DST(v4(IPSEC_NUT_NET3_ADDR));
+	},
+	{
+		payload = IPSEC_ECHO_DATA;
+	}
+)
+#else
+FEM_icmp6_echo_request(
+	echo_request_from_router,
+	hether_router2nut,
+	{
+		_SRC(v6(IPSEC_ROUTER_NET3_ADDR));
+		_DST(v6merge(IPSEC_NET3_PREFIX, IPSEC_NET3_PREFIX_LEN, nutv6()));
+	},
+	{
+		payload = IPSEC_ECHO_DATA;
+	}
+)
+#endif
+
+//======================================================================
+//
+// Echo Reply to Router
+//
+
+#if (IPSEC_IPVERSION == 4)
+FEM_icmp4_echo_reply(
+	echo_reply_to_router,
+	hether_nut2router,
+	{
+		_SRC(v4(IPSEC_NUT_NET3_ADDR));
+		_DST(v4(IPSEC_ROUTER_NET3_ADDR));
+	},
+	{
+		payload = IPSEC_ECHO_DATA;
+	}
+)
+#else
+FEM_icmp6_echo_reply(
+	echo_reply_to_router,
+	hether_nut2router,
+	{
+		_SRC(v6merge(IPSEC_NET3_PREFIX, IPSEC_NET3_PREFIX_LEN, nutv6()));
+		_DST(v6(IPSEC_ROUTER_NET3_ADDR));
+	},
+	{
+		payload = IPSEC_ECHO_DATA;
+	}
+)
+#endif
+
+//======================================================================
+//
+// Echo Request from Host1
+//
+
+#if (IPSEC_IPVERSION == 4)
+FEM_icmp4_echo_request(
+	echo_request_from_host1,
+	hether_router2nut,
+	{
+		_SRC(v4(IPSEC_HOST1_NET5_ADDR));
+		_DST(v4(IPSEC_NUT_NET3_ADDR));
+	},
+	{
+		payload = IPSEC_ECHO_DATA;
+	}
+)
+#else
+FEM_icmp6_echo_request(
+	echo_request_from_host1,
+	hether_router2nut,
+	{
+		_SRC(v6(IPSEC_HOST1_NET5_ADDR));
+		_DST(v6merge(IPSEC_NET3_PREFIX, IPSEC_NET3_PREFIX_LEN, nutv6()));
+	},
+	{
+		payload = IPSEC_ECHO_DATA;
+	}
+)
+#endif
+
+//======================================================================
+//
+// Echo Reply to Host1
+//
+
+#if (IPSEC_IPVERSION == 4)
+FEM_icmp4_echo_reply(
+	echo_reply_to_host1,
+	hether_nut2router,
+	{
+		_SRC(v4(IPSEC_NUT_NET3_ADDR));
+		_DST(v4(IPSEC_HOST1_NET5_ADDR));
+	},
+	{
+		payload = IPSEC_ECHO_DATA;
+	}
+)
+#else
+FEM_icmp6_echo_reply(
+	echo_reply_to_host1,
+	hether_nut2router,
+	{
+		_SRC(v6merge(IPSEC_NET3_PREFIX, IPSEC_NET3_PREFIX_LEN, nutv6()));
+		_DST(v6(IPSEC_HOST1_NET5_ADDR));
+	},
+	{
+		payload = IPSEC_ECHO_DATA;
+	}
+)
+#endif
+
+//======================================================================
+//
+// Echo Request from Host1 (before Fragment)
+//
+
+#if (IPSEC_IPVERSION == 4)
+FEM_icmp4_echo_request(
+	echo_request_from_host1_big,
+	hether_router2nut,
+	{
+		_SRC(v4(IPSEC_HOST1_NET5_ADDR));
+		_DST(v4(IPSEC_NUT_NET3_ADDR));
+	},
+	{
+		payload = echo_data_big;
+	}
+)
+#else
+FEM_icmp6_echo_request(
+	echo_request_from_host1_big,
+	hether_router2nut,
+	{
+		_SRC(v6(IPSEC_HOST1_NET5_ADDR));
+		_DST(v6merge(IPSEC_NET3_PREFIX, IPSEC_NET3_PREFIX_LEN, nutv6()));
+	},
+	{
+		payload = echo_data_big;
+	}
+)
+#endif
+
+#if (IPSEC_IPVERSION == 4)
+#else
+//
+// Echo Request from Host1 (Fragment 1st)
+//
+
+FEM_hdr_ipv6_exth(
+	echo_request_from_host1_1st,
+	hether_router2nut,
+	{
+		_SRC(v6(IPSEC_HOST1_NET5_ADDR));
+		_DST(v6merge(IPSEC_NET3_PREFIX, IPSEC_NET3_PREFIX_LEN, nutv6()));
+	},
+	{
+		header = _HDR_IPV6_NAME(echo_request_from_host1_1st);
+		exthdr = frag_req_1st;
+		upper = payload_req_1st;
+	}
+)
+
+//
+// Echo Request from Host1 (Fragment 2nd)
+//
+
+FEM_hdr_ipv6_exth(
+	echo_request_from_host1_2nd,
+	hether_router2nut,
+	{
+		_SRC(v6(IPSEC_HOST1_NET5_ADDR));
+		_DST(v6merge(IPSEC_NET3_PREFIX, IPSEC_NET3_PREFIX_LEN, nutv6()));
+	},
+	{
+		header = _HDR_IPV6_NAME(echo_request_from_host1_2nd);
+		exthdr = frag_req_2nd;
+		upper = payload_req_2nd;
+	}
+)
+#endif
+
+//======================================================================
+//
+// Echo Reply to Host1 (before Fragment)
+//
+
+#if (IPSEC_IPVERSION == 4)
+FEM_icmp4_echo_reply(
+	echo_reply_to_host1_big,
+	hether_nut2router,
+	{
+		_SRC(v4(IPSEC_NUT_NET3_ADDR));
+		_DST(v4(IPSEC_HOST1_NET5_ADDR));
+	},
+	{
+		payload = echo_data_big;
+	}
+)
+#else
+FEM_icmp6_echo_reply(
+	echo_reply_to_host1_big,
+	hether_nut2router,
+	{
+		_SRC(v6merge(IPSEC_NET3_PREFIX, IPSEC_NET3_PREFIX_LEN, nutv6()));
+		_DST(v6(IPSEC_HOST1_NET5_ADDR));
+	},
+	{
+		payload = echo_data_big;
+	}
+)
+#endif
+
+#if (IPSEC_IPVERSION == 4)
+#else
+//
+// Echo Reply to Host1 (Fragment 1st)
+//
+
+FEM_hdr_ipv6_exth(
+	echo_reply_to_host1_1st,
+	hether_nut2router,
+	{
+		_SRC(v6merge(IPSEC_NET3_PREFIX, IPSEC_NET3_PREFIX_LEN, nutv6()));
+		_DST(v6(IPSEC_HOST1_NET5_ADDR));
+	},
+	{
+		header = _HDR_IPV6_NAME(echo_reply_to_host1_1st);
+		exthdr = frag_rep_1st;
+		upper = payload_rep_1st;
+	}
+)
+
+//
+// Echo Reply to Host1 (Fragment 2nd)
+//
+
+FEM_hdr_ipv6_exth(
+	echo_reply_to_host1_2nd,
+	hether_nut2router,
+	{
+		_SRC(v6merge(IPSEC_NET3_PREFIX, IPSEC_NET3_PREFIX_LEN, nutv6()));
+		_DST(v6(IPSEC_HOST1_NET5_ADDR));
+	},
+	{
+		header = _HDR_IPV6_NAME(echo_reply_to_host1_2nd);
+		exthdr = frag_rep_2nd;
+		upper = payload_rep_2nd;
+	}
+)
+
+//======================================================================
+//
+// Echo Request from Host1 (Payload data size 1024)
+//
+
+FEM_icmp6_echo_request(
+	echo_request_from_host1_1024,
+	hether_router2nut,
+	{
+		_SRC(v6(IPSEC_HOST1_NET5_ADDR));
+		_DST(v6merge(IPSEC_NET3_PREFIX, IPSEC_NET3_PREFIX_LEN, nutv6()));
+	},
+	{
+		payload = echo_data_1024;
+	}
+)
+
+//
+// Echo Request from Host1 (Fragment 1st)
+//
+
+FEM_hdr_ipv6_exth(
+	echo_request_from_host1_1st_1024,
+	hether_router2nut,
+	{
+		_SRC(v6(IPSEC_HOST1_NET5_ADDR));
+		_DST(v6merge(IPSEC_NET3_PREFIX, IPSEC_NET3_PREFIX_LEN, nutv6()));
+	},
+	{
+		header = _HDR_IPV6_NAME(echo_request_from_host1_1st_1024);
+		exthdr = frag_req_1st_1024;
+		upper = payload_req_1st_1024;
+	}
+)
+
+//
+// Echo Request from Host1 (Fragment 2nd)
+//
+
+FEM_hdr_ipv6_exth(
+	echo_request_from_host1_2nd_1024,
+	hether_router2nut,
+	{
+		_SRC(v6(IPSEC_HOST1_NET5_ADDR));
+		_DST(v6merge(IPSEC_NET3_PREFIX, IPSEC_NET3_PREFIX_LEN, nutv6()));
+	},
+	{
+		header = _HDR_IPV6_NAME(echo_request_from_host1_2nd_1024);
+		exthdr = frag_req_2nd_1024;
+		upper = payload_req_2nd_1024;
+	}
+)
+
+//======================================================================
+//
+// Echo Reply to Host1 (Fragment, payload size 1024)
+//
+
+FEM_icmp6_echo_reply(
+	echo_reply_to_host1_1024,
+	hether_nut2router,
+	{
+		_SRC(v6merge(IPSEC_NET3_PREFIX, IPSEC_NET3_PREFIX_LEN, nutv6()));
+		_DST(v6(IPSEC_HOST1_NET5_ADDR));
+	},
+	{
+		payload = echo_data_1024;
+	}
+)
+
+//======================================================================
+//
+// ICMP Parameter Problem to Host1
+//
+
+FEM_icmp6_parameter_problem(
+	icmperr_from_host1_1st,
+	hether_nut2router,
+        {
+		_SRC(v6merge(IPSEC_NET3_PREFIX, IPSEC_NET3_PREFIX_LEN, nutv6()));
+		_DST(v6(IPSEC_HOST1_NET5_ADDR));
+        },
+        {
+                Code = 1;       // unrecognized Next Header type encounted
+                Pointer = 40;
+                payload = err_1st;
+        }
+)
+
+//
+// ICMP Time Exceeded for 1st fragment
+//
+
+FEM_icmp6_time_exceeded(
+        time_exceeded_1st,
+	hether_nut2router,
+        {
+		_SRC(v6merge(IPSEC_NET3_PREFIX, IPSEC_NET3_PREFIX_LEN, nutv6()));
+		_DST(v6(IPSEC_HOST1_NET5_ADDR));
+        },
+        {
+                Code = 1;       // fragment reassembly time exceeded
+                payload = err_1st;
+        }
+)
+
+Payload err_1st {
+        data = right(_PACKET_IPV6_NAME(echo_request_from_host1_1st_1024), 0);
+}
+
+FEM_icmp6_parameter_problem(
+	icmperr_from_host1_2nd,
+	hether_nut2router,
+        {
+		_SRC(v6merge(IPSEC_NET3_PREFIX, IPSEC_NET3_PREFIX_LEN, nutv6()));
+		_DST(v6(IPSEC_HOST1_NET5_ADDR));
+        },
+        {
+                Code = 1;       // unrecognized Next Header type encounted
+                Pointer = 40;
+                payload = err_2nd;
+        }
+)
+
+//
+// ICMP Time Exceeded for 2nd fragment (never returned, make vRecv happy)
+//
+
+FEM_icmp6_time_exceeded(
+        time_exceeded_2nd,
+	hether_nut2router,
+        {
+		_SRC(v6merge(IPSEC_NET3_PREFIX, IPSEC_NET3_PREFIX_LEN, nutv6()));
+		_DST(v6(IPSEC_HOST1_NET5_ADDR));
+        },
+        {
+                Code = 1;       // fragment reassembly time exceeded
+                payload = err_2nd;
+        }
+)
+
+Payload err_2nd {
+        data = right(_PACKET_IPV6_NAME(echo_request_from_host1_2nd_1024), 0);
+}
+#endif
+
+//======================================================================
+//
+// Default Payload Data ("EchoData")
+//
+
+Payload echo_data8 {
+	data = { 0x45, 0x63, 0x68, 0x6f, 0x44, 0x61, 0x74, 0x61};
+}
+
+Payload echo_data24 {
+	data = { 0x45, 0x63, 0x68, 0x6f, 0x44, 0x61, 0x74, 0x61};
+	data = { 0x45, 0x63, 0x68, 0x6f, 0x44, 0x61, 0x74, 0x61};
+	data = { 0x45, 0x63, 0x68, 0x6f, 0x44, 0x61, 0x74, 0x61};
+}
+
+//======================================================================
+//
+// Echo Data 1 ("Data 1")
+//
+
+Payload echo_data_1 {
+        data = { 0x44, 0x61, 0x74, 0x61, 0x20, 0x31 };
+}
+
+//======================================================================
+//
+// Echo Data 2 ("Data 2")
+//
+
+Payload echo_data_2 {
+        data = { 0x44, 0x61, 0x74, 0x61, 0x20, 0x32 };
+}
+
+//======================================================================
+//
+// Echo Data 1024 ("Data 1024")
+//
+
+Payload echo_data_1024 {
+	data = repeat(1, 512);
+	data = repeat(2, 512);
+}
+
+//======================================================================
+//
+// Echo Data for Fragment
+//
+
+Payload echo_data_big {
+	data = repeat(0xff, 1702);
+}
+
+Hdr_Fragment frag_req_1st {
+	NextHeader = 58;	// ICMP
+	FragmentOffset = 0;
+	MFlag = 1;
+	Identification = 0x0001;
+}
+
+Hdr_Fragment frag_req_2nd {
+	NextHeader = 58;	// ICMP
+	FragmentOffset = 181;
+	MFlag = 0;
+	Identification = 0x0001;
+}
+
+Payload payload_req_1st {
+	data = substr(_PACKET_IPV6_NAME(echo_request_from_host1_big), 40, 1448);
+}
+
+Payload payload_req_2nd {
+	data = right(_PACKET_IPV6_NAME(echo_request_from_host1_big), 1488);
+}
+
+Hdr_Fragment frag_rep_1st {
+	NextHeader = 58;	// ICMP
+	FragmentOffset = 0;
+	MFlag = 1;
+	Identification = any;
+}
+
+Hdr_Fragment frag_rep_2nd {
+	NextHeader = 58;	// ICMP
+	FragmentOffset = 181;
+	MFlag = 0;
+	Identification = any;
+}
+
+Payload payload_rep_1st {
+	data = substr(_PACKET_IPV6_NAME(echo_reply_to_host1_big), 40, 1448);
+}
+
+Payload payload_rep_2nd {
+	data = right(_PACKET_IPV6_NAME(echo_reply_to_host1_big), 1488);
+}
+
+//======================================================================
+//
+// Echo Data for Fragment 1024
+//
+
+Hdr_Fragment frag_req_1st_1024 {
+	NextHeader = 58;	// ICMP
+	FragmentOffset = 0;
+	MFlag = 1;
+	Identification = 0x0001;
+}
+
+Hdr_Fragment frag_req_2nd_1024 {
+	NextHeader = 58;	// ICMP
+	FragmentOffset = 65;    // 520/8
+	MFlag = 0;
+	Identification = 0x0001;
+}
+
+Payload payload_req_1st_1024 {
+	data = substr(_PACKET_IPV6_NAME(echo_request_from_host1_1024), 40, 520);
+}
+
+Payload payload_req_2nd_1024 {
+	data = substr(_PACKET_IPV6_NAME(echo_request_from_host1_1024), 560, 512);
+}
+
+#endif

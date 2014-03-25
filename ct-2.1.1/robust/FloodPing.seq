@@ -1,0 +1,222 @@
+#!/usr/bin/perl
+#
+# Copyright (C) 1999, 2000, 2001, 2002, 2003 Yokogawa Electric Corporation,
+# IPA (Information-technology Promotion Agency, Japan).
+# All rights reserved.
+# 
+# Redistribution and use of this software in source and binary forms, with 
+# or without modification, are permitted provided that the following 
+# conditions and disclaimer are agreed and accepted by the user:
+# 
+# 1. Redistributions of source code must retain the above copyright 
+# notice, this list of conditions and the following disclaimer.
+# 
+# 2. Redistributions in binary form must reproduce the above copyright 
+# notice, this list of conditions and the following disclaimer in the 
+# documentation and/or other materials provided with the distribution.
+# 
+# 3. Neither the names of the copyrighters, the name of the project which 
+# is related to this software (hereinafter referred to as "project") nor 
+# the names of the contributors may be used to endorse or promote products 
+# derived from this software without specific prior written permission.
+# 
+# 4. No merchantable use may be permitted without prior written 
+# notification to the copyrighters. However, using this software for the 
+# purpose of testing or evaluating any products including merchantable 
+# products may be permitted without any notification to the copyrighters.
+# 
+# 
+# 
+# THIS SOFTWARE IS PROVIDED BY THE COPYRIGHTERS, THE PROJECT AND 
+# CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING 
+# BUT NOT LIMITED THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS 
+# FOR A PARTICULAR PURPOSE, ARE DISCLAIMED.  IN NO EVENT SHALL THE 
+# COPYRIGHTERS, THE PROJECT OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, 
+# INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES 
+# (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR 
+# SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) 
+# HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN 
+# CONTRACT,STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) 
+# ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF 
+# THE POSSIBILITY OF SUCH DAMAGE.
+#
+# $TAHI: ct/robust/FloodPing.seq,v 1.4 2001/10/05 06:39:13 masaxmasa Exp $
+#
+######################################################################
+BEGIN {
+	$V6evalTool::TestVersion = '$Name: REL_2_1_1 $';
+}
+
+use V6evalTool;
+sub ping_one();
+
+%pktdesc = (
+	echo_request	=> 'Send Echo Request (Link-Local Address)',
+	echo_reply	=> 'Recv Echo Reply (Link-Local Address)',
+	ns		=> 'Recv Neighbor Solicitation',
+	na		=> 'Send Neighbor Advertisement',
+);
+
+$IF=Link0;
+$nodes=1;
+
+#----- get arguments
+foreach (@ARGV) {
+	/^times=([0-9]+)/  && do {$times=$1; next; };
+	print STDERR "Unknown option $_\n";
+}
+
+#----- start Capturing
+vCapture($IF);
+
+#----- make NCE
+vLog("--- Initialize ---");
+vLog("make NCE");
+ping_one();
+
+#----- start test
+vLog("--- Test ---");
+$pktname="echo_request";
+
+for($i=0; $i < $times; $i++){
+    $pktnames[$i]="$pktname";
+}
+vSend($IF, @pktnames);
+
+#----- check NUT
+vRecv($IF, 2, 0, 0,);
+
+vLog("--- JUDGME ---");
+ping_one();
+
+vLogHTML('Looks OK, Please check whether NUT have crashed.');
+exit $V6evalTool::exitPass;
+end;
+
+sub ping_one(){
+	vSend($IF, echo_request);
+
+	%ret = vRecv($IF, 5, 0, 0, ns, echo_reply);
+	if ($ret{status} != 0) {
+		vLogHTML('No response from NUT');
+		vLogHTML('<FONT COLOR="#FF0000">NG</FONT>');
+		exit $V6evalTool::exitFail;
+	}
+
+	if ($ret{recvFrame} eq 'ns') {
+		vSend($IF, na);
+
+		%ret = vRecv($IF, 5, 0, 0, echo_reply);
+		if ($ret{status} != 0) {
+			vLogHTML('Cannot receive Echo Reply<BR>');
+			vLogHTML('<FONT COLOR="#FF0000">NG</FONT>');
+			exit $V6evalTool::exitFail;
+		}
+	}
+
+	if ($ret{recvFrame} ne 'echo_reply') {
+		vLogHTML('Cannot receive Echo Reply<BR>');
+		vLogHTML('<FONT COLOR="#FF0000">NG</FONT>');
+		exit $V6evalTool::exitFail;
+	}
+}
+
+######################################################################
+__END__
+
+=head1 NAME
+
+FloodPing.seq - Flood ping
+
+=head1 TARGET
+
+Host and Router
+
+=head1 SYNOPSIS
+
+B<FloodPing.seq> [I<times=num>]
+
+=head1 INITIALIZATION
+
+Make neighbor cache entry for TN.
+
+  1. Send echo request.
+  2. If TN receive NS, sends NA.
+  3. Wait echo reply.
+
+
+  [TN]  --------------> [NUT]
+        echo request
+
+  [TN]  <-------------  [NUT]
+            (NS)
+
+  [TN]  --------------> [NUT]
+            (NA)
+
+  [TN]  <-------------  [NUT]
+         echo reply
+
+
+=head1 TEST PROCEDURE
+
+TN and NUT is on the same link.
+
+=over 4
+
+    ---+--------+--- Link0
+       |        |
+     +-+-+   +--+-+
+     |NUT|   | TN |
+     +---+   +----+
+
+       Figure. 1
+
+=back
+
+TN sends echo request packets as fast. the number of packets is specify
+times option.
+
+
+    [TN]   -------->   [NUT]
+            request
+
+    [TN]   -------->   [NUT]
+            request
+
+    [TN]   -------->   [NUT]
+            request
+
+               .
+               .
+               .
+
+    [TN]   -------->   [NUT]
+            request
+
+After sent the flood packet, send echo request once more.
+
+If TN receive NS, send NA. And wait echo reply packet from
+NUT.
+
+
+=head1 JUDGMENT
+
+  PASS : echo reply packet received.
+
+  FAIL : don't received echo reply packet.
+
+=head1 NOTES
+
+  If the judgement is PASS, you must check that NUT have not been
+crashed by your eyes. Becouse the test can't detect it.
+
+=head1 TERMINATION
+
+NONE
+
+=head1 SEE ALSO
+
+perldoc V6evalTool
+
+=cut

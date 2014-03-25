@@ -1,0 +1,78 @@
+##
+## $Name: REL_2_1_1 $
+##
+## $TAHI: ct/ipsec/INDEX_router_esp,v 1.30 2001/10/05 06:38:55 masaxmasa Exp $
+##
+##<seq>:<def>:[<opt>]:[<log>]:<desc>
+##
+#======================================================================
+&print:<B>Router Tunnel ESP Outbound</B>
+
+&print:ESP Outbound without authentication
+
+./RTU_E_Out_descbc.seq:./RTU_E_descbc.def:::Outbound ESP packet (DES-CBC):2
+./RTU_E_Out_3descbc.seq:./RTU_E_3descbc.def:::Outbound ESP packet (3DES-CBC):2
+
+&print:ESP Outbound with authentication
+
+./RTU_E_Out_null_hmacmd5.seq:./RTU_E_null_hmacmd5.def:::Outbound ESP packet (NULL, HMAC-MD5):2
+./RTU_E_Out_null_hmacsha1.seq:./RTU_E_null_hmacsha1.def:::Outbound ESP packet (NULL, HMAC-SHA1):2
+./RTU_E_Out_descbc_hmacmd5.seq:./RTU_E_descbc_hmacmd5.def:::Outbound ESP packet (DES-CBC, HMAC-MD5):2
+./RTU_E_Out_descbc_hmacsha1.seq:./RTU_E_descbc_hmacsha1.def:::Outbound ESP packet (DES-CBC, HMAC-SHA1):2
+./RTU_E_Out_3descbc_hmacmd5.seq:./RTU_E_3descbc_hmacmd5.def:::Outbound ESP packet (3DES-CBC, HMAC-MD5):2
+./RTU_E_Out_3descbc_hmacsha1.seq:./RTU_E_3descbc_hmacsha1.def:::Outbound ESP packet (3DES-CBC, HMAC-SHA1):2
+
+&print:ESP Outbound Padding
+
+./RTU_E_Out_Padding_null.seq:./RTU_E_Padding_null.def:::Outbound Padding (NULL, HMAC-MD5):2
+./RTU_E_Out_Padding_descbc.seq:./RTU_E_Padding_descbc.def:::Outbound Padding (DES-CBC, HMAC-MD5):2
+./RTU_E_Out_Padding_3descbc.seq:./RTU_E_Padding_3descbc.def:::Outbound Padding (3DES-CBC, HMAC-MD5):2
+
+&print:ESP Outbound Connect SA bundles
+
+./RTU_E_Out_2SA_DspiDipdst.seq :./RTU_E_2SA_DspiDip.def:::Connect two SA bundles with different spi, different IPdst:2
+./RTU_E_Out_2SA_SspiDipdst.seq:./RTU_E_2SA_SspiDip.def:::Connect two SA bundles with same spi, different IPdst:2
+
+#======================================================================
+
+&print:<B>Router Tunnel ESP Inbound</B>
+
+./RTU_E_In.seq:./RTU_E_common.def:::Inbound ESP Tunnel packet (with SPD entry):2
+
+&print:ESP Inbound without authentication
+
+./RTU_E_In_descbc.seq:./RTU_E_descbc.def:::Inbound ESP packet (DES-CBC):2
+./RTU_E_In_3descbc.seq:./RTU_E_3descbc.def:::Inbound ESP packet (3DES-CBC):2
+
+./RTU_E_In_EncryptKey.seq:./RTU_E_EncryptKey.def:::Inbound ESP packet (Invalid Encryption Key):2
+
+&print:ESP Inbound with authentication
+
+./RTU_E_In_null_hmacmd5.seq:./RTU_E_null_hmacmd5.def:::Inbound ESP packet (NULL, HMAC-MD5):2
+./RTU_E_In_null_hmacsha1.seq:./RTU_E_null_hmacsha1.def:::Inbound ESP packet (NULL, HMAC-SHA1):2
+./RTU_E_In_descbc_hmacmd5.seq:./RTU_E_descbc_hmacmd5.def:::Inbound ESP packet (DES-CBC, HMAC-MD5):2
+./RTU_E_In_descbc_hmacsha1.seq:./RTU_E_descbc_hmacsha1.def:::Inbound ESP packet (DES-CBC, HMAC-SHA1):2
+./RTU_E_In_3descbc_hmacmd5.seq:./RTU_E_3descbc_hmacmd5.def:::Inbound ESP packet (3DES-CBC, HMAC-MD5):2
+./RTU_E_In_3descbc_hmacsha1.seq:./RTU_E_3descbc_hmacsha1.def:::Inbound ESP packet (3DES-CBC, HMAC-SHA1):2
+
+./RTU_E_In_AuthKey.seq:./RTU_E_AuthKey.def:::Inbound ESP packet (Invalid Authentication Key):2
+
+&print:Router Tunnel ESP Inbound Header Order
+./RTU_E_In_Order_DSTH.seq:./RTU_E_Order_DSTH.def:::Header Order (Destination Options Header vs ESP):2
+
+&print:ESP Inbound Padding
+
+./RTU_E_In_Padding_null.seq:./RTU_E_Padding_null.def:::Inbound Padding (NULL, HMAC-MD5):2
+./RTU_E_In_Padding_descbc.seq:./RTU_E_Padding_descbc.def:::Inbound Padding (DES-CBC, HMAC-MD5):2
+./RTU_E_In_Padding_3descbc.seq:./RTU_E_Padding_3descbc.def:::Inbound Padding (3DES-CBC, HMAC-MD5):2
+
+./RTU_E_In_PadLen255.seq:./RTU_E_PadLen255.def:::Padding Length is 255 (max):2
+./RTU_E_In_InvalidPadding.seq:./RTU_E_InvalidPadding.def:::Invalid Padding:2
+
+&print:ESP Inbound Connect SA bundles
+
+./RTU_E_In_2SA_DspiDipsrc.seq :./RTU_E_2SA_DspiDip.def:::Connect two SA bundles with different spi, different IPsrc:2
+./RTU_E_In_2SA_DspiSipsrc.seq:./RTU_E_2SA_DspiSip.def:::Connect two SA bundles with different spi, same IPsrc:2
+
+#
+#########################################################################

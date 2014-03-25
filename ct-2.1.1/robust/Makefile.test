@@ -1,0 +1,33 @@
+#
+# $Name: REL_2_1_1 $
+#
+# $TAHI: ct/robust/Makefile.test,v 1.12 2002/10/21 04:18:11 akisada Exp $
+#
+
+RM=/bin/rm
+
+TITLE="IPv6 robustness test"
+INDEX="./INDEX"
+
+document:
+	$(AUTORUN) -g $(INDEX)
+
+document2:
+	$(AUTORUN) -G $(INDEX)
+
+tiny:
+	$(AUTORUN) -tiny -nolcna $(INDEX)
+
+clean:
+	-$(RM) -f *.log *.dump [0-9]*.html index.html tn.def summary.html report.html
+
+test:
+	-mv tn.def tn.def.orig
+	$(AUTORUN) $(AROPT) -title=$(TITLE) $(INDEX)
+
+tahi: document
+	-mv tn.def tn.def.orig
+	$(RM) -f index.html summary.html report.html
+	$(AUTORUN) $(AROPT) -title=$(TITLE) -dump2txt $(INDEX)
+
+.include "../Makefile.inc"

@@ -1,0 +1,117 @@
+<HTML>
+<HEAD>
+<TITLE>HH_BadHdrExtLenOverRouter - Bad Hdr Ext Len in Hop-by-Hop Options Header</TITLE>
+<LINK REV="made" HREF="mailto:hackers@FreeBSD.org">
+</HEAD>
+
+<BODY>
+
+<!-- INDEX BEGIN -->
+<!--
+
+<UL>
+
+	<LI><A HREF="#NAME">NAME</A>
+	<LI><A HREF="#TARGET">TARGET</A>
+	<LI><A HREF="#SYNOPSIS">SYNOPSIS</A>
+	<LI><A HREF="#INITIALIZATION">INITIALIZATION</A>
+	<LI><A HREF="#TEST_PROCEDURE">TEST PROCEDURE</A>
+	<LI><A HREF="#JUDGMENT">JUDGMENT</A>
+	<LI><A HREF="#SEE_ALSO">SEE ALSO</A>
+</UL>
+-->
+<!-- INDEX END -->
+
+<P>
+<H1><A NAME="NAME">NAME</A></H1>
+<P>
+<PRE>    HH_BadHdrExtLenOverRouter - Bad Hdr Ext Len in Hop-by-Hop Options Header (over router)
+</PRE>
+<P>
+<HR>
+<H1><A NAME="TARGET">TARGET</A></H1>
+<P>
+<PRE>    Router
+</PRE>
+<P>
+<HR>
+<H1><A NAME="SYNOPSIS">SYNOPSIS</A></H1>
+<PRE>
+    <A HREF="./HH_BadHdrExtLenOverRouter.seq">HH_BadHdrExtLenOverRouter.seq</A> [-tooloption ...] -pkt <A HREF="./HH_BadHdrExtLenOverRouter.def">HH_BadHdrExtLenOverRouter.def</A>
+        -tooloption: v6eval tool option
+    </PRE>
+
+<P>
+<HR>
+<H1><A NAME="INITIALIZATION">INITIALIZATION</A></H1>
+<P>
+<PRE>    1. Check Link0 Global Address Reachability
+    2. Check Link1 Global Address Reachability
+    3. Check Global Address Reachability (from Link0 to Link1)
+    4. Check support of Hop-by-Hop Options Header
+</PRE>
+<P>
+<HR>
+<H1><A NAME="TEST_PROCEDURE">TEST PROCEDURE</A></H1>
+<P>
+<PRE>    1. Send bad Echo Request (Link0)
+    2. Wait 5 sec.
+    3. Send Echo Request (Link0)
+    4. If NS received then send NA, and wait Echo Reply again (Link1)
+    5. Receive Echo Request (Link1)
+    6. Send Echo Reply (Link1)
+    7. If NS received then send NA, and wait Echo Reply again (Link0)
+    8. Receive Echo Reply (Link0)
+</PRE>
+<P>
+<PRE>    Bad Echo Request Data is:
+</PRE>
+<P>
+<PRE>        IPv6 Header
+            Version            = 6
+            Traffic Class      = 0
+            FlowLabel          = 0
+            PayloadLength      = 24
+            NextHeader         = 0 (Hop-by-Hop Options Header)
+            HopLimit           = 64
+            SourceAddress      = Tester Global Address (Link0)
+            DestinationAddress = Target Global Address (Link1)
+</PRE>
+<P>
+<PRE>        Hop-by-Hop Options Header
+            NextHeader         = 58 (ICMPv6)
+            HeaderExtLength    = 100 (It' bad. True value is 0.)
+</PRE>
+<P>
+<PRE>            Opt_PadN
+                OptionType     = 1
+                OptDataLength  = 4
+                pad            = {0, 0, 0, 0}
+</PRE>
+<P>
+<PRE>        ICMPv6 Echo Request
+            Type               = 128 (Echo Request)
+            Code               = 0
+            Checksum           = (auto)
+            Identifier         = 0
+            SequenceNumber     = 0
+            PayloadData        = {1, 2, 3, 4, 5, 6, 7, 8}
+</PRE>
+<P>
+<HR>
+<H1><A NAME="JUDGMENT">JUDGMENT</A></H1>
+<P>
+<PRE>    PASS : echo reply packet received.
+</PRE>
+<P>
+<PRE>    FAIL : don't received echo reply packet.
+</PRE>
+<P>
+<HR>
+<H1><A NAME="SEE_ALSO">SEE ALSO</A></H1>
+<P>
+<PRE>    perldoc V6evalTool
+</PRE>
+</BODY>
+
+</HTML>

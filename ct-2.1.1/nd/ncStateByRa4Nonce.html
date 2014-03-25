@@ -1,0 +1,132 @@
+<HTML>
+<HEAD>
+<TITLE>ncStateByRa4Nonce - Verifying State Machine: RA vs. NONCE</TITLE>
+<LINK REV="made" HREF="mailto:hackers@FreeBSD.org">
+</HEAD>
+
+<BODY>
+
+<!-- INDEX BEGIN -->
+<!--
+
+<UL>
+
+	<LI><A HREF="#NAME">NAME</A>
+	<LI><A HREF="#TARGET">TARGET</A>
+	<LI><A HREF="#SYNOPSIS">SYNOPSIS</A>
+	<LI><A HREF="#INITIALIZATION">INITIALIZATION</A>
+	<LI><A HREF="#TEST_PROCEDURE">TEST PROCEDURE</A>
+	<LI><A HREF="#JUDGMENT">JUDGMENT</A>
+	<LI><A HREF="#TERMINATION">TERMINATION</A>
+	<LI><A HREF="#NOTE">NOTE</A>
+	<LI><A HREF="#SEE_ALSO">SEE ALSO</A>
+</UL>
+-->
+<!-- INDEX END -->
+
+<P>
+<H1><A NAME="NAME">NAME</A></H1>
+<P>
+ncStateByRa4Nonce - Verifying State Machine: RA vs. NONCE
+
+<P>
+<HR>
+<H1><A NAME="TARGET">TARGET</A></H1>
+<P>
+Host only
+
+<P>
+<HR>
+<H1><A NAME="SYNOPSIS">SYNOPSIS</A></H1>
+<P>
+<PRE>  ncStateByRa4Nonce.seq [-tooloption ...] -p ncStateByRa4Nonce.def
+</PRE>
+<P>
+<HR>
+<H1><A NAME="INITIALIZATION">INITIALIZATION</A></H1>
+<P>
+<PRE>  Clear NC state for TN.
+</PRE>
+<P>
+<HR>
+<H1><A NAME="TEST_PROCEDURE">TEST PROCEDURE</A></H1>
+<P>
+<STRONG>ncStateByRa4Nonce</STRONG> verifies that state transition for a NUT in NONCE state when receiving a
+RA.
+
+<PRE>
+  TN               NUT
+  ----------------------
+<BR>
+  State: NONCE (for TN)
+<BR>
+  ==== <A HREF="#JDG1">RA</A> ===>
+      src=TN's link
+      dst=all-node
+      RouterLifetime=600
+      ReachableTime=0
+      RetransTimer=0
+      M=0, O=0
+      <B>w/o or w/ TLLA</B>
+<BR>
+  <A HREF="#JDG1">Judgment</A>: <A HREF="nd.html">Examining NUT's neighbor cache state</A>
+</PRE>
+
+<P>
+<HR>
+<H1><A NAME="JUDGMENT">JUDGMENT</A></H1>
+<A NAME="JDG1"></A>
+<PRE>
+<HR>
+6.3.4.  Processing Received Router Advertisements
+<BR>
+   After extracting information from the fixed part of the Router
+   Advertisement message, the advertisement is scanned for valid
+   options.  <A NAME="TLL"><B>If the advertisement contains a Source Link-Layer Address
+   option the link-layer address SHOULD be recorded in the Neighbor
+   Cache entry for the router (creating an entry if necessary)</A></B> and the
+   IsRouter flag in the Neighbor Cache entry MUST be set to TRUE.  If no
+   Source Link-Layer Address is included, but a corresponding Neighbor
+   Cache entry exists, its IsRouter flag MUST be set to TRUE.  The
+   IsRouter flag is used by Neighbor Unreachability Detection to
+   determine when a router changes to being a host (i.e., no longer
+   capable of forwarding packets).  <A NAME="STATE_A"><B>If a Neighbor Cache entry is created
+   for the router its reachability state MUST be set to STALE as
+   specified in Section 7.3.3.</A></B>  If a cache entry already exists and is
+   updated with a different link-layer address the reachability state
+   MUST also be set to STALE.
+<HR>
+  ====================+===============================================+===============
+  RA                  | Neighbor Cache                                | Comment
+  ------------+-------+---------+-------------------------+-----------+
+  Destination | TLLA  | Current | New                     | LLA       |
+  ============+=======+=========+=========================+===========+===============
+  all-node    | none  | NONCE   | unchanged or INCOMPLETE | unchanged | Not mentioned
+              |       |         |                         |           | in RFC2461
+  ------------+-------+---------+-------------------------+-----------+---------------
+  all-node    | exist | NONCE   | <A HREF="#STATE_A">STALE</A>                   | <A HREF="#TLL">updated</A>   |
+  ============+=======+=========+=========================+===========+===============
+</PRE>
+
+<P>
+<HR>
+<H1><A NAME="TERMINATION">TERMINATION</A></H1>
+<P>
+<PRE>  N/A
+</PRE>
+<P>
+<HR>
+<H1><A NAME="NOTE">NOTE</A></H1>
+<P>
+<PRE>  The test does not invoke any remote command.
+</PRE>
+<P>
+<HR>
+<H1><A NAME="SEE_ALSO">SEE ALSO</A></H1>
+<P>
+<PRE>  perldoc V6evalTool
+  perldoc V6evalRemote
+</PRE>
+</BODY>
+
+</HTML>

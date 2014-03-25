@@ -1,0 +1,150 @@
+<HTML>
+<HEAD>
+<TITLE>Pkt_Too_Big - Verify that the NUT sends Packet Too Big Message</TITLE>
+<LINK REV="made" HREF="mailto:hackers@FreeBSD.org">
+</HEAD>
+
+<BODY>
+
+<!-- INDEX BEGIN -->
+<!--
+
+<UL>
+
+	<LI><A HREF="#NAME">NAME</A>
+	<LI><A HREF="#TARGET">TARGET</A>
+	<LI><A HREF="#SYNOPSIS">SYNOPSIS</A>
+	<LI><A HREF="#NETWORK_CONFIGURATION">NETWORK CONFIGURATION</A>
+	<LI><A HREF="#INITIALIZATION">INITIALIZATION</A>
+	<LI><A HREF="#TEST_PROCEDURE">TEST PROCEDURE</A>
+	<LI><A HREF="#JUDGMENT">JUDGMENT</A>
+</UL>
+-->
+<!-- INDEX END -->
+
+<P>
+<H1><A NAME="NAME">NAME</A></H1>
+<P>
+<PRE>        Pkt_Too_Big - Verify that the NUT sends Packet Too Big Message
+</PRE>
+<P>
+<HR>
+<H1><A NAME="TARGET">TARGET</A></H1>
+<P>
+<PRE>        Router
+</PRE>
+<P>
+<HR>
+<H1><A NAME="SYNOPSIS">SYNOPSIS</A></H1>
+<P>
+<PRE>        Pkt_Too_Big.seq [-tooloption ...] -p Pkt_Too_Big.def
+</PRE>
+<P>
+<HR>
+<H1><A NAME="NETWORK_CONFIGURATION">NETWORK CONFIGURATION</A></H1>
+<P>
+<PRE>        This test is OFFLINK Network Configuration test.
+        In this test, TN play a Roll of the Router.
+        
+        Physical Network configuration
+        
+        Link0   
+        --------+---------------+--------------
+                |               |
+                NUT             TN
+                |               |
+        --------+---------------+--------------
+        Link1
+</PRE>
+<P>
+<PRE>        Logical Network Configuration
+</PRE>
+<P>
+<PRE>                        Host A (TN-Link0)
+                        |                                       Link0
+        --------+-------+-----------------
+                | 
+                NUT (globaladdress:B)
+                |
+        --------+-------+-----------------
+                        |                                       Link1
+                        Router(TN-Link1)
+                        |
+        ----------------+-------+---------
+                                |
+                                HOST B (OFFLINK_LINK1_GLOBAL_ADDRESS)
+</PRE>
+<P>
+<PRE>        In this configuration, Packets are send and received. 
+</PRE>
+<P>
+<PRE>        for example,
+                In Logical
+                        HOST B           -- Echo Reply --&gt; NUT
+                Actually, in physical
+                        TN (as Router)   -- Echo Reply --&gt; NUT
+</PRE>
+<P>
+<HR>
+<H1><A NAME="INITIALIZATION">INITIALIZATION</A></H1>
+<P>
+<PRE>        TN attempt to execute remote command 'vRemote(route.rmt)'.
+        'route add -inet6 OFFLINK_LINK1_GLOBAL_ADDRESS TN-LINK1-address' 
+</PRE>
+<P>
+<PRE>        And status of Neighbor Cache Entry for TN's addresses are reachable.
+</PRE>
+<P>
+<HR>
+<H1><A NAME="TEST_PROCEDURE">TEST PROCEDURE</A></H1>
+<P>
+<PRE>        This test verifies that the node sends a Packet Too Big Message 
+        in response to a packet that it can not forward because the packet 
+        is larger than the MTU of the outgoing link.
+</PRE>
+<P>
+<PRE>        TN                      NUT
+</PRE>
+<P>
+<PRE>        ---------------------------
+</PRE>
+<P>
+<PRE>        1.
+        After NUT is initialized (set static route) , NUT sets 
+        the Link MTU of LINK1 Interface to 1300 .
+</PRE>
+<P>
+<PRE>        2.
+        TN send Echo Request to Host B.
+</PRE>
+<P>
+<PRE>         === echo request  ===&gt;
+</PRE>
+<P>
+<PRE>        3.
+        NUT send Packet Too Big Message 
+</PRE>
+<P>
+<PRE>         &lt;=== Packet Too Big Message ===
+</PRE>
+<P>
+<HR>
+<H1><A NAME="JUDGMENT">JUDGMENT</A></H1>
+<P>
+<PRE>        
+        &lt;&lt; PASS &gt;&gt;
+                NUT send a Packet Too Big Message.
+</PRE>
+<P>
+<PRE>        &lt;&lt; FAIL &gt;&gt;      
+                NUT do not send a Packet Too Big Message.
+                
+=head1 SEE ALSO
+</PRE>
+<P>
+<PRE>          perldoc V6evalTool
+          perldoc V6evalRemote
+</PRE>
+</BODY>
+
+</HTML>

@@ -1,0 +1,236 @@
+//
+// Copyright (C) 1999, 2000, 2001, 2002, 2003 Yokogawa Electric Corporation,
+// IPA (Information-technology Promotion Agency, Japan).
+// All rights reserved.
+// 
+// Redistribution and use of this software in source and binary forms, with 
+// or without modification, are permitted provided that the following 
+// conditions and disclaimer are agreed and accepted by the user:
+// 
+// 1. Redistributions of source code must retain the above copyright 
+// notice, this list of conditions and the following disclaimer.
+// 
+// 2. Redistributions in binary form must reproduce the above copyright 
+// notice, this list of conditions and the following disclaimer in the 
+// documentation and/or other materials provided with the distribution.
+// 
+// 3. Neither the names of the copyrighters, the name of the project which 
+// is related to this software (hereinafter referred to as "project") nor 
+// the names of the contributors may be used to endorse or promote products 
+// derived from this software without specific prior written permission.
+// 
+// 4. No merchantable use may be permitted without prior written 
+// notification to the copyrighters. However, using this software for the 
+// purpose of testing or evaluating any products including merchantable 
+// products may be permitted without any notification to the copyrighters.
+// 
+// 
+// 
+// THIS SOFTWARE IS PROVIDED BY THE COPYRIGHTERS, THE PROJECT AND 
+// CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING 
+// BUT NOT LIMITED THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS 
+// FOR A PARTICULAR PURPOSE, ARE DISCLAIMED.  IN NO EVENT SHALL THE 
+// COPYRIGHTERS, THE PROJECT OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, 
+// INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES 
+// (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR 
+// SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) 
+// HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN 
+// CONTRACT,STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) 
+// ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF 
+// THE POSSIBILITY OF SUCH DAMAGE.
+//
+// $TAHI: ct/natpt/rfc2765_3.1_fragmentation.def,v 1.3 2001/10/11 01:41:46 akisada Exp $
+//
+
+#include "natpt.def"
+
+#define FEM_icmp4_echo(_pNAME, _pDF, _pTTL, _pPAYLOAD) \
+FEM_icmp4_echo_request( \
+	_pNAME, \
+	_HETHER_tn2nut, \
+	{ \
+		_SRC(TN_LINK1_V4_ADDRESS); \
+		_DST(TN_LINK0_V4_ADDRESS); \
+		DF = _pDF; \
+		TTL = _pTTL; \
+	}, \
+	{ \
+		payload = _pPAYLOAD; \
+	} \
+)
+
+// Translate 1252 bytes IPv4 echo to an IPv6 echo with no fragmentation header
+FEM_icmp4_echo(ipv4_echo_1232_df, 1, 64, data_size_1224)
+FEM_icmp6_echo_request(
+	ipv6_echo_1232,
+	_HETHER_nut2tn,
+	{
+		_SRC(TN_LINK1_SIIT_ADDRESS);
+		_DST(TN_LINK0_SIIT_ADDRESS);
+	},
+	{
+		payload = data_size_1224;
+	}
+)
+
+// Translate 1252 bytes IPv4 (+ timestamp option) echo to an IPv6 echo
+FEM_icmp4_echo_request( 
+	ipv4_echo_1232_df_opt,
+	_HETHER_tn2nut, 
+         { 
+		DF=1; 
+                MF=0; 
+		SourceAddress=TN_LINK1_V4_ADDRESS; 
+		DestinationAddress=TN_LINK0_V4_ADDRESS;	 
+	        option = timestamp; 
+         }, 
+         { 
+                 payload=data_size_1224; 
+         }
+) 
+Opt_IPv4_Timestamp timestamp {
+        Timestamp = 0; Timestamp = 0; Timestamp = 0; Timestamp = 0;
+}
+
+// Reply to a 1254 bytes ipv4 (don't fragment) with an
+// ICMPv4 Destination Unreachable (fragmentation needed)
+FEM_icmp4_echo(ipv4_echo_1234_df, 1, 255, data_size_1226)
+Payload payload_ipv4_echo_1234_df
+	{
+		data = left(_PACKET_IPV4_NAME(ipv4_echo_1234_df),548);
+	}
+FEM_icmp4_destination_unreachable(
+	icmpv4_unreach_mtu1252, 
+	_HETHER_nut2tn,
+	{
+		_SRC(NUT_LINK1_V4_ADDRESS);
+		_DST(TN_LINK1_V4_ADDRESS);
+	},
+	{
+		Code = 4;
+		payload = payload_ipv4_echo_1234_df;
+	}
+)
+FEM_icmp4_echo(ipv4_echo_1234_df_ttl, 1, 254, data_size_1226)
+Payload payload_ipv4_echo_1234_df_ttl
+	{
+		data = left(_PACKET_IPV4_NAME(ipv4_echo_1234_df_ttl),548);
+	}
+FEM_icmp4_destination_unreachable(
+	icmpv4_unreach_mtu1252_ttl, 
+	_HETHER_nut2tn,
+	{
+		_SRC(NUT_LINK1_V4_ADDRESS);
+		_DST(TN_LINK1_V4_ADDRESS);
+	},
+	{
+		Code = 4;
+		payload = payload_ipv4_echo_1234_df_ttl;
+	}
+)
+
+// Translate 1252 bytes IPv4 echo to an IPv6 echo with fragmentation header
+FEM_icmp4_echo(ipv4_echo_1232, 0, 64, data_size_1224)
+FEM_add_fragment_hdr(
+	ipv6_echo_1232_frag, 
+	_HETHER_nut2tn, 
+	ipv6_echo_1232, 
+	{
+		MFlag = 0; 
+		FragmentOffset = 0; 
+		NextHeader = 58; 
+	}
+)
+
+// Translate 1252 bytes IPv4 echo to two IPv6 fragments
+FEM_icmp4_echo(ipv4_echo_1234, 0, 64, data_size_1226)
+ICMPv6_EchoRequest ipv6_echo_1234 
+	{
+	        Checksum = 0xf89f;
+		payload = data_size_1226;
+	}
+FEM_fragment(
+	ipv6_echo_1234_frag1,
+	_HETHER_nut2tn,
+	{
+		_SRC(TN_LINK1_SIIT_ADDRESS);
+		_DST(TN_LINK0_SIIT_ADDRESS);
+	},
+	{
+		MFlag = 1; 
+		FragmentOffset = 0; 
+		NextHeader = 58; 
+	},
+	{
+		data = left(ipv6_echo_1234, 1232);
+	}
+)
+FEM_fragment(
+	ipv6_echo_1234_frag2,
+	_HETHER_nut2tn,
+	{
+		_SRC(TN_LINK1_SIIT_ADDRESS);
+		_DST(TN_LINK0_SIIT_ADDRESS);
+	},
+	{
+		MFlag = 0; 
+		FragmentOffset = 154; // (8-octets) =1232 bytes; 
+		NextHeader = 58; 
+	},
+	{
+		data = right(ipv6_echo_1234, 1232);
+	}
+)
+
+// Translate an IPv4 fragment to two IPv6 fragments
+FEM_icmp4_echo_request(
+	ipv4_echo_frag,
+	_HETHER_tn2nut,
+	{
+		_SRC(TN_LINK1_V4_ADDRESS);
+		_DST(TN_LINK0_V4_ADDRESS);
+		MF = 1;
+		FragmentOffset = 64; // (8-octets) =512 bytes;
+		Identifier = 12345;
+	},
+	{
+		payload = data_size_1226;
+	}
+)
+Payload icmpv4_size_1234 {
+	data = right(_PACKET_IPV4_NAME(ipv4_echo_frag), 20);
+}
+FEM_fragment(
+	ipv6_echo_frag_frag1,
+	_HETHER_nut2tn,
+	{
+		_SRC(TN_LINK1_SIIT_ADDRESS);
+		_DST(TN_LINK0_SIIT_ADDRESS);
+	},
+	{
+		MFlag = 1; 
+		FragmentOffset = 64;  // (8-octets) =512 bytes; 
+		NextHeader = 58; 
+		Identification = 12345;
+	},
+	{
+		data = left(icmpv4_size_1234, 1232);
+	}
+)
+FEM_fragment(
+	ipv6_echo_frag_frag2,
+	_HETHER_nut2tn,
+	{
+		_SRC(TN_LINK1_SIIT_ADDRESS);
+		_DST(TN_LINK0_SIIT_ADDRESS);
+	},
+	{
+		MFlag = 1; 
+		FragmentOffset = 218; // (8-octets) =1744 bytes; 
+		NextHeader = 58; 
+		Identification = 12345;
+	},
+	{
+		data = right(icmpv4_size_1234, 1232);
+	}
+)

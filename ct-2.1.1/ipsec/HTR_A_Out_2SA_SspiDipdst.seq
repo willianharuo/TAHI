@@ -1,0 +1,421 @@
+#!/usr/bin/perl
+#
+# Copyright (C) 1999, 2000, 2001, 2002, 2003 Yokogawa Electric Corporation,
+# IPA (Information-technology Promotion Agency, Japan).
+# All rights reserved.
+# 
+# Redistribution and use of this software in source and binary forms, with 
+# or without modification, are permitted provided that the following 
+# conditions and disclaimer are agreed and accepted by the user:
+# 
+# 1. Redistributions of source code must retain the above copyright 
+# notice, this list of conditions and the following disclaimer.
+# 
+# 2. Redistributions in binary form must reproduce the above copyright 
+# notice, this list of conditions and the following disclaimer in the 
+# documentation and/or other materials provided with the distribution.
+# 
+# 3. Neither the names of the copyrighters, the name of the project which 
+# is related to this software (hereinafter referred to as "project") nor 
+# the names of the contributors may be used to endorse or promote products 
+# derived from this software without specific prior written permission.
+# 
+# 4. No merchantable use may be permitted without prior written 
+# notification to the copyrighters. However, using this software for the 
+# purpose of testing or evaluating any products including merchantable 
+# products may be permitted without any notification to the copyrighters.
+# 
+# 
+# 
+# THIS SOFTWARE IS PROVIDED BY THE COPYRIGHTERS, THE PROJECT AND 
+# CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING 
+# BUT NOT LIMITED THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS 
+# FOR A PARTICULAR PURPOSE, ARE DISCLAIMED.  IN NO EVENT SHALL THE 
+# COPYRIGHTERS, THE PROJECT OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, 
+# INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES 
+# (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR 
+# SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) 
+# HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN 
+# CONTRACT,STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) 
+# ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF 
+# THE POSSIBILITY OF SUCH DAMAGE.
+#
+# $TAHI: ct/ipsec/HTR_A_Out_2SA_SspiDipdst.seq,v 1.10 2003/05/05 19:37:35 ozoe Exp $
+#
+######################################################################
+BEGIN {
+    unshift(@INC, '../ipsec/');
+    $V6evalTool::TestVersion = '$Name: REL_2_1_1 $ ';
+}
+
+use V6evalTool;
+use IPSEC;
+
+%pktdesc = (
+	    ### TBD
+);
+$IF = Link0;
+
+#----- check NUT type
+
+ipsecCheckNUT(host);
+
+#----- set SAD,SPD
+vLogHTML("<FONT SIZE=3>*** Target initialization phase ***</FONT><BR>");
+
+ipsecClearAll();
+
+## HOST1 vs NUT
+ipsecSetSAD(
+	"src=$IPSEC::IPsecAddr{IPSEC_NUT_NET3_ADDR}" ,
+	"dst=$IPSEC::IPsecAddr{IPSEC_HOST1_NET5_ADDR}" ,
+	"spi=0x1000" ,
+	"mode=transport" ,
+	"protocol=ah" ,
+	"aalgo=hmac-md5" ,
+	"aalgokey=TAHITEST89ABCDEF"
+	);
+
+ipsecSetSPD(
+	"src=$IPSEC::IPsecAddr{IPSEC_NUT_NET3_ADDR}" ,
+	"dst=$IPSEC::IPsecAddr{IPSEC_HOST1_NET5_ADDR}" ,
+	"upperspec=any" ,
+	"direction=out" ,
+	"protocol=ah" ,
+	"mode=transport" ,
+	);
+
+## HOST2 vs NUT
+ipsecSetSAD(
+	"src=$IPSEC::IPsecAddr{IPSEC_NUT_NET3_ADDR}" ,
+	"dst=$IPSEC::IPsecAddr{IPSEC_HOST2_NET5_ADDR}" ,
+	"spi=0x1000" ,
+	"mode=transport" ,
+	"protocol=ah" ,
+	"aalgo=hmac-md5" ,
+	"aalgokey=foo0foo1foo2foo3"
+	);
+
+ipsecSetSPD(
+	"src=$IPSEC::IPsecAddr{IPSEC_NUT_NET3_ADDR}" ,
+	"dst=$IPSEC::IPsecAddr{IPSEC_HOST2_NET5_ADDR}" ,
+	"upperspec=any" ,
+	"direction=out" ,
+	"protocol=ah" ,
+	"mode=transport" ,
+	);
+
+#======================================================================
+vLogHTML("<FONT SIZE=3>*** Target testing phase ***<FONT><BR>");
+vCapture($IF);
+
+# ping TN(HOST1) <-> NUT
+
+($stat, %ret) = ipsecPing2NUT($IF, 'echo_request_from_host1', 'echo_reply_to_host1_ah');
+
+if ($stat ne 'GOT_REPLY') {
+    vLogHTML("TN received no echo reply from NUT to HOST1.<BR>");
+    ipsecExitFail();
+}
+vLogHTML("TN received echo reply from NUT to HOST1.<BR>");
+vLogHTML("Ping over 1st SA bundle is available.<BR>");
+
+# ping TN(HOST2) <-> NUT
+
+($stat, %ret) = ipsecPing2NUT($IF, 'echo_request_from_host2', 'echo_reply_to_host2_ah');
+
+if ($stat ne 'GOT_REPLY') {
+    vLogHTML("TN received no echo reply from NUT to HOST2.<BR>");
+    ipsecExitFail();
+}
+vLogHTML("TN received echo reply from NUT to HOST2.<BR>");
+vLogHTML("Ping over 2nd SA bundle is available.<BR>");
+
+vLogHTML("Ping over coexisting two SA bundles are available.<BR>");
+ipsecExitPass();
+
+
+######################################################################
+__END__
+
+=head1 NAME
+
+  HTR_A_Out_2SA_SspiDipdst - Host Transport Mode AH Outbound 2 SA selection, Same SPI, Different IPdst
+  
+
+=head1 TARGET
+
+  Host
+
+=head1 SYNOPSIS
+
+=begin html
+<PRE>
+  <A HREF="./HTR_A_Out_2SA_SspiDipdst.seq">HTR_A_Out_2SA_SspiDipdst.seq</A> [-tooloption ...] -pkt <A HREF="./HTR_A_2SA_SspiDip.def">HTR_A_2SA_SspiDip.def</A>
+    -tooloption : v6eval tool option
+  See also <A HREF="./HTR_A_common.def">HTR_A_common.def</A> and <A HREF="./HTR_common.def">HTR_common.def</A>
+</PRE>
+
+=end html
+
+=head1 INITIALIZATION
+
+=begin html
+<P>
+For details of Network Topology, see <A HREF="00README">00README</A>
+</P>
+<P>
+Set NUT's SAD and SPD as following:
+</P>
+<PRE>
+              NET5      NET3
+    HOST1_NET5 -- Router -- NUT
+         <----transport------ (SA1)
+    HOST2_NET5
+         <----transport------ (SA2)
+</PRE>
+<P>
+Security Association Database (SAD) for SA1
+</P>
+<TABLE border="1">
+  <TR>
+    <TD>source address</TD>
+    <TD>NUT_NET3</TD></TR>
+  <TR>
+    <TD>destination address</TD>
+    <TD><B>HOST1_NET5</B></TD></TR>
+  <TR>
+    <TD>SPI</TD>
+    <TD>0x1000</TD></TR>
+  <TR>
+    <TD>mode</TD>
+    <TD>transport</TD></TR>
+  <TR>
+    <TD>protocol</TD>
+    <TD>AH</TD></TR>
+  <TR>
+    <TD>AH algorithm</TD>
+    <TD>HMAC-MD5</TD></TR>
+  <TR>
+    <TD>AH algorithm key</TD>
+    <TD>TAHITEST89ABCDEF</TD></TR>
+</TABLE>
+<P>
+Security Policy Database (SPD) for SA1
+</P>
+<TABLE border="1">
+  <TR>
+    <TD>source address</TD>
+    <TD>NUT_NET3</TD></TR>
+  <TR>
+    <TD>destination address</TD>
+    <TD><B>HOST1_NET5</B></TD></TR>
+  <TR>
+    <TD>upper spec</TD>
+    <TD>any</TD></TR>
+  <TR>
+    <TD>direction</TD>
+    <TD>out</TD></TR>
+  <TR>
+    <TD>protocol</TD>
+    <TD>AH</TD></TR>
+  <TR>
+    <TD>mode</TD>
+    <TD>transport</TD></TR>
+</TABLE>
+<P>
+Security Association Database (SAD) for SA2
+</P>
+<TABLE border="1">
+  <TR>
+    <TD>source address</TD>
+    <TD>NUT_NET3</TD></TR>
+  <TR>
+    <TD>destination address</TD>
+    <TD><B>HOST2_NET5</B></TD></TR>
+  <TR>
+    <TD>SPI</TD>
+    <TD>0x1000</TD></TR>
+  <TR>
+    <TD>mode</TD>
+    <TD>transport</TD></TR>
+  <TR>
+    <TD>protocol</TD>
+    <TD>AH</TD></TR>
+  <TR>
+    <TD>AH algorithm</TD>
+    <TD>HMAC-MD5</TD></TR>
+  <TR>
+    <TD>AH algorithm key</TD>
+    <TD>foo0foo1foo2foo3</TD></TR>
+</TABLE>
+<P>
+Security Policy Database (SPD) for SA2
+</P>
+<TABLE border="1">
+  <TR>
+    <TD>source address</TD>
+    <TD>NUT_NET3</TD></TR>
+  <TR>
+    <TD>destination address</TD>
+    <TD><B>HOST2_NET5</B></TD></TR>
+  <TR>
+    <TD>upper spec</TD>
+    <TD>any</TD></TR>
+  <TR>
+    <TD>direction</TD>
+    <TD>out</TD></TR>
+  <TR>
+    <TD>protocol</TD>
+    <TD>AH</TD></TR>
+  <TR>
+    <TD>mode</TD>
+    <TD>transport</TD></TR>
+</TABLE>
+
+=end html
+
+=head1 TEST PROCEDURE
+
+=begin html
+<PRE>
+ Tester                      Target
+   |                           |
+   |-------------------------->|
+   |      ICMP Echo Request    |
+   |        From Host1         |
+   |                           |
+   |<--------------------------|
+   |      ICMP Echo Reply      |
+   |         To Host1          |
+   |        (using SA1)        |
+   |                           |
+   |                           |
+   |-------------------------->|
+   |      ICMP Echo Request    |
+   |        From Host2         |
+   |                           |
+   |<--------------------------|
+   |      ICMP Echo Reply      |
+   |         To Host2          |
+   |        (using SA2)        |
+   |                           |
+   v                           v
+</PRE>
+<OL>
+  <LI>Send ICMP Echo Request from Host1
+  <LI>Receive ICMP Echo Reply using SA1 to Host1
+  <LI>Send ICMP Echo Request from Host2
+  <LI>Receive ICMP Echo Reply using SA2 to Host2
+</OL>
+<P>
+ICMP Echo Request from Host1
+</P>
+<TABLE border="1">
+  <TR>
+    <TD>IP Header</TD>
+    <TD>Source Address</TD>
+    <TD><B>HOST1_NET5</B></TD></TR>
+  <TR>
+    <TD></TD>
+    <TD>Destination Address</TD>
+    <TD>NUT_NET3</TD></TR>
+  <TR>
+    <TD>ICMP</TD>
+    <TD>Type</TD>
+    <TD>128 (Echo Request)</TD></TR>
+</TABLE>
+<P>
+ICMP Echo Reply using SA1 to Host1
+</P>
+<TABLE border="1">
+  <TR>
+    <TD>IP Header</TD>
+    <TD>Source Address</TD>
+    <TD>NUT_NET3</TD></TR>
+  <TR>
+    <TD></TD>
+    <TD>Destination Address</TD>
+    <TD><B>HOST1_NET5</B></TD></TR>
+  <TR>
+    <TD>AH</TD>
+    <TD>SPI</TD>
+    <TD>0x1000</TD></TR>
+  <TR>
+    <TD></TD>
+    <TD>Algorithm</TD>
+    <TD>HMAC-MD5</TD></TR>
+  <TR>
+    <TD></TD>
+    <TD>Key</TD>
+    <TD>TAHITEST89ABCDEF</TD></TR>
+  <TR>
+    <TD>ICMP</TD>
+    <TD>Type</TD>
+    <TD>129 (Echo Reply)</TD></TR>
+</TABLE>
+<P>
+ICMP Echo Request from Host2
+</P>
+<TABLE border="1">
+  <TR>
+    <TD>IP Header</TD>
+    <TD>Source Address</TD>
+    <TD><B>HOST2_NET5</B></TD></TR>
+  <TR>
+    <TD></TD>
+    <TD>Destination Address</TD>
+    <TD>NUT_NET3</TD></TR>
+  <TR>
+    <TD>ICMP</TD>
+    <TD>Type</TD>
+    <TD>128 (Echo Request)</TD></TR>
+</TABLE>
+<P>
+ICMP Echo Reply using SA2 to Host2
+</P>
+<TABLE border="1">
+  <TR>
+    <TD>IP Header</TD>
+    <TD>Source Address</TD>
+    <TD>NUT_NET3</TD></TR>
+  <TR>
+    <TD></TD>
+    <TD>Destination Address</TD>
+    <TD><B>HOST2_NET5</B></TD></TR>
+  <TR>
+    <TD>AH</TD>
+    <TD>SPI</TD>
+    <TD>0x1000</TD></TR>
+  <TR>
+    <TD></TD>
+    <TD>Algorithm</TD>
+    <TD>HMAC-MD5</TD></TR>
+  <TR>
+    <TD></TD>
+    <TD>Key</TD>
+    <TD>foo0foo1foo2foo3</TD></TR>
+  <TR>
+    <TD>ICMP</TD>
+    <TD>Type</TD>
+    <TD>129 (Echo Reply)</TD></TR>
+</TABLE>
+
+
+=end html
+
+=head1 JUDGMENT
+
+  PASS: Both ICMP Echo Reply with AH (using SA1, SA2) received
+
+=head1 SEE ALSO
+
+  perldoc V6evalTool
+
+=begin html
+<PRE>
+  <A HREF="./IPSEC.html">IPSEC.html</A> IPsec Test Common Utility
+</PRE>
+
+=cut
+

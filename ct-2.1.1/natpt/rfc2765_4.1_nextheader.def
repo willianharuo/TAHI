@@ -1,0 +1,183 @@
+//
+// Copyright (C) 1999, 2000, 2001, 2002, 2003 Yokogawa Electric Corporation,
+// IPA (Information-technology Promotion Agency, Japan).
+// All rights reserved.
+// 
+// Redistribution and use of this software in source and binary forms, with 
+// or without modification, are permitted provided that the following 
+// conditions and disclaimer are agreed and accepted by the user:
+// 
+// 1. Redistributions of source code must retain the above copyright 
+// notice, this list of conditions and the following disclaimer.
+// 
+// 2. Redistributions in binary form must reproduce the above copyright 
+// notice, this list of conditions and the following disclaimer in the 
+// documentation and/or other materials provided with the distribution.
+// 
+// 3. Neither the names of the copyrighters, the name of the project which 
+// is related to this software (hereinafter referred to as "project") nor 
+// the names of the contributors may be used to endorse or promote products 
+// derived from this software without specific prior written permission.
+// 
+// 4. No merchantable use may be permitted without prior written 
+// notification to the copyrighters. However, using this software for the 
+// purpose of testing or evaluating any products including merchantable 
+// products may be permitted without any notification to the copyrighters.
+// 
+// 
+// 
+// THIS SOFTWARE IS PROVIDED BY THE COPYRIGHTERS, THE PROJECT AND 
+// CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING 
+// BUT NOT LIMITED THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS 
+// FOR A PARTICULAR PURPOSE, ARE DISCLAIMED.  IN NO EVENT SHALL THE 
+// COPYRIGHTERS, THE PROJECT OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, 
+// INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES 
+// (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR 
+// SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) 
+// HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN 
+// CONTRACT,STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) 
+// ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF 
+// THE POSSIBILITY OF SUCH DAMAGE.
+//
+// $TAHI: ct/natpt/rfc2765_4.1_nextheader.def,v 1.3 2001/10/11 01:41:47 akisada Exp $
+//
+
+#include "natpt.def"
+
+Payload MyPayload {
+	data=repeat(0xff,64);
+}
+Hdr_UDP MyUDPHdr {
+        SourcePort = 1234;
+        DestinationPort = 5678;
+}
+Upp_UDP MyUDPPacket {
+        header = MyUDPHdr;
+	payload = MyPayload;
+}
+Hdr_TCP MyTCPHdr {
+        SourcePort = 1234;
+        DestinationPort = 5678;
+}
+Upp_TCP MyTCPPacket {
+        header = MyTCPHdr;
+        payload = MyPayload;
+}
+
+
+// IPv4 ICMP packet to send
+FEM_icmp4_echo_request(
+	ipv4_icmp,
+	_HETHER_nut2tn,
+	{ // HDR_IPV4
+		DF=1;
+		SourceAddress=TN_LINK0_V4_ADDRESS;
+		DestinationAddress=TN_LINK1_V4_ADDRESS;	
+	},
+	{ // ICMPv4_EchoRequest
+		payload=MyPayload;
+	}
+)
+
+// IPv6 ICMP packet to receive
+FEM_icmp6_echo_request( 
+        ipv6_icmp, 
+        _HETHER_tn2nut, 
+	{ 
+	        _SRC(TN_LINK0_SIIT_ADDRESS); 
+		_DST(TN_LINK1_SIIT_ADDRESS); 
+	}, 
+	{ 
+		payload=MyPayload;
+	} 
+)  
+
+// IPv4 UDP packet to send
+FEM_hdr_ipv4_exth(
+        ipv4_udp,
+	_HETHER_nut2tn,
+	{ // HDR_IPV4
+		DF=1;
+		SourceAddress=TN_LINK0_V4_ADDRESS;
+		DestinationAddress=TN_LINK1_V4_ADDRESS;	
+	},
+	{ // PACKET_IPV4
+	        header = _HDR_IPV4_ipv4_udp;
+		upper = MyUDPPacket;
+	}
+)
+
+// IPv6 UDP packet to receive
+FEM_hdr_ipv6_exth(
+        ipv6_udp,
+	_HETHER_tn2nut,
+	{ // HDR_IPV6
+	        _SRC(TN_LINK0_SIIT_ADDRESS); 
+		_DST(TN_LINK1_SIIT_ADDRESS); 
+	},
+	{ // PACKET_IPV6
+	        header = _HDR_IPV6_ipv6_udp;
+		upper = MyUDPPacket;
+	}
+)
+
+// IPv4 TCP packet to send
+FEM_hdr_ipv4_exth(
+        ipv4_tcp,
+	_HETHER_nut2tn,
+	{ // HDR_IPV4
+		DF=1;
+		SourceAddress=TN_LINK0_V4_ADDRESS;
+		DestinationAddress=TN_LINK1_V4_ADDRESS;	
+	},
+	{ // PACKET_IPV4
+	        header = _HDR_IPV4_ipv4_tcp;
+		upper = MyTCPPacket;
+	}
+)
+
+// IPv6 TCP packet to receive
+FEM_hdr_ipv6_exth(
+        ipv6_tcp,
+	_HETHER_tn2nut,
+	{ // HDR_IPV6
+	        _SRC(TN_LINK0_SIIT_ADDRESS); 
+		_DST(TN_LINK1_SIIT_ADDRESS); 
+	},
+	{ // PACKET_IPV6
+	        header = _HDR_IPV6_ipv6_tcp;
+		upper = MyTCPPacket;
+	}
+)
+
+// IPv4 unknown protocol(255) packet to send
+FEM_hdr_ipv4_exth(
+        ipv4_unknown,
+	_HETHER_nut2tn,
+	{ // HDR_IPV4
+		DF=1;
+		SourceAddress=TN_LINK0_V4_ADDRESS;
+		DestinationAddress=TN_LINK1_V4_ADDRESS;	
+		Protocol = 255;
+	},
+	{ // PACKET_IPV4
+	        header = _HDR_IPV4_ipv4_unknown;
+		upper = MyPayload;
+	}
+)
+
+// IPv6 unknown next header(255) packet to receive
+FEM_hdr_ipv6_exth(
+        ipv6_unknown,
+	_HETHER_tn2nut,
+	{ // HDR_IPV6
+	        _SRC(TN_LINK0_SIIT_ADDRESS); 
+		_DST(TN_LINK1_SIIT_ADDRESS); 
+		NextHeader = 255;
+	},
+	{ // PACKET_IPV6
+	        header = _HDR_IPV6_ipv6_unknown;
+		upper = MyPayload;
+	}
+)
+

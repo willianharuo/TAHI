@@ -1,0 +1,58 @@
+				README of
+		    IPv6 Conformance Test for NAT-PT
+
+		    	  Ericsson Telebit
+
+		     $Date: 2001/10/11 01:41:46 $
+
+* First of all
+
+	This is a set of conformance tests for IPv6 over IPv4 Tunnel that is 
+	based upon RFC2766(NAT-PT) and RFC2765(SIIT).
+
+* Test coverage
+
+	The test coverage is the followings:
+
+					
+	              | the NUT type    |
+	Category      | host   | router | comments
+	--------------+--------+--------+-------------------
+	V6 -> V4                   *
+	V4 -> V6                   *
+	Fragmentation              *
+	ICMP Message               *
+	--------------+--------+--------+-------------------
+
+
+* How to run the tests
+
+	# vi /usr/local/v6eval/etc/tn.def
+	# vi /usr/local/v6eval/etc/nut.def
+	% cp -Rp /usr/local/v6eval/ct $SOMEWHERE
+	% cd $SOMEWHERE
+	% make test
+	% netscape index.html
+
+	If you know more about it,
+	please see /usr/local/v6eval/doc/INSTALL.ct.
+
+
+* Using remote commands
+
+	                | the NUT type |
+	Script          | Host |Router | Description| Command(s)
+	----------------+------+-------+------------+----------
+	initialize.seq            *      Initialize  tunnel.rmt
+                                                     manualaddrconf.rmt
+                                                     route.rmt
+	----------------+------+-------+------------+----------
+	fragment.seq              *      change MTU  mtuconfig.rmt
+	----------------+------+-------+------------+----------
+	icmpv4.seq	          *      config      tunnel.rmt
+                                         tunnel
+	----------------+------+-------+------------+----------
+
+
+
+						[end of README]

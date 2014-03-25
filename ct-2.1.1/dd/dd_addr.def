@@ -1,0 +1,131 @@
+//
+// Copyright (C) 2003 Yokogawa Electric Corporation, 
+// INTAP(Interoperability Technology Association
+// for Information Processing, Japan).  All rights reserved.
+// 
+// Redistribution and use of this software in source and binary forms, with 
+// or without modification, are permitted provided that the following 
+// conditions and disclaimer are agreed and accepted by the user:
+// 
+// 1. Redistributions of source code must retain the above copyright 
+// notice, this list of conditions and the following disclaimer.
+// 
+// 2. Redistributions in binary form must reproduce the above copyright 
+// notice, this list of conditions and the following disclaimer in the 
+// documentation and/or other materials provided with the distribution.
+// 
+// 3. Neither the names of the copyrighters, the name of the project which 
+// is related to this software (hereinafter referred to as "project") nor 
+// the names of the contributors may be used to endorse or promote products 
+// derived from this software without specific prior written permission.
+// 
+// 4. No merchantable use may be permitted without prior written 
+// notification to the copyrighters. However, using this software for the 
+// purpose of testing or evaluating any products including merchantable 
+// products may be permitted without any notification to the copyrighters.
+// 
+// 
+// 
+// THIS SOFTWARE IS PROVIDED BY THE COPYRIGHTERS, THE PROJECT AND 
+// CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING 
+// BUT NOT LIMITED THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS 
+// FOR A PARTICULAR PURPOSE, ARE DISCLAIMED.  IN NO EVENT SHALL THE 
+// COPYRIGHTERS, THE PROJECT OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, 
+// INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES 
+// (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR 
+// SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) 
+// HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN 
+// CONTRACT,STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) 
+// ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF 
+// THE POSSIBILITY OF SUCH DAMAGE.
+//
+// $TAHI: ct/dd/dd_addr.def,v 1.3 2003/04/22 04:04:45 akisada Exp $
+//
+
+////////////////////////////////////////////////////////////////
+//
+// Default value
+//
+////////////////////////////////
+
+//
+// TN Link0 address
+//
+////////////////////////////////
+#ifndef TN_LINK0_ETHER_ADR
+#define TN_LINK0_ETHER_ADR  A0N_MAC_ADDR             //00:00:00:00:a0:a0
+#endif
+
+#ifndef TN_LINK0_GLOBAL_ADR
+#define TN_LINK0_GLOBAL_ADR _GLOBAL0A0N_UCAST_ADDR   //3ffe:501:ffff:100:200:ff:fe00:a0a0
+#endif
+
+//
+// RA on Link0
+//
+////////////////////////////////
+#ifndef TN_LINK0_PREFIX
+#define TN_LINK0_PREFIX     _GLOBAL0_UCAST_PRFX      //3ffe:501:ffff:100::
+#endif
+
+#ifndef TN_LINK0_PREFIX_LEN
+#define TN_LINK0_PREFIX_LEN _GLOBAL0_UCAST_PRFXLEN   //64
+#endif
+
+//
+// DNS server address
+//
+////////////////////////////////
+#ifndef DNS_SRV_ADDR
+#define DNS_SRV_ADDR TN_LINK0_GLOBAL_ADR
+#endif
+
+#ifndef DNS_SRV_WELLKNOWN_ADDR1
+#define DNS_SRV_WELLKNOWN_ADDR1 "fec0:000:0000:ffff::1"
+#endif
+
+#ifndef DNS_SRV_WELLKNOWN_ADDR2
+#define DNS_SRV_WELLKNOWN_ADDR2 "fec0:000:0000:ffff::2"
+#endif
+
+#ifndef DNS_SRV_WELLKNOWN_ADDR3
+#define DNS_SRV_WELLKNOWN_ADDR3 "fec0:000:0000:ffff::3"
+#endif
+
+//
+// DNS search list
+//
+////////////////////////////////
+#ifndef DNS_SEARCHLIST
+#define DNS_SEARCHLIST "tahi.org"
+#endif
+
+//
+// Host1 resource record
+//
+////////////////////////////////
+#ifndef DNS_NAME
+#define DNS_NAME "test.tahi.org"
+#endif
+
+#ifndef AAAA_RECORD
+#define AAAA_RECORD _GLOBAL1A1N_UCAST_ADDR  //3ffe:501:ffff:101:200:ff:fe00:a1a1
+#endif
+
+//
+// DNS response parametor
+//
+////////////////////////////////
+#ifndef TTLVALUE
+#define TTLVALUE 1800
+#endif
+
+//
+// Destination address of ICMP echo request
+//
+////////////////////////////////
+#ifndef PING_DST_ADDR
+#define PING_DST_ADDR AAAA_RECORD
+#endif
+
+//end

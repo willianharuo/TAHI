@@ -1,0 +1,295 @@
+#!/usr/bin/perl
+#
+# Copyright (C) 1999, 2000, 2001, 2002, 2003 Yokogawa Electric Corporation,
+# IPA (Information-technology Promotion Agency, Japan).
+# All rights reserved.
+# 
+# Redistribution and use of this software in source and binary forms, with 
+# or without modification, are permitted provided that the following 
+# conditions and disclaimer are agreed and accepted by the user:
+# 
+# 1. Redistributions of source code must retain the above copyright 
+# notice, this list of conditions and the following disclaimer.
+# 
+# 2. Redistributions in binary form must reproduce the above copyright 
+# notice, this list of conditions and the following disclaimer in the 
+# documentation and/or other materials provided with the distribution.
+# 
+# 3. Neither the names of the copyrighters, the name of the project which 
+# is related to this software (hereinafter referred to as "project") nor 
+# the names of the contributors may be used to endorse or promote products 
+# derived from this software without specific prior written permission.
+# 
+# 4. No merchantable use may be permitted without prior written 
+# notification to the copyrighters. However, using this software for the 
+# purpose of testing or evaluating any products including merchantable 
+# products may be permitted without any notification to the copyrighters.
+# 
+# 
+# 
+# THIS SOFTWARE IS PROVIDED BY THE COPYRIGHTERS, THE PROJECT AND 
+# CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING 
+# BUT NOT LIMITED THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS 
+# FOR A PARTICULAR PURPOSE, ARE DISCLAIMED.  IN NO EVENT SHALL THE 
+# COPYRIGHTERS, THE PROJECT OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, 
+# INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES 
+# (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR 
+# SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) 
+# HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN 
+# CONTRACT,STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) 
+# ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF 
+# THE POSSIBILITY OF SUCH DAMAGE.
+#
+# $TAHI: ct/stateless-addrconf/DADFail_DADPreSendNS.seq,v 1.34 2001/10/05 06:39:19 masaxmasa Exp $
+
+########################################################################
+BEGIN { $V6evalTool::TestVersion = '$Name: REL_2_1_1 $ '; }
+use V6evalTool;
+use DAD;
+
+#----- get sequence arguments
+$howto_initNUT="none";
+$send = "ok";
+foreach (@ARGV) {
+    /^addrconf=(\S+)/ && do {$DAD::howto_addrconf=$1; # How to configure address of NUT?
+                             next; };                 #    sample: boot, ra, manual+_GLOBAL0A0N_UCAST
+    /^init=(\S+)/     && do {$howto_initNUT=$1;       # How to initialize NUT?
+                             next; };                 #    sample: none, DADSuccess_boot, DADFail_boot
+    /^send=(\S+)/     && do {$send=$1;                # "none" if send no pakcet to NUT in state DADPostSendNS
+                             next; };                 #    sample: ok, none
+    /^sd=(\S+)/       && do {$seqdebugopt=$1;         # sequence debug options
+                             next; };                 #    sample: qR
+    seqERROR("Unknown sequence option '$_'");
+}
+
+#----- test condition
+$IF=Link0;                 # network interface
+$send_interval  = 2;       # 2[sec] time between DAD NS and DAD NS, send to NUT
+                           #        (RandomDelay 0-1sec + defaul RetransTimer 1000msec)
+$max_retry_count = 20;     # retry if NUT state becomes DADPostSendNS
+seqSetDADParam($seqdebugopt);
+$max_retry_count = 2 if $DAD::sd =~ /q/;    # quick retry
+
+
+#----- set %pktdesc
+seqSetPktdesc();
+
+#----- retry loop
+$retry_count = 0;
+while(1) {
+
+    #----- initialize NUT
+    vLog("*** Target initialization phase ***");
+    seqInitNUT($IF, $howto_initNUT);
+
+    #----- start Capturing
+    vLog("*** Target testing phase ***");
+    vCapture($IF);
+
+    #----- Configure Address on NUT
+    seqConfAddrNUT($IF);
+    $t0 = time();  #manual address configuration or reboot start time
+
+    #----- send DAD NS to NUT with interval_time 2[sec] for few minits
+    #----- and wait a DAD NS comming from NUT in every interval.
+    vLog("TN send the DAD NS($DAD::dadpkt_to_NUT) to NUT and wait ");
+    vLog(" DAD NS or NA($DAD::dadns_from_NUT, $DAD::chkconf_dadna_from_NUT) from NUT for $send_interval [sec],");
+    vLog(" to force NUT to detect the address duplication in random delaying phase.");
+    vLog(" Try this process for $DAD::wait_dadns{$DAD::howto_addrconf} [sec].");
+    select(undef, undef, undef, rand 2);  #random wait 0.0-2.0sec
+
+    do {
+	%retsw1 = seqSendWait($IF,
+			      "DAD Packet from TN to NUT:",
+			      $DAD::dadpkt_to_NUT,
+			      "DAD NS or NA from NUT:", $send_interval, 0, 
+			      $DAD::dadns_from_NUT, $DAD::chkconf_dadna_from_NUT);
+	$td = $DAD::wait_dadns{$DAD::howto_addrconf} - (time()-$t0);
+	$td = 0 if $td < 0;
+	vLog("countdown timer: $td [sec]");
+    } while($retsw1{status}!=0 && $td > 0 );
+
+
+    #----- retry if received DAD NS
+    if ($retsw1{status} == 0 && $retsw1{recvFrame} eq $DAD::dadns_from_NUT){
+	vLog("Oh! TN received the DAD NS, NUT's DAD state changed to DADPostSendNS ...");
+	$retry_count++;
+	if ($retry_count < $max_retry_count) {
+	    vLog("Retry. (retry_count=$retry_count)");
+	    vStop($IF);
+	    vClear($IF);
+            seqWaitNUTbeReady(); # wait login: prompt
+	    next;      # retry loop
+	}else{
+	    vLog("Retry count ($max_retry_count) exceeded");
+	    vLog("It seems that NUT cannot detected address duplication in state DADPreSendNS.");
+	    seqExitWARN();
+	}
+    }else{
+	last; #exit retry loop
+    }
+}
+#endof retry loop
+
+vLog("End of retry loop (retry_cout=$retry_count)");
+
+#----- if timeout
+if ($retsw1{status}==1) { #timeout
+    vLog("Although $DAD::wait_dadns{$DAD::howto_addrconf}\[sec] spent since NUT's address configured, no DAD NS came from NUT.");
+    vLog("It seems that NUT has detected address duplication in state DADPreSendNS.");
+    vLog("Let's check it now.");
+
+    #----- check if NUT's address is configured
+    #seqWaitNUTbeReady();
+    vSleep($DAD::RetransTimerSec);
+    if (seqCheckNUTAddrConfigured($IF) eq TRUE) {
+	vLog("Without DAD, NUT assigned the address to the interface.");
+	if ($DAD::DupAddrDetectTransmits == 0) {
+	    vLog("So DupAddrDetectTransmits == 0");
+	    seqOK();
+	}else{
+	    seqNG();
+	}
+    }else{
+	seqOK();
+    }
+}
+
+#----- if received DAD NA
+if ($retsw1{recvFrame} eq $DAD::chkconf_dadna_from_NUT){
+    vLog("Oh! NUT's DAD state changed to DADFinishSuccess ...");
+    vLog("But NUT did not perform DAD process, it's strange,");
+    vLog("so terminate the retry loop.");
+    seqNG();
+}
+
+#----- else
+vLog("recvFrame is '$retsw1{recvFrame}'");
+seqERROR("Cannot reach here!");#exit
+
+
+
+#end
+########################################################################
+__END__
+
+=head1 NAME
+
+DADFail_DADPreSendNS - check if NUT detect address duplication in state DADPreSendNS(before sending out first DAD NS)
+
+=head1 TARGET
+
+Host and Router
+
+=head1 SYNOPSIS
+
+DADFail_DADPreSendNS.seq [-tooloption ...] -pkt <packetdef>
+ [addrconf=<addrconfname>] [init=<initname>,<initname>...] [sd=<sdopt>]
+
+  -tooloption   : v6eval tool option
+  <packetdef>   : packet definition file (v6eval tool option)
+  <addrconfname>: how to configure address on NUT; boot/manual+/ra
+  <initname>    : how to initialize NUT; DADSuccess_boot/DADFail_boot/ra
+  <sdopt>       : debug options
+
+=begin html
+<PRE>
+ detail of v6eval tool option: see perldoc V6evalTool.pm, perldoc V6evalRemote.pm
+ detail of parameters: see <A HREF="DAD.html">Test sequence for IPv6 Stateless Address Autoconfiguration</A>.
+</PRE>
+
+=end html
+
+
+=head1 INITIALIZATION
+
+=begin html
+<PRE>
+ detail of Initialization: see <A HREF="DAD.html">Test sequence for IPv6 Stateless Address Autoconfiguration</A>.
+</PRE>
+
+=end html
+
+=head1 TEST PROCEDURE
+
+ The following tests are prepared in this test package. See INDEX file.
+
+B<Test for a Host and Router>
+
+   DAD Fail when NUT received Valid NS in random delaying phase on Stateless Link-local address autoconfiguration
+
+B<Test sequence>
+
+  TN(or X)	             NUT
+  ------------------------------
+  Initialize NUT (see ...)
+
+  Configure address of NUT by reboot (sequence parameter addrconf=boot)
+
+  while waiting reboot (120[sec]) {
+     Send DAD Packet to NUT to force NUT to detect address duplication.
+     ==== Action #1: DAD NS ====>
+           name: dadpkt_to_NUT
+
+     Check if the DAD NS does not come from NUT
+     (when NUT detect address duplication in random delaying phase).
+     If DAD NS come, retry the test sequence.
+     <=== Judgement #1: DAD NS does not come====
+           name: dadns_from_NUT
+           timeout: 2 [sec]  (2[sec] >= RandomDelay=0-1[sec] + RetransTimer=1[sec])
+  }
+
+  Check if NUT's address is not configured
+  ==== Action #2: DAD NS ====>
+        name: chkconf_dadns_to_NUT
+
+  DAD NA does not come because NUT detect address duplicated and address is not configured.
+  <=== Judgement #2: DAD NA does not come====
+        name: chkconf_dadna_from_NUT (or chkconf_dadna_from_NUT_rf1 if NUT is a Router)
+
+
+=head1 JUDGEMENT
+
+B<Test for a Host and Router>
+
+B< DAD Fail when NUT received Valid NS in random delaying phase on Stateless Link-local address autoconfiguration
+  -pkt LLOCAL_valNS_SameMacAddr.def addrconf=boot>
+
+   Action #1. Send DAD NS to force NUT to detect address duplication.
+        name: dadpkt_to_NUT
+	src: ::0
+	dst: solnode[NUT's tentative Link-local address]
+        TargetAddress: NUT's tentative Link-local address
+
+   Judgement #1. DAD NS does not come from NUT
+        name: dadns_from_NUT
+	src: ::0
+	dst: solnode[NUT's tentative Link-local address]
+        TargetAddress: NUT's tentative Link-local address
+
+   Action #2. Send DAD NS to check if NUT's address is not configured
+        name: chkconf_dadns_to_NUT
+	src: ::0
+	dst: solnode[NUT's Link-local address]
+        TargetAddress: NUT's Link-local address
+
+   Judgement #2. DAD NA must not come from NUT because NUT detect address duplication.
+        name: chkconf_dadna_from_NUT (or chkconf_dadna_from_NUT_rf1 if NUT is a Router)
+	src: NUT's Link-local address
+	dst: allnodes multicast
+        TargetAddress: NUT's Link-local address
+        OFlag: 1
+	RFlag: 0 ( if NUT is a Router then 1)
+
+=head1 SEE ALSO
+
+=begin html
+<PRE>
+ detail of v6eval tool option: see perldoc V6evalTool.pm, perldoc V6evalRemote.pm
+ detail of parameters: see <A HREF="DAD.html">Test sequence for IPv6 Stateless Address Autoconfiguration</A>.
+</PRE>
+
+=end html
+
+=cut
+

@@ -1,0 +1,62 @@
+#
+# $Name: REL_2_1_1 $
+#
+# $TAHI: ct/ipsec-udp/Makefile.test,v 1.1 2003/05/05 15:16:24 ozoe Exp $
+#
+
+PERL	= /usr/bin/perl
+POD2HTML= -$(PERL) -e 'use Pod::Html; pod2html("--noindex", @ARGV);'
+
+check:
+	$(AUTORUN) -t INDEX_host
+
+document:
+	$(AUTORUN) -g \
+	INDEX_host INDEX_host_ah INDEX_host_esp INDEX_host_common
+	$(POD2HTML) ../ipsec/IPSEC.pm > ../ipsec/IPSEC.html
+	rm -f pod2html-dircache pod2html-itemcache
+
+document2:
+	$(AUTORUN) -G \
+	INDEX_host INDEX_host_ah INDEX_host_esp INDEX_host_common 
+	$(POD2HTML) ../ipsec/IPSEC.pm > ../ipsec/IPSEC.html
+	rm -f pod2html-dircache pod2html-itemcache
+
+clean:
+	-/bin/rm -f *.log *.dump [0-9]*.html \
+	index.html summary.html report.html
+
+test:
+	$(AUTORUN) $(AROPT) \
+	-title='Conformance Test For IPv6(UDP) IPsec' \
+	INDEX_host INDEX_host_esp INDEX_host_common
+
+tahi:	document
+	/bin/rm -f index.html summary.html report.html
+	$(AUTORUN) $(AROPT) -dump2txt \
+	-title='Conformance Test For IPv6(UDP) IPsec' \
+	INDEX_host INDEX_host_esp INDEX_host_common
+
+tiny:	document
+	/bin/rm -f index.html summary.html report.html
+	$(AUTORUN) $(AROPT) -dump2txt -tiny\
+	-title='Conformance Test For IPv6(UDP) IPsec' \
+	INDEX_host INDEX_host_esp INDEX_host_common
+
+test-esp:
+	$(AUTORUN) $(AROPT) \
+	-title='Conformance Test For IPv6(UDP) IPsec (ESP)' \
+	INDEX_host INDEX_host_esp
+
+test-common:
+	$(AUTORUN) $(AROPT) \
+	-title='Conformance Test For IPv6(UDP) IPsec (Common)' \
+	INDEX_host INDEX_host_common \
+
+#demo:
+#	$(AUTORUN) $(AROPT) -onlylcna \
+#	-title='Conformance Test For IPv6(UDP) IPsec demonstration ' \
+#	INDEX_demo
+
+.include "../Makefile.inc"
+

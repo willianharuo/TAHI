@@ -1,0 +1,133 @@
+<HTML>
+<HEAD>
+<TITLE>adrsolvQueuTwo - Verifying address resolution queue</TITLE>
+<LINK REV="made" HREF="mailto:hackers@FreeBSD.org">
+</HEAD>
+
+<BODY>
+
+<!-- INDEX BEGIN -->
+<!--
+
+<UL>
+
+	<LI><A HREF="#NAME">NAME</A>
+	<LI><A HREF="#TARGET">TARGET</A>
+	<LI><A HREF="#SYNOPSIS">SYNOPSIS</A>
+	<LI><A HREF="#INITIALIZATION">INITIALIZATION</A>
+	<LI><A HREF="#TEST_PROCEDURE">TEST PROCEDURE</A>
+	<LI><A HREF="#JUDGMENT">JUDGMENT</A>
+	<LI><A HREF="#TERMINATION">TERMINATION</A>
+	<LI><A HREF="#NOTE">NOTE</A>
+	<LI><A HREF="#SEE_ALSO">SEE ALSO</A>
+</UL>
+-->
+<!-- INDEX END -->
+
+<P>
+<H1><A NAME="NAME">NAME</A></H1>
+<P>
+adrsolvQueuTwo - Verifying address resolution queue
+
+<P>
+<HR>
+<H1><A NAME="TARGET">TARGET</A></H1>
+<P>
+Host and Router
+
+<P>
+<HR>
+<H1><A NAME="SYNOPSIS">SYNOPSIS</A></H1>
+<P>
+<PRE>  adrsolvQueuTwo.seq [-tooloption ...] -p adrsolvQueuTwo.def
+</PRE>
+<P>
+<HR>
+<H1><A NAME="INITIALIZATION">INITIALIZATION</A></H1>
+<P>
+<PRE>  Clear NC state for TN.
+</PRE>
+<P>
+<HR>
+<H1><A NAME="TEST_PROCEDURE">TEST PROCEDURE</A></H1>
+<P>
+<STRONG>adrsolvQueuTwo</STRONG> verifies that a NUT queues at the least one packet for an address whose LLA
+is not resolved. If NUT's queue has one entry the latest packet must be
+queued.
+
+<PRE>
+  TN		   NUT
+  ----------------------
+<BR>
+  State: NONCE
+<BR>
+  ==== echo-request A ===>
+	src=TN's link-local
+	dst=NUT's link-local
+<BR>
+  ==== echo-request B ===>
+	src=TN's link-local
+	dst=NUT's link-local
+<BR>
+  State: INCOMPLETE
+<BR>
+  <=== <A HREF="#JDG1">Judgment #1</A>: multicast NS ====
+	src=NUT's link-local
+	dst=solicited-node[TN's link-local]
+	w/ SLLA
+	timeout: $RETRANS_TIMER * $MAX_MULTICAST_SOLICIT
+<BR>
+  ==== solicited NA ===>
+	src=TN's link-local
+	dst=NUT's link-local
+	R=0, S=1, O=1
+	w/ TLLA
+<BR>
+  State: REACHABLE
+	
+  <=== <A HREF="#JDG2">Judgment #2</A>: echo-reply B ====
+	src=NUT's link-local
+	dst=TN's link-local
+	
+  <=== <A HREF="#JDG3">Judgment #3</A>: echo-reply A ====
+	src=NUT's link-local
+	dst=TN's link-local
+</PRE>
+
+<P>
+<HR>
+<H1><A NAME="JUDGMENT">JUDGMENT</A></H1>
+<PRE>
+<A NAME="JDG1"></A>
+  1. NUT must send at the least one multicast NS.
+     src=NUT's link-local, dst=sol-node[TN's link-local], w/SLLA
+<A NAME="JDG2"></A>
+  2. NUT must send an echo-reply B.
+     src=NUT's link-local, dst=TN's link-local
+<A NAME="JDG3"></A>
+  3. NUT may send an echo-reply A.
+     src=NUT's link-local, dst=TN's link-local
+</PRE>
+
+<P>
+<HR>
+<H1><A NAME="TERMINATION">TERMINATION</A></H1>
+<P>
+<PRE>  N/A
+</PRE>
+<P>
+<HR>
+<H1><A NAME="NOTE">NOTE</A></H1>
+<P>
+<PRE>  The test does not invoke any remote command.
+</PRE>
+<P>
+<HR>
+<H1><A NAME="SEE_ALSO">SEE ALSO</A></H1>
+<P>
+<PRE>  perldoc V6evalTool
+  perldoc V6evalRemote
+</PRE>
+</BODY>
+
+</HTML>

@@ -1,0 +1,232 @@
+<HTML>
+<HEAD>
+<TITLE>hostRecvRaNHD - Verifying net-hop determination</TITLE>
+<LINK REV="made" HREF="mailto:hackers@FreeBSD.org">
+</HEAD>
+
+<BODY>
+
+<!-- INDEX BEGIN -->
+<!--
+
+<UL>
+
+	<LI><A HREF="#NAME">NAME</A>
+	<LI><A HREF="#TARGET">TARGET</A>
+	<LI><A HREF="#SYNOPSIS">SYNOPSIS</A>
+	<LI><A HREF="#INITIALIZATION">INITIALIZATION</A>
+	<LI><A HREF="#TEST_PROCEDURE">TEST PROCEDURE</A>
+	<UL>
+
+		<LI><A HREF="#Off_link">Off-link</A>
+		<LI><A HREF="#On_link">On-link</A>
+	</UL>
+
+	<LI><A HREF="#JUDGMENT">JUDGMENT</A>
+	<LI><A HREF="#TERMINATION">TERMINATION</A>
+	<LI><A HREF="#NOTE">NOTE</A>
+	<LI><A HREF="#SEE_ALSO">SEE ALSO</A>
+</UL>
+-->
+<!-- INDEX END -->
+
+<P>
+<H1><A NAME="NAME">NAME</A></H1>
+<P>
+hostRecvRaNHD - Verifying net-hop determination
+
+<P>
+<HR>
+<H1><A NAME="TARGET">TARGET</A></H1>
+<P>
+Host only
+
+<P>
+<HR>
+<H1><A NAME="SYNOPSIS">SYNOPSIS</A></H1>
+<P>
+<PRE>  hostRecvRaNHD.seq [-tooloption ...] -p hostRecvRaNHD.def
+</PRE>
+<P>
+<HR>
+<H1><A NAME="INITIALIZATION">INITIALIZATION</A></H1>
+<OL>
+  <LI>Clear the Prefix List that was learned by RAs.
+  <LI>Clear the Default Router List.
+  <LI>Set its state to REACHABLE.
+  <LI><A HREF="#JDG1">The Router Lifetime of a RA is ether 0 or 600.</A>
+  <LI><A HREF="#JDG1">A RA includes or excludes a prefix option.</A>
+</OL>
+<PRE>
+  TN                 NUT
+  ----------------------
+<BR>
+  State: NONCE (for TN)
+<BR>
+  ==== unsolicited RA ===>
+       src=TN's link-local
+       dst=all-node
+       M=0, O=0
+       <B>RouterLifetime=0 or 600</B>
+       ReachableTime=0
+       RetransTimer=0
+       w/ SLLA
+       <B>w/o Prefix option or Prefix Option:
+           L=1, A=1
+           ValidLifetime=2592000
+           PreferredLifetime=604800
+           Prefix=3ffe:501:ffff:100::/64</B>
+<BR>
+  State: STALE (for TN)
+<BR>
+  <=== Ns for DAD (if any) ====
+       src=unspecified
+       dst=solicited-node[NUT's global, prefix=3ffe:501:ffff:100::/64]
+       target=NUT's global
+<BR>
+  Wait (3 sec)
+<BR>
+  ==== solicited NA ===>
+        src=TN's link-local
+        dst=NUT's link-local
+        R=1, S=1, O=1
+        target=TN's link-local
+        TLLA=TN's LLA
+<BR>
+  State: REACHABLE (for TN)
+</PRE>
+
+<P>
+<HR>
+<H1><A NAME="TEST_PROCEDURE">TEST PROCEDURE</A></H1>
+<B>hostRecvRaNHD</B> verifies next-hop determination for an unicast address:
+<UL>
+  <LI><A HREF="#Off_link">A case where a given address should be off-link</A>
+  <LI><A HREF="#On_link">A cast where a given address should be on-link</A>
+</UL>
+
+<P>
+<HR>
+<H2><A NAME="Off_link">Off-link</A></H2>
+<PRE>
+  TN               NUT
+  ----------------------
+<BR>
+  State: REACHABLE (for TN)
+<BR>
+  ==== echo-request ===>
+       src=off-link global, but LLA is TN's one
+       dst=NUT's global
+<BR>
+  <=== <A HREF="#JDG2">Judgment #2</A>: echo-reply ====
+       src=NUT's global
+       dst=off-link global, but LLA is TN's one
+<BR>
+</PER>
+
+<P>
+<HR>
+<H2><A NAME="On_link">On-link</A></H2>
+<PRE>
+  TN               NUT
+  ----------------------
+<BR>
+  State: REACHABLE (for TN)
+<BR>
+  ==== echo-request ===>
+       src=off-link global, but LLA is TN's one
+       dst=NUT's global
+<BR>
+  <=== <A HREF="#JDG3">Judgment #3</A>: multicast NS ====
+        src=NUT's link-local
+        dst=solicited-node[off-link global]
+        target=off-link global
+        w/ SLLA
+</PER>
+
+<P>
+<HR>
+<H1><A NAME="JUDGMENT">JUDGMENT</A></H1>
+<PRE>
+1. Next-hop determination
+<A NAME="JDG1"></A>
+<HR>
+5.2.  Conceptual Sending Algorithm
+<BR>
+     Next-hop determination for a given unicast destination operates as
+     follows.  NUT performs a longest prefix match against the
+     Prefix List to determine whether the packet's destination is on- or
+     off-link.  If the destination is on-link, the next-hop address is the
+     same as the packet's destination address.  Otherwise, NUT
+     selects a router from the Default Router List.  <B>If the Default Router
+     List is empty, NUT assumes that the destination is on-link.</B>
+<HR>
+  =========+========+==========================================
+  RA received       | NUT
+  by NUT            |
+  ---------+--------+-----------------+-------------+---------
+  Prefix   |Router  | The Prefix List | The Default | Next Hop
+  Option   |Lifetime|                 | Router List |
+  =========+========+=================+=============+==========
+  none     | 0      | empty           | empty       | <A HREF="#NOTE1">on-link</A>
+  ---------+--------+-----------------+-------------+----------
+  none     | 600    | empty           | NOT empty   | <A HREF="#NOTE2">off-link</A>
+  ---------+--------+-----------------+-------------+----------
+  exist    | 0      | NOT empty       | empty       | <A HREF="#NOTE1">on-link</A>
+  =========+========+=================+=============+==========
+<BR>
+<A NAME="JDG2"></A>
+  2. NUT throws an echo-reply to the default router (i.e. TN)
+     because the given address should be off-link.
+<BR>
+<A NAME="JDG3"></A>
+  3. NUT sends multicast NSs for the given address
+     because <A HREF="#NOTE1">it should be on-link</A>.
+</PRE>
+
+<P>
+<HR>
+<H1><A NAME="TERMINATION">TERMINATION</A></H1>
+<P>
+<PRE>  Send RA with RouterLifetime=0 to clear the Default Router List.
+</PRE>
+<P>
+<PRE>  Clear the Prefix List and the Default Router List by remote commands. XXX
+</PRE>
+<P>
+<HR>
+<H1><A NAME="NOTE">NOTE</A></H1>
+<A NAME="NOTE1"></A>
+
+<P>
+<PRE>  1. RFC2461 describes that a host assumes the destination is on-link
+     if the Default Router List is empty. However, it also describes
+     that multihomed related issues are not concerned.
+     It is also one of the issues that a host assumes an address is
+     on-link if the Default Router List is empty. This test judges
+     NUT &quot;WARN&quot; instead of &quot;FAIL&quot; in such case.
+</PRE>
+<A NAME="NOTE2"></A>
+
+<P>
+<PRE>  2. The echo request that NUT captures has an off-link source address
+     and a link-local source address. It is reasonable for NUT not to
+     throw the echo-reply to the default router because its source
+     address is a link-local. This test judges NUT &quot;WARN&quot; instead of &quot;FAIL&quot;
+     in such case.
+</PRE>
+<P>
+<PRE>  3. The test invokes the following command:
+     - Clear the Prefix List
+     - Clear the Default Router List
+</PRE>
+<P>
+<HR>
+<H1><A NAME="SEE_ALSO">SEE ALSO</A></H1>
+<P>
+<PRE>  perldoc V6evalTool
+  perldoc V6evalRemote
+</PRE>
+</BODY>
+
+</HTML>

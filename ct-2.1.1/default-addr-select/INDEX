@@ -1,0 +1,63 @@
+#
+# $Name: REL_2_1_1 $
+#
+# $TAHI: ct/default-addr-select/INDEX,v 1.13 2003/04/24 07:51:07 kenta Exp $
+#
+#<seq>:<def>:[<opt>]:[<log>]:<desc>
+#
+
+########################################################################
+&print:Initialize
+./BEGIN.seq:/dev/null:::Initialization
+
+########################################################################
+&print:Source Address Selection
+./SrcSelectRule1.seq:./ADDR_SELECT.def:::Rule1[Prefer same address]
+./SrcSelectRule1_deprecated.seq:./ADDR_SELECT.def:::Rule1[Prefer same address] with deprecated address
+./SrcSelectRule2.seq:./ADDR_SELECT.def:::Rule2[Prefer appropriate scope]
+./SrcSelectRule2_deprecated.seq:./ADDR_SELECT.def:::Rule2[Prefer appropriate scope] with deprecated address
+./SrcSelectRule2_TempAddr.seq:./ADDR_SELECT.def:::Rule2[Prefer appropriate scope] with temporary address
+./SrcSelectRule3.seq:./ADDR_SELECT.def:::Rule3[Avoid deprecated addresses]
+./SrcSelectRule3_TempAddr.seq:./ADDR_SELECT.def:::Rule3[Avoid deprecated addresses] with temporary address
+./SrcSelectRule5.seq:./ADDR_SELECT.def:::Rule5[Prefer outgoing interface]:2
+./SrcSelectRule5_deprecated.seq:./ADDR_SELECT.def:::Rule5[Prefer outgoing interface] with deprecated address:2
+./SrcSelectRule5_TempAddr.seq:./ADDR_SELECT.def:::Rule5[Prefer outgoing interface] with temporary address:2
+./SrcSelectRule6.seq:./ADDR_SELECT.def:::Rule6[Prefer matching label]
+./SrcSelectRule7.seq:./ADDR_SELECT.def:::Rule7[Prefer public addresses]
+./SrcSelectRule8.seq:./ADDR_SELECT.def:::Rule8[Use longest matching prefix]
+
+########################################################################
+&print:Source Address Selection Examples in RFC
+./SrcSelectExample1.seq:./ADDR_SELECT.def:::Example 1 - 4[Prefer appropriate scope]
+./SrcSelectExample5.seq:./ADDR_SELECT.def:::Example 5[Prefer same address]
+./SrcSelectExample6.seq:./ADDR_SELECT.def:::Example 6[Prefer appropriate scope]
+./SrcSelectExample7.seq:./ADDR_SELECT.def:::Example 7[longest-matching-prefix]
+./SrcSelectExample9.seq:./ADDR_SELECT.def:::Example 9[prefer matching label]
+./SrcSelectExample10.seq:./ADDR_SELECT.def:::Example 10[Prefer public addresses]
+
+########################################################################
+&print:Destination Address Selection
+./DstSelectRule2.seq:./ADDR_SELECT.def:::Rule2[Prefer matching scope]
+./DstSelectRule2_deprecated.seq:./ADDR_SELECT.def:::Rule2[Prefer matching scope] with deprecated address
+./DstSelectRule3.seq:./ADDR_SELECT.def:::Rule3[Avoid deprecated addresses]
+./DstSelectRule5.seq:./ADDR_SELECT.def:::Rule5[Prefer matching label]
+./DstSelectRule6.seq:./ADDR_SELECT.def:::Rule6[Prefer higher precedence]
+./DstSelectRule8.seq:./ADDR_SELECT.def:::Rule8[Prefer smaller scope]
+./DstSelectRule9.seq:./ADDR_SELECT.def:::Rule9[Use longest matching prefix]
+./DstSelectRule10.seq:./ADDR_SELECT.def:::Rule10[Otherwise, leave the order unchanged]
+
+########################################################################
+&print:Destination Address Selection Examples in RFC
+./DstSelectExample4.seq:./ADDR_SELECT.def:::Example 4[Prefer smaller scope]
+./DstSelectExample6.seq:./ADDR_SELECT.def:::Example 6[Avoid deprecated addresses]
+./DstSelectExample7.seq:./ADDR_SELECT.def:::Example 7[Use longest matching prefix]
+./DstSelectExample8.seq:./ADDR_SELECT.def:::Example 8[Prefer matching label]
+./DstSelectExample9.seq:./ADDR_SELECT.def:::Example 9[Prefer higher precedence]
+
+########################################################################
+&print:Destination Address Selection with configure tunnel
+./DstSelectRule7.seq:./ADDR_SELECT.def:::Rule7[Prefer native transport]
+
+########################################################################
+&print:Termination
+./END.seq:/dev/null:::Termination

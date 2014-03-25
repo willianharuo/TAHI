@@ -1,0 +1,269 @@
+<HTML>
+<HEAD>
+<TITLE>rfc2766_5.3.2_checksum_tcp_udp.seq - Verify IPv6 <-> IPv4 header 
+        translation in accordance with RFC2766 [NATPT]</TITLE>
+<LINK REV="made" HREF="mailto:hackers@FreeBSD.org">
+</HEAD>
+
+<BODY>
+
+<!-- INDEX BEGIN -->
+<!--
+
+<UL>
+
+	<LI><A HREF="#NAME">NAME</A>
+	<LI><A HREF="#TARGET">TARGET</A>
+	<LI><A HREF="#SYNOPSIS">SYNOPSIS</A>
+	<LI><A HREF="#INITIALIZATION">INITIALIZATION</A>
+	<LI><A HREF="#TEST_PROCEDURE">TEST PROCEDURE</A>
+	<LI><A HREF="#JUDGMENT">JUDGMENT</A>
+	<LI><A HREF="#NOTE">NOTE</A>
+	<LI><A HREF="#REFERENCE">REFERENCE</A>
+	<LI><A HREF="#SEE_ALSO">SEE ALSO</A>
+</UL>
+-->
+<!-- INDEX END -->
+
+<P>
+<H1><A NAME="NAME">NAME</A></H1>
+<P>
+<PRE>        rfc2766_5.3.2_checksum_tcp_udp.seq - Verify IPv6 &lt;-&gt; IPv4 header 
+        translation in accordance with RFC2766 [NATPT]
+</PRE>
+<P>
+<HR>
+<H1><A NAME="TARGET">TARGET</A></H1>
+<P>
+<PRE>        Router
+</PRE>
+<P>
+<HR>
+<H1><A NAME="SYNOPSIS">SYNOPSIS</A></H1>
+<P>
+<PRE>        rfc2766_5.3.2_checksum_tcp_udp.seq [-tooloption ...] 
+        -p rfc2766_5.3.2_checksum_tcp_udp.def
+</PRE>
+<P>
+<HR>
+<H1><A NAME="INITIALIZATION">INITIALIZATION</A></H1>
+<PRE>
+	Before this test starts, run <A HREF="./initialize_natpt.html">initialize_natpt.seq</A>.
+</PRE>
+
+<P>
+<HR>
+<H1><A NAME="TEST_PROCEDURE">TEST PROCEDURE</A></H1>
+<P>
+<PRE>        This test verifies that NUT adjusts header checksum for TCP/UDP 
+        packets.
+        
+        Network Topology
+</PRE>
+<P>
+<PRE>        Link0
+        --------------------------
+            |               |
+           TN              NUT
+            |               |
+        --------------------------
+        Link1
+</PRE>
+<P>
+<PRE>        TN -- (Link0) -- NUT        NUT -- (Link1) -- TN
+        
+        ---------------------      ------------------------
+</PRE>
+<HR WIDTH=80%>
+
+<P>
+<PRE>        1.1.
+        ===================&gt;
+        IPv6 UDP packet
+                IPv6 Header
+                        src address : TN LINK0 IPv4 embedded IPv6 address
+                        dst address : TN LINK1 IPv4 embedded IPv6 address
+                UDP packet
+                        Checksum including IPv6 pseudo header
+                        data = repeat(0xff,128)
+        1.2.
+        &lt;&lt;JUDGMENT&gt;&gt;
+                                   ===================&gt;
+        IPv4 UDP packet
+                IPv4 Header
+                        src address : TN LINK0 IPv4 address
+                        dst address : TN LINK1 IPv4 address
+                        DF = 1
+                UDP packet
+                        Checksum including IPv4 pseudo header, or zero
+                        data = repeat(0xff,128)
+</PRE>
+<HR WIDTH=80%>
+
+<P>
+<PRE>        2.1.
+        ===================&gt;
+        IPv6 UDP packet
+                IPv6 Header
+                        src address : TN LINK0 IPv4 embedded IPv6 address
+                        dst address : TN LINK1 IPv4 embedded IPv6 address
+                Fragment Header
+                        More fragments = 1
+                UDP packet
+                        Checksum including IPv6 pseudo header, or zero
+                        data = repeat(0xff,64)
+        2.2.
+        &lt;&lt;JUDGMENT&gt;&gt;
+                                   ===================&gt;
+        IPv4 UDP packet
+                IPv4 Header
+                        src address : TN LINK0 IPv4 address
+                        dst address : TN LINK1 IPv4 address
+                        MF = 1
+                UDP packet
+                        Checksum for full UDP packet, including pseudo header
+                        data = repeat(0xff,64)
+</PRE>
+<HR WIDTH=80%>
+
+<P>
+<PRE>        3.1.
+        ===================&gt;
+        IPv6 UDP packet
+                IPv6 Header
+                        src address : TN LINK0 IPv4 embedded IPv6 address
+                        dst address : TN LINK1 IPv4 embedded IPv6 address
+                Fragment Header
+                        More fragments = 0
+                        NextHeader = 17
+                Payload
+                        data = repeat(0xff,64)
+        3.2.
+        &lt;&lt;JUDGMENT&gt;&gt;
+                                   ===================&gt;
+        IPv4 UDP packet
+                IPv4 Header
+                        src address : TN LINK0 IPv4 address
+                        dst address : TN LINK1 IPv4 address
+                        MF = 0
+                        Protocol = 17
+                Payload
+                        data = repeat(0xff,64)
+</PRE>
+<HR WIDTH=80%>
+
+<P>
+<PRE>        4.1.
+        ===================&gt;
+        IPv6 TCP packet
+                IPv6 Header
+                        src address : TN LINK0 IPv4 embedded IPv6 address
+                        dst address : TN LINK1 IPv4 embedded IPv6 address
+                TCP packet
+                        Checksum including IPv6 pseudo header
+                        data = repeat(0xff,128)
+        4.2.
+        &lt;&lt;JUDGMENT&gt;&gt;
+                                   ===================&gt;
+        IPv4 TCP packet
+                IPv4 Header
+                        src address : TN LINK0 IPv4 address
+                        dst address : TN LINK1 IPv4 address
+                        DF = 1
+                TCP packet
+                        Checksum including IPv4 pseudo header
+                        data = repeat(0xff,128)
+</PRE>
+<HR WIDTH=80%>
+
+<P>
+<PRE>        5.1.
+        ===================&gt;
+        IPv6 TCP packet
+                IPv6 Header
+                        src address : TN LINK0 IPv4 embedded IPv6 address
+                        dst address : TN LINK1 IPv4 embedded IPv6 address
+                Fragment Header
+                        More fragments = 1
+                TCP packet
+                        Checksum including IPv6 pseudo header
+                        data = repeat(0xff,64)
+        5.2.
+        &lt;&lt;JUDGMENT&gt;&gt;
+                                   ===================&gt;
+        IPv4 TCP packet
+                IPv4 Header
+                        src address : TN LINK0 IPv4 address
+                        dst address : TN LINK1 IPv4 address
+                        MF = 1
+                TCP packet
+                        Checksum including IPv4 pseudo header
+                        data = repeat(0xff,64)
+</PRE>
+<HR WIDTH=80%>
+
+<P>
+<PRE>        6.1.
+        ===================&gt;
+        IPv6 TCP packet
+                IPv6 Header
+                        src address : TN LINK0 IPv4 embedded IPv6 address
+                        dst address : TN LINK1 IPv4 embedded IPv6 address
+                Fragment Header
+                        More fragments = 0
+                Payload
+                        data = repeat(0xff,64)
+        6.2.
+        &lt;&lt;JUDGMENT&gt;&gt;
+                                   ===================&gt;
+        IPv4 TCP packet
+                IPv4 Header
+                        src address : TN LINK0 IPv4 address
+                        dst address : TN LINK1 IPv4 address
+                        MF = 0
+                Payload
+                        data = repeat(0xff,64)
+</PRE>
+<P>
+<HR>
+<H1><A NAME="JUDGMENT">JUDGMENT</A></H1>
+<P>
+<PRE>        &lt;&lt; PASS &gt;&gt;
+                NUT adjusts header checksum for UDP/TCP packets.
+                Optionally NUT sets checksum to zero on UDP packets.
+</PRE>
+<P>
+<PRE>        &lt;&lt; FAIL &gt;&gt;      
+                NUT send TCP/UDP packets with wrong checksum.
+</PRE>
+<P>
+<HR>
+<H1><A NAME="NOTE">NOTE</A></H1>
+<P>
+<HR>
+<H1><A NAME="REFERENCE">REFERENCE</A></H1>
+<P>
+<STRONG>RFC2766</STRONG>
+
+
+
+<P>
+5.3.2 TCP/UDP/ICMP Checksum Update from IPv6 to IPv4
+
+<P>
+<PRE>   TCP and UDP checksums SHOULD be recalculated to reflect the address
+   change from v6 to v4. The incremental checksum adjustment algorithm
+   may be borrowed from [NAT]. In the case of NAPT-PT, TCP/UDP checksums
+   should be adjusted to account for the address and TCP/UDP port
+   changes, going from V6 to V4 addresses. For UDP packets, optionally,
+   the checksum may simply be changed to zero.
+</PRE>
+<P>
+<HR>
+<H1><A NAME="SEE_ALSO">SEE ALSO</A></H1>
+<P>
+<PRE>        perldoc V6evalTool
+</PRE>
+</BODY>
+
+</HTML>

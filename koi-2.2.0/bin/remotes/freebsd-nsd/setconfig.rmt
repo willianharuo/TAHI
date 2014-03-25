@@ -1,0 +1,650 @@
+#!/usr/bin/perl
+#
+# Copyright (C) 2004, 2005, 2006, 2007, 2008, 2009, 2010
+# NTT Advanced Technology, Yokogawa Electric Corporation.
+# All rights reserved.
+# 
+# Redistribution and use of this software in source and binary
+# forms, with or without modification, are permitted provided that
+# the following conditions and disclaimer are agreed and accepted
+# by the user:
+# 
+# 1. Redistributions of source code must retain the above copyright
+#    notice, this list of conditions and the following disclaimer.
+# 
+# 2. Redistributions in binary form must reproduce the above copyright
+#    notice, this list of conditions and the following disclaimer in
+#    the documentation and/or other materials provided with
+#    the distribution.
+# 
+# 3. Neither the names of the copyrighters, the name of the project
+#    which is related to this software (hereinafter referred to as
+#    "project") nor the names of the contributors may be used to
+#    endorse or promote products derived from this software without
+#    specific prior written permission.
+# 
+# 4. No merchantable use may be permitted without prior written
+#    notification to the copyrighters.
+# 
+# 5. The copyrighters, the project and the contributors may prohibit
+#    the use of this software at any time.
+# 
+# THIS SOFTWARE IS PROVIDED BY THE COPYRIGHTERS, THE PROJECT AND
+# CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING
+# BUT NOT LIMITED THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS
+# FOR A PARTICULAR PURPOSE, ARE DISCLAIMED.  IN NO EVENT SHALL THE
+# COPYRIGHTERS, THE PROJECT OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT,
+# INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
+# (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+# SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
+# HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT,
+# STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING
+# IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+# POSSIBILITY OF SUCH DAMAGE.
+#
+# $TAHI: koi/bin/remotes/freebsd-nsd/setconfig.rmt,v 1.13 2006/06/30 07:10:42 akisada Exp $
+#
+# $Id: setconfig.rmt,v 1.3 2008/06/03 07:39:53 akisada Exp $
+#
+########################################################################
+
+
+
+#----------------------------------------------------------------------#
+#                                                                      #
+# target: nsd-3.0.5 (dns/nsd)                                          #
+#                                                                      #
+#----------------------------------------------------------------------#
+
+
+
+BEGIN
+{
+	push(@INC, '/usr/local/koi/libdata');
+	push(@INC, '.');
+}
+
+END {}
+
+
+
+use kRemote;
+
+
+
+#----------------------------------#
+# Configuration for NUT            #
+#----------------------------------#
+my $localbase	= '/usr/local';
+my $nsdc	= "${localbase}/sbin/nsdc";
+my @nsdconf	= ();
+my $configfile	= "${localbase}/etc/nsd/nsd.conf";
+my $xfrdfile	= "${localbase}/etc/nsd/xfrd.state";
+my $zonesdir	= "${localbase}/etc/nsd";
+my $master_dir	= 'master';
+my $slave_dir	= 'slave';
+my $logfile	= '/var/log/nsd.log';
+
+#zonefile_hash: zone_name -> zonefile_name
+my %zonefile_hash	= ();
+
+#states_zonefile_hash: zone_name -> zonestates
+my %states_zonefile_hash	= ();
+
+
+
+#----------------------------------#
+# Parameter                        #
+#----------------------------------#
+my $timeout = 20;
+
+
+
+#----------------------------------------------------------------------#
+# START                                                                #
+#----------------------------------------------------------------------#
+#----------------------------------#
+# debug                            #
+#----------------------------------#
+print("debug: ".
+	">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>".
+	"\n");
+print("debug: \$\$: $$\n");
+while(my ($key, $value) = each (%kRemote::kRemoteOpt)) {
+	print("debug: $key: $value\n");
+}
+print("debug: ".
+	"<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<".
+	"\n");
+
+
+
+#----------------------------------#
+# prepare named.root               #
+#----------------------------------#
+if(defined($kRemote::kRemoteOpt{'ModeSetNamedRoot'}) ||
+	($kRemote::kRemoteOpt{'ModeRequiredTestMode'} eq 'recursive')) {
+	print STDERR "NSD is an authoritative only non-recursive name server.\n";
+	exit($kRemote::exitNS);
+}
+
+
+
+#----------------------------------#
+# open session                     #
+#----------------------------------#
+my $ret = kRemoteOpen();
+unless(defined($ret)) {
+	print STDERR "fail to open session.\n";
+	exit(1);
+}
+
+
+
+#----------------------------------#
+# prepare nsdc.conf                #
+#----------------------------------#
+if(defined($kRemote::kRemoteOpt{'ModeSetNamedConf'}) &&
+	!defined(makeNsdConf())) {
+
+	print STDERR "fail to make nsdc.conf.\n";
+	exit(1);
+}
+
+
+
+#----------------------------------#
+# prepare zone file                #
+#----------------------------------#
+if((defined($kRemote::kRemoteOpt{'ModeSetZoneFiles'}) ||
+	defined($kRemote::kRemoteOpt{'ModeSetNsUpdate'})) &&
+	!defined(makeZonefiles())) {
+
+	print STDERR "fail to make zone file.\n";
+	exit(1);
+}
+
+
+
+#----------------------------------#
+# Login                            #
+#----------------------------------#
+print("\n".
+	"========================================================================".
+	"\n");
+unless(defined(kRemoteLogin($timeout))) {
+	print STDERR "fail to login.\n";
+	exit(1);
+}
+
+
+
+#----------------------------------#
+# switch to Root                   #
+#----------------------------------#
+print("\n".
+	"========================================================================".
+	"\n");
+unless(defined(kRemoteSubstituteRootWait())) {
+	print STDERR "fail to substitute to Root.\n";
+	exit(1);
+}
+
+
+
+#----------------------------------#
+# Kill  Nsd                        #
+#----------------------------------#
+if(defined($kRemote::kRemoteOpt{'ModeSetNamedConf'})) {
+	print("\n".
+		"====================================".
+		"====================================".
+		"\n");
+
+	unless(defined(kRemoteCommandWait("$nsdc stop", $timeout))) {
+		print STDERR "fail to kill nsd.\n";
+		exit(1);
+	}
+
+	sleep(10);
+
+	print("\n".
+		"====================================".
+		"====================================".
+		"\n");
+
+	unless(defined(
+		kRemoteCommandWait("cat -n $logfile && rm -f $logfile", $timeout))) {
+		print STDERR "fail to remove log.\n";
+		exit(1);
+	}
+
+	print("\n".
+		"====================================".
+		"====================================".
+		"\n");
+
+	unless(defined(
+		kRemoteCommandWait("cat -n $xfrdfile && rm -f $xfrdfile", $timeout))) {
+		print STDERR "fail to xfrdfile.\n";
+		exit(1);
+	}
+}
+
+
+
+#------------------------------#
+# Write Configuration files    #
+#------------------------------#
+if(defined($kRemote::kRemoteOpt{'ModeSetNamedConf'})){
+	print("\n".
+		"====================================".
+		"====================================".
+		"\n");
+
+	$ret = kRemoteWriteFile($configfile, $timeout, @nsdconf);
+	unless(defined($ret)) {
+		print STDERR "fail to write nsd configuration.\n";
+		exit(1);
+	}
+
+	print("\n".
+		"====================================".
+		"====================================".
+		"\n");
+	@lines = ();
+}
+
+
+
+if(defined($kRemote::kRemoteOpt{'ModeSetZoneFiles'})
+	|| defined($kRemote::kRemoteOpt{'ModeSetNsUpdate'})) {
+
+	#makedir
+	my $master_dir_path	= "${zonesdir}/${master_dir}";
+	my $slave_dir_path	= "${zonesdir}/${slave_dir}";
+	
+	print("\n".
+		"====================================".
+		"====================================".
+		"\n");
+
+	unless(defined(
+		kRemoteCommandWait("rm -fr $master_dir_path $slave_dir_path",
+		$timeout))) {
+
+		print STDERR "fail to remove zone files.\n";
+		exit(1);
+	}
+
+	print("\n".
+		"====================================".
+		"====================================".
+		"\n");
+	unless(defined(
+		kRemoteCommandWait("mkdir $master_dir_path $slave_dir_path",
+		$timeout))) {
+
+		print STDERR "fail to create directory.\n";
+		exit(1);
+	}
+
+	#write zone
+	foreach my $zone_key (keys(%states_zonefile_hash)) {
+		my $filepath	= "${zonesdir}/${zonefile_hash{${zone_key}}}";
+
+		my $zonestate = $states_zonefile_hash{$zone_key};
+
+		my @lines = split('\n', $zonestate);
+
+		print("\n".
+			"====================================".
+			"====================================".
+			"\n");
+
+		unless(defined(kRemoteWriteFile($filepath, $timeout, @lines))) {
+			print STDERR "fail to write configuration.\n";
+			exit(1);
+		}
+	}
+}
+
+
+
+#------------------------------#
+# Restart or Reload Named      #
+#------------------------------#
+$ret = undef;
+if(defined($kRemote::kRemoteOpt{'ModeSetNamedConf'})){
+	#------------------------------#
+	# nsdc rebuild                 #
+	#------------------------------#
+	print("\n".
+		"====================================".
+		"====================================".
+		"\n");
+	unless(defined(kRemoteCommandWait("$nsdc rebuild", $timeout))) {
+		print STDERR "fail to start Named.\n";
+		exit(1);
+	}
+
+	#------------------------------#
+	# nsdc start                   #
+	#------------------------------#
+	print("\n".
+		"====================================".
+		"====================================".
+		"\n");
+#	unless(defined(kRemoteCommandWait("$nsdc start", $timeout))) {
+	unless(defined(kRemoteCommandWait(
+		"nohup sleep 10s; $nsdc start &", $timeout))) {
+
+		print STDERR "fail to start Named.\n";
+		exit(1);
+	}
+
+#	print("\n".
+#		"====================================".
+#		"====================================".
+#		"\n");
+#	unless(defined(kRemoteCommandWait("cat $logfile", $timeout))) {
+#		print STDERR "fail to print log.\n";
+#		exit(1);
+#	}
+
+#	print("\n".
+#		"====================================".
+#		"====================================".
+#		"\n");
+#	unless(defined(
+#		kRemoteCommandWait("nohup sleep 10s; $nsdc update &", $timeout))) {
+#		print STDERR "fail to update zone.\n";
+#		exit(1);
+#	}
+} elsif(defined($kRemote::kRemoteOpt{'ModeSetZoneFiles'})
+	|| defined($kRemote::kRemoteOpt{'ModeSetNsUpdate'})){
+
+	#------------------------------#
+	# nsdc rebuild                 #
+	#------------------------------#
+	print("\n".
+		"====================================".
+		"====================================".
+		"\n");
+	$ret = kRemoteCommandWait("$nsdc rebuild", $timeout);
+
+	#------------------------------#
+	# nsdc reload                  #
+	#------------------------------#
+	print("\n".
+		"====================================".
+		"====================================".
+		"\n");
+#	$ret = kRemoteCommandWait("$nsdc reload", $timeout);
+	unless(defined(kRemoteCommandWait(
+		"nohup sleep 10s; $nsdc reload &", $timeout))) {
+
+		print STDERR "fail to update zone.\n";
+		exit(1);
+	}
+
+#	print("\n".
+#		"====================================".
+#		"====================================".
+#		"\n");
+#	unless(defined(kRemoteCommandWait("cat $logfile", $timeout))) {
+#		print STDERR "fail to print log.\n";
+#		exit(1);
+#	}
+
+#	print("\n".
+#		"====================================".
+#		"====================================".
+#		"\n");
+#	$ret = kRemoteCommandWait("nohup sleep 10s; $nsdc update &", $timeout);
+#	unless(defined($ret)) {
+#		print STDERR "fail to update zone.\n";
+#		exit(1);
+#	}
+}
+
+
+
+#------------------------------#
+# logout root                  #
+#------------------------------#
+print("\n".
+	"========================================================================".
+	"\n");
+unless(defined(kRemoteLogoutWait($timeout))) {
+	print STDERR "fail to logout.\n";
+	exit(1);
+}
+
+
+
+#------------------------------#
+# logout                       #
+#------------------------------#
+print("\n".
+	"========================================================================".
+	"\n");
+unless(defined(kRemoteLogoutNoWait($timeout))) {
+	print STDERR "fail to logout.\n";
+	exit(1);
+}
+
+
+
+#------------------------------#
+# close session                #
+#------------------------------#
+kRemoteClose();
+
+
+
+exit(0);
+
+
+
+#----------------------------------------------------------------------#
+# makeNsdConf()                                                        #
+#----------------------------------------------------------------------#
+sub
+makeNsdConf()
+{
+	#----------------------------------#
+	# make zone sentence               #
+	#----------------------------------#
+	my $numZones	= scalar(grep(/ConfZone[0-9]+Name/,
+		keys(%kRemote::kRemoteOpt)));
+
+	push(@nsdconf, "server:");
+	push(@nsdconf, "    logfile: \"$logfile\"");
+	push(@nsdconf, "    username: root");
+	push(@nsdconf, "    xfrdfile: \"$xfrdfile\"");
+	push(@nsdconf, "");
+
+	for(my $i = 0; $i < $numZones; $i ++) {
+		my $states_zone	= '';
+		my $confZonePath	= 'ConfZone'. $i;
+
+		my $zoneName	= $kRemote::kRemoteOpt{${confZonePath}. 'Name'};
+		my $zoneType	= $kRemote::kRemoteOpt{${confZonePath}. 'Type'};
+		my $zoneAllowTransfer
+			= $kRemote::kRemoteOpt{${confZonePath}. 'AllowTransfer'};
+		my $zoneAlsoNotify
+			= $kRemote::kRemoteOpt{${confZonePath}. 'AlsoNotify'};
+		my $zone_name	= $zoneName;
+		my $zone_file	= '';
+		my $zoneMasters	= '';
+
+		if($zoneType eq 'master') {
+			$zone_file	= "$master_dir/$zone_name";
+		} elsif($zoneType eq 'slave') {
+			$zoneMasters	= $kRemote::kRemoteOpt{${confZonePath}. 'Masters'};
+			$zone_file	= "$slave_dir/$zone_name";
+		} else {
+			print STDERR "zone type error: $zoneType.\n";
+			return(undef);
+		}
+
+		push(@nsdconf, "zone:");
+		push(@nsdconf, "    name:    \"$zone_name\"");
+		push(@nsdconf, "    zonefile:    \"$zone_file\"");
+
+		if($zoneMasters) {
+			push(@nsdconf, "    allow-notify: $zoneMasters NOKEY");
+			push(@nsdconf, "    request-xfr: $zoneMasters NOKEY");
+		}
+
+		if($zoneAlsoNotify) {
+			push(@nsdconf, "    notify: $zoneAlsoNotify NOKEY");
+		}
+
+		if($zoneAllowTransfer eq "any") {
+			push(@nsdconf, "    provide-xfr: 0.0.0.0/0 NOKEY");
+			push(@nsdconf, "    provide-xfr: ::/0 NOKEY");
+		} elsif($zoneAllowTransfer) {
+			push(@nsdconf, "    provide-xfr: $zoneAllowTransfer NOKEY");
+		}
+
+		push(@nsdconf, "");
+	}
+
+	return(0);
+}
+
+
+
+#----------------------------------------------------------------------#
+# makeZonefiles()                                                      #
+#----------------------------------------------------------------------#
+sub
+makeZonefiles()
+{
+	my $numZones = scalar(grep(/ZoneZone[0-9]+Name/,
+		keys(%kRemote::kRemoteOpt)));
+
+	for(my $i = 0; $i < $numZones; $i ++) {
+		my $zoneZonePath	= "ZoneZone" . $i;
+		my $zoneName		= $kRemote::kRemoteOpt{${zoneZonePath}. "Name"};
+		my $zoneTTL			= $kRemote::kRemoteOpt{${zoneZonePath}. "Ttl"};
+		my $zoneType		= $kRemote::kRemoteOpt{${zoneZonePath}. "Type"};
+
+		if($zoneType eq 'master') {
+			$zonefile_hash{$zoneName}	= "$master_dir/$zoneName";
+		} elsif($zoneType eq 'slave') {
+			$zonefile_hash{$zoneName}	= "$slave_dir/$zoneName";
+		} else {
+			print STDERR "zone type error: $zoneType.\n";
+			return(undef);
+		}
+
+		my $states_zonefile	= "\$TTL $zoneTTL\n";
+
+		my $zoneRecString	= ${zoneZonePath}. "Rec";
+
+		my $numRecord = scalar(grep(/$zoneRecString[0-9]+Name/,
+			keys(%kRemote::kRemoteOpt)));
+		
+		for(my $j = 0; $j < $numRecord; $j ++) {
+			my $zoneRecPath	= ${zoneRecString}. $j;
+			my $name	= $kRemote::kRemoteOpt{${zoneRecPath}. "Name"};
+			my $type	= $kRemote::kRemoteOpt{${zoneRecPath}. "Type"};
+			my $class	= $kRemote::kRemoteOpt{${zoneRecPath}. "Class"};
+			my $ttl	= '';
+
+			if($zoneTTL != $kRemote::kRemoteOpt{${zoneRecPath}. "Ttl"}) {
+				$ttl = $kRemote::kRemoteOpt{${zoneRecPath}. "Ttl"};
+			}
+
+			if($type eq 'SOA') {
+				my $mname	= $kRemote::kRemoteOpt{${zoneRecPath}. "Mname"};
+				my $rname	= $kRemote::kRemoteOpt{${zoneRecPath}. "Rname"};
+				my $serial	= $kRemote::kRemoteOpt{${zoneRecPath}. "Serial"};
+				my $refresh	= $kRemote::kRemoteOpt{${zoneRecPath}. "Refresh"};
+				my $retry	= $kRemote::kRemoteOpt{${zoneRecPath}. "Retry"};
+				my $expire	= $kRemote::kRemoteOpt{${zoneRecPath}. "Expire"};
+				my $minimum	= $kRemote::kRemoteOpt{${zoneRecPath}. "Minimum"};
+
+				$states_zonefile .= "$name $ttl $class $type $mname $rname (\n";
+				$states_zonefile .= "    $serial\n";
+				$states_zonefile .= "    $refresh\n";
+				$states_zonefile .= "    $retry\n";
+				$states_zonefile .= "    $expire\n";
+				$states_zonefile .= "    $minimum\n";
+				$states_zonefile .= ")\n";
+			} elsif($type eq 'NS') {
+				my $value = $kRemote::kRemoteOpt{${zoneRecPath}. "Value"};
+				$states_zonefile	.= "$name $ttl $class $type $value\n";
+			} elsif($type eq 'MX') {
+				my $preference
+					= $kRemote::kRemoteOpt{${zoneRecPath}. "Preference"};
+				my $value	= $kRemote::kRemoteOpt{${zoneRecPath}. "Value"};
+				$states_zonefile
+					.= "$name $ttl $class $type $preference $value\n";
+			} elsif($type eq 'A') {
+				my $value	= $kRemote::kRemoteOpt{${zoneRecPath}. "Value"};
+				$states_zonefile	.= "$name $ttl $class $type $value\n";
+			} elsif($type eq 'AAAA') {
+				my $value	= $kRemote::kRemoteOpt{${zoneRecPath}. "Value"};
+				$states_zonefile	.= "$name $ttl $class $type $value\n";
+			} elsif($type eq 'CNAME') {
+				my $value	= $kRemote::kRemoteOpt{${zoneRecPath}. "Value"};
+				$states_zonefile	.= "$name $ttl $class $type $value\n";
+			} elsif($type eq 'HINFO') {
+				my $cpu	= $kRemote::kRemoteOpt{${zoneRecPath}. "Cpu"};
+				my $os	= $kRemote::kRemoteOpt{${zoneRecPath}. "Os"};
+				$states_zonefile
+					.= "$name $ttl $class $type $cpu $os\n";
+			} elsif($type eq 'PTR') {
+				my $value	= $kRemote::kRemoteOpt{${zoneRecPath}. "Value"};
+				$states_zonefile	.= "$name $ttl $class $type $value\n";
+			} elsif($type eq 'TXT') {
+				my $value	= $kRemote::kRemoteOpt{${zoneRecPath}. "Value"};
+				$states_zonefile	.= "$name $ttl $class $type $value\n";
+			} elsif($type eq 'WKS') {
+				my $address	= $kRemote::kRemoteOpt{${zoneRecPath}. "Address"};
+				my $protocol
+					= $kRemote::kRemoteOpt{${zoneRecPath}. "Protocol"};
+				my $bitmap	= $kRemote::kRemoteOpt{${zoneRecPath}. "Bitmap"};
+				$states_zonefile
+					.= "$name $ttl $class $type $address $protocol $bitmap\n";
+			} elsif($type eq 'SRV') {
+				my $priority	
+					= $kRemote::kRemoteOpt{${zoneRecPath}. "Priority"};
+				my $weight	= $kRemote::kRemoteOpt{${zoneRecPath}. "Weight"};
+				my $port	= $kRemote::kRemoteOpt{${zoneRecPath}. "Port"};
+				my $value	= $kRemote::kRemoteOpt{${zoneRecPath}. "Value"};
+				$states_zonefile	.= "$name $ttl $class $type ";
+				$states_zonefile	.= "$priority $weight $port $value\n";
+			} elsif($type eq 'NAPTR') {
+				my $order	= $kRemote::kRemoteOpt{${zoneRecPath}. "Order"};
+				my $preference
+					= $kRemote::kRemoteOpt{${zoneRecPath}. "Preference"};
+				my $flags	= $kRemote::kRemoteOpt{${zoneRecPath}. "Flags"};
+				my $services
+					= $kRemote::kRemoteOpt{${zoneRecPath}. "Services"};
+				my $regexp	= $kRemote::kRemoteOpt{${zoneRecPath}. "Regexp"};
+				my $replacement
+					= $kRemote::kRemoteOpt{${zoneRecPath}. "Replacement"};
+				$states_zonefile	.= "$name $ttl $class $type ";
+				$states_zonefile	.= "$order $preference $flags $services ";
+				$states_zonefile	.= "$regexp $replacement\n";
+			} else {
+				print STDERR "record type error: $type.\n";
+				return undef;
+			}
+		}
+
+		$states_zonefile_hash{$zoneName} = $states_zonefile;
+	}
+
+	return(0);
+}
+
+
+
+########################################################################
+__END__

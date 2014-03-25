@@ -1,0 +1,229 @@
+<HTML>
+<HEAD>
+<TITLE>routerSendSolRaDefault - TBD</TITLE>
+<LINK REV="made" HREF="mailto:hackers@FreeBSD.org">
+</HEAD>
+
+<BODY>
+
+<!-- INDEX BEGIN -->
+<!--
+
+<UL>
+
+	<LI><A HREF="#NAME">NAME</A>
+	<LI><A HREF="#TARGET">TARGET</A>
+	<LI><A HREF="#SYNOPSIS">SYNOPSIS</A>
+	<LI><A HREF="#INITIALIZATION">INITIALIZATION</A>
+	<LI><A HREF="#TEST_PROCEDURE">TEST PROCEDURE</A>
+	<LI><A HREF="#JUDGMENT">JUDGMENT</A>
+	<LI><A HREF="#TERMINATION">TERMINATION</A>
+	<LI><A HREF="#NOTE">NOTE</A>
+	<LI><A HREF="#REFERENCE">REFERENCE</A>
+	<LI><A HREF="#SEE_ALSO">SEE ALSO</A>
+</UL>
+-->
+<!-- INDEX END -->
+
+<P>
+<H1><A NAME="NAME">NAME</A></H1>
+<P>
+routerSendSolRaDefault - TBD
+
+<P>
+<HR>
+<H1><A NAME="TARGET">TARGET</A></H1>
+<P>
+Router Only
+
+<P>
+<HR>
+<H1><A NAME="SYNOPSIS">SYNOPSIS</A></H1>
+<P>
+<PRE>  routerSendSolRaDefault.seq [-tooloption ...] -p routerSendSolRaDefault.def
+</PRE>
+<P>
+<HR>
+<H1><A NAME="INITIALIZATION">INITIALIZATION</A></H1>
+Start NUT advertising RAs whose parameters are as same as 
+<A HREF="startDefaultRA.html#INITIALIZATION">those</A>
+except the followings:
+<UL>
+  <LI>MaxRtrAdvInterval:7
+  <LI>MinRtrAdvInterval:10
+</UL>
+
+<P>
+<HR>
+<H1><A NAME="TEST_PROCEDURE">TEST PROCEDURE</A></H1>
+<P>
+<STRONG>routerSendSolRaDefault</STRONG> verifies that RA is delayed by the rules.
+
+<PRE>
+CASE I
+<BR>
+  TN               NUT
+  ----------------------
+<BR>
+  <=== RA ====
+       src=NUT
+       dst=all-node
+       any option is accepted.
+<BR>
+       T1 <= received time
+<BR>
+  Wait(MIN_DELAY_BETWEEN_RAS - 1 sec)
+<BR>
+  ==== RS ===>
+       src=TN
+       dst=all-router
+<BR>
+  <=== RA ====
+       src=NUT
+       dst=allnode
+       any option is accepted.
+<BR>
+       T2 <= received time
+<BR>
+  <A HREF="#JDG1">Judgment</A>: MIN_DELAY_BETWEEN_RAS < T2 - T1 < MIN_DELAY_BETWEEN_RAS +
+                                              RA_MAX_DELAY_TIME
+<BR>
+CASE II
+<BR>
+  TN               NUT
+  ----------------------
+<BR>
+  <=== RA ====
+       src=NUT
+       dst=all-node
+       any option is accepted.
+<BR>
+  Wait(MIN_DELAY_BETWEEN_RAS + 1 sec)
+<BR>
+  ==== RS ===>
+       src=TN
+       dst=all-router
+<BR>
+       T1 <= sent time
+<BR>
+  <=== RA ====
+       src=NUT
+       dst=all-node
+       any option is accepted.
+<BR>
+       T2 <= received time
+<BR>
+  <A HREF="#JDG2">Judgment</A>: 0 < = T2 - T1 < RA_MAX_DELAY_TIME
+</PRE>
+
+<P>
+<HR>
+<H1><A NAME="JUDGMENT">JUDGMENT</A></H1>
+<PRE>
+<A NAME="JDG1">CASE I</A>
+                                    Solicited
+      Multicast                     Multicast
+          RA                 RS         RA
+          ^                  |          ^
+          |                  |          |
+          |                  V          |
+      ----+------------------+-----+----+----> time
+          |<======================>|    |
+          | MIN_DELAY_BETWEEN_RAS       |
+          |                             |
+          |<===========================>|
+            <A HREF="#REF1">MIN_DELAY_BETWEEN_RAS + T</A>
+<BR>
+      MIN_DELAY_BETWEEN_RAS=3 sec.
+      0 < T < MAX_RA_DELAY_TIME (0.5 sec)
+<BR>
+<A NAME="JDG2">CASE II</A>
+                                           Solicited
+      Multicast                            Multicast
+          RA                            RS    RA
+          ^                             |     ^
+          |                             |     |
+          |                             V     |
+      ----+------------------------+----+-----+---> time
+          |<======================>|    |<===>|
+            MIN_DELAY_BETWEEN_RAS          <A HREF="#REF2">T</A>
+<BR>
+      MIN_DELAY_BETWEEN_RAS=3 sec.
+      0 < T < MAX_RA_DELAY_TIME (0.5 sec)
+</PRE>
+
+<P>
+<HR>
+<H1><A NAME="TERMINATION">TERMINATION</A></H1>
+<P>
+<PRE>  N/A
+</PRE>
+<P>
+<HR>
+<H1><A NAME="NOTE">NOTE</A></H1>
+<P>
+<PRE>  TBD
+</PRE>
+<P>
+<HR>
+<H1><A NAME="REFERENCE">REFERENCE</A></H1>
+<PRE>
+6.2.6.  Processing Router Solicitations
+<BR>
+   A host MUST silently discard any received Router Solicitation
+   messages.
+<BR>
+   In addition to sending periodic, unsolicited advertisements, a router
+   sends advertisements in response to valid solicitations received on
+   an advertising interface.  A router MAY choose to unicast the
+   response directly to the soliciting host's address (if the
+   solicitation's source address is not the unspecified address), but
+   the usual case is to multicast the response to the all-nodes group.
+   In the latter case, the interface's interval timer is reset to a new
+   random value, as if an unsolicited advertisement had just been sent
+   (see Section 6.2.4).
+<BR>
+   In all cases, Router Advertisements sent in response to a Router
+   Solicitation MUST be delayed by a random time between 0 and
+   MAX_RA_DELAY_TIME seconds. (If a single advertisement is sent in
+   response to multiple solicitations, the delay is relative to the
+   first solicitation.)  In addition, consecutive Router Advertisements
+   sent to the all-nodes multicast address MUST be rate limited to no
+   more than one advertisement every MIN_DELAY_BETWEEN_RAS seconds.
+<BR>
+   A router might process Router Solicitations as follows:
+<BR>
+    - Upon receipt of a Router Solicitation, compute a random delay
+      within the range 0 through MAX_RA_DELAY_TIME.  If the computed
+      value corresponds to a time later than the time the next multicast
+      Router Advertisement is scheduled to be sent, ignore the random
+      delay and send the advertisement at the already-scheduled time.
+<BR>
+    - <A NAME="REF1"><B>If the router sent a multicast Router Advertisement (solicited or
+      unsolicited) within the last MIN_DELAY_BETWEEN_RAS seconds,
+      schedule the advertisement to be sent at a time corresponding to
+      MIN_DELAY_BETWEEN_RAS plus the random value after the previous
+      advertisement was sent.  This ensures that the multicast Router
+      Advertisements are rate limited.</B></A>
+<BR>
+    - <A NAME="REF2"><B>Otherwise, schedule the sending of a Router Advertisement at the
+      time given by the random value.</B></A>
+<BR>
+   Note that a router is permitted to send multicast Router
+   Advertisements more frequently than indicated by the
+   MinRtrAdvInterval configuration variable so long as the more frequent
+   advertisements are responses to Router Solicitations.  In all cases,
+   however, unsolicited multicast advertisements MUST NOT be sent more
+   frequently than indicated by MinRtrAdvInterval.
+</PRE>
+
+<P>
+<HR>
+<H1><A NAME="SEE_ALSO">SEE ALSO</A></H1>
+<P>
+<PRE>  perldoc V6evalTool
+  perldoc V6evalRemote
+</PRE>
+</BODY>
+
+</HTML>

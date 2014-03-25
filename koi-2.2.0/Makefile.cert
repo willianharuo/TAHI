@@ -1,0 +1,105 @@
+#
+# Copyright (C) 2004, 2005, 2006, 2007, 2008, 2009, 2010
+# NTT Advanced Technology, Yokogawa Electric Corporation.
+# All rights reserved.
+# 
+# Redistribution and use of this software in source and binary
+# forms, with or without modification, are permitted provided that
+# the following conditions and disclaimer are agreed and accepted
+# by the user:
+# 
+# 1. Redistributions of source code must retain the above copyright
+#    notice, this list of conditions and the following disclaimer.
+# 
+# 2. Redistributions in binary form must reproduce the above copyright
+#    notice, this list of conditions and the following disclaimer in
+#    the documentation and/or other materials provided with
+#    the distribution.
+# 
+# 3. Neither the names of the copyrighters, the name of the project
+#    which is related to this software (hereinafter referred to as
+#    "project") nor the names of the contributors may be used to
+#    endorse or promote products derived from this software without
+#    specific prior written permission.
+# 
+# 4. No merchantable use may be permitted without prior written
+#    notification to the copyrighters.
+# 
+# 5. The copyrighters, the project and the contributors may prohibit
+#    the use of this software at any time.
+# 
+# THIS SOFTWARE IS PROVIDED BY THE COPYRIGHTERS, THE PROJECT AND
+# CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING
+# BUT NOT LIMITED THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS
+# FOR A PARTICULAR PURPOSE, ARE DISCLAIMED.  IN NO EVENT SHALL THE
+# COPYRIGHTERS, THE PROJECT OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT,
+# INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
+# (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+# SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
+# HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT,
+# STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING
+# IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+# POSSIBILITY OF SUCH DAMAGE.
+#
+# $Id: Makefile.cert,v 1.3 2008/07/30 04:11:24 inoue Exp $
+#
+
+RM = /bin/rm
+CAT = /bin/cat
+OPENSSL = /usr/bin/openssl
+INSTALL = /usr/bin/install
+
+CERTS = root.pem tn.pem nut.pem
+INSTALLDIR = /usr/local/koi/keys
+
+DHPARAMS = dh512.pem dh1024.pem
+
+all: $(CERTS) $(DHPARAMS)
+
+$(CERTS): $(CERTS:.pem=.cnf)
+	# rootCA
+	$(OPENSSL) req -newkey rsa:1024 -sha1 -keyout rootkey.pem -out rootreq.pem -config root.cnf
+	$(OPENSSL) x509 -req -in rootreq.pem -sha1 -days 3650 -extfile root.cnf -extensions certificate_extensions -signkey rootkey.pem -out rootcert.pem
+	$(CAT) rootcert.pem rootkey.pem > root.pem
+
+	# tester node
+	$(OPENSSL) req -newkey rsa:1024 -sha1 -keyout tnkey.pem -out tnreq.pem -config tn.cnf -reqexts req_extensions
+	$(OPENSSL) x509 -req -in tnreq.pem -sha1 -days 3650 -extfile tn.cnf -extensions certificate_extensions -CA root.pem -CAkey root.pem -CAcreateserial -out tncert.pem
+	$(CAT) tncert.pem tnkey.pem rootcert.pem > tn.pem
+	
+	# target node
+	$(OPENSSL) req -newkey rsa:1024 -sha1 -keyout nutkey.pem -out nutreq.pem -config nut.cnf -reqexts req_extensions
+	$(OPENSSL) x509 -req -in nutreq.pem -sha1 -days 3650 -extfile nut.cnf -extensions certificate_extensions -CA root.pem -CAkey root.pem -CAcreateserial -out nutcert.pem
+	$(CAT) nutcert.pem nutkey.pem rootcert.pem > nut.pem
+
+certclean:
+	$(RM) -f rootkey.pem rootreq.pem rootcert.pem root.pem root.srl
+	$(RM) -f tnkey.pem tnreq.pem tncert.pem tn.pem
+	$(RM) -f nutkey.pem nutreq.pem nutcert.pem nut.pem
+
+paramclean:
+	$(RM) -f rootkey.pem rootreq.pem rootcert.pem root.srl
+	$(RM) -f tnkey.pem tnreq.pem tncert.pem
+	$(RM) -f nutkey.pem nutreq.pem nutcert.pem
+
+dh512.pem:
+	$(OPENSSL) dhparam -check -text -5 512 -out dh512.pem
+
+dh1024.pem:
+	$(OPENSSL) dhparam -check -text -5 1024 -out dh1024.pem
+
+dhparamclean:
+	$(RM) -f $(DHPARAMS)
+
+install:
+	/bin/mkdir -p $(INSTALLDIR)
+	$(INSTALL) -o root -g wheel -m 555 root.pem $(INSTALLDIR)
+	$(INSTALL) -o root -g wheel -m 555 tn.pem $(INSTALLDIR)
+	$(INSTALL) -o root -g wheel -m 555 dh1024.pem $(INSTALLDIR)
+	$(INSTALL) -o root -g wheel -m 555 dh512.pem $(INSTALLDIR)
+	
+
+clean: certclean
+
+cleanall: certclean dhparamclean
+

@@ -1,0 +1,908 @@
+//
+// Copyright (C) 2002, 2003 Yokogawa Electric Corporation, 
+// INTAP(Interoperability Technology Association for Information 
+// Processing, Japan), IPA (Information-technology Promotion Agency, Japan).
+// All rights reserved.
+// 
+// Redistribution and use of this software in source and binary forms, with 
+// or without modification, are permitted provided that the following 
+// conditions and disclaimer are agreed and accepted by the user:
+// 
+// 1. Redistributions of source code must retain the above copyright 
+// notice, this list of conditions and the following disclaimer.
+// 
+// 2. Redistributions in binary form must reproduce the above copyright 
+// notice, this list of conditions and the following disclaimer in the 
+// documentation and/or other materials provided with the distribution.
+// 
+// 3. Neither the names of the copyrighters, the name of the project which 
+// is related to this software (hereinafter referred to as "project") nor 
+// the names of the contributors may be used to endorse or promote products 
+// derived from this software without specific prior written permission.
+// 
+// 4. No merchantable use may be permitted without prior written 
+// notification to the copyrighters. However, using this software for the 
+// purpose of testing or evaluating any products including merchantable 
+// products may be permitted without any notification to the copyrighters.
+// 
+// 
+// 
+// THIS SOFTWARE IS PROVIDED BY THE COPYRIGHTERS, THE PROJECT AND 
+// CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING 
+// BUT NOT LIMITED THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS 
+// FOR A PARTICULAR PURPOSE, ARE DISCLAIMED.  IN NO EVENT SHALL THE 
+// COPYRIGHTERS, THE PROJECT OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, 
+// INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES 
+// (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR 
+// SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) 
+// HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN 
+// CONTRACT,STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) 
+// ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF 
+// THE POSSIBILITY OF SUCH DAMAGE.
+//
+// $Name: REL_2_1_1 $
+// 
+// $TAHI: ct/ipsec/HTR_G_common.def,v 1.2 2003/05/05 17:45:24 ozoe Exp $
+// 
+#ifndef IPSEC_HTR_COMMON_DEF
+#define IPSEC_HTR_COMMON_DEF
+
+#include "./ipsecaddr.def"
+
+#ifndef IPSEC_ECHO_DATA
+#define IPSEC_ECHO_DATA echo_data8
+#endif
+
+//======================================================================
+// UDPv6 definitions. move to stdpacket.def later.
+//======================================================================
+//
+//----------------------------------------------------------------------
+// Standard name definition for header and packet
+//
+// for IPv6
+//
+
+#define _UDPV6_NAME(_pNAME)     _UDPV6_##_pNAME
+#define _HDR_UDPV6_NAME(_pNAME) _HDR_UDPV6_##_pNAME
+
+//----------------------------------------------------------------------
+// echo request
+
+#define FEM_udp6_echo_request_exth(_pNAME,_pETHER,_oHDR_IPV6,_oPACKET_IPV6,_oUDPV6_EchoRequest) \
+Frame_Ether _pNAME { \
+	header=_pETHER; \
+	packet=_PACKET_IPV6_NAME(_pNAME); \
+} \
+Packet_IPv6 _PACKET_IPV6_NAME(_pNAME) \
+	_oPACKET_IPV6 \
+Hdr_IPv6 _HDR_IPV6_NAME(_pNAME) \
+	_oHDR_IPV6 \
+Upp_UDP _UDPV6_NAME(_pNAME) \
+	_oUDPV6_EchoRequest \
+//Hdr_UDP _HDR_UDPV6_NAME(_pNAME) { \
+//	SourcePort=10000; \
+//	DestinationPort=7; \
+//
+
+#define FEM_udp6_echo_request(_pNAME,_pETHER,_oHDR_IPV6,_oUDPV6_EchoRequest) \
+Frame_Ether _pNAME { \
+	header=_pETHER; \
+	packet=_PACKET_IPV6_NAME(_pNAME); \
+} \
+Packet_IPv6 _PACKET_IPV6_NAME(_pNAME) { \
+	header=_HDR_IPV6_NAME(_pNAME); \
+	upper=_UDPV6_NAME(_pNAME); \
+} \
+Hdr_IPv6 _HDR_IPV6_NAME(_pNAME) \
+	_oHDR_IPV6 \
+Upp_UDP _UDPV6_NAME(_pNAME) \
+	_oUDPV6_EchoRequest \
+//Hdr_UDP _HDR_UDPV6_NAME(_pNAME) { \
+//	SourcePort=10000; \
+//	DestinationPort=7; \
+//
+
+//----------------------------------------------------------------------
+// echo reply
+
+#define FEM_udp6_echo_reply_exth(_pNAME,_pETHER,_oHDR_IPV6,_oPACKET_IPV6,_oUDPV6_EchoReply) \
+Frame_Ether _pNAME { \
+	header=_pETHER; \
+	packet=_PACKET_IPV6_NAME(_pNAME); \
+} \
+Packet_IPv6 _PACKET_IPV6_NAME(_pNAME) \
+	_oPACKET_IPV6 \
+Hdr_IPv6 _HDR_IPV6_NAME(_pNAME) \
+	_oHDR_IPV6 \
+Upp_UDP _UDPV6_NAME(_pNAME) \
+	_oUDPV6_EchoReply \
+//Hdr_UDP _HDR_UDPV6_NAME(_pNAME) { \
+//	SourcePort=7; \
+//	DestinationPort=10000; \
+//
+
+#define FEM_udp6_echo_reply(_pNAME,_pETHER,_oHDR_IPV6,_oUDPV6_EchoReply) \
+Frame_Ether _pNAME { \
+	header=_pETHER; \
+	packet=_PACKET_IPV6_NAME(_pNAME); \
+} \
+Packet_IPv6 _PACKET_IPV6_NAME(_pNAME) { \
+	header=_HDR_IPV6_NAME(_pNAME); \
+	upper=_UDPV6_NAME(_pNAME); \
+} \
+Hdr_IPv6 _HDR_IPV6_NAME(_pNAME) \
+	_oHDR_IPV6 \
+Upp_UDP _UDPV6_NAME(_pNAME) \
+	_oUDPV6_EchoReply \
+//Hdr_UDP _HDR_UDPV6_NAME(_pNAME) { \
+//	SourcePort=7; \
+//	DestinationPort=10000; \
+//
+
+//======================================================================
+// TCPv6 definitions. move to stdpacket.def later.
+//======================================================================
+//
+//----------------------------------------------------------------------
+// Standard name definition for header and packet
+//
+// for IPv6
+//
+
+#define _TCPV6_NAME(_pNAME)     _TCPV6_##_pNAME
+#define _HDR_TCPV6_NAME(_pNAME) _HDR_TCPV6_##_pNAME
+
+//======================================================================
+//
+// TCP packet define
+//
+#define FEM_tcp6_syn_exth(_pNAME,_pETHER,_oHDR_IPV6,_oPACKET_IPV6,_oTCPV6_Syn) \
+Frame_Ether _pNAME { \
+	header=_pETHER; \
+	packet=_PACKET_IPV6_NAME(_pNAME); \
+} \
+Packet_IPv6 _PACKET_IPV6_NAME(_pNAME) \
+	_oPACKET_IPV6 \
+Hdr_IPv6 _HDR_IPV6_NAME(_pNAME) \
+	_oHDR_IPV6 \
+Upp_TCP _TCPV6_NAME(_pNAME) \
+	_oTCPV6_Syn \
+
+#define FEM_tcp6_syn(_pNAME,_pETHER,_oHDR_IPV6,_oTCPV6_Syn) \
+Frame_Ether _pNAME { \
+	header=_pETHER; \
+	packet=_PACKET_IPV6_NAME(_pNAME); \
+} \
+Packet_IPv6 _PACKET_IPV6_NAME(_pNAME) { \
+	header=_HDR_IPV6_NAME(_pNAME); \
+	upper=_TCPV6_NAME(_pNAME); \
+} \
+Hdr_IPv6 _HDR_IPV6_NAME(_pNAME) \
+	_oHDR_IPV6 \
+Upp_TCP _TCPV6_NAME(_pNAME) \
+	_oTCPV6_Syn \
+
+//----------------------------------------------------------------------
+#define FEM_tcp6_synack_exth(_pNAME,_pETHER,_oHDR_IPV6,_oPACKET_IPV6,_oTCPV6_SynAck) \
+Frame_Ether _pNAME { \
+        header=_pETHER; \
+        packet=_PACKET_IPV6_NAME(_pNAME); \
+} \
+Packet_IPv6 _PACKET_IPV6_NAME(_pNAME) \
+        _oPACKET_IPV6 \
+Hdr_IPv6 _HDR_IPV6_NAME(_pNAME) \
+        _oHDR_IPV6 \
+Upp_TCP _TCPV6_NAME(_pNAME) \
+        _oTCPV6_SynAck \
+
+#define FEM_tcp6_synack(_pNAME,_pETHER,_oHDR_IPV6,_oTCPV6_SynAck) \
+Frame_Ether _pNAME { \
+        header=_pETHER; \
+        packet=_PACKET_IPV6_NAME(_pNAME); \
+} \
+Packet_IPv6 _PACKET_IPV6_NAME(_pNAME) { \
+        header=_HDR_IPV6_NAME(_pNAME); \
+        upper=_TCPV6_NAME(_pNAME); \
+} \
+Hdr_IPv6 _HDR_IPV6_NAME(_pNAME) \
+        _oHDR_IPV6 \
+Upp_TCP _TCPV6_NAME(_pNAME) \
+        _oTCPV6_SynAck \
+
+//----------------------------------------------------------------------
+#define FEM_tcp6_reset_exth(_pNAME,_pETHER,_oHDR_IPV6,_oPACKET_IPV6,_oTCPV6_Reset) \
+Frame_Ether _pNAME { \
+        header=_pETHER; \
+        packet=_PACKET_IPV6_NAME(_pNAME); \
+} \
+Packet_IPv6 _PACKET_IPV6_NAME(_pNAME) \
+        _oPACKET_IPV6 \
+Hdr_IPv6 _HDR_IPV6_NAME(_pNAME) \
+        _oHDR_IPV6 \
+Upp_TCP _TCPV6_NAME(_pNAME) \
+        _oTCPV6_Reset \
+
+#define FEM_tcp6_reset(_pNAME,_pETHER,_oHDR_IPV6,_oTCPV6_Reset) \
+Frame_Ether _pNAME { \
+        header=_pETHER; \
+        packet=_PACKET_IPV6_NAME(_pNAME); \
+} \
+Packet_IPv6 _PACKET_IPV6_NAME(_pNAME) { \
+        header=_HDR_IPV6_NAME(_pNAME); \
+        upper=_TCPV6_NAME(_pNAME); \
+} \
+Hdr_IPv6 _HDR_IPV6_NAME(_pNAME) \
+        _oHDR_IPV6 \
+Upp_TCP _TCPV6_NAME(_pNAME) \
+        _oTCPV6_Reset \
+
+//======================================================================
+//
+// Ether Header
+//
+
+_HETHER_define(hether_router2nut,
+	ether(IPSEC_ROUTER_NET3_MAC_ADDR),
+	nutether()
+)
+
+_HETHER_define(hether_nut2router,
+	nutether(),
+	ether(IPSEC_ROUTER_NET3_MAC_ADDR)
+)
+
+_HETHER_define(_HETHER_router2allnodes,
+	ether(IPSEC_ROUTER_NET3_MAC_ADDR),
+	v62ethermulti(v6(_ALLNODES_MCAST_ADDR))
+)
+
+//======================================================================
+//
+// RA
+//
+
+FEM_icmp6_ra(
+		ra_to_nut,
+		_HETHER_router2allnodes,
+	{
+		HopLimit = 255;
+		_SRC(v6(IPSEC_ROUTER_NET3_LINK_ADDR));
+		_DST(v6(_ALLNODES_MCAST_ADDR));
+	},
+	{
+		CurHopLimit=64;
+		LifeTime = 1800;
+		option   = opt_sll_router;
+		option   = opt_mtu_1500;
+		option   = opt_prefixinformation_router;
+	}
+)
+
+Opt_ICMPv6_SLL opt_sll_router {
+	LinkLayerAddress = ether(IPSEC_ROUTER_NET3_MAC_ADDR);
+}
+
+Opt_ICMPv6_MTU opt_mtu_1500 {
+	MTU = 1500;
+}
+
+Opt_ICMPv6_Prefix opt_prefixinformation_router {
+	LFlag             = 1;
+	AFlag             = 1;
+	ValidLifetime     = 2592000;
+	PreferredLifetime = 604800;
+	Prefix            = v6(IPSEC_NET3_PREFIX);
+}
+
+//======================================================================
+//
+// NS
+//
+
+_HETHER_define(hether_nut2routersolnode,
+	nutether(),
+	oneof(_ETHER_SOLNODE_MCAST(v6(IPSEC_ROUTER_NET3_ADDR)),
+	      ether(IPSEC_ROUTER_NET3_MAC_ADDR) )
+)
+
+FEM_icmp6_ns(
+	ns_to_router,
+	hether_nut2routersolnode,
+	{
+//		_SRC(oneof(v6(IPSEC_NUT_NET3_ADDR), nutv6()));
+		_SRC(oneof(v6merge(IPSEC_NET3_PREFIX, IPSEC_NET3_PREFIX_LEN, nutv6()), nutv6()));
+		_DST(oneof(v6(IPSEC_ROUTER_NET3_ADDR), _IPV6_SOLNODE_MCAST(v6(IPSEC_ROUTER_NET3_ADDR))));
+		HopLimit = 255;
+	},
+	{
+		TargetAddress = v6(IPSEC_ROUTER_NET3_ADDR);
+		option = _SLLOPT_nut;
+	}
+)
+
+FEM_icmp6_ns(
+	ns_to_router_linkaddr,
+	hether_nut2routersolnode,
+	{
+		_SRC(nutv6());
+		_DST(oneof(v6(IPSEC_ROUTER_NET3_LINK_ADDR), _IPV6_SOLNODE_MCAST(v6(IPSEC_ROUTER_NET3_LINK_ADDR))));
+		HopLimit = 255;
+	},
+	{
+		TargetAddress = v6(IPSEC_ROUTER_NET3_LINK_ADDR);
+		option = _SLLOPT_nut;
+	}
+)
+
+//======================================================================
+//
+// NA
+//
+
+_TLLOPT_define(tllopt_router, ether(IPSEC_ROUTER_NET3_MAC_ADDR))
+
+FEM_icmp6_na(
+	na_from_router,
+	hether_router2nut,
+	{
+		_SRC(v6(IPSEC_ROUTER_NET3_ADDR));
+//		_DST(v6(IPSEC_NUT_NET3_ADDR));
+		_DST(v6merge(IPSEC_NET3_PREFIX, IPSEC_NET3_PREFIX_LEN, nutv6()));
+		HopLimit = 255;
+	},
+	{
+		RFlag = 1;
+		SFlag = 1;
+		OFlag = 1;
+		TargetAddress = v6(IPSEC_ROUTER_NET3_ADDR);
+		option = tllopt_router;
+	}
+)
+
+FEM_icmp6_na(
+	na_from_router_linkaddr,
+	hether_router2nut,
+	{
+		_SRC(v6(IPSEC_ROUTER_NET3_LINK_ADDR));
+		_DST(nutv6());
+		HopLimit = 255;
+	},
+	{
+		RFlag = 1;
+		SFlag = 1;
+		OFlag = 1;
+		TargetAddress = v6(IPSEC_ROUTER_NET3_LINK_ADDR);
+		option = tllopt_router;
+	}
+)
+
+//======================================================================
+//
+// Echo Request from Router
+//
+
+FEM_icmp6_echo_request(
+	echo_request_from_router,
+	hether_router2nut,
+	{
+		_SRC(v6(IPSEC_ROUTER_NET3_ADDR));
+//		_DST(v6(IPSEC_NUT_NET3_ADDR));
+		_DST(v6merge(IPSEC_NET3_PREFIX, IPSEC_NET3_PREFIX_LEN, nutv6()));
+	},
+	{
+		payload = IPSEC_ECHO_DATA;
+	}
+)
+
+//======================================================================
+//
+// Echo Reply to Router
+//
+
+FEM_icmp6_echo_reply(
+	echo_reply_to_router,
+	hether_nut2router,
+	{
+//		_SRC(v6(IPSEC_NUT_NET3_ADDR));
+		_SRC(v6merge(IPSEC_NET3_PREFIX, IPSEC_NET3_PREFIX_LEN, nutv6()));
+		_DST(v6(IPSEC_ROUTER_NET3_ADDR));
+	},
+	{
+		payload = IPSEC_ECHO_DATA;
+	}
+)
+
+//======================================================================
+//
+// Echo Request from Host1
+//
+
+FEM_icmp6_echo_request(
+	echo_request_from_host1,
+	hether_router2nut,
+	{
+		_SRC(v6(IPSEC_HOST1_NET5_ADDR));
+//		_DST(v6(IPSEC_NUT_NET3_ADDR));
+		_DST(v6merge(IPSEC_NET3_PREFIX, IPSEC_NET3_PREFIX_LEN, nutv6()));
+	},
+	{
+		payload = IPSEC_ECHO_DATA;
+	}
+)
+
+//======================================================================
+//
+// Echo Reply to Host1
+//
+
+FEM_icmp6_echo_reply(
+	echo_reply_to_host1,
+	hether_nut2router,
+	{
+//		_SRC(v6(IPSEC_NUT_NET3_ADDR));
+		_SRC(v6merge(IPSEC_NET3_PREFIX, IPSEC_NET3_PREFIX_LEN, nutv6()));
+		_DST(v6(IPSEC_HOST1_NET5_ADDR));
+	},
+	{
+		payload = IPSEC_ECHO_DATA;
+	}
+)
+
+//======================================================================
+//
+// Echo Request from Host2
+//
+
+FEM_icmp6_echo_request(
+	echo_request_from_host2,
+	hether_router2nut,
+	{
+		_SRC(v6(IPSEC_HOST2_NET5_ADDR));
+//		_DST(v6(IPSEC_NUT_NET3_ADDR));
+		_DST(v6merge(IPSEC_NET3_PREFIX, IPSEC_NET3_PREFIX_LEN, nutv6()));
+	},
+	{
+		payload = IPSEC_ECHO_DATA;
+	}
+)
+
+//======================================================================
+//
+// Echo Reply to Host2
+//
+
+FEM_icmp6_echo_reply(
+	echo_reply_to_host2,
+	hether_nut2router,
+	{
+//		_SRC(v6(IPSEC_NUT_NET3_ADDR));
+		_SRC(v6merge(IPSEC_NET3_PREFIX, IPSEC_NET3_PREFIX_LEN, nutv6()));
+		_DST(v6(IPSEC_HOST2_NET5_ADDR));
+	},
+	{
+		payload = IPSEC_ECHO_DATA;
+	}
+)
+
+//======================================================================
+//
+// UDP Echo Request from Router
+//
+
+FEM_udp6_echo_request(
+	udp_echo_request_from_router,
+	hether_router2nut,
+	{
+		_SRC(v6(IPSEC_ROUTER_NET3_ADDR));
+//		_DST(v6(IPSEC_NUT_NET3_ADDR));
+		_DST(v6merge(IPSEC_NET3_PREFIX, IPSEC_NET3_PREFIX_LEN, nutv6()));
+	},
+	{
+		header = _HDR_UDPV6_NAME(udp_echo_request_from_router);
+		payload = IPSEC_ECHO_DATA;
+	}
+)
+
+Hdr_UDP _HDR_UDPV6_NAME(udp_echo_request_from_router) {
+	SourcePort=10000;
+	DestinationPort=7;
+}
+
+//======================================================================
+//
+// UDP Echo Reply to Router
+//
+
+FEM_udp6_echo_reply(
+	udp_echo_reply_to_router,
+	hether_nut2router,
+	{
+//		_SRC(v6(IPSEC_NUT_NET3_ADDR));
+		_SRC(v6merge(IPSEC_NET3_PREFIX, IPSEC_NET3_PREFIX_LEN, nutv6()));
+		_DST(v6(IPSEC_ROUTER_NET3_ADDR));
+	},
+	{
+		header = _HDR_UDPV6_NAME(udp_echo_reply_to_router);
+		payload = IPSEC_ECHO_DATA;
+	}
+)
+
+Hdr_UDP _HDR_UDPV6_NAME(udp_echo_reply_to_router) {
+	SourcePort=7;
+	DestinationPort=10000;
+}
+
+//======================================================================
+//
+// UDP Echo Request from Host1
+//
+
+FEM_udp6_echo_request(
+	udp_echo_request_from_host1,
+	hether_router2nut,
+	{
+		_SRC(v6(IPSEC_HOST1_NET5_ADDR));
+//		_DST(v6(IPSEC_NUT_NET3_ADDR));
+		_DST(v6merge(IPSEC_NET3_PREFIX, IPSEC_NET3_PREFIX_LEN, nutv6()));
+	},
+	{
+		header = _HDR_UDPV6_NAME(udp_echo_request_from_host1);
+		payload = IPSEC_ECHO_DATA;
+	}
+)
+
+Hdr_UDP _HDR_UDPV6_NAME(udp_echo_request_from_host1) {
+	SourcePort=10000;
+	DestinationPort=7;
+}
+
+//======================================================================
+//
+// UDP Echo Reply to Host1
+//
+
+FEM_udp6_echo_reply(
+	udp_echo_reply_to_host1,
+	hether_nut2router,
+	{
+//		_SRC(v6(IPSEC_NUT_NET3_ADDR));
+		_SRC(v6merge(IPSEC_NET3_PREFIX, IPSEC_NET3_PREFIX_LEN, nutv6()));
+		_DST(v6(IPSEC_HOST1_NET5_ADDR));
+	},
+	{
+		header = _HDR_UDPV6_NAME(udp_echo_reply_to_host1);
+		payload = IPSEC_ECHO_DATA;
+	}
+)
+
+Hdr_UDP _HDR_UDPV6_NAME(udp_echo_reply_to_host1) {
+	SourcePort=7;
+	DestinationPort=10000;
+}
+
+//======================================================================
+//
+// UDP Echo Request from Host1 (Source Port 20000)
+//
+
+FEM_udp6_echo_request(
+	udp_echo_request_from_host1_20000,
+	hether_router2nut,
+	{
+		_SRC(v6(IPSEC_HOST1_NET5_ADDR));
+//		_DST(v6(IPSEC_NUT_NET3_ADDR));
+		_DST(v6merge(IPSEC_NET3_PREFIX, IPSEC_NET3_PREFIX_LEN, nutv6()));
+	},
+	{
+		header = _HDR_UDPV6_NAME(udp_echo_request_from_host1_20000);
+		payload = IPSEC_ECHO_DATA;
+	}
+)
+
+Hdr_UDP _HDR_UDPV6_NAME(udp_echo_request_from_host1_20000) {
+	SourcePort=20000;
+	DestinationPort=7;
+}
+
+//======================================================================
+//
+// UDP Echo Reply to Host1 (Destination Port 20000)
+//
+
+FEM_udp6_echo_reply(
+	udp_echo_reply_to_host1_20000,
+	hether_nut2router,
+	{
+//		_SRC(v6(IPSEC_NUT_NET3_ADDR));
+		_SRC(v6merge(IPSEC_NET3_PREFIX, IPSEC_NET3_PREFIX_LEN, nutv6()));
+		_DST(v6(IPSEC_HOST1_NET5_ADDR));
+	},
+	{
+		header = _HDR_UDPV6_NAME(udp_echo_reply_to_host1_20000);
+		payload = IPSEC_ECHO_DATA;
+	}
+)
+
+Hdr_UDP _HDR_UDPV6_NAME(udp_echo_reply_to_host1_20000) {
+	SourcePort=7;
+	DestinationPort=20000;
+}
+
+//======================================================================
+//
+// UDP Echo Request from Host2
+//
+
+FEM_udp6_echo_request(
+	udp_echo_request_from_host2,
+	hether_router2nut,
+	{
+		_SRC(v6(IPSEC_HOST2_NET5_ADDR));
+//		_DST(v6(IPSEC_NUT_NET3_ADDR));
+		_DST(v6merge(IPSEC_NET3_PREFIX, IPSEC_NET3_PREFIX_LEN, nutv6()));
+	},
+	{
+		header = _HDR_UDPV6_NAME(udp_echo_request_from_host2);
+		payload = IPSEC_ECHO_DATA;
+	}
+)
+
+Hdr_UDP _HDR_UDPV6_NAME(udp_echo_request_from_host2) {
+	SourcePort=10000;
+	DestinationPort=7;
+}
+
+//======================================================================
+//
+// UDP Echo Reply to Host2
+//
+
+FEM_udp6_echo_reply(
+	udp_echo_reply_to_host2,
+	hether_nut2router,
+	{
+//		_SRC(v6(IPSEC_NUT_NET3_ADDR));
+		_SRC(v6merge(IPSEC_NET3_PREFIX, IPSEC_NET3_PREFIX_LEN, nutv6()));
+		_DST(v6(IPSEC_HOST2_NET5_ADDR));
+	},
+	{
+		header = _HDR_UDPV6_NAME(udp_echo_reply_to_host2);
+		payload = IPSEC_ECHO_DATA;
+	}
+)
+
+Hdr_UDP _HDR_UDPV6_NAME(udp_echo_reply_to_host2) {
+	SourcePort=7;
+	DestinationPort=10000;
+}
+
+//======================================================================
+//
+// TCP Option 
+//
+
+Opt_TCP_MaximumSegmentSize opt_syn {
+	Kind       = 2;
+	Length     = 4;
+	MaxSegSize = 1440;
+}
+
+//======================================================================
+//
+// TCP Syn Request from HOST1
+//
+
+FEM_tcp6_syn(
+	syn_request_from_host1,
+	hether_router2nut,
+	{
+		_SRC(v6(IPSEC_HOST1_NET5_ADDR));
+//		_DST(v6(IPSEC_NUT_NET3_ADDR));
+		_DST(v6merge(IPSEC_NET3_PREFIX, IPSEC_NET3_PREFIX_LEN, nutv6()));
+	},
+	{
+		header = _HDR_TCPV6_NAME(syn_request_from_host1);
+		payload = payload_syn;
+	}
+)
+
+Hdr_TCP _HDR_TCPV6_NAME(syn_request_from_host1) {
+	SourcePort           = 10000;
+	DestinationPort      = 7;
+	SequenceNumber       = 1000000000;
+	SYNFlag              = 1;
+//	Window               = 16384;
+//	option               = opt_syn;
+}
+
+//======================================================================
+//
+// TCP Syn,Ack Reply to HOST1
+//
+
+FEM_tcp6_synack(
+	synack_reply_to_host1,
+	hether_nut2router,
+	{
+//		_SRC(v6(IPSEC_NUT_NET3_ADDR));
+		_SRC(v6merge(IPSEC_NET3_PREFIX, IPSEC_NET3_PREFIX_LEN, nutv6()));
+		_DST(v6(IPSEC_HOST1_NET5_ADDR));
+	},
+	{
+		header = _HDR_TCPV6_NAME(synack_reply_to_host1);
+		payload = payload_syn;
+	}
+)
+
+Hdr_TCP _HDR_TCPV6_NAME(synack_reply_to_host1) {
+	SourcePort=7;
+	DestinationPort=10000;
+	SequenceNumber=any;
+	AcknowledgmentNumber=any;
+	ACKFlag=1;
+	SYNFlag=1;
+	Window=any;
+	option = opt_syn; 
+}
+
+//======================================================================
+//
+// TCP Syn Request from HOST1 (Destination Port 23)
+//
+
+FEM_tcp6_syn(
+	syn_request_from_host1_23,
+	hether_router2nut,
+	{
+		_SRC(v6(IPSEC_HOST1_NET5_ADDR));
+//		_DST(v6(IPSEC_NUT_NET3_ADDR));
+		_DST(v6merge(IPSEC_NET3_PREFIX, IPSEC_NET3_PREFIX_LEN, nutv6()));
+	},
+	{
+		header = _HDR_TCPV6_NAME(syn_request_from_host1_23);
+		payload = payload_syn;
+	}
+)
+
+Hdr_TCP _HDR_TCPV6_NAME(syn_request_from_host1_23) {
+	SourcePort           = 10000;
+	DestinationPort      = 23;
+	SequenceNumber       = 1000000000;
+	SYNFlag              = 1;
+//	Window               = 16384;
+//	option               = opt_syn;
+}
+
+//======================================================================
+//
+// TCP Syn,Ack Reply to HOST1 (Source Rort 23)
+//
+
+FEM_tcp6_synack(
+	synack_reply_to_host1_23,
+	hether_nut2router,
+	{
+//		_SRC(v6(IPSEC_NUT_NET3_ADDR));
+		_SRC(v6merge(IPSEC_NET3_PREFIX, IPSEC_NET3_PREFIX_LEN, nutv6()));
+		_DST(v6(IPSEC_HOST1_NET5_ADDR));
+	},
+	{
+		header = _HDR_TCPV6_NAME(synack_reply_to_host1_23);
+		payload = payload_syn;
+	}
+)
+
+Hdr_TCP _HDR_TCPV6_NAME(synack_reply_to_host1_23) {
+	SourcePort=23;
+	DestinationPort=10000;
+	SequenceNumber=any;
+	AcknowledgmentNumber=any;
+	ACKFlag=1;
+	SYNFlag=1;
+	Window=any;
+	option = opt_syn; 
+}
+
+//======================================================================
+//
+// TCP Syn Request from HOST2
+//
+
+FEM_tcp6_syn(
+	syn_request_from_host2,
+	hether_router2nut,
+	{
+		_SRC(v6(IPSEC_HOST2_NET5_ADDR));
+//		_DST(v6(IPSEC_NUT_NET3_ADDR));
+		_DST(v6merge(IPSEC_NET3_PREFIX, IPSEC_NET3_PREFIX_LEN, nutv6()));
+	},
+	{
+		header = _HDR_TCPV6_NAME(syn_request_from_host2);
+		payload = payload_syn;
+	}
+)
+
+Hdr_TCP _HDR_TCPV6_NAME(syn_request_from_host2) {
+	SourcePort           = 10000;
+	DestinationPort      = 7;
+	SequenceNumber       = 1000000000;
+	SYNFlag              = 1;
+//	Window               = 16384;
+//	option               = opt_syn;
+}
+
+//======================================================================
+//
+// TCP Syn,Ack Reply to HOST2
+//
+
+FEM_tcp6_synack(
+	synack_reply_to_host2,
+	hether_nut2router,
+	{
+//		_SRC(v6(IPSEC_NUT_NET3_ADDR));
+		_SRC(v6merge(IPSEC_NET3_PREFIX, IPSEC_NET3_PREFIX_LEN, nutv6()));
+		_DST(v6(IPSEC_HOST2_NET5_ADDR));
+	},
+	{
+		header = _HDR_TCPV6_NAME(synack_reply_to_host2);
+		payload = payload_syn;
+	}
+)
+
+Hdr_TCP _HDR_TCPV6_NAME(synack_reply_to_host2) {
+	SourcePort=7;
+	DestinationPort=10000;
+	SequenceNumber=any;
+	AcknowledgmentNumber=any;
+	ACKFlag=1;
+	SYNFlag=1;
+	Window=any;
+	option = opt_syn; 
+}
+
+//======================================================================
+//
+// Default Payload Data ("EchoData")
+//
+
+Payload echo_data8 {
+	data = { 0x45, 0x63, 0x68, 0x6f, 0x44, 0x61, 0x74, 0x61};
+}
+
+Payload echo_data24 {
+	data = { 0x45, 0x63, 0x68, 0x6f, 0x44, 0x61, 0x74, 0x61};
+	data = { 0x45, 0x63, 0x68, 0x6f, 0x44, 0x61, 0x74, 0x61};
+	data = { 0x45, 0x63, 0x68, 0x6f, 0x44, 0x61, 0x74, 0x61};
+}
+
+//======================================================================
+//
+// Payload Data ("TCP syn") 
+//
+
+Payload payload_syn {
+        data = {};
+}
+
+//======================================================================
+//
+// Echo Data 1 ("Data 1")
+//
+
+Payload echo_data_1 {
+        data = { 0x44, 0x61, 0x74, 0x61, 0x20, 0x31 };
+}
+
+//======================================================================
+//
+// Echo Data 2 ("Data 2")
+//
+
+Payload echo_data_2 {
+        data = { 0x44, 0x61, 0x74, 0x61, 0x20, 0x32 };
+}
+
+#endif
+

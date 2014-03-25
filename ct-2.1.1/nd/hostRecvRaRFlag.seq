@@ -1,0 +1,483 @@
+#!/usr/bin/perl
+#
+# Copyright (C) 1999, 2000, 2001, 2002, 2003 Yokogawa Electric Corporation,
+# IPA (Information-technology Promotion Agency, Japan).
+# All rights reserved.
+# 
+# Redistribution and use of this software in source and binary forms, with 
+# or without modification, are permitted provided that the following 
+# conditions and disclaimer are agreed and accepted by the user:
+# 
+# 1. Redistributions of source code must retain the above copyright 
+# notice, this list of conditions and the following disclaimer.
+# 
+# 2. Redistributions in binary form must reproduce the above copyright 
+# notice, this list of conditions and the following disclaimer in the 
+# documentation and/or other materials provided with the distribution.
+# 
+# 3. Neither the names of the copyrighters, the name of the project which 
+# is related to this software (hereinafter referred to as "project") nor 
+# the names of the contributors may be used to endorse or promote products 
+# derived from this software without specific prior written permission.
+# 
+# 4. No merchantable use may be permitted without prior written 
+# notification to the copyrighters. However, using this software for the 
+# purpose of testing or evaluating any products including merchantable 
+# products may be permitted without any notification to the copyrighters.
+# 
+# 
+# 
+# THIS SOFTWARE IS PROVIDED BY THE COPYRIGHTERS, THE PROJECT AND 
+# CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING 
+# BUT NOT LIMITED THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS 
+# FOR A PARTICULAR PURPOSE, ARE DISCLAIMED.  IN NO EVENT SHALL THE 
+# COPYRIGHTERS, THE PROJECT OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, 
+# INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES 
+# (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR 
+# SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) 
+# HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN 
+# CONTRACT,STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) 
+# ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF 
+# THE POSSIBILITY OF SUCH DAMAGE.
+#
+# $TAHI: ct/nd/hostRecvRaRFlag.seq,v 1.30 2002/02/27 01:08:25 masaxmasa Exp $
+
+########################################################################
+BEGIN { $V6evalTool::TestVersion = '$Name: REL_2_1_1 $ '; }
+ 
+use V6evalTool;
+use nd;
+
+ndOptions(@ARGV);
+
+# The following generate debugging messages.
+$nd::debug=$ndOpt_v|$ndOpt_vv;
+
+# You can specifies debug options to a remote control program.
+# If you want to know more detail, please see the following:
+# - V6evalTool.pm: perldoc V6evalTool
+# - V6evalRemote.pm: perldoc V6evalRemote
+$nd::remote_debug="-o1" if $ndOpt_vv;
+
+$IF=Link0;
+$exit_rtn=$V6evalTool::exitPass;
+
+$wait_dad=3;
+$wait_echo=2;
+$wait_expire=10;
+$wait_probe=$nd::DELAY_FIRST_PROBE_TIME + 1;
+$wait_ns=$nd::RETRANS_TIMER * $nd::MAX_UNICAST_SOLICIT + 1;
+
+%pktdesc=(
+	  ra_tn2allnode => 'Send RA w/o SLL to set the IsRouter flag',
+	  ra_tn2allnode_sll => 'Send RA w/ SLL to set the IsRouter flag',
+	  );
+
+@ra_title=(
+	   "w/o SLL",
+	   "w/ SLL, same LLA as cached",
+	   "RA w/ SLL, different LLA than cached",
+	   );
+
+@ra_ptn=(
+	  ra_tn2allnode,
+	  ra_tn2allnode_sll,
+	  ra_tn2allnode_sll,
+	  );
+
+@ra_same_lla=(
+	      1,
+	      1,
+	      0,
+	      );
+
+#
+#
+#
+$type=$V6evalTool::NutDef{Type};
+if($type eq router) {
+    vLogHTML("This test is for the host only<BR>");
+    exit $V6evalTool::exitHostOnly;
+}
+
+$type=$V6evalTool::NutDef{Type};
+if($type ne host) {
+    vLogHTML(ndErrmsg("ERROR: $V6evalTool::NutDef{Type}: ".
+		      "Unknown target type<BR>"));
+    exit $V6evalTool::exitFail;
+}
+
+#
+#
+#
+vCapture($IF);
+
+#
+#
+#
+#goto error if ndClearPrefix() != 0;
+#goto error if ndClearDefr() != 0;
+
+#
+# 
+#
+$idx=0;
+foreach(@ra_ptn) {
+    vLogHTML("<HR>");
+    vLogHTML("<FONT SIZE=\"+2\">*** @ra_title[$idx] ***</FONT><BR>");
+    $title{$idx}="<TD>$ra_title[$idx]</TD>";
+    if(checkRFlag($_, $ra_same_lla[$idx]) == 0) {
+	$title{$idx}.="<TD>exp:updated</TD><TD>result:updated</TD>";
+	$result{$idx}=$V6evalTool::exitPass;
+	vLogHTML("<A NAME=\"T$idx\">OK</A><BR>");
+    } else {
+	$title{$idx}.="<TD>ex:updated</TD><TD>result:unchanged</TD>";
+	$result{$idx}=$V6evalTool::exitFail;
+	$exit_rtn=$V6evalTool::exitFail;
+	vLogHTML("<A NAME=\"T$idx\">".ndErrmsg(NG)."</A><BR>");
+    }
+    $idx++;
+}
+$idx--;
+
+#
+#
+#
+clear();
+
+#
+#
+#
+@col=('PTN', 'EXP', 'RESULT');
+ndPrintSummaryHTML("*** Test Summary: Does RA set IsRouter flag ? ***", @col,
+                   %title, %result, $idx);
+
+#
+#
+#
+vLogHTML("*** EOT ***<BR>");
+exit $exit_rtn;
+
+error:
+    clear();
+    exit $V6evalTool::exitFail;
+
+#
+#
+#
+sub checkRFlag($$)
+{
+    my($ra, $same_lla)=@_;
+    my($rtn);
+
+#    goto error if ndClearPrefix() != 0;
+#    goto error if ndClearDefr() != 0;
+    clear();
+
+    vLogHTML("<HR><FONT SIZE=\"+1\">Initialization</FONT><BR>");
+    if($same_lla) {
+	goto error if nd2Reachable($IF) != 0;
+    } else {
+	goto error if nd2ReachableZ($IF) != 0;
+    }
+    vClear($IF);
+
+    $pktdesc{ra_x2allnode_sll}=
+	'Send RA (X ==>all-nodes) to be in STALE state';
+    vSend($IF, ra_x2allnode_sll);
+
+    $pktdesc{unicast_na_x2nut_RSO_tll}=
+	'Send NA (X ==> NUT) to be in REACHABLE state';
+    vSend($IF, unicast_na_x2nut_RSO_tll);
+
+    vLogHTML("Wait fro DAD NS<BR>");
+    vRecv($IF, $wait_echo, 0, 0);
+
+    $pktdesc{offlink_echo_request_x2nut}=
+	'Forward off-link echo-request (X ==> NUT)';
+    %ret=vSend($IF, offlink_echo_request_x2nut);
+
+    $pktdesc{offlink_echo_reply_nut2x}=
+	'Got off-link echo-reply (NUT ==> X)';
+    %ret=vRecv($IF, $wait_echo, $ret{sentTime1}, 1, offlink_echo_reply_nut2x);
+    goto error if $ret{status} != 0;
+
+    vLogHTML("<HR><FONT SIZE=\"+1\">Test</FONT><BR>");
+    %ret=vSend($IF, $ra);
+    goto error if $ret{status} != 0;
+
+    vSleep($wait_expire);
+    vLogHTML("The router lifetime of X was expired<BR>");
+
+    $pktdesc{offlink_echo_request_tn2nut}=
+	'Forward off-link echo-request (TN ==> NUT)';
+    %ret=vSend($IF, offlink_echo_request_tn2nut);
+
+    $pktdesc{offlink_echo_reply_nut2tn}='Got off-link echo-reply (NUT ==> TN)';
+    %ret=vRecv($IF, $wait_echo, $ret{sentTime1}, 1, offlink_echo_reply_nut2tn);
+    if($ret{status} == 0) {
+	vLogHTML("The IsRouter flag of TN is TRUE<BR>");
+	$rtn=0;
+    } else {
+	vLogHTML("Never got off-link echo-reply (NUT ==> TN)<BR>");
+	vLogHTML("The IsRouter flag of TN is FALSE<BR>");
+	$rtn=1;
+    }
+
+    if($same_lla == 0) {
+	vLogHTML("Wait for unicast NS if any<BR>");
+	vRecv($IF, $wait_probe+$wait_ns, 0, 0);
+    }
+
+    return $rtn;
+
+error:
+    clear();
+    vLogHTML(vErrmsg(%ret)."<BR>");
+    exit $V6evalTool::exitFail;
+}
+
+#
+#
+
+sub clear()
+{
+    vLogHTML("<HR><FONT SIZE=\"+1\">Termination</FONT><BR>");
+    $pktdesc{ra_x2allnode_clrrtr}=
+	'Clear Router X from the Default Router list';
+    $pktdesc{ra_tn2allnode_clrrtr}=
+	'Clear Router TN from the Default Router list';
+    vSend($IF,
+	  ra_x2allnode_clrrtr,
+	  ra_tn2allnode_clrrtr,
+	  );
+}
+########################################################################
+__END__
+
+=head1 NAME
+
+hostRecvRaRFlag - Verifying that a RA sets a IsRouter flag true
+
+=head1 TARGET
+
+Host only
+
+=head1 SYNOPSIS
+
+  hostRecvRaRFlag.seq [-tooloption ...] -p hostRecvRaRFlag.def
+
+=head1 INITIALIZATION
+
+=begin html
+<OL>
+  <LI> Create an neighbor cache entry for TN where a IsRouter flag is FALSE.
+  <LI> Set its state to REACHABLE.
+  <LI> Cache either <A HREF="#Cache_a_LLA_of_TN">TN's LLA</A> or
+       <A HREF="#Cache_a_bogus_LLA">a bogus LLA</A>.
+</OL>
+
+=end html
+
+=head2 Cache a LLA of TN
+
+=begin html
+<PRE>
+  TN                 NUT
+  ----------------------
+  State: NONCE (for TN)
+<BR>
+  ==== echo-request ===>
+        src=TN's link-local
+        dst=NUT's link-local
+<BR>
+  State: INCOMPLETE (for TN)
+<BR>
+  <=== multicast NS ====
+        src:NUT's link-local
+        dst:solicited-node[TN's link-local]
+        target=TN's link-local
+        SLLA=NUT's LLA
+        timeout: RETRANS_TIMER * MAX_MULTICAST_SOLICIT
+<BR>
+  ==== solicited NA ===>
+        src:TN's link
+        dst:NUT's link-local
+        R=0, S=1, O=1
+        target=TN's link-local
+        TLLA=<B>TN's LLA</B>
+<BR>
+  State: REACHABLE (for TN)
+</PRE>
+
+=end html
+
+=head2 Cache a bogus LLA
+
+=begin html
+<PRE>
+  TN                 NUT
+  ----------------------
+  State: NONCE (for TN)
+<BR>
+  ==== echo-request ===>
+        src=TN's link-local
+        dst=NUT's link-local
+<BR>
+  State: INCOMPLETE (for TN)
+<BR>
+  <=== multicast NS ====
+        src:NUT's link-local
+        dst:solicited-node[TN's link-local]
+        target=TN's link-local
+        SLLA=NUT's LLA
+        timeout: RETRANS_TIMER * MAX_MULTICAST_SOLICIT
+<BR>
+  ==== solicited NA ===>
+        src:TN's link
+        dst:NUT's link-local
+        R=0, S=1, O=1
+        target=TN's link-local
+        TLLA=<B>a bogus LLA (0:0:0:0:a9:a9)</B>
+<BR>
+  State: REACHABLE (for TN)
+</PRE>
+
+=end html
+
+=head1 TEST PROCEDURE
+
+B<hostRecvRaRFlag> verifies that a RA sets a IsRouter flag true.
+
+=begin html
+<PRE>
+  TN                 NUT
+  ----------------------
+<BR>
+  State: REACHABLE (for TN), NONCE(for X)
+<BR>
+  ==== unsolicited RA</A> ===>
+       src=X's link-local
+       dst=all-node
+       M=0, O=0
+       RouterLifetime=10
+       ReachableTime=0
+       RetransTimer=0
+       w/ SLLA
+       Prefix Option:
+           L=1, A=1
+           ValidLifetime=2592000
+           PreferredLifetime=604800
+           Prefix=3ffe:501:ffff:100::/64
+<BR>
+  State: REACHABLE (for TN), STALE(for X)
+<BR>
+  ==== solicited NA ===>
+        src:X's link
+        dst:NUT's link-local
+        R=1, S=1, O=1
+        target=X's link-local
+        w/ TLLA
+<BR>
+  Wait for 2 sec to ignore DAD NS
+<BR>
+  State: REACHABLE (for TN, X)
+<BR>
+  ==== echo-request ===>
+       src=off-link global, but LLA is X's one
+       dst=NUT's global
+<BR>
+  <=== <A HREF="#JDG1">Judgment #1</A>: echo-reply ====
+       src=NUT's global
+       dst=off-link global, but LLA is X's one
+<BR>
+  ==== <A HREF="#JDG2">unsolicited RA</A> ===>
+       src=TN's link-local
+       dst=all-node
+       M=0, O=0
+       RouterLifetime=600
+       ReachableTime=0
+       RetransTimer=0
+       w/ or w/o SLLA
+       Prefix Option:
+           L=1, A=1
+           ValidLifetime=2592000
+           PreferredLifetime=604800
+           Prefix=3ffe:501:ffff:100::/64
+<BR>
+  State: REACHABLE/STALE (for TN), REACHABLE (for X)
+<BR>
+  Wait (10 sec) for X's router lifetime to be expired
+<BR>
+  ==== echo-request ===>
+       src=off-link global, but LLA is TN's one
+       dst=NUT's global
+<BR>
+  <=== <A HREF="#JDG3">Judgment #3</A>: echo-reply ====
+       src=NUT's global
+       dst=off-link global, but LLA is TN's one
+<BR>
+  State: REACHABLE/DELAY (for TN), REACHABLE (for X)
+</PRE>
+
+=end html
+
+=head1 JUDGMENT
+
+=begin html
+<PRE>
+  1. <A NAME="JDG1">NUT throw an echo-reply to the default router (i.e. X).</A>
+<BR>
+  2. <A NAME="JDG2">RA set IsRouter flag.</A>
+<HR>
+6.3.4.  Processing Received Router Advertisements
+<BR>
+   After extracting information from the fixed part of the Router
+   Advertisement message, the advertisement is scanned for valid
+   options.  <A NAME="SLL"><B>If the advertisement contains a Source Link-Layer Address
+   option the link-layer address SHOULD be recorded in the Neighbor
+   Cache entry for the router (creating an entry if necessary) and the
+   IsRouter flag in the Neighbor Cache entry MUST be set to TRUE.</B></A>
+   <A NAME="NOSLL"><B>If no Source Link-Layer Address is included, but a corresponding Neighbor
+   Cache entry exists, its IsRouter flag MUST be set to TRUE.</A></B>  The
+   IsRouter flag is used by Neighbor Unreachability Detection to
+   determine when a router changes to being a host (i.e., no longer
+   capable of forwarding packets).  If a Neighbor Cache entry is created
+   for the router its reachability state MUST be set to STALE as
+   specified in Section 7.3.3.  If a cache entry already exists and is
+   updated with a different link-layer address the reachability state
+   MUST also be set to STALE.
+<HR>
+  ============+===========+===============================
+  RA received by the NUT  | NUT's Neighbor Cache State
+  ------------+-----------+---------+---------------------
+  Destination | SLLA      | Current | New
+  ============+===========+=========+=====================
+  all-node    | none      | 0       | <A HREF="#NOSLL">1</A>
+  ------------+-----------+---------+---------------------
+  all-node    | same      | 0       | <A HREF="#SLL">1</A>
+  ------------+-----------+---------+---------------------
+  all-node    | different | 0       | <A HREF="#SLL">1</A>
+  ============+===========+=========+=====================
+<BR>
+  3. <A NAME="JDG3"></A>NUT throw an echo-reply to NUT instead of X.</A>
+</PRE>
+
+=end html
+
+=head1 TERMINATION
+
+  Send the following RAs to clear the Default Router List:
+  - RA (src: TN) with RouterLifetime=0
+  - RA (src: X)  with RouterLifetime=0
+
+=head1 NOTE
+
+  The test does not invoke any remote command.
+
+=head1 SEE ALSO
+
+  perldoc V6evalTool
+  perldoc V6evalRemote
+
+=cut

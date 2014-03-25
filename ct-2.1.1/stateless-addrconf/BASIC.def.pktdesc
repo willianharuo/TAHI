@@ -1,0 +1,9 @@
+vLog("Reading BASIC.def.pktdesc") if $debug > 0;
+
+$main::pktdesc{dadns_from_NUT}         = "received DAD NS from NUT";
+$main::pktdesc{chkconf_dadns_to_NUT}   = "send DAD NS from TN to NUT to check if NUT's address is configured";
+$main::pktdesc{chkconf_dadna_from_NUT} = "received DAD NA from NUT";
+$main::pktdesc{chkconf_dadna_from_NUT_rf1} = "received DAD NA from NUT (RouterFlag==1)";
+
+1;
+#end

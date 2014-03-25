@@ -1,0 +1,294 @@
+<HTML>
+<HEAD>
+<TITLE>hostRecvRaRLifetimeN - Verifying that a host recognize RouterLifetime!=0</TITLE>
+<LINK REV="made" HREF="mailto:hackers@FreeBSD.org">
+</HEAD>
+
+<BODY>
+
+<!-- INDEX BEGIN -->
+<!--
+
+<UL>
+
+	<LI><A HREF="#NAME">NAME</A>
+	<LI><A HREF="#TARGET">TARGET</A>
+	<LI><A HREF="#SYNOPSIS">SYNOPSIS</A>
+	<LI><A HREF="#INITIALIZATION">INITIALIZATION</A>
+	<LI><A HREF="#TEST_PROCEDURE">TEST PROCEDURE</A>
+	<LI><A HREF="#JUDGMENT">JUDGMENT</A>
+	<LI><A HREF="#TERMINATION">TERMINATION</A>
+	<LI><A HREF="#NOTE">NOTE</A>
+	<LI><A HREF="#SEE_ALSO">SEE ALSO</A>
+</UL>
+-->
+<!-- INDEX END -->
+
+<P>
+<H1><A NAME="NAME">NAME</A></H1>
+<P>
+hostRecvRaRLifetimeN - Verifying that a host recognize RouterLifetime!=0
+
+<P>
+<HR>
+<H1><A NAME="TARGET">TARGET</A></H1>
+<P>
+Host only
+
+<P>
+<HR>
+<H1><A NAME="SYNOPSIS">SYNOPSIS</A></H1>
+<P>
+<PRE>  hostRecvRaRLifetimeN.seq [-tooloption ...] -p hostRecvRaRLifetimeN.def
+</PRE>
+<P>
+<HR>
+<H1><A NAME="INITIALIZATION">INITIALIZATION</A></H1>
+<OL>
+  <LI>Create neighbor cache entries for NUT, Y, Z.
+  <LI>Set their state to REACHABLEs.
+  <LI>Give a global prefix, 3ffe:501:ffff:100::/64
+</OL>
+<PRE>
+  TN                 NUT
+  ----------------------
+<BR>
+  State: NONCE (for all)
+<BR>
+  ==== unsolicited RA ===>
+       src=TN's link-local
+       dst=all-node
+       M=0, O=0
+       RouterLifetime=600
+       ReachableTime=0
+       RetransTimer=0
+       w/ SLLA
+       Prefix Option:
+           L=1, A=1
+           ValidLifetime=2592000
+           PreferredLifetime=604800
+           Prefix=3ffe:501:ffff:100::/64
+<BR>
+  State: STALE (for TN), NONCE (for Y, Z)
+<BR>
+  ==== unsolicited RA ===>
+       src=Y's link-local
+       dst=all-node
+       M=0, O=0
+       RouterLifetime=600
+       ReachableTime=0
+       RetransTimer=0
+       w/ SLLA
+       Prefix Option:
+           L=1, A=1
+           ValidLifetime=2592000
+           PreferredLifetime=604800
+           Prefix=3ffe:501:ffff:100::/64
+<BR>
+  State: STALE (for TN, Y), NONCE (for Z)
+<BR>
+  ==== unsolicited RA ===>
+       src=Z's link-local
+       dst=all-node
+       M=0, O=0
+       RouterLifetime=600
+       ReachableTime=0
+       RetransTimer=0
+       w/ SLLA
+       Prefix Option:
+           L=1, A=1
+           ValidLifetime=2592000
+           PreferredLifetime=604800
+           Prefix=3ffe:501:ffff:100::/64
+<BR>
+  State: STALE (for all)
+<BR>
+  <=== Ns for DAD ====
+       src=unspecified
+       dst=solicited-node[NUT's global, prefix=3ffe:501:ffff:100::/64]
+       target=NUT's global
+<BR>
+  Wait (3 sec)
+<BR>
+  ==== solicited NA ===>
+        src=TN's link-local
+        dst=NUT's link-local
+        R=1, S=1, O=1
+        target=TN's link-local
+        TLLA=TN's LLA
+<BR>
+  State: REACHABLE (for TN), STALE (for Y and Z)
+  ==== solicited NA ===>
+        src=Y's link-local
+        dst=NUT's link-local
+        R=1, S=1, O=1
+        target=Y's link-local
+        TLLA=X's LLA
+<BR>
+  State: REACHABLE (for TN, Y), STALE (for Z)
+  ==== solicited NA ===>
+        src=Z's link-local
+        dst=NUT's link-local
+        R=1, S=1, O=1
+        target=Z's link-local
+        TLLA=Z's LLA
+<BR>
+  State: REACHABLE (for all)
+</PRE>
+
+<P>
+<HR>
+<H1><A NAME="TEST_PROCEDURE">TEST PROCEDURE</A></H1>
+<BR>
+<B>hostRecvRaRLifetimeN</B> verifies that
+<UL>
+  <LI>a host recognizes RouterLifetime.
+  <LI>a host updates the Default Router List if its entry is expires.
+  <LI>the Default Router List holds at the least two entries.
+</UL>
+<PRE>
+  TN               NUT
+  ----------------------
+<BR>
+  State: REACHABLE (for all)
+<BR>
+  ==== echo-request ===>
+       src=off-link global, but LLA is the W's one
+       dst=NUT's global
+<BR>
+  <=== <A HREF="#JDG4">Judgment #4</A>: echo-reply ====
+       src=NUT's global
+       dst=off-link global, but LLA is one of the routers(TN, Y, Z)
+<BR>
+  ==== unsolicited RA ===>
+       src=TN's link-local
+       dst=all-node
+       M=0, O=0
+       <B>RouterLifetime=5</B>
+       ReachableTime=0
+       RetransTimer=0
+       w/ SLLA
+<BR>
+  Wait (7 sec)
+      for the entry of the Default Router List to be expired.
+<BR>
+  ==== echo-request ===>
+       src=off-link global, but LLA is the W's one
+       dst=NUT's global
+<BR>
+  <=== <A HREF="#JDG5">Judgment #5</A>: echo-reply ====
+       src=NUT's global
+       dst=off-link global, but LLA is one of the routers(Y, Z)
+<BR>
+  ==== unsolicited RA ===>
+       src=Y's link-local
+       dst=all-node
+       M=0, O=0
+       <B>RouterLifetime=5</B>
+       ReachableTime=0
+       RetransTimer=0
+       w/ SLLA
+<BR>
+  Wait (7 sec)
+      for the entry of the Default Router List to be expired.
+<BR>
+  ==== echo-request ===>
+       src=off-link global, but LLA is the W's one
+       dst=NUT's global
+<BR>
+  <=== <A HREF="#JDG6">Judgment #6</A>: echo-reply ====
+       src=NUT's global
+       dst=off-link global, but LLA is one of the routers(Z)
+<BR>
+  ==== unsolicited RA ===>
+       src=Z's link-local
+       dst=all-node
+       M=0, O=0
+       <B>RouterLifetime=5</B>
+       ReachableTime=0
+       RetransTimer=0
+       w/ SLLA
+<BR>
+  Wait (7 sec)
+      for the entry of the Default Router List to be expired.
+<BR>
+  ==== echo-request ===>
+       src=off-link global, but LLA is the W's one
+       dst=NUT's global
+<BR>
+  <=== <A HREF="#JDG7">Judgment #7</A>: multicast NS (if any) ====
+       src=NUT's global
+       dst=solicited-node[off-link global]
+       w/ SLLA
+</PRE>
+
+<P>
+<HR>
+<H1><A NAME="JUDGMENT">JUDGMENT</A></H1>
+<A NAME="JDG1"></A>
+
+<P>
+<PRE>  1. If the address is already present in the host's Default Router
+     List and the received Router Lifetime value is zero, immediately
+     time-out the entry.
+</PRE>
+<A NAME="JDG2"></A>
+
+<P>
+<PRE>  2. Whenever the Lifetime of an entry in the Default Router List expires,
+     that entry is discarded.  When removing a router from the Default
+     Router list, NUT must update the Destination Cache in such a way
+     that all entries using the router perform next-hop determination
+     again rather than continue sending traffic to the (deleted) router.
+</PRE>
+<A NAME="JDG3"></A>
+
+<P>
+<PRE>  3. NUT must retain at least two router addresses and should retain more. 
+</PRE>
+<A NAME="JDG4"></A>
+
+<P>
+<PRE>  4. NUT must throw an echo-reply to the default router (NUT or Y or Z).
+</PRE>
+<A NAME="JDG5"></A>
+
+<P>
+<PRE>  5. NUT must throw an echo-reply to the default router (Y or Z).
+</PRE>
+<A NAME="JDG6"></A>
+
+<P>
+<PRE>  6. NUT must throw an echo-reply to the default router (i.e. Z).
+</PRE>
+<A NAME="JDG7"></A>
+
+<P>
+<PRE>  7. NUT must not throw an echo-reply to any routers.
+     NUT may throw multicast NS for onlink determination.
+</PRE>
+<P>
+<HR>
+<H1><A NAME="TERMINATION">TERMINATION</A></H1>
+<P>
+<PRE>  Send RAs to clear the Default Router List:
+  - RA (src=TN) with RouterLifetime=0
+  - RA (src=Y)  with RouterLifetime=0
+  - RA (src=Z)  with RouterLifetime=0
+</PRE>
+<P>
+<HR>
+<H1><A NAME="NOTE">NOTE</A></H1>
+<P>
+<PRE>  The test does not invoke any remote command.
+</PRE>
+<P>
+<HR>
+<H1><A NAME="SEE_ALSO">SEE ALSO</A></H1>
+<P>
+<PRE>  perldoc V6evalTool
+  perldoc V6evalRemote
+</PRE>
+</BODY>
+
+</HTML>

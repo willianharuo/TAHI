@@ -1,0 +1,135 @@
+<HTML>
+<TITLE>IPv6 Conformance Test</TITLE>
+<META NAME="GENERATOR" CONTENT="TAHI IPv6 Conformance Test Suite">
+<BODY BGCOLOR="#FFFFFF">
+<CENTER>
+<H1>IPv6 Conformance Test</H1>
+<HR>
+<TABLE BORDER=0>
+<TR><TD>Tool Version :</TD><TD>REL_2_1_1</TD></TR>
+<TR><TD>Test Program Version :</TD><TD>REL_2_1_1</TD></TR>
+</TABLE>
+<HR>
+<TABLE BORDER=0>
+<TR><TD>Start:</TD><TD>2003/06/11 20:01:27</TD></TR>
+<TR><TD>End :</TD><TD>2003/06/11 20:01:28</TD></TR>
+</TABLE>
+<HR>
+<HR>
+<TABLE BORDER=1>
+<TR>
+<TH>No.</TH><TH>Title</TH>
+<TH>Result</TH><TH>Log</TH><TH>Script</TH><TH>Packet</TH><TH>Dump<BR>(bin)</TH>
+</TR>
+<TR><TD><BR></TD><TD>Initialize</TD><TD><BR></TD><TD><BR></TD><TD><BR></TD><TD><BR></TD><TD><BR></TD></TR>
+<TR>
+<TD>1</TD><TD><A HREF="./BEGIN.html">Initialization</A></TD><TD ALIGN="CENTER">PASS</TD><TD ALIGN="CENTER"><A HREF="1.html">X</A></TD><TD ALIGN="CENTER"><A HREF="./BEGIN.seq">X</A></TD><TD ALIGN="CENTER">-</TD><TD ALIGN="CENTER"><A HREF="1.html.Link0.dump">Link0</A> </TD></TR>
+<TR><TD><BR></TD><TD>Source Address Selection</TD><TD><BR></TD><TD><BR></TD><TD><BR></TD><TD><BR></TD><TD><BR></TD></TR>
+<TR>
+<TD>2</TD><TD><A HREF="./SrcSelectRule1.html">Rule1[Prefer same address]</A></TD><TD ALIGN="CENTER">PASS</TD><TD ALIGN="CENTER"><A HREF="2.html">X</A></TD><TD ALIGN="CENTER"><A HREF="./SrcSelectRule1.seq">X</A></TD><TD ALIGN="CENTER"><A HREF="./ADDR_SELECT.def">X</A></TD><TD ALIGN="CENTER"><A HREF="2.html.Link0.dump">Link0</A> </TD></TR>
+<TR>
+<TD>3</TD><TD><A HREF="./SrcSelectRule1_deprecated.html">Rule1[Prefer same address] with deprecated address</A></TD><TD ALIGN="CENTER">PASS</TD><TD ALIGN="CENTER"><A HREF="3.html">X</A></TD><TD ALIGN="CENTER"><A HREF="./SrcSelectRule1_deprecated.seq">X</A></TD><TD ALIGN="CENTER"><A HREF="./ADDR_SELECT.def">X</A></TD><TD ALIGN="CENTER"><A HREF="3.html.Link0.dump">Link0</A> </TD></TR>
+<TR>
+<TD>4</TD><TD><A HREF="./SrcSelectRule2.html">Rule2[Prefer appropriate scope]</A></TD><TD ALIGN="CENTER">PASS</TD><TD ALIGN="CENTER"><A HREF="4.html">X</A></TD><TD ALIGN="CENTER"><A HREF="./SrcSelectRule2.seq">X</A></TD><TD ALIGN="CENTER"><A HREF="./ADDR_SELECT.def">X</A></TD><TD ALIGN="CENTER"><A HREF="4.html.Link0.dump">Link0</A> </TD></TR>
+<TR>
+<TD>5</TD><TD><A HREF="./SrcSelectRule2_deprecated.html">Rule2[Prefer appropriate scope] with deprecated address</A></TD><TD ALIGN="CENTER">PASS</TD><TD ALIGN="CENTER"><A HREF="5.html">X</A></TD><TD ALIGN="CENTER"><A HREF="./SrcSelectRule2_deprecated.seq">X</A></TD><TD ALIGN="CENTER"><A HREF="./ADDR_SELECT.def">X</A></TD><TD ALIGN="CENTER"><A HREF="5.html.Link0.dump">Link0</A> </TD></TR>
+<TR>
+<TD>6</TD><TD><A HREF="./SrcSelectRule2_TempAddr.html">Rule2[Prefer appropriate scope] with temporary address</A></TD><TD ALIGN="CENTER">PASS</TD><TD ALIGN="CENTER"><A HREF="6.html">X</A></TD><TD ALIGN="CENTER"><A HREF="./SrcSelectRule2_TempAddr.seq">X</A></TD><TD ALIGN="CENTER"><A HREF="./ADDR_SELECT.def">X</A></TD><TD ALIGN="CENTER"><A HREF="6.html.Link0.dump">Link0</A> </TD></TR>
+<TR>
+<TD>7</TD><TD><A HREF="./SrcSelectRule3.html">Rule3[Avoid deprecated addresses]</A></TD><TD ALIGN="CENTER">PASS</TD><TD ALIGN="CENTER"><A HREF="7.html">X</A></TD><TD ALIGN="CENTER"><A HREF="./SrcSelectRule3.seq">X</A></TD><TD ALIGN="CENTER"><A HREF="./ADDR_SELECT.def">X</A></TD><TD ALIGN="CENTER"><A HREF="7.html.Link0.dump">Link0</A> </TD></TR>
+<TR>
+<TD>8</TD><TD><A HREF="./SrcSelectRule3_TempAddr.html">Rule3[Avoid deprecated addresses] with temporary address</A></TD><TD ALIGN="CENTER">PASS</TD><TD ALIGN="CENTER"><A HREF="8.html">X</A></TD><TD ALIGN="CENTER"><A HREF="./SrcSelectRule3_TempAddr.seq">X</A></TD><TD ALIGN="CENTER"><A HREF="./ADDR_SELECT.def">X</A></TD><TD ALIGN="CENTER"><A HREF="8.html.Link0.dump">Link0</A> </TD></TR>
+<TR>
+<TD>9</TD><TD><A HREF="./SrcSelectRule5.html">Rule5[Prefer outgoing interface]</A></TD><TD ALIGN="CENTER">PASS</TD><TD ALIGN="CENTER"><A HREF="9.html">X</A></TD><TD ALIGN="CENTER"><A HREF="./SrcSelectRule5.seq">X</A></TD><TD ALIGN="CENTER"><A HREF="./ADDR_SELECT.def">X</A></TD><TD ALIGN="CENTER"><A HREF="9.html.Link0.dump">Link0</A> <A HREF="9.html.Link1.dump">Link1</A> </TD></TR>
+<TR>
+<TD>10</TD><TD><A HREF="./SrcSelectRule5_deprecated.html">Rule5[Prefer outgoing interface] with deprecated address</A></TD><TD ALIGN="CENTER">PASS</TD><TD ALIGN="CENTER"><A HREF="10.html">X</A></TD><TD ALIGN="CENTER"><A HREF="./SrcSelectRule5_deprecated.seq">X</A></TD><TD ALIGN="CENTER"><A HREF="./ADDR_SELECT.def">X</A></TD><TD ALIGN="CENTER"><A HREF="10.html.Link0.dump">Link0</A> <A HREF="10.html.Link1.dump">Link1</A> </TD></TR>
+<TR>
+<TD>11</TD><TD><A HREF="./SrcSelectRule5_TempAddr.html">Rule5[Prefer outgoing interface] with temporary address</A></TD><TD ALIGN="CENTER">PASS</TD><TD ALIGN="CENTER"><A HREF="11.html">X</A></TD><TD ALIGN="CENTER"><A HREF="./SrcSelectRule5_TempAddr.seq">X</A></TD><TD ALIGN="CENTER"><A HREF="./ADDR_SELECT.def">X</A></TD><TD ALIGN="CENTER"><A HREF="11.html.Link0.dump">Link0</A> <A HREF="11.html.Link1.dump">Link1</A> </TD></TR>
+<TR>
+<TD>12</TD><TD><A HREF="./SrcSelectRule6.html">Rule6[Prefer matching label]</A></TD><TD ALIGN="CENTER">PASS</TD><TD ALIGN="CENTER"><A HREF="12.html">X</A></TD><TD ALIGN="CENTER"><A HREF="./SrcSelectRule6.seq">X</A></TD><TD ALIGN="CENTER"><A HREF="./ADDR_SELECT.def">X</A></TD><TD ALIGN="CENTER"><A HREF="12.html.Link0.dump">Link0</A> </TD></TR>
+<TR>
+<TD>13</TD><TD><A HREF="./SrcSelectRule7.html">Rule7[Prefer public addresses]</A></TD><TD ALIGN="CENTER">PASS</TD><TD ALIGN="CENTER"><A HREF="13.html">X</A></TD><TD ALIGN="CENTER"><A HREF="./SrcSelectRule7.seq">X</A></TD><TD ALIGN="CENTER"><A HREF="./ADDR_SELECT.def">X</A></TD><TD ALIGN="CENTER"><A HREF="13.html.Link0.dump">Link0</A> </TD></TR>
+<TR>
+<TD>14</TD><TD><A HREF="./SrcSelectRule8.html">Rule8[Use longest matching prefix]</A></TD><TD ALIGN="CENTER">PASS</TD><TD ALIGN="CENTER"><A HREF="14.html">X</A></TD><TD ALIGN="CENTER"><A HREF="./SrcSelectRule8.seq">X</A></TD><TD ALIGN="CENTER"><A HREF="./ADDR_SELECT.def">X</A></TD><TD ALIGN="CENTER"><A HREF="14.html.Link0.dump">Link0</A> </TD></TR>
+<TR><TD><BR></TD><TD>Source Address Selection Examples in RFC</TD><TD><BR></TD><TD><BR></TD><TD><BR></TD><TD><BR></TD><TD><BR></TD></TR>
+<TR>
+<TD>15</TD><TD><A HREF="./SrcSelectExample1.html">Example 1 - 4[Prefer appropriate scope]</A></TD><TD ALIGN="CENTER">PASS</TD><TD ALIGN="CENTER"><A HREF="15.html">X</A></TD><TD ALIGN="CENTER"><A HREF="./SrcSelectExample1.seq">X</A></TD><TD ALIGN="CENTER"><A HREF="./ADDR_SELECT.def">X</A></TD><TD ALIGN="CENTER"><A HREF="15.html.Link0.dump">Link0</A> </TD></TR>
+<TR>
+<TD>16</TD><TD><A HREF="./SrcSelectExample5.html">Example 5[Prefer same address]</A></TD><TD ALIGN="CENTER">PASS</TD><TD ALIGN="CENTER"><A HREF="16.html">X</A></TD><TD ALIGN="CENTER"><A HREF="./SrcSelectExample5.seq">X</A></TD><TD ALIGN="CENTER"><A HREF="./ADDR_SELECT.def">X</A></TD><TD ALIGN="CENTER"><A HREF="16.html.Link0.dump">Link0</A> </TD></TR>
+<TR>
+<TD>17</TD><TD><A HREF="./SrcSelectExample6.html">Example 6[Prefer appropriate scope]</A></TD><TD ALIGN="CENTER">PASS</TD><TD ALIGN="CENTER"><A HREF="17.html">X</A></TD><TD ALIGN="CENTER"><A HREF="./SrcSelectExample6.seq">X</A></TD><TD ALIGN="CENTER"><A HREF="./ADDR_SELECT.def">X</A></TD><TD ALIGN="CENTER"><A HREF="17.html.Link0.dump">Link0</A> </TD></TR>
+<TR>
+<TD>18</TD><TD><A HREF="./SrcSelectExample7.html">Example 7[longest-matching-prefix]</A></TD><TD ALIGN="CENTER">PASS</TD><TD ALIGN="CENTER"><A HREF="18.html">X</A></TD><TD ALIGN="CENTER"><A HREF="./SrcSelectExample7.seq">X</A></TD><TD ALIGN="CENTER"><A HREF="./ADDR_SELECT.def">X</A></TD><TD ALIGN="CENTER"><A HREF="18.html.Link0.dump">Link0</A> </TD></TR>
+<TR>
+<TD>19</TD><TD><A HREF="./SrcSelectExample9.html">Example 9[prefer matching label]</A></TD><TD ALIGN="CENTER">PASS</TD><TD ALIGN="CENTER"><A HREF="19.html">X</A></TD><TD ALIGN="CENTER"><A HREF="./SrcSelectExample9.seq">X</A></TD><TD ALIGN="CENTER"><A HREF="./ADDR_SELECT.def">X</A></TD><TD ALIGN="CENTER"><A HREF="19.html.Link0.dump">Link0</A> </TD></TR>
+<TR>
+<TD>20</TD><TD><A HREF="./SrcSelectExample10.html">Example 10[Prefer public addresses]</A></TD><TD ALIGN="CENTER">PASS</TD><TD ALIGN="CENTER"><A HREF="20.html">X</A></TD><TD ALIGN="CENTER"><A HREF="./SrcSelectExample10.seq">X</A></TD><TD ALIGN="CENTER"><A HREF="./ADDR_SELECT.def">X</A></TD><TD ALIGN="CENTER"><A HREF="20.html.Link0.dump">Link0</A> </TD></TR>
+<TR><TD><BR></TD><TD>Destination Address Selection</TD><TD><BR></TD><TD><BR></TD><TD><BR></TD><TD><BR></TD><TD><BR></TD></TR>
+<TR>
+<TD>21</TD><TD><A HREF="./DstSelectRule2.html">Rule2[Prefer matching scope]</A></TD><TD ALIGN="CENTER">PASS</TD><TD ALIGN="CENTER"><A HREF="21.html">X</A></TD><TD ALIGN="CENTER"><A HREF="./DstSelectRule2.seq">X</A></TD><TD ALIGN="CENTER"><A HREF="./ADDR_SELECT.def">X</A></TD><TD ALIGN="CENTER"><A HREF="21.html.Link0.dump">Link0</A> </TD></TR>
+<TR>
+<TD>22</TD><TD><A HREF="./DstSelectRule2_deprecated.html">Rule2[Prefer matching scope] with deprecated address</A></TD><TD ALIGN="CENTER">PASS</TD><TD ALIGN="CENTER"><A HREF="22.html">X</A></TD><TD ALIGN="CENTER"><A HREF="./DstSelectRule2_deprecated.seq">X</A></TD><TD ALIGN="CENTER"><A HREF="./ADDR_SELECT.def">X</A></TD><TD ALIGN="CENTER"><A HREF="22.html.Link0.dump">Link0</A> </TD></TR>
+<TR>
+<TD>23</TD><TD><A HREF="./DstSelectRule3.html">Rule3[Avoid deprecated addresses]</A></TD><TD ALIGN="CENTER">PASS</TD><TD ALIGN="CENTER"><A HREF="23.html">X</A></TD><TD ALIGN="CENTER"><A HREF="./DstSelectRule3.seq">X</A></TD><TD ALIGN="CENTER"><A HREF="./ADDR_SELECT.def">X</A></TD><TD ALIGN="CENTER"><A HREF="23.html.Link0.dump">Link0</A> </TD></TR>
+<TR>
+<TD>24</TD><TD><A HREF="./DstSelectRule5.html">Rule5[Prefer matching label]</A></TD><TD ALIGN="CENTER">PASS</TD><TD ALIGN="CENTER"><A HREF="24.html">X</A></TD><TD ALIGN="CENTER"><A HREF="./DstSelectRule5.seq">X</A></TD><TD ALIGN="CENTER"><A HREF="./ADDR_SELECT.def">X</A></TD><TD ALIGN="CENTER"><A HREF="24.html.Link0.dump">Link0</A> </TD></TR>
+<TR>
+<TD>25</TD><TD><A HREF="./DstSelectRule6.html">Rule6[Prefer higher precedence]</A></TD><TD ALIGN="CENTER">PASS</TD><TD ALIGN="CENTER"><A HREF="25.html">X</A></TD><TD ALIGN="CENTER"><A HREF="./DstSelectRule6.seq">X</A></TD><TD ALIGN="CENTER"><A HREF="./ADDR_SELECT.def">X</A></TD><TD ALIGN="CENTER"><A HREF="25.html.Link0.dump">Link0</A> </TD></TR>
+<TR>
+<TD>26</TD><TD><A HREF="./DstSelectRule8.html">Rule8[Prefer smaller scope]</A></TD><TD ALIGN="CENTER">PASS</TD><TD ALIGN="CENTER"><A HREF="26.html">X</A></TD><TD ALIGN="CENTER"><A HREF="./DstSelectRule8.seq">X</A></TD><TD ALIGN="CENTER"><A HREF="./ADDR_SELECT.def">X</A></TD><TD ALIGN="CENTER"><A HREF="26.html.Link0.dump">Link0</A> </TD></TR>
+<TR>
+<TD>27</TD><TD><A HREF="./DstSelectRule9.html">Rule9[Use longest matching prefix]</A></TD><TD ALIGN="CENTER">PASS</TD><TD ALIGN="CENTER"><A HREF="27.html">X</A></TD><TD ALIGN="CENTER"><A HREF="./DstSelectRule9.seq">X</A></TD><TD ALIGN="CENTER"><A HREF="./ADDR_SELECT.def">X</A></TD><TD ALIGN="CENTER"><A HREF="27.html.Link0.dump">Link0</A> </TD></TR>
+<TR>
+<TD>28</TD><TD><A HREF="./DstSelectRule10.html">Rule10[Otherwise, leave the order unchanged]</A></TD><TD ALIGN="CENTER">PASS</TD><TD ALIGN="CENTER"><A HREF="28.html">X</A></TD><TD ALIGN="CENTER"><A HREF="./DstSelectRule10.seq">X</A></TD><TD ALIGN="CENTER"><A HREF="./ADDR_SELECT.def">X</A></TD><TD ALIGN="CENTER"><A HREF="28.html.Link0.dump">Link0</A> </TD></TR>
+<TR><TD><BR></TD><TD>Destination Address Selection Examples in RFC</TD><TD><BR></TD><TD><BR></TD><TD><BR></TD><TD><BR></TD><TD><BR></TD></TR>
+<TR>
+<TD>29</TD><TD><A HREF="./DstSelectExample4.html">Example 4[Prefer smaller scope]</A></TD><TD ALIGN="CENTER">PASS</TD><TD ALIGN="CENTER"><A HREF="29.html">X</A></TD><TD ALIGN="CENTER"><A HREF="./DstSelectExample4.seq">X</A></TD><TD ALIGN="CENTER"><A HREF="./ADDR_SELECT.def">X</A></TD><TD ALIGN="CENTER"><A HREF="29.html.Link0.dump">Link0</A> </TD></TR>
+<TR>
+<TD>30</TD><TD><A HREF="./DstSelectExample6.html">Example 6[Avoid deprecated addresses]</A></TD><TD ALIGN="CENTER">PASS</TD><TD ALIGN="CENTER"><A HREF="30.html">X</A></TD><TD ALIGN="CENTER"><A HREF="./DstSelectExample6.seq">X</A></TD><TD ALIGN="CENTER"><A HREF="./ADDR_SELECT.def">X</A></TD><TD ALIGN="CENTER"><A HREF="30.html.Link0.dump">Link0</A> </TD></TR>
+<TR>
+<TD>31</TD><TD><A HREF="./DstSelectExample7.html">Example 7[Use longest matching prefix]</A></TD><TD ALIGN="CENTER">PASS</TD><TD ALIGN="CENTER"><A HREF="31.html">X</A></TD><TD ALIGN="CENTER"><A HREF="./DstSelectExample7.seq">X</A></TD><TD ALIGN="CENTER"><A HREF="./ADDR_SELECT.def">X</A></TD><TD ALIGN="CENTER"><A HREF="31.html.Link0.dump">Link0</A> </TD></TR>
+<TR>
+<TD>32</TD><TD><A HREF="./DstSelectExample8.html">Example 8[Prefer matching label]</A></TD><TD ALIGN="CENTER">PASS</TD><TD ALIGN="CENTER"><A HREF="32.html">X</A></TD><TD ALIGN="CENTER"><A HREF="./DstSelectExample8.seq">X</A></TD><TD ALIGN="CENTER"><A HREF="./ADDR_SELECT.def">X</A></TD><TD ALIGN="CENTER"><A HREF="32.html.Link0.dump">Link0</A> </TD></TR>
+<TR>
+<TD>33</TD><TD><A HREF="./DstSelectExample9.html">Example 9[Prefer higher precedence]</A></TD><TD ALIGN="CENTER">PASS</TD><TD ALIGN="CENTER"><A HREF="33.html">X</A></TD><TD ALIGN="CENTER"><A HREF="./DstSelectExample9.seq">X</A></TD><TD ALIGN="CENTER"><A HREF="./ADDR_SELECT.def">X</A></TD><TD ALIGN="CENTER"><A HREF="33.html.Link0.dump">Link0</A> </TD></TR>
+<TR><TD><BR></TD><TD>Destination Address Selection with configure tunnel</TD><TD><BR></TD><TD><BR></TD><TD><BR></TD><TD><BR></TD><TD><BR></TD></TR>
+<TR>
+<TD>34</TD><TD><A HREF="./DstSelectRule7.html">Rule7[Prefer native transport]</A></TD><TD ALIGN="CENTER">PASS</TD><TD ALIGN="CENTER"><A HREF="34.html">X</A></TD><TD ALIGN="CENTER"><A HREF="./DstSelectRule7.seq">X</A></TD><TD ALIGN="CENTER"><A HREF="./ADDR_SELECT.def">X</A></TD><TD ALIGN="CENTER"><A HREF="34.html.Link0.dump">Link0</A> </TD></TR>
+<TR><TD><BR></TD><TD>Termination</TD><TD><BR></TD><TD><BR></TD><TD><BR></TD><TD><BR></TD><TD><BR></TD></TR>
+<TR>
+<TD>35</TD><TD><A HREF="./END.html">Termination</A></TD><TD ALIGN="CENTER">PASS</TD><TD ALIGN="CENTER"><A HREF="35.html">X</A></TD><TD ALIGN="CENTER"><A HREF="./END.seq">X</A></TD><TD ALIGN="CENTER">-</TD><TD ALIGN="CENTER"><A HREF="35.html.Link0.dump">Link0</A> </TD></TR>
+</TABLE>
+</CENTER>
+<HR>
+Index
+<UL>
+  <LI><A HREF="../spec/index.html">IPv6 Specification</A>
+  <LI><A HREF="../icmp/index.html">ICMPv6 for IPv6 Specification</A>
+  <LI><A HREF="../nd/index.html">Neighbor Discovery</A>
+  <LI><A HREF="../stateless-addrconf/index.html">IPv6 Stateless Address Autoconfiguration</A>
+  <LI><A HREF="../pmtu/index.html">IPv6 Path MTU Discovery</A>
+  <LI><A HREF="../router-select/index.html">Default Router Preferences, More-Specific Routes, and Load Sharing</A>
+  <LI><A HREF="../ipsec/index.html">IPSec AH and ESP for IPv6</A>
+  <LI><A HREF="../ipsec-udp/index.html">IPSec ESP for IPv6(UDP)</A>
+  <LI><A HREF="../ipsec4/index.html">IPSec AH and ESP for IPv4</A>
+  <LI><A HREF="../ipsec4-udp/index.html">IPSec AH and ESP for IPv4(UDP)</A>
+  <LI><A HREF="../mip6-cn-20/index.html">Mobility Support in IPv6 (ID-20) - Correspondent Node</A>
+  <LI><A HREF="../mip6-ha-20/index.html">Mobility Support in IPv6 (ID-20) - Home Agent</A>
+  <LI><A HREF="../mip6-mn-20/index.html">Mobility Support in IPv6 (ID-20) - Mobile Node</A>
+  <LI>Default Address Selection for Internet Protocol version 6 (IPv6)
+  <LI><A HREF="../dd/index.html">DNS discovery</A>
+  <LI><A HREF="../pd/index.html">Prefix delegation</A>
+  <LI><A HREF="../tunnel/index.html">IPv6 over IPv4 Tunnel</A>
+  <LI><A HREF="../natpt/index.html">NAT-PT</A>
+  <LI><A HREF="../robust/index.html">Robustness</A>
+</UL>
+
+<UL>
+  <LI><A HREF="../index.html">Up</A>
+  <LI><A HREF="http://www.tahi.org/">TAHI Project</A>
+</UL>
+<HR>
+This Report was generated by
+<A HREF="http://www.tahi.org/">TAHI</A> IPv6 Conformance Test Suite
+</BODY>
+</HTML>

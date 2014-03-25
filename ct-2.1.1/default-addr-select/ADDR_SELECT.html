@@ -1,0 +1,266 @@
+<HTML>
+<HEAD>
+<TITLE>ADDR_SELECT.pm - utility functions for "Default Address Selection for IPv6" test</TITLE>
+<LINK REV="made" HREF="mailto:hackers@FreeBSD.org">
+</HEAD>
+
+<BODY>
+
+<!-- INDEX BEGIN -->
+<!--
+
+<UL>
+
+	<LI><A HREF="#NAME">NAME</A>
+	<LI><A HREF="#SYNOPSIS">SYNOPSIS</A>
+	<LI><A HREF="#DESCRIPTION">DESCRIPTION</A>
+	<LI><A HREF="#SEE_ALSO">SEE ALSO</A>
+</UL>
+-->
+<!-- INDEX END -->
+
+<P>
+<H1><A NAME="NAME">NAME</A></H1>
+<P>
+<PRE>  ADDR_SELECT.pm - utility functions for &quot;Default Address Selection for IPv6&quot; test
+</PRE>
+<P>
+<HR>
+<H1><A NAME="SYNOPSIS">SYNOPSIS</A></H1>
+<P>
+<PRE>  nutReboot
+  nutDefaultRouteAdd
+  nutIPv6AddrAdd
+  nutIPv6AddrAdd_Any
+  nutIPv6AddrDelete
+  nutIPv6AddrDelete_Any
+  nutDeprecatedIPv6AddrAdd
+  nutDeprecatedIPv6AddrAdd_Any
+  nutAutoConfIPv6AddrAdd
+  nutAutoConfIPv6AddrAdd_Any
+  nutPing6
+  nutPing6_Link0
+  nutPing6Async
+  nutPing6Async_Link0
+  nutPing6AsyncWait
+  nutClear
+  prefix2G_ADDR_NUT
+  nutLLA
+  nutInitialize
+  nutInitialize_ConfiguredTunnel
+  checkNUT_SrcAddr
+  checkNUT_SrcAddr_Any
+  nutTempAddrEnable
+  nutTempAddrDisable
+  nutDnsSet
+  nutDnsRemove
+  nutPing62Dest
+  nutPing62Dest_TempAddr
+  nutPing62Dest_Dns
+</PRE>
+<P>
+<HR>
+<H1><A NAME="DESCRIPTION">DESCRIPTION</A></H1>
+<P>
+<PRE>  #nutReboot() - reboot NUT
+</PRE>
+<P>
+<PRE>    This routine calls vRemote(&quot;reboot.rmt&quot;) simply.
+</PRE>
+<P>
+<PRE>  #nutDefaultRouteAdd() - Add IPv6 Default Route in NUT
+</PRE>
+<P>
+<PRE>    route.rmt wrapper method.
+    
+    (FreeBSD)
+    route add -inet6  default &lt;TN-Link0-LinkLocalAddress&gt;%&lt;NUT-Link0&gt;
+</PRE>
+<P>
+<PRE>  #nutIPv6AddrAdd($ADDR,$PLEN) - Add IPv6 Unicast Address in NUT Link0
+</PRE>
+<P>
+<PRE>    manualaddrconf.rmt wrapper method.
+    
+    (FreeBSD)
+    ifconfig &lt;NUT-Link0&gt; inet6 &lt;$ADDR&gt; prefixlen &lt;$PLEN&gt; alias
+</PRE>
+<P>
+<PRE>  #nutIPv6AddrAdd_Any($ADDR,$PLEN,$IF) - Add IPv6 Unicast Address in NUT any Link
+</PRE>
+<P>
+<PRE>    manualaddrconf.rmt wrapper method.
+    
+    (FreeBSD)
+    ifconfig &lt;$IF&gt; inet6 &lt;$ADDR&gt; prefixlen &lt;$PLEN&gt; alias
+</PRE>
+<P>
+<PRE>  #nutIPv6AddrDelete($ADDR,$PLEN) - Delete IPv6 Unicast Address in NUT Link0
+</PRE>
+<P>
+<PRE>    manualaddrconf.rmt wrapper method.
+    
+    (FreeBSD)
+    ifconfig &lt;NUT-Link0&gt; inet6 &lt;$ADDR&gt; prefixlen &lt;$PLEN&gt; delete
+</PRE>
+<P>
+<PRE>  #nutIPv6AddrDelete_Any($ADDR,$PLEN,$IF) - Delete IPv6 Unicast Address in NUT any Link
+</PRE>
+<P>
+<PRE>    manualaddrconf.rmt wrapper method.
+    
+    (FreeBSD)
+    ifconfig &lt;$IF&gt; inet6 &lt;$ADDR&gt; prefixlen &lt;$PLEN&gt; delete
+</PRE>
+<P>
+<PRE>  #nutDeprecatedIPv6AddrAdd($G_PREFIX,$CPP) - Add Deprecated IPv6 Address in NUT Link0
+</PRE>
+<P>
+<PRE>    Send 'ra_DEPRECATED' packet simply.
+</PRE>
+<P>
+<PRE>  #nutDeprecatedIPv6AddrAdd($G_PREFIX,$CPP) - Add Deprecated IPv6 Address in NUT Link0
+</PRE>
+<P>
+<PRE>    Send 'ra_DEPRECATED' packet simply.
+</PRE>
+<P>
+<PRE>  #nutDeprecatedIPv6AddrAdd_Any($G_PREFIX,$CPP,$IF) - Add Deprecated IPv6 Address in NUT any Link
+</PRE>
+<P>
+<PRE>    Send 'ra_DEPRECATED' packet simply.
+</PRE>
+<P>
+<PRE>  #nutAutoConfIPv6AddrAdd($G_PREFIX,$CPP) - Add IPv6 Address in NUT Link0 by RA
+</PRE>
+<P>
+<PRE>    Send 'ra_NORMAL' packet simply.
+</PRE>
+<P>
+<PRE>  #nutAutoConfIPv6AddrAdd_Any($G_PREFIX,$CPP,$IF) - Add IPv6 Address in NUT  any Link by RA
+</PRE>
+<P>
+<PRE>    Send 'ra_NORMAL' packet simply.
+</PRE>
+<P>
+<PRE>  #nutPing6($ADDR) - Ping6 from NUT
+</PRE>
+<P>
+<PRE>    ping6.rmt wrapper method.
+    
+    (FreeBSD)
+    ping6 -n -c 1 -i 1 -h 64 -s 2 -p 00 &lt;$ADDR&gt;
+</PRE>
+<P>
+<PRE>  #nutPing6_Link0($ADDR) - Ping6 from NUT
+</PRE>
+<P>
+<PRE>    ping6.rmt wrapper method.
+    
+    (FreeBSD)
+    ping6 -n -c 1 -i 1 -h 64 -s 2 -p 00 -I &lt;NUT-Link0&gt; &lt;$ADDR&gt;
+</PRE>
+<P>
+<PRE>  #nutPing6Async($ADDR) - Ping6 from NUT
+</PRE>
+<P>
+<PRE>    ping6.rmt wrapper method.
+    * use vRemoteAsync()
+    
+    (FreeBSD)
+    ping6 -n -c 1 -i 1 -h 64 -s 2 -p 00 &lt;$ADDR&gt;
+</PRE>
+<P>
+<PRE>  #nutPing6Async_Link0($ADDR) - Ping6 from NUT
+</PRE>
+<P>
+<PRE>    ping6.rmt wrapper method.
+    * use vRemoteAsync()
+    
+    (FreeBSD)
+    ping6 -n -c 1 -i 1 -h 64 -s 2 -p 00 -I &lt;NUT-Link0&gt; &lt;$ADDR&gt;
+</PRE>
+<P>
+<PRE>  #nutPing6AsyncWait($ADDR) -
+</PRE>
+<P>
+<PRE>    vRemoteAsyncWait() wrapper method.
+</PRE>
+<P>
+<PRE>  #ping6_Destination2SOURCE1($CPP,$IF) - internal subroutine
+</PRE>
+<P>
+<PRE>  #nutClear($ADDR1,$PLEN1, ; $ADDR2,$PLEN2,$ADDR3,$PLEN3,$ADDR4,$PLEN4) - delete all address &amp; NCE in NUT Link0
+</PRE>
+<P>
+<PRE>    Call nutIPv6AddrDelete($ADDR1,$PLEN1) , nutIPv6AddrDelete($ADDR2,$PLEN2),...  simply
+    and Call clearprefix.rmt &amp; clearnc.rmt &amp; cleardefr.rmt simply.
+</PRE>
+<P>
+<PRE>  #prefix2G_ADDR_NUT($G_PREFIX,$IF_SELECT) - return grobal address ($G_PREFIX::NUT'sEUI64)
+</PRE>
+<P>
+<PRE>  #nutLLA($IF_SELECT) - return link local address (NUT's LLA)
+</PRE>
+<P>
+<PRE>  #nutInitialize() - NUT initialization
+  
+    Call nutDefaultRouteAdd() simply
+</PRE>
+<P>
+<PRE>  #nutInitialize_ConfiguredTunnel($IPv4_ROUTER,$TUN_SRC,$TUN_END,$TUN_PREFIX) - NUT initialization ConfiguredTunnel
+</PRE>
+<P>
+<PRE>  #checkNUT_SrcAddr($CPP_ORG,$CHECK_SRC1,$CHECK_DST1 ; $CHECK_SRC2,$CHECK_DST2,$CHECK_SRC3,$CHECK_DST3,$CHECK_SRC4,$CHECK_DST4) - check All source address in NUT
+     
+     Send ping6 from CHECK_DST1 to CHECK_SRC1,
+     Send ping6 from CHECK_DST2 to CHECK_SRC2,
+     Send ping6 from CHECK_DST3 to CHECK_SRC3,
+     Send ping6 from CHECK_DST4 to CHECK_SRC4
+     
+     return true(1) : ping6 success
+     return false(0) : One of ping6 fail
+</PRE>
+<P>
+<PRE>  # checkNUT_SrcAddr_Any($CPP_ORG,$CHECK_SRC1,$CHECK_DST1,$IF_SELECT) - check source address in NUT any Link
+</PRE>
+<P>
+<PRE>     Send ping6 from CHECK_DST1 to CHECK_SRC1($IF_SELECT)
+</PRE>
+<P>
+<PRE>     return true(1) : ping6 success
+     return false(0) : ping6 fail
+</PRE>
+<P>
+<PRE>  #nutTempAddrEnable() - NUT enable temporary address
+</PRE>
+<P>
+<PRE>  #nutTempAddrDisable() - NUT disable temporary address
+</PRE>
+<P>
+<PRE>  #nutDnsSet($DNS_ADDR) - NUT set DNS(server=$DNS_ADDR)
+</PRE>
+<P>
+<PRE>  #nutDnsRemove() - NUT remove DNS
+</PRE>
+<P>
+<PRE>  #nutPing62Dest() - ping6 NUT to DESTNATION
+</PRE>
+<P>
+<PRE>  #nutPing62Dest_TempAddr() - ping6 NUT to DESTNATION
+</PRE>
+<P>
+<PRE>  #nutPing62Dest_Dns() - ping6 NUT to DESTNATION
+</PRE>
+<P>
+<HR>
+<H1><A NAME="SEE_ALSO">SEE ALSO</A></H1>
+<A HREF="./ADDR_SELECT.pm">ADDR_SELECT.pm</A>
+
+<P>
+<PRE>  perldoc V6EvalTool
+  perldoc V6Remote
+</PRE>
+</BODY>
+
+</HTML>

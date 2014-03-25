@@ -1,0 +1,118 @@
+//
+// Copyright (C) 1999, 2000, 2001, 2002, 2003 Yokogawa Electric Corporation,
+// IPA (Information-technology Promotion Agency, Japan).
+// All rights reserved.
+// 
+// Redistribution and use of this software in source and binary forms, with 
+// or without modification, are permitted provided that the following 
+// conditions and disclaimer are agreed and accepted by the user:
+// 
+// 1. Redistributions of source code must retain the above copyright 
+// notice, this list of conditions and the following disclaimer.
+// 
+// 2. Redistributions in binary form must reproduce the above copyright 
+// notice, this list of conditions and the following disclaimer in the 
+// documentation and/or other materials provided with the distribution.
+// 
+// 3. Neither the names of the copyrighters, the name of the project which 
+// is related to this software (hereinafter referred to as "project") nor 
+// the names of the contributors may be used to endorse or promote products 
+// derived from this software without specific prior written permission.
+// 
+// 4. No merchantable use may be permitted without prior written 
+// notification to the copyrighters. However, using this software for the 
+// purpose of testing or evaluating any products including merchantable 
+// products may be permitted without any notification to the copyrighters.
+// 
+// 
+// 
+// THIS SOFTWARE IS PROVIDED BY THE COPYRIGHTERS, THE PROJECT AND 
+// CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING 
+// BUT NOT LIMITED THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS 
+// FOR A PARTICULAR PURPOSE, ARE DISCLAIMED.  IN NO EVENT SHALL THE 
+// COPYRIGHTERS, THE PROJECT OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, 
+// INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES 
+// (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR 
+// SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) 
+// HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN 
+// CONTRACT,STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) 
+// ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF 
+// THE POSSIBILITY OF SUCH DAMAGE.
+//
+// GLOBAL_manyprfxopt_lt.def
+//
+// $TAHI: ct/stateless-addrconf/GLOBAL_manyprfxopt.def,v 1.4 2001/10/05 06:39:20 masaxmasa Exp $
+
+
+#define  DADV6ADDR v6merge(_GLOBAL0_UCAST_PRFX, _GLOBAL0_UCAST_PRFXLEN, nutv6())
+#include "BASIC.def"
+
+_PRFXOPT_define(prefixopt_test0, v6(_GLOBAL0_UCAST_PRFX), 64,ValidLifetime=200; PreferredLifetime=100; )
+_PRFXOPT_define(prefixopt_test1, v6(_GLOBAL1_UCAST_PRFX), 64,ValidLifetime=200; PreferredLifetime=100; )
+_PRFXOPT_define(prefixopt_test2, v6(_GLOBAL2_UCAST_PRFX), 64,ValidLifetime=200; PreferredLifetime=100; )
+_PRFXOPT_define(prefixopt_test3, v6(_GLOBAL3_UCAST_PRFX), 64,ValidLifetime=200; PreferredLifetime=100; )
+_PRFXOPT_define(prefixopt_test4, v6(_GLOBAL4_UCAST_PRFX), 64,ValidLifetime=200; PreferredLifetime=100; )
+_PRFXOPT_define(prefixopt_test5, v6(_GLOBAL5_UCAST_PRFX), 64,ValidLifetime=200; PreferredLifetime=100; )
+_PRFXOPT_define(prefixopt_test6, v6(_GLOBAL6_UCAST_PRFX), 64,ValidLifetime=200; PreferredLifetime=100; )
+_PRFXOPT_define(prefixopt_test7, v6(_GLOBAL7_UCAST_PRFX), 64,ValidLifetime=200; PreferredLifetime=100; )
+_PRFXOPT_define(prefixopt_test8, v6(_GLOBAL8_UCAST_PRFX), 64,ValidLifetime=200; PreferredLifetime=100; )
+_PRFXOPT_define(prefixopt_test9, v6(_GLOBAL9_UCAST_PRFX), 64,ValidLifetime=200; PreferredLifetime=100; )
+_PRFXOPT_define(prefixopt_test10,v6(_GLOBAL10_UCAST_PRFX), 64,ValidLifetime=200; PreferredLifetime=100; )
+_PRFXOPT_define(prefixopt_test11,v6(_GLOBAL11_UCAST_PRFX), 64,ValidLifetime=200; PreferredLifetime=100; )
+_PRFXOPT_define(prefixopt_test12,v6(_GLOBAL12_UCAST_PRFX), 64,ValidLifetime=200; PreferredLifetime=100; )
+_PRFXOPT_define(prefixopt_test13,v6(_GLOBAL13_UCAST_PRFX), 64,ValidLifetime=200; PreferredLifetime=100; )
+_PRFXOPT_define(prefixopt_test14,v6(_GLOBAL14_UCAST_PRFX), 64,ValidLifetime=200; PreferredLifetime=100; )
+_PRFXOPT_define(prefixopt_test15,v6(_GLOBAL15_UCAST_PRFX), 64,ValidLifetime=200; PreferredLifetime=100; )
+_PRFXOPT_define(prefixopt_test16,v6(_GLOBAL16_UCAST_PRFX), 64,ValidLifetime=200; PreferredLifetime=100; )
+_PRFXOPT_define(prefixopt_test17,v6(_GLOBAL17_UCAST_PRFX), 64,ValidLifetime=200; PreferredLifetime=100; )
+_PRFXOPT_define(prefixopt_test18,v6(_GLOBAL18_UCAST_PRFX), 64,ValidLifetime=200; PreferredLifetime=100; )
+_PRFXOPT_define(prefixopt_test19,v6(_GLOBAL19_UCAST_PRFX), 64,ValidLifetime=200; PreferredLifetime=100; )
+_PRFXOPT_define(prefixopt_test20,v6(_GLOBAL20_UCAST_PRFX), 64,ValidLifetime=200; PreferredLifetime=100; )
+_PRFXOPT_define(prefixopt_test21,v6(_GLOBAL21_UCAST_PRFX), 64,ValidLifetime=200; PreferredLifetime=100; )
+_PRFXOPT_define(prefixopt_test22,v6(_GLOBAL22_UCAST_PRFX), 64,ValidLifetime=200; PreferredLifetime=100; )
+_PRFXOPT_define(prefixopt_test23,v6(_GLOBAL23_UCAST_PRFX), 64,ValidLifetime=200; PreferredLifetime=100; )
+_PRFXOPT_define(prefixopt_test24,v6(_GLOBAL24_UCAST_PRFX), 64,ValidLifetime=200; PreferredLifetime=100; )
+_PRFXOPT_define(prefixopt_test25,v6(_GLOBAL25_UCAST_PRFX), 64,ValidLifetime=200; PreferredLifetime=100; )
+_PRFXOPT_define(prefixopt_test26,v6(_GLOBAL26_UCAST_PRFX), 64,ValidLifetime=200; PreferredLifetime=100; )
+_PRFXOPT_define(prefixopt_test27,v6(_GLOBAL27_UCAST_PRFX), 64,ValidLifetime=200; PreferredLifetime=100; )
+_PRFXOPT_define(prefixopt_test28,v6(_GLOBAL28_UCAST_PRFX), 64,ValidLifetime=200; PreferredLifetime=100; )
+_PRFXOPT_define(prefixopt_test29,v6(_GLOBAL29_UCAST_PRFX), 64,ValidLifetime=200; PreferredLifetime=100; )
+
+
+FEM_ADDRCONF_ra(usolra, _HETHER_src2allnodes,
+		_SRC(v6src());
+		,
+		option=_SLLOPT_src;
+		option=prefixopt_test0;
+		option=prefixopt_test1;
+		option=prefixopt_test2;
+		option=prefixopt_test3;
+		option=prefixopt_test4;
+		option=prefixopt_test5;
+		option=prefixopt_test6;
+		option=prefixopt_test7;
+		option=prefixopt_test8;
+		option=prefixopt_test9;
+		option=prefixopt_test10;
+		option=prefixopt_test11;
+		option=prefixopt_test12;
+		option=prefixopt_test13;
+		option=prefixopt_test14;
+		option=prefixopt_test15;
+		option=prefixopt_test16;
+		option=prefixopt_test17;
+		option=prefixopt_test18;
+		option=prefixopt_test19;
+		option=prefixopt_test20;
+		option=prefixopt_test21;
+		option=prefixopt_test22;
+		option=prefixopt_test23;
+		option=prefixopt_test24;
+		option=prefixopt_test25;
+		option=prefixopt_test26;
+		option=prefixopt_test27;
+		option=prefixopt_test28;
+		option=prefixopt_test29;
+		)
+
+//end

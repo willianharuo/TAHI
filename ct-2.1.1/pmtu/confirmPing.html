@@ -1,0 +1,174 @@
+<HTML>
+<HEAD>
+<TITLE>confirmPing - Confirm if NUT can reply to variable size of 
+	ICMP Echo Request</TITLE>
+<LINK REV="made" HREF="mailto:hackers@FreeBSD.org">
+</HEAD>
+
+<BODY>
+
+<!-- INDEX BEGIN -->
+<!--
+
+<UL>
+
+	<LI><A HREF="#NAME">NAME</A>
+	<LI><A HREF="#TARGET">TARGET</A>
+	<LI><A HREF="#SYNOPSIS">SYNOPSIS</A>
+	<LI><A HREF="#NETWORK_CONFIGURATION">NETWORK CONFIGURATION</A>
+	<LI><A HREF="#INITIALIZATION">INITIALIZATION</A>
+	<LI><A HREF="#TEST_PROCEDURE">TEST PROCEDURE</A>
+	<LI><A HREF="#JUDGMENT">JUDGMENT</A>
+</UL>
+-->
+<!-- INDEX END -->
+
+<P>
+<H1><A NAME="NAME">NAME</A></H1>
+<P>
+<PRE>        confirmPing - Confirm if NUT can reply to variable size of 
+        ICMP Echo Request
+</PRE>
+<P>
+<HR>
+<H1><A NAME="TARGET">TARGET</A></H1>
+<P>
+<PRE>        Host
+</PRE>
+<P>
+<HR>
+<H1><A NAME="SYNOPSIS">SYNOPSIS</A></H1>
+<P>
+<PRE>        confirmPing.seq [-tooloption ...] -p confirmPing.def
+</PRE>
+<P>
+<HR>
+<H1><A NAME="NETWORK_CONFIGURATION">NETWORK CONFIGURATION</A></H1>
+<P>
+<PRE>        This test just confirms if NUT can reply to variable size of 
+        ICMP Echo Request
+</PRE>
+<P>
+<PRE>        In this test, NUT is a HOST, TN plays as both of HOST and Router.
+        
+        Phisical Network configuration
+        
+        --------+---------------+--------------
+                |               |
+                NUT             TN
+</PRE>
+<P>
+<PRE>        Logical Network Configuration
+</PRE>
+<P>
+<PRE>                                NUT
+                                |
+        ----------------+-----------------
+                        |
+                        Router
+                        |
+        ----------------+-----------------
+                | 
+                HOST-A
+</PRE>
+<P>
+<PRE>        NUT &lt; --- Router --- &gt; HOST A
+</PRE>
+<P>
+<HR>
+<H1><A NAME="INITIALIZATION">INITIALIZATION</A></H1>
+<P>
+<PRE>        The TN send a RA to assign global address prefix.
+</PRE>
+<P>
+<PRE>        TN              NUT
+</PRE>
+<P>
+<PRE>        -------------------
+</PRE>
+<P>
+<PRE>        ===multicast RA===&gt;
+        src=TN's link-local
+        dst=LinkLocal-all-node                                                  
+        M=0, O=0,
+        Lifetime=3600, ReachableTime=60000, RetransTimer=1005
+        Prefix:
+           L=1, A=1,                       
+           ValidLifetime=3600005, PreferredLifetime=3600005
+           Prefix=3ffe:501:ffff:100::, PrefixLength=64                      
+   
+          Wait (5 sec.)
+                 Ignoring DAD packets for global address.                 
+</PRE>
+<P>
+<HR>
+<H1><A NAME="TEST_PROCEDURE">TEST PROCEDURE</A></H1>
+<P>
+<PRE>        &quot;confirmPing&quot; confirms the availability of NUT for variable size of
+        PING.
+        
+         TN                     NUT
+         |                       |
+        -+-----------------------+-
+</PRE>
+<P>
+<PRE>        1.
+        TN send Echo Request size=64.  
+        
+         === echo request(64) ===&gt;
+</PRE>
+<P>
+<PRE>        2.
+        NUT send Echo Reply size=64.
+        &lt;&lt; JUDGMENT 1 &gt;&gt;
+        &lt;=== echo reply(64) ===
+</PRE>
+<P>
+<PRE>        3.
+        TN send Echo Request size=1280.  
+        
+         === echo request(1280) ===&gt;
+</PRE>
+<P>
+<PRE>        4.
+        NUT send Echo Reply size=1280.
+        &lt;&lt; JUDGMENT 2 &gt;&gt;
+        &lt;=== echo reply(1280) ===
+</PRE>
+<P>
+<PRE>        5.
+        TN send Echo Request size=1500.  
+        
+         === echo request(1500) ===&gt;
+</PRE>
+<P>
+<PRE>        6.
+        NUT send Echo Reply size=1500.
+        &lt;&lt; JUDGMENT 3 &gt;&gt;
+        &lt;=== echo reply(1500) ===
+</PRE>
+<P>
+<HR>
+<H1><A NAME="JUDGMENT">JUDGMENT</A></H1>
+<P>
+<PRE>        &lt;&lt; JUDGMENT 1 -PASS- &gt;&gt;
+                &quot;PASS&quot; means that NUT received the ICMP Echo Request 
+                size=64Byte, and NUT can send ICMP Echo Reply size=64Byte.
+</PRE>
+<P>
+<PRE>        &lt;&lt; JUDGMENT 2 -PASS- &gt;&gt;
+                &quot;PASS&quot; means that NUT received the ICMP Echo Request 
+                size=1280Byte, and NUT can send ICMP Echo Reply size=1280Byte.
+</PRE>
+<P>
+<PRE>        &lt;&lt; JUDGMENT 3 -PASS- &gt;&gt;
+                &quot;PASS&quot; means that NUT received the ICMP Echo Request 
+                size=1500Byte, and NUT can send ICMP Echo Reply size=1500Byte.
+</PRE>
+<P>
+<PRE>        perldoc V6evalTool
+        perldoc V6evalRemote
+</PRE>
+</BODY>
+
+</HTML>

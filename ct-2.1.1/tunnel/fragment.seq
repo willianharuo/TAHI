@@ -1,0 +1,400 @@
+#!/usr/bin/perl
+#
+# Copyright (C) 1999, 2000, 2001, 2002, 2003 Yokogawa Electric Corporation,
+# IPA (Information-technology Promotion Agency, Japan).
+# All rights reserved.
+# 
+# Redistribution and use of this software in source and binary forms, with 
+# or without modification, are permitted provided that the following 
+# conditions and disclaimer are agreed and accepted by the user:
+# 
+# 1. Redistributions of source code must retain the above copyright 
+# notice, this list of conditions and the following disclaimer.
+# 
+# 2. Redistributions in binary form must reproduce the above copyright 
+# notice, this list of conditions and the following disclaimer in the 
+# documentation and/or other materials provided with the distribution.
+# 
+# 3. Neither the names of the copyrighters, the name of the project which 
+# is related to this software (hereinafter referred to as "project") nor 
+# the names of the contributors may be used to endorse or promote products 
+# derived from this software without specific prior written permission.
+# 
+# 4. No merchantable use may be permitted without prior written 
+# notification to the copyrighters. However, using this software for the 
+# purpose of testing or evaluating any products including merchantable 
+# products may be permitted without any notification to the copyrighters.
+# 
+# 
+# 
+# THIS SOFTWARE IS PROVIDED BY THE COPYRIGHTERS, THE PROJECT AND 
+# CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING 
+# BUT NOT LIMITED THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS 
+# FOR A PARTICULAR PURPOSE, ARE DISCLAIMED.  IN NO EVENT SHALL THE 
+# COPYRIGHTERS, THE PROJECT OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, 
+# INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES 
+# (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR 
+# SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) 
+# HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN 
+# CONTRACT,STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) 
+# ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF 
+# THE POSSIBILITY OF SUCH DAMAGE.
+#
+# $TAHI: ct/tunnel/fragment.seq,v 1.11 2001/10/05 06:39:22 masaxmasa Exp $
+########################################################################
+BEGIN { $V6evalTool::TestVersion = '$Name: REL_2_1_1 $'; }
+use V6evalTool;
+use tunnel;
+
+checkNUT(router);
+
+$IF=$tunnel::IF_ID_0;
+$IF1=$tunnel::IF_ID_1;
+
+$PASS=$tunnel::PASS;
+$WARN=$tunnel::WARN;
+$FAIL=$tunnel::FAIL;
+$FATAL=$tunnel::FATAL;
+
+$ON=$tunnel::ON;
+$OFF=$tunnel::OFF;
+$result;
+
+%pktdesc = (
+	echo_request_LINK1_v4_tn2nut_OFFLINK => 'TN(Offlink address) --ICMPv4 Echo Request (size 1450)-->NUT',
+	echo_reply_LINK1_v4_nut2tn_OFFLINK => 'TN(Offlink address) <--ICMPv4 Echo Reply (size 1450)--NUT',
+	v6_echo_request_LINK0_tn2nut_OFFLINK_1280 => 'TN --ICMPv4 Echo Request (size 1280)-->NUT(tunnel)',
+	v6overv4_echo_request_LINK1_nut2tn_1300_DF => 'NUT -->IPv4 packet '
+
+);
+
+vCapture($IF);
+vCapture($IF1);
+
+$ret=makeNCE_TN_LLA();
+if( $ret !=0) {
+        vLogHTML("<FONT COLOR=#FF0000><H4>NUT can not be initialized !!</H4></FONT>");
+        goto error;
+}else {
+        vLogHTML("<H4>--- TN can make TN's link local address NCE in TN ---</H4>");
+}
+
+$ret=makeNCE_TN_GA();
+if( $ret !=0) {
+        vLogHTML("<FONT COLOR=#FF0000><H4>NUT can not be initialized !!</H4></FONT>");
+        goto error;
+}else {
+        vLogHTML("<H4>--- TN can make TN's global address NCE in TN ---</H4>");
+}
+
+$ret=makeARPTable_LINK1();
+if( $ret !=0) {
+        vLogHTML("<FONT COLOR=#FF0000><H4>NUT can not convert v4 address to ethernet address !!</H4></FONT>");
+        goto error;
+}else {
+        vLogHTML("<H4>--- NUT can convert v4 address to ethernet address ---</H4>");
+}
+
+$ret=config_tunnel_mtu("1500");
+if($ret != 0) {
+	vLogHTML("<FONT COLOR=#FF0000><H4>NUT can not set tunnel MTU !!</H4></FONT>");
+	goto error;
+}else {
+        vLogHTML("<H4>--- NUT can set tunnel MTU ---</H4>");
+}
+
+vLogHTML("<H4>--- Test part ---</H4>");
+
+vClear($IF);
+vClear($IF1);
+
+vSend($IF, v6_echo_request_LINK0_tn2nut_OFFLINK_1280);
+
+%ret=vRecv($IF1,2,0,0,v6overv4_echo_request_LINK1_nut2tn_1300,v6overv4_echo_request_LINK1_nut2tn_1300_DF);
+if( $ret{status} !=0) {
+	vLogHTML("<FONT COLOR=#FF0000><H4>TN can not receive Echo Reply from NUT</H4></FONT>");
+	%ret=vRecv($IF,1,0,0,v6overv4_echo_request_LINK1_nut2tn_1500);
+	goto error;
+}elsif ($ret{recvFrame} eq "v6overv4_echo_request_LINK1_nut2tn_1300_DF" ) {
+	vLogHTML("<H4>NUT use IPv4 Path MTU algorithm across the tunnel</H4>");
+	$ipv4_pmtu = $ON;
+}elsif ($ret{recvFrame} eq "v6overv4_echo_request_LINK1_nut2tn_1300" ) {
+	vLogHTML("<H4>NUT use the MTU of the link layer (under IPv4)</H4>");
+	$ipv4_pmtu = $OFF;
+}	
+
+
+vClear($IF);
+vClear($IF1);
+
+#
+# v4PMTU-20 = 1400
+vLogHTML("<H4>v4PMTU-20 = 1400</H4>");
+
+change_tunnel_mtu(1420);
+
+vSend($IF, v6_echo_request_LINK0_tn2nut_OFFLINK_1401);
+
+%ret=vRecv($IF,2,0,0,icmp6_TooBigMesg_LINK0_nut2tn_1400);
+if( $ret{status} !=0) {
+	vLogHTML("<FONT COLOR=#FF0000><H4>TN can not receive Echo Reply from NUT</H4></FONT><BR>");
+	%ret=vRecv($IF1,1,0,0,v6overv4_echo_request_LINK1_nut2tn_1421);
+	$result=$FAIL;
+}else {
+	vLogHTML("<H4>TN can receive Echo Reply from NUT</H4><BR>");
+}	
+
+vSend($IF, v6_echo_request_LINK0_tn2nut_OFFLINK_1400);
+
+%ret=vRecv($IF1,2,0,0,v6overv4_echo_request_LINK1_nut2tn_1420_DF,v6overv4_echo_request_LINK1_nut2tn_1420);
+if ($ret{recvFrame} eq "v6overv4_echo_request_LINK1_nut2tn_1420_DF" && $ipv4_pmtu == $ON) {
+	vLogHTML("<H4>TN can receive correct Echo Reply from NUT</H4><BR>");
+}elsif ($ret{recvFrame} eq "v6overv4_echo_request_LINK1_nut2tn_1420" && $ipv4_pmtu == $OFF) {
+	vLogHTML("<H4>TN can receive correct Echo Reply from NUT</H4><BR>");
+}else {
+	vLogHTML("<FONT COLOR=#FF0000><H4>TN can not receive Echo Reply from NUT</H4></FONT><BR>");
+	%ret=vRecv($IF,1,0,0,icmp6_TooBigMesg_LINK0_nut2tn_1400);
+	$result=$FAIL;
+}
+
+vClear($IF);
+vClear($IF1);
+
+#
+# v4PMTU-20 = 1280
+vLogHTML("<H4>v4PMTU-20 = 1280</H4>");
+
+change_tunnel_mtu(1300);
+
+# send ICMPv6 Echo Request (size=1400)
+vSend($IF, v6_echo_request_LINK0_tn2nut_OFFLINK_1400);
+
+%ret=vRecv($IF,2,0,0,icmp6_TooBigMesg_LINK0_nut2tn_1280);
+if( $ret{status} !=0) {
+	vLogHTML("<FONT COLOR=#FF0000><H4>TN can not receive Echo Reply from NUT</H4></FONT><BR>");
+	%ret=vRecv($IF1,1,0,0,v6overv4_echo_request_LINK1_nut2tn_1420);
+	$result=$FAIL;
+}else {
+	vLogHTML("<H4>TN can receive ICMPv6 Packet Too Big message from NUT</H4><BR>");
+}	
+
+# send ICMPv6 Echo Request (size=1281)
+vSend($IF, v6_echo_request_LINK0_tn2nut_OFFLINK_1281);
+
+%ret=vRecv($IF,2,0,0,icmp6_TooBigMesg_LINK0_nut2tn_1280);
+if( $ret{status} !=0) {
+	vLogHTML("<FONT COLOR=#FF0000><H4>TN can not receive Echo Reply from NUT</H4></FONT><BR>");
+	%ret=vRecv($IF1,1,0,0,v6overv4_echo_request_LINK1_nut2tn_1301);
+	$result=$FAIL;
+}else {
+	vLogHTML("<H4>TN can receive ICMPv6 Packet Too Big message from NUT</H4><BR>");
+}	
+
+# send ICMPv6 Echo Request (size=1280)
+vSend($IF, v6_echo_request_LINK0_tn2nut_OFFLINK_1280);
+
+%ret=vRecv($IF1,2,0,0,v6overv4_echo_request_LINK1_nut2tn_1300_noset_DF);
+if( $ret{status} !=0) {
+	vLogHTML("<FONT COLOR=#FF0000><H4>TN can not receive Echo Reply from NUT</H4></FONT><BR>");
+	%ret=vRecv($IF,1,0,0,icmp6_TooBigMesg_LINK0_nut2tn_1280);
+	$result=$FAIL;
+}else {
+	vLogHTML("<H4>TN can receive Echo Reply from NUT</H4><BR>");
+}	
+
+if ($result == $PASS) {
+	vLogHTML("<H3>OK</H3>");
+	exit $V6evalTool::exitPass;
+}else {
+	goto error;
+}
+
+
+
+sub change_tunnel_mtu ($) {
+	my ($v4_mtu) = @_;
+	my ($packet_too_big, $tunnel_mtu);
+
+	if($ipv4_pmtu == $ON) {
+		vSend($IF1,echo_request_LINK1_v4_tn2nut_OFFLINK);
+		%ret=vRecv($IF1,2,0,0,echo_reply_LINK1_v4_nut2tn_OFFLINK);
+		if( $ret{status} !=0) {
+				vLogHTML("<FONT COLOR=#FF0000><H4>TN can not receive Echo Reply from NUT</H4></FONT><BR>");
+		}
+
+		# send ICMPv4 Packet Too Big message
+		$packet_too_big="icmp4_packet_too_big_LINK1_tn2nut_MTU_".$v4_mtu;
+		vSend($IF1, $packet_too_big);
+		return $PASS;
+	}else {
+		$tunnel_mtu = $v4_mtu - 20;  	# 20 : IPv4 Header size
+		$ret=config_tunnel_mtu($tunnel_mtu);
+		if( $ret{status} !=0) {
+			vLogHTML("<FONT COLOR=#FF0000><H4>TN can not change NUT's MTU</H4></FONT><BR>");
+			goto error;
+		}
+	}
+}
+
+
+error:
+
+vLogHTML("<FONT COLOR=#FF0000><H3>NG</H3></FONT>");
+exit $V6evalTool::exitFail;
+
+error_WARN:
+
+vLogHTML("<FONT COLOR=#FF0000><H3>WARN</H3></FONT>");
+exit $V6evalTool::exitWarn;
+
+
+
+
+########################################################################
+__END__
+
+=head1 NAME
+
+	fragment.seq - Verify that node perform fragmentation inside 
+	tunnel
+
+=head1 TARGET
+
+	Router
+
+=head1 SYNOPSIS
+
+	fragment.seq [-tooloption ...] -p fragment.def
+
+=head1 INITIALIZATION
+
+=begin html
+<PRE>
+	Before this test starts, run <A HREF="initialize.html">initialize.seq</A>.
+	In subroutine "change_tunnel_mtu" use two way of changeing 
+	tunnel's path MTU.
+	If DF flag of encapsulating IPv4 Header isn't set, the test consider 
+	that node do not execute IPv4 path MTU. and change node's link MTU.
+	If DF flag of encapsulating IPv4 Header is set, test consider 
+	that node execute IPv4 path MTU. and send ICMPv4 Packet Too Big 
+	message.
+</PRE>
+
+=end html
+
+=head1 TEST PROCEDURE
+
+	This test verifies that node can employ fragmentation algorithm 
+	to determine when to forward an IPv6 packet that is larger than 
+	the tunnel's path mtu.
+	
+    Network Topology
+
+    Link0
+    --------------------------
+        |               |
+       TN              NUT
+        |               |
+    --------------------------
+    Link1
+
+    TN -- (Link0) -- NUT        TN -- (Link1) -- NUT
+
+    ---------------------      ------------------------
+    0.
+    set tunnel's mtu is 1500
+
+    -- V4PMTU -20 = 1400
+    1.1.1
+    ===================>
+    ICMPv6 Echo Request
+    	packet size : 1401
+
+    1.1.2
+    <<JUDGMENT>>
+    <===================
+    ICMPv6 Packet Too Big message 
+    	MTU : 1400
+
+    1.2.1
+    ===================>
+    ICMPv6 Echo Request
+    	packet size : 1400
+
+    1.2.2
+    <<JUDGMENT>>
+                               <===================
+    IPv4 packet encapsulating IPv6 packet
+
+    -- V4PMTU -20 = 1280
+
+    2.1.1
+    ===================>
+    ICMPv6 Echo Request
+    	packet size : 1400
+
+    2.1.2
+    <<JUDGMENT>>
+    <===================
+    ICMPv6 Packet Too Big message 
+    	MTU : 1280
+
+    2.2.1
+    ===================>
+    ICMPv6 Echo Request
+    	packet size : 1281
+
+    2.2.2
+    <<JUDGMENT>>
+    <===================
+    ICMPv6 Packet Too Big message 
+        MTU : 1280
+
+    2.3.1
+    ===================>
+    ICMPv6 Echo Request
+    	packet size : 1280
+
+    2.3.2
+    <<JUDGMENT>>
+                               <===================
+    IPv4 packet encapsulating IPv6 packet
+
+
+    -- V4PMTU -20 = 1000
+    3.1.1
+    ===================>
+    ICMPv6 Echo Request
+        packet size : 1281
+
+    3.1.2
+    <<JUDGMENT>>
+    <===================
+    ICMPv6 Packet Too Big message 
+    	MTU : 1280
+
+    3.2.1
+    ===================>
+    ICMPv6 Echo Request
+    	packet size : 1280
+
+    3.2.2
+    <<JUDGMENT>>
+                               <===================
+    IPv4 packet encapsulating IPv6 packet
+
+=head1 JUDGMENT
+
+	<< PASS >>
+		TN received the packet which describe above "TEST PROCEDURE" 	
+
+	<< FAIL >>	
+		TN could not receive the packet which describe above 
+		"TEST PROCEDURE" 	
+
+
+=head1 SEE ALSO
+
+	  perldoc V6evalTool
+
+=cut

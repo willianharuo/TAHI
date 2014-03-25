@@ -1,0 +1,185 @@
+<HTML>
+<HEAD>
+<TITLE>FL_NonZeroOverRouter - check Flow Label Non-Zero over Router</TITLE>
+<LINK REV="made" HREF="mailto:hackers@FreeBSD.org">
+</HEAD>
+
+<BODY>
+
+<!-- INDEX BEGIN -->
+<!--
+
+<UL>
+
+	<LI><A HREF="#NAME">NAME</A>
+	<LI><A HREF="#TARGET">TARGET</A>
+	<LI><A HREF="#SYNOPSIS">SYNOPSIS</A>
+	<LI><A HREF="#INITIALIZATION">INITIALIZATION</A>
+	<LI><A HREF="#TEST_PROCEDURE">TEST PROCEDURE</A>
+	<LI><A HREF="#JUDGMENT">JUDGMENT</A>
+	<LI><A HREF="#REFERENCE">REFERENCE</A>
+	<LI><A HREF="#SEE_ALSO">SEE ALSO</A>
+</UL>
+-->
+<!-- INDEX END -->
+
+<P>
+<H1><A NAME="NAME">NAME</A></H1>
+<P>
+<PRE>  FL_NonZeroOverRouter - check Flow Label Non-Zero over Router
+</PRE>
+<P>
+<HR>
+<H1><A NAME="TARGET">TARGET</A></H1>
+<P>
+<PRE>  Router
+</PRE>
+<P>
+<HR>
+<H1><A NAME="SYNOPSIS">SYNOPSIS</A></H1>
+<PRE>
+  <A HREF="./FL_NonZeroOverRouter.seq">FL_NonZeroOverRouter.seq</A> [-tooloption ...] -pkt <A HREF="./FL_NonZeroOverRouter.def">FL_NonZeroOverRouter.def</A>
+    -tooloption : v6eval tool option
+  See also <A HREF="./IH_Router.def">IH_Router.def</A>
+</PRE>
+
+<P>
+<HR>
+<H1><A NAME="INITIALIZATION">INITIALIZATION</A></H1>
+<P>
+<PRE>  None
+</PRE>
+<P>
+<HR>
+<H1><A NAME="TEST_PROCEDURE">TEST PROCEDURE</A></H1>
+<P>
+<PRE>  Tester                      Target                      Tester
+              (Link0)                     (Link1)
+    |                           |                           |
+    |--------------------------&gt;|                           |
+    |   Echo Request to Link0   |                           |
+    |                           |                           |
+    |                           |--------------------------&gt;|
+    |                           |   Neighbor Solicitation   |
+    |                           |                           |
+    |                           |&lt;--------------------------|
+    |                           |   Neighbor Advertisement  |
+    |                           |                           |
+    |                           |--------------------------&gt;|
+    |                           |   Echo Request from Link1 |
+    |                           |                           |
+    |                           |                           |
+    |                           |&lt;--------------------------|
+    |                           |   Echo Reply to Link1     |
+    |                           |                           |
+    |&lt;--------------------------|                           |
+    |   Neighbor Solicitation   |                           |
+    |                           |                           |
+    |--------------------------&gt;|                           |
+    |   Neighbor Advertisement  |                           |
+    |                           |                           |
+    |&lt;--------------------------|                           |
+    |   Echo Reply from Link0   |                           |
+    |                           |                           |
+    v                           v                           v
+</PRE>
+<P>
+<PRE>  1. Send Echo Request to Link0
+  2. Wait Echo Reply from Link1 or NS from Link1
+  3. If NS received then send NA to Link1, and wait Echo Reply form Link1 again
+  4. Receive Echo Reply from Link1
+  5. Send Echo Request to Link1
+  6. Wait Echo Reply from Link0 or NS from Link0
+  7. If NS received then send NA to Link0, and wait Echo Reply form Link0 again
+  8. Receive Echo Reply from Link0
+</PRE>
+<P>
+<PRE>  Echo Request to Link0 Data is:
+</PRE>
+<P>
+<PRE>        IPv6 Header
+            Version            = 6
+            Traffic Class      = 0
+            FlowLabel          = 0x34567 (20 bit)
+            PayloadLength      = 16
+            NextHeader         = 58 (ICMP)
+            SourceAddress      = Tester Global Address (Link0)
+            DestinationAddress = Tester Global Address (Link1)
+</PRE>
+<P>
+<PRE>        ICMP Echo Request
+            Type           = 128 (Echo Request)
+            Code           = 0
+            Checksum       = (auto)
+            Identifier     = 0xffff
+            SequenceNumber = 1
+            PayloadData    = {1,2,3,4,5,6,7,8}
+</PRE>
+<P>
+<PRE>  Neighbor Solicitation packet's IP source Address selection may be:
+    - Link Local Address
+    - Global Address
+  This test IS NOT the Neighbor Discovery test, so admit both implementation.
+</PRE>
+<P>
+<HR>
+<H1><A NAME="JUDGMENT">JUDGMENT</A></H1>
+<P>
+<PRE>  PASS: Echo Reply Received from Link0
+</PRE>
+<P>
+<PRE>        IPv6 Header
+            Version             = 6
+            Traffic Class       = 0
+            FlowLabel           = 0x34567 (20 bit)
+            PayloadLength       = 16
+            NextHeader          = 58 (ICMP)
+            SourceAddress      = Tester Global Address (Link1)
+            DestinationAddress = Tester Global Address (Link0)
+</PRE>
+<P>
+<PRE>        ICMP Echo Reply
+            Type           = 129 (Echo Reply)
+            Code           = 0
+            Checksum       = (auto)
+            Identifier     = 0xffff (same as Echo Request)
+            SequenceNumber = 1 (same as Echo Request)
+            PayloadData    = {1,2,3,4,5,6,7,8} (same as Echo Request)
+</PRE>
+<P>
+<HR>
+<H1><A NAME="REFERENCE">REFERENCE</A></H1>
+<P>
+RFC2460
+
+<P>
+3. IPv6 Header Format
+
+<P>
+<PRE>   Flow Label           20-bit flow label.  See section 6.
+</PRE>
+<P>
+6. Flow Labels
+
+<PRE>
+   The 20-bit Flow Label field in the IPv6 header may be used by a
+   source to label sequences of packets for which it requests special
+   handling by the IPv6 routers, such as non-default quality of service
+   or "real-time" service.  This aspect of IPv6 is, at the time of
+   writing, still experimental and subject to change as the requirements
+   for flow support in the Internet become clearer.  <B>Hosts or routers
+   that do not support the functions of the Flow Label field are
+   required to set the field to zero when originating a packet, pass the
+   field on unchanged when forwarding a packet, and ignore the field
+   when receiving a packet.</B>
+</PRE>
+
+<P>
+<HR>
+<H1><A NAME="SEE_ALSO">SEE ALSO</A></H1>
+<P>
+<PRE>  perldoc V6evalTool
+</PRE>
+</BODY>
+
+</HTML>

@@ -1,0 +1,633 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<title>CL_RFC2181_5_2_diff_nonauth - Differing TTLs from non-authoritative source</title>
+<link rev="made" href="mailto:akisada@ifrit.64translator.com" />
+</head>
+
+<body style="background-color: white">
+
+<p><a name="__index__"></a></p>
+<!-- INDEX BEGIN -->
+<!--
+
+<ul>
+
+	<li><a href="#name">NAME</a></li>
+	<li><a href="#verification_points">VERIFICATION POINTS</a></li>
+	<li><a href="#target">TARGET</a></li>
+	<li><a href="#synopsis">SYNOPSIS</a></li>
+	<li><a href="#initialization">INITIALIZATION</a></li>
+	<li><a href="#test_procedure">TEST PROCEDURE</a></li>
+	<li><a href="#judgment">JUDGMENT</a></li>
+	<li><a href="#termination">TERMINATION</a></li>
+	<li><a href="#reference">REFERENCE</a></li>
+</ul>
+-->
+<!-- INDEX END -->
+
+<p>
+</p>
+<h1><a name="name">NAME</a></h1>
+<pre>
+        CL_RFC2181_5_2_diff_nonauth - Differing TTLs from non-authoritative source</pre>
+<p>
+</p>
+<hr />
+<h1><a name="verification_points">VERIFICATION POINTS</a></h1>
+<pre>
+        Verify that a NUT treats as an error, when receive response containing RRs 
+        from an RRSet with differing TTLs from a non-authoritative source.</pre>
+<UL>
+	<DD><LI>Should a client receive a response containing RRs from an RRSet with
+	<DD>differing TTLs, it should treat this as an error.  If the RRSet
+	<DD>concerned is from a non-authoritative source for this data, the
+	<DD>client should simply ignore the RRSet, and if the values were
+	<DD>required, seek to acquire them from an authoritative source.  Clients
+	<DD>that are configured to send all queries to one, or more, particular
+	<DD>servers should treat those servers as authoritative for this purpose.
+	</LI>
+	</ul><p>
+</p>
+<hr />
+<h1><a name="target">TARGET</a></h1>
+<pre>
+        Client (with Caching function)</pre>
+<p>
+</p>
+<hr />
+<h1><a name="synopsis">SYNOPSIS</a></h1>
+<PRE>
+	<A HREF="./CL_RFC2181_5_2_diff_nonauth.seq">CL_RFC2181_5_2_diff_nonauth.seq</A> [-tooloption ...]: KOI tool option
+	See also <A HREF="../DNSConfig.pm">DNSConfig.pm</A>
+</PRE><p>
+</p>
+<hr />
+<h1><a name="initialization">INITIALIZATION</a></h1>
+<UL>
+	<LI><STRONG>Network Topology</STRONG></LI> 
+	<PRE>
+        AP Server1(TN):A.example.com     DNS Server1(TN)           DNS Server2(TN)
+          |3ffe:501:ffff:101::10           |3ffe:501:ffff:101::20    |3ffe:501:ffff:101::30
+          |192.168.1.10                    |192.168.1.20             |192.168.1.30
+          |                                |                         |
+Net-y   --+--------+-----------------------+-------------------------+--- 3ffe:501:ffff:101::/64 
+                   |                                                      192.168.1/24
+                   |
+                   |
+                 ROUTER1(TN)
+                   |3ffe:501:ffff:100::1
+                   |192.168.0.1
+                   |
+Net-z   --+--------+----------------------------------------------------- 3ffe:501:ffff:100::/64 
+          |                                                               192.168.0/24
+        DNS Client1(NUT)
+           3ffe:501:ffff:100:XXXX
+           192.168.0.10
+	<BR>
+	XXXX: EUI64 address
+	</PRE>
+	<P></P>
+	<LI><STRONG>Setup</STRONG></LI>
+	<PRE>
+	Set the DNS Server1(TN) address on NUT as above mentioned Network Topology.
+	</PRE>
+	<P></P>
+	<LI><STRONG>Pre-Sequence</STRONG></LI><P><PRE>
+	In order to send the query for A type(IN class) of AP Server1(TN):A.example.com to the DNS Server1(TN), 
+	NUT is configured.
+	</PRE>
+	</UL><p>
+</p>
+<hr />
+<h1><a name="test_procedure">TEST PROCEDURE</a></h1>
+<pre>
+        This test sequence is following.</pre>
+<pre>
+    DNS Client1 (NUT)                        DNS Server1 (TN)                               DNS Server2 (TN)
+        |                                              |                                              |
+        |---------------------------------------------&gt;|                                              |
+        |           1. Send standard query             |                                              |
+        |              QNAME=A.example.com             |                                              |
+        |                                              |                                              |
+        |&lt;---------------------------------------------|                                              |
+        |           2. Standard query response         |                                              |
+        |              RRs with differing TTLs         |                                              |
+        |                                              |                                              |
+        |----------------------------------------------|---------------------------------------------&gt;|
+        |           3A. Send standard query            |                                              |
+        |              QNAME=A.example.com             |                                              |
+        |                                              |                                              |
+        |---------------------------------------------&gt;|---------------------------------------------&gt;|
+        |           3B. Send standard query            |                                              |
+        |              QNAME=A.example.com             |                                              |
+        v                                              v                                              v</pre>
+<pre>
+        1. NUT send standard query to DNS Server1(TN). (Judgment *1)
+        2. TN send standard query response to NUT.
+        3A. NUT send standard query to DNS Server2(TN). *Don't specify the DNS Server2.
+           *Send query automatically. (Judgment *3A)
+        3B. NUT send standard query. (Judgment *3B)</pre>
+<pre>
+        *3A or 3B is executed.</pre>
+<UL>
+	<LI>Packet Description</LI><BR>
+	<BR>
+	1st Packet
+	<TABLE BORDER="1">
+	  <TBODY>
+	    <TR>
+	      <TD colspan="3">
+	      <center>1. Standard query from DNS Client1 (NUT) to DNS Server1 (TN) </center>
+	      </TD>
+	    </TR>
+	    <TR>
+	      <TD rowspan="2">IP Header</TD>
+	      <TD>Source Address</TD>
+	      <TD>NUT_NETZ</TD>
+	    </TR>
+	    <TR>
+	      <TD>Destination Address</TD>
+	      <TD>SV_NETY</TD>
+	    </TR>
+	    <TR>
+	      <TD colspan="1" rowspan="2">UDP Header<BR>
+	      </TD>
+	      <TD>Src Port<BR>
+	      </TD>
+	      <TD><i>any</i><BR>
+	      </TD>
+	    </TR>
+	    <TR>
+	      <TD>Dst Port<BR>
+	      </TD>
+	      <TD>53<BR>
+ 	     </TD>
+	    </TR>
+ 	   <TR>
+ 	     <TD colspan="1" rowspan="13">DNS Header<BR>
+ 	     </TD>
+ 	     <TD>ID</TD>
+	      <TD><i>any</i></TD>
+	    </TR>
+	    <TR>
+	      <TD>QR<BR>
+	      </TD>
+	      <TD>0<BR>
+	      </TD>
+	    </TR>
+	    <TR>
+	      <TD>OPCODE<BR>
+	      </TD>
+	      <TD>0<BR>
+	      </TD>
+	    </TR>
+	    <TR>
+	      <TD>AA<BR>
+	      </TD>
+	      <TD><i>any</i><BR>
+	      </TD>
+	    </TR>
+	    <TR>
+	      <TD>TC</TD>
+	      <TD>0</TD>
+	    </TR>
+	    <TR>
+	      <TD>RD</TD>
+	      <TD><i>any</i></TD>
+	    </TR>
+	    <TR>
+	      <TD>RA<BR>
+	      </TD>
+	      <TD><i>any</i><BR>
+	      </TD>
+	    </TR>
+	    <TR>
+	      <TD>Z<BR>
+	      </TD>
+	      <TD>any<BR>
+	      </TD>
+	    </TR>
+	    <TR>
+	      <TD>RCODE<BR>
+	      </TD>
+ 	     <TD><i>any</i><BR>
+	      </TD>
+	    </TR>
+	    <TR>
+	      <TD>QDCOUNT<BR>
+	      </TD>
+	      <TD>1<BR>
+	      </TD>
+ 	   </TR>
+	    <TR>
+	      <TD>ANCOUNT<BR>
+	      </TD>
+	      <TD>0<BR>
+	      </TD>
+	    </TR>
+	    <TR>
+	      <TD>NSCOUNT<BR>
+	      </TD>
+	      <TD>0<BR>
+	      </TD>
+	    </TR>
+	    <TR>
+	      <TD>ARCOUNT<BR>
+	      </TD>
+	      <TD>any<BR>
+	      </TD>
+	    </TR>
+	    <TR>
+	      <TD colspan="1" rowspan="3">DNS Question section<BR>
+	      </TD>
+	      <TD>QNAME</TD>
+	      <TD>A.example.com<BR>
+	      </TD>
+	    </TR>
+	    <TR>
+	      <TD>QTYPE<BR>
+	      </TD>
+	      <TD>A (0x0001)<BR>
+	      </TD>
+	    </TR>
+	    <TR>
+	      <TD>QCLASS<BR>
+	      </TD>
+	      <TD>IN (0x0001)<BR>
+	      </TD>
+	    </TR>
+	  </TBODY>
+	</TABLE>
+	<BR>
+	2nd packet.
+	<P></P>
+	<TABLE BORDER="1">
+		<TBODY>
+		<TR>
+			<TD COLSPAN="3">
+			<CENTER>2. Standard query response from DNS Server1 (TN) to Client1 (NUT)</CENTER>
+			</TD>
+		</TR>
+		<TR>
+			<TD ROWSPAN="2">IP Header</TD>
+			<TD>Source Address</TD>
+			<TD>SV_NETY</TD>
+		</TR>
+		<TR>
+			<TD>Destination Address</TD>
+			<TD>NUT_NETZ</TD>
+		</TR>
+		<TR>
+			<TD COLSPAN="1" ROWSPAN="2">UDP Header</TD>
+			<TD>Src Port</TD>
+			<TD>53</TD>
+		</TR>
+		<TR>
+			<TD>Dst Port</TD>
+			<TD>Same as 1st Packet's Src Port</TD>
+		</TR>
+		<TR>
+			<TD COLSPAN="1" ROWSPAN="13">DNS Header</TD>
+			<TD>ID</TD>
+			<TD>Same as 1st Packet's ID</TD>
+		</TR>
+		<TR>
+			<TD>QR</TD>
+			<TD>1</TD>
+		</TR>
+		<TR>
+			<TD>OPCODE</TD>
+			<TD>0</TD>
+		</TR>
+		<TR>
+			<TD>AA</TD>
+			<TD>0</TD>
+		</TR>
+		<TR>
+			<TD>TC</TD>
+			<TD>0</TD>
+		</TR>
+		<TR>
+			<TD>RD</TD>
+			<TD>Same as 1st Packet's RD</TD>
+		</TR>
+		<TR>
+			<TD>RA</TD>
+			<TD>0</TD>
+		</TR>
+		<TR>
+			<TD>Z</TD>
+			<TD>0</TD>
+		</TR>
+		<TR>
+			<TD>RCODE</TD>
+			<TD>0</TD>
+		</TR>
+		<TR>
+			<TD>QDCOUNT</TD>
+			<TD>1</TD>
+		</TR>
+		<TR>
+			<TD>ANCOUNT</TD>
+			<TD>2</TD>
+		</TR>
+		<TR>
+			<TD>NSCOUNT</TD>
+			<TD>1</TD>
+		</TR>
+		<TR>
+			<TD>ARCOUNT</TD>
+			<TD>1</TD>
+		</TR>
+		<TR>
+			<TD COLSPAN="1" ROWSPAN="3">DNS Question section</TD>
+			<TD>QNAME</TD>
+			<TD>A.example.com</TD>
+		</TR>
+		<TR>
+			<TD>QTYPE</TD>
+			<TD>A (0x0001)</TD>
+		</TR>
+		<TR>
+			<TD>QCLASS</TD>
+			<TD>IN (0x0001)</TD>
+		</TR>
+		<TR>
+			<TD COLSPAN="1" ROWSPAN="6">DNS Answer section</TD>
+			<TD>NAME</TD>
+			<TD>A.example.com (Pointer 0xC00C)</TD>
+		</TR>
+		<TR>
+			<TD>TYPE</TD>
+			<TD>A (0x0001)</TD>
+		</TR>
+		<TR>
+			<TD>CLASS</TD>
+			<TD>IN (0x0001)</TD>
+		</TR>
+		<TR>
+			<TD>TTL</TD>
+			<TD>1 day (86400)</TD>
+		</TR>
+		<TR>
+			<TD>RDLENGTH</TD>
+			<TD>4</TD>
+		</TR>
+		<TR>
+			<TD>ADDRESS</TD>
+			<TD>192.168.1.10</TD>
+		</TR>
+		<TR>
+		<TR>
+			<TD COLSPAN="1" ROWSPAN="6">DNS Answer section</TD>
+			<TD>NAME</TD>
+			<TD>A.example.com (Pointer 0xC00C)</TD>
+		</TR>
+		<TR>
+			<TD>TYPE</TD>
+			<TD>A (0x0001)</TD>
+		</TR>
+		<TR>
+			<TD>CLASS</TD>
+			<TD>IN (0x0001)</TD>
+		</TR>
+		<TR>
+			<TD>TTL</TD>
+			<TD>2 day (172800)</TD>
+		</TR>
+		<TR>
+			<TD>RDLENGTH</TD>
+			<TD>4</TD>
+		</TR>
+		<TR>
+			<TD>ADDRESS</TD>
+			<TD>192.168.1.11</TD>
+		</TR>
+		<TR>
+			<TD COLSPAN="1" ROWSPAN="6">DNS Authority section</TD>
+			<TD>NAME</TD>
+			<TD>example.com (Pointer 0xC00E)</TD>
+		</TR>
+		<TR>
+			<TD>TYPE</TD>
+			<TD>NS (0x0002)</TD>
+		</TR>
+		<TR>
+			<TD>CLASS</TD>
+			<TD>IN (0x0001)</TD>
+		</TR>
+		<TR>
+			<TD>TTL</TD>
+			<TD>1 day (86400)</TD>
+		</TR>
+		<TR>
+			<TD>RDLENGTH</TD>
+			<TD>6</TD>
+		</TR>
+		<TR>
+			<TD>NSDNAME</TD>
+			<TD>NS2.example.com (NS2 + Pointer 0xC00E)</TD>
+		</TR>
+		<TR>
+			<TD COLSPAN="1" ROWSPAN="6">DNS Additional section</TD>
+			<TD>NAME</TD>
+			<TD>NS2.example.com (Pointer 0xC04B)</TD>
+		</TR>
+		<TR>
+			<TD>TYPE<BR>
+			</TD>
+			<TD>A (0x0001)</TD>
+		</TR>
+		<TR>
+			<TD>CLASS</TD>
+			<TD>IN (0x0001)</TD>
+		</TR>
+		<TR>
+			<TD>TTL</TD>
+			<TD>1 day (86400)</TD>
+		</TR>
+		<TR>
+			<TD>RDLENGTH</TD>
+			<TD>4</TD>
+		</TR>
+		<TR>
+			<TD>ADDRESS</TD>
+			<TD>192.168.1.30</TD>
+		</TR>
+		</TBODY>
+	</TABLE>
+	<BR>
+	3rd packet.
+	<P></P>
+	<TABLE border="1">
+	  <TBODY>
+	    <TR>
+	      <TD colspan="3">
+	      <center>3A. Standard query from DNS Client1 (NUT) to DNS Server2 (TN) </center>
+	      </TD>
+	    </TR>
+	    <TR>
+	      <TD rowspan="2">IP Header</TD>
+	      <TD>Source Address</TD>
+	      <TD>NUT_NETZ</TD>
+	    </TR>
+	    <TR>
+	      <TD>Destination Address</TD>
+	      <TD>SV2_NETY</TD>
+	    </TR>
+	    <TR>
+	      <TD colspan="1" rowspan="2">UDP Header<BR>
+	      </TD>
+	      <TD>Src Port<BR>
+	      </TD>
+	      <TD><i>any</i><BR>
+	      </TD>
+	    </TR>
+	    <TR>
+	      <TD>Dst Port<BR>
+	      </TD>
+	      <TD>53<BR>
+ 	     </TD>
+	    </TR>
+ 	   <TR>
+ 	     <TD colspan="1" rowspan="13">DNS Header<BR>
+ 	     </TD>
+ 	     <TD>ID</TD>
+	      <TD><i>any</i></TD>
+	    </TR>
+	    <TR>
+	      <TD>QR<BR>
+	      </TD>
+	      <TD>0<BR>
+	      </TD>
+	    </TR>
+	    <TR>
+	      <TD>OPCODE<BR>
+	      </TD>
+	      <TD>0<BR>
+	      </TD>
+	    </TR>
+	    <TR>
+	      <TD>AA<BR>
+	      </TD>
+	      <TD><i>any</i><BR>
+	      </TD>
+	    </TR>
+	    <TR>
+	      <TD>TC</TD>
+	      <TD>0</TD>
+	    </TR>
+	    <TR>
+	      <TD>RD</TD>
+	      <TD><i>any</i></TD>
+	    </TR>
+	    <TR>
+	      <TD>RA<BR>
+	      </TD>
+	      <TD><i>any</i><BR>
+	      </TD>
+	    </TR>
+	    <TR>
+	      <TD>Z<BR>
+	      </TD>
+	      <TD>any<BR>
+	      </TD>
+	    </TR>
+	    <TR>
+	      <TD>RCODE<BR>
+	      </TD>
+ 	     <TD><i>any</i><BR>
+	      </TD>
+	    </TR>
+	    <TR>
+	      <TD>QDCOUNT<BR>
+	      </TD>
+	      <TD>1<BR>
+	      </TD>
+ 	   </TR>
+	    <TR>
+	      <TD>ANCOUNT<BR>
+	      </TD>
+	      <TD>0<BR>
+	      </TD>
+	    </TR>
+	    <TR>
+	      <TD>NSCOUNT<BR>
+	      </TD>
+	      <TD>0<BR>
+	      </TD>
+	    </TR>
+	    <TR>
+	      <TD>ARCOUNT<BR>
+	      </TD>
+	      <TD>any<BR>
+	      </TD>
+	    </TR>
+	    <TR>
+	      <TD colspan="1" rowspan="3">DNS Question section<BR>
+	      </TD>
+	      <TD>QNAME</TD>
+	      <TD>A.example.com<BR>
+	      </TD>
+	    </TR>
+	    <TR>
+	      <TD>QTYPE<BR>
+	      </TD>
+	      <TD>A (0x0001)<BR>
+	      </TD>
+	    </TR>
+	    <TR>
+	      <TD>QCLASS<BR>
+	      </TD>
+	      <TD>IN (0x0001)<BR>
+	      </TD>
+	    </TR>
+	  </TBODY>
+	</TABLE>
+        <BR>
+        <BR>
+        Exp.
+        <BR>
+        <TABLE BORDER="1">
+                <TBODY>
+                <TR>
+                        <TD>NUT_NETZ</TD>
+                        <TD>DNS Client1's (NUT) Net-z address</TD>
+                </TR>
+                <TR>
+                        <TD>SV_NETY</TD>
+                        <TD>DNS Server1's (TN) Net-y address</TD>
+                </TR>
+                <TR>
+                        <TD>SV2_NETY</TD>
+                        <TD>DNS Server2's (TN) Net-y address</TD>
+                </TR>
+		</TBODY>
+	</TABLE>
+	</UL><p>
+</p>
+<hr />
+<h1><a name="judgment">JUDGMENT</a></h1>
+<pre>
+        1. Received standard query QNAME=A.example.com from NUT to Server1(TN).
+        3A. Received standard query QNAME=A.example.com from NUT to Server2(TN).
+        3B. Received standard query QNAME=A.example.com from NUT to Server1(TN) or Server2(TN).
+        *3A or 3B is judged.</pre>
+<p>
+</p>
+<hr />
+<h1><a name="termination">TERMINATION</a></h1>
+<pre>
+        If NUT has cache function, clear the cache.</pre>
+<p>
+</p>
+<hr />
+<h1><a name="reference">REFERENCE</a></h1>
+<PRE>
+	RFC2181 Clarifications to the DNS Specification
+	5.2. TTLs of RRs in an RRSet
+</PRE>
+</body>
+
+</html>

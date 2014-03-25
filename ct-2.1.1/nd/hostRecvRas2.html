@@ -1,0 +1,237 @@
+<HTML>
+<HEAD>
+<TITLE>hostRecvRas2 - Verifying that a host accept the union of all RAs</TITLE>
+<LINK REV="made" HREF="mailto:hackers@FreeBSD.org">
+</HEAD>
+
+<BODY>
+
+<!-- INDEX BEGIN -->
+<!--
+
+<UL>
+
+	<LI><A HREF="#NAME">NAME</A>
+	<LI><A HREF="#TARGET">TARGET</A>
+	<LI><A HREF="#SYNOPSIS">SYNOPSIS</A>
+	<LI><A HREF="#INITIALIZATION">INITIALIZATION</A>
+	<LI><A HREF="#TEST_PROCEDURE">TEST PROCEDURE</A>
+	<LI><A HREF="#JUDGMENT">JUDGMENT</A>
+	<LI><A HREF="#TERMINATION">TERMINATION</A>
+	<LI><A HREF="#NOTE">NOTE</A>
+	<LI><A HREF="#SEE_ALSO">SEE ALSO</A>
+</UL>
+-->
+<!-- INDEX END -->
+
+<P>
+<H1><A NAME="NAME">NAME</A></H1>
+<P>
+hostRecvRas2 - Verifying that a host accept the union of all RAs
+
+<P>
+<HR>
+<H1><A NAME="TARGET">TARGET</A></H1>
+<P>
+Host only
+
+<P>
+<HR>
+<H1><A NAME="SYNOPSIS">SYNOPSIS</A></H1>
+<P>
+<PRE> hostRecvRas2.seq [-tooloption ...] -p hostRecvRas2.def
+</PRE>
+<P>
+<HR>
+<H1><A NAME="INITIALIZATION">INITIALIZATION</A></H1>
+<OL>
+  <LI>Clear the Prefix List that was learned with RAs.
+  <LI>Create a neighbor cache entry for TN, Y, Z
+      where the IsRouter flag is TRUE.
+  <LI>Set their state to REACHABLEs.
+  <LI>Give three global prefixes by TN, Y and Z:
+      <UL>
+        <LI>3ffe:501:ffff:100::/64
+        <LI>3ffe:501:ffff:108::/64
+        <LI>3ffe:501:ffff:107::/64
+      </UL>
+</OL>
+<PRE>
+  TN                 NUT
+  ----------------------
+<BR>
+  State: NONCE (for all)
+<BR>
+  ==== unsolicited RA ===>
+       src=TN's link-local
+       dst=all-node
+       M=0, O=0
+       RouterLifetime=600
+       ReachableTime=0
+       RetransTimer=0
+       w/ SLLA
+       Prefix Option:
+           L=1, A=1
+           ValidLifetime=2592000
+           PreferredLifetime=604800
+           Prefix=3ffe:501:ffff:100::/64
+<BR>
+  State: STALE (for TN), NONCE (for Y, Z)
+<BR>
+  ==== unsolicited RA ===>
+       src=Y's link-local
+       dst=all-node
+       M=0, O=0
+       RouterLifetime=600
+       ReachableTime=0
+       RetransTimer=0
+       w/ SLLA
+       Prefix Option:
+           L=1, A=1
+           ValidLifetime=2592000
+           PreferredLifetime=604800
+           Prefix=3ffe:501:ffff:108::/64
+<BR>
+  State: STALE (for TN, Y), NONCE (for Z)
+<BR>
+  ==== unsolicited RA ===>
+       src=Z's link-local
+       dst=all-node
+       M=0, O=0
+       RouterLifetime=600
+       ReachableTime=0
+       RetransTimer=0
+       w/ SLLA
+       Prefix Option:
+           L=1, A=1
+           ValidLifetime=2592000
+           PreferredLifetime=604800
+           Prefix=3ffe:501:ffff:107::/64
+<BR>
+  State: STALE (for all)
+<BR>
+  <=== Ns for DAD ====
+       src=unspecified
+       dst=solicited-node[NUT's global, prefix=3ffe:501:ffff:100::/64]
+       target=NUT's global
+<BR>
+  <=== Ns for DAD ====
+       src=unspecified
+       dst=solicited-node[NUT's global, prefix=3ffe:501:ffff:108::/64]
+       target=NUT's global
+<BR>
+  <=== Ns for DAD ====
+       src=unspecified
+       dst=solicited-node[NUT's global, prefix=3ffe:501:ffff:107::/64]
+       target=NUT's global
+<BR>
+  Wait (3 sec)
+<BR>
+  ==== solicited NA ===>
+        src=TN's link-local
+        dst=NUT's link-local
+        R=1, S=1, O=1
+        target=TN's link-local
+        TLLA=TN's LLA
+<BR>
+  State: REACHABLE (for TN), STALE (for Y and Z)
+  ==== solicited NA ===>
+        src=Y's link-local
+        dst=NUT's link-local
+        R=1, S=1, O=1
+        target=Y's link-local
+        TLLA=X's LLA
+<BR>
+  State: REACHABLE (for TN, Y), STALE (for Z)
+  ==== solicited NA ===>
+        src=Z's link-local
+        dst=NUT's link-local
+        R=1, S=1, O=1
+        target=Z's link-local
+        TLLA=Z's LLA
+<BR>
+  State: REACHABLE (for all)
+</PRE>
+
+<P>
+<HR>
+<H1><A NAME="TEST_PROCEDURE">TEST PROCEDURE</A></H1>
+<P>
+<STRONG>hostRecvRas</STRONG> verifies that a host accept the union of all RAs.
+
+<PRE>
+  TN               NUT
+  ----------------------
+<BR>
+  State: REACHABLE (for all)
+<BR>
+  ==== echo-request ===>
+       src=off-link global, but LLA is TN's one
+       dst=NUT's global, prefix==3ffe:501:ffff:100::/64
+<BR>
+  <=== <A HREF="#JDG2">Judgment #2</A>: echo-reply ====
+       src=NUT's global, prefix==3ffe:501:ffff:100::/64
+       dst=off-link global, but LLA is one of the routers(TN, Y, Z)
+<BR>
+  ==== echo-request ===>
+       src=off-link global, but LLA is TN's one
+       dst=NUT's global, prefix==3ffe:501:ffff:108::/64
+<BR>
+  <=== <A HREF="#JDG2">Judgment #2</A>: echo-reply ====
+       src=NUT's global, prefix==3ffe:501:ffff:108::/64
+       dst=off-link global, but LLA is one of the routers(TN, Y, Z)
+<BR>
+  ==== echo-request ===>
+       src=off-link global, but LLA is TN's one
+       dst=NUT's global, prefix==3ffe:501:ffff:107::/64
+<BR>
+  <=== <A HREF="#JDG2">Judgment #2</A>: echo-reply ====
+       src=NUT's global, prefix==3ffe:501:ffff:107::/64
+       dst=off-link global, but LLA is one of the routers(TN, Y, Z)
+</PRE>
+
+<P>
+<HR>
+<H1><A NAME="JUDGMENT">JUDGMENT</A></H1>
+<A NAME="JDG1"></A>
+
+<P>
+<PRE>  1. NUT accepts the union of all received information; the receipt of
+     a RA must not invalidate all information received in a previous RA
+     or from another source.
+</PRE>
+<A NAME="JDG2"></A>
+
+<P>
+<PRE>  2. NUT throw three echo-replies to the default router (i.e. TN),
+     and their source addresses are different global prefixes.
+</PRE>
+<P>
+<HR>
+<H1><A NAME="TERMINATION">TERMINATION</A></H1>
+<P>
+<PRE>  Send the following RAs to clear the Default Router List:
+  - RA (src=TN) with RouterLifetime=0
+  - RA (src=Y)  with RouterLifetime=0
+  - RA (src=Z)  with RouterLifetime=0
+</PRE>
+<P>
+<PRE>  Clear the Prefix List by remote command. XXX
+</PRE>
+<P>
+<HR>
+<H1><A NAME="NOTE">NOTE</A></H1>
+<P>
+<PRE>  The test invokes the following command:
+  - Clear the Prefix List
+</PRE>
+<P>
+<HR>
+<H1><A NAME="SEE_ALSO">SEE ALSO</A></H1>
+<P>
+<PRE>  perldoc V6evalTool
+  perldoc V6evalRemote
+</PRE>
+</BODY>
+
+</HTML>

@@ -1,0 +1,179 @@
+#!/usr/bin/perl
+#
+# Copyright (C) 1999, 2000, 2001, 2002, 2003 Yokogawa Electric Corporation,
+# IPA (Information-technology Promotion Agency, Japan).
+# All rights reserved.
+# 
+# Redistribution and use of this software in source and binary forms, with 
+# or without modification, are permitted provided that the following 
+# conditions and disclaimer are agreed and accepted by the user:
+# 
+# 1. Redistributions of source code must retain the above copyright 
+# notice, this list of conditions and the following disclaimer.
+# 
+# 2. Redistributions in binary form must reproduce the above copyright 
+# notice, this list of conditions and the following disclaimer in the 
+# documentation and/or other materials provided with the distribution.
+# 
+# 3. Neither the names of the copyrighters, the name of the project which 
+# is related to this software (hereinafter referred to as "project") nor 
+# the names of the contributors may be used to endorse or promote products 
+# derived from this software without specific prior written permission.
+# 
+# 4. No merchantable use may be permitted without prior written 
+# notification to the copyrighters. However, using this software for the 
+# purpose of testing or evaluating any products including merchantable 
+# products may be permitted without any notification to the copyrighters.
+# 
+# 
+# 
+# THIS SOFTWARE IS PROVIDED BY THE COPYRIGHTERS, THE PROJECT AND 
+# CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING 
+# BUT NOT LIMITED THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS 
+# FOR A PARTICULAR PURPOSE, ARE DISCLAIMED.  IN NO EVENT SHALL THE 
+# COPYRIGHTERS, THE PROJECT OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, 
+# INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES 
+# (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR 
+# SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) 
+# HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN 
+# CONTRACT,STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) 
+# ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF 
+# THE POSSIBILITY OF SUCH DAMAGE.
+#
+# $TAHI: ct/icmp/Dst_Unreach_0_Global.seq,v 1.1 2003/03/26 07:47:29 masaxmasa Exp $
+#----------------------------------------------------------------------
+
+BEGIN { $V6evalTool::TestVersion = '$Name: REL_2_1_1 $'; }
+use V6evalTool;
+use icmp;
+
+$IF = Link0;
+
+checkNUT(router);
+
+#-----------------------------------------------------------------------
+# Initialization
+#-----------------------------------------------------------------------
+
+vLogHTML("<FONT SIZE=\"+1\">Initialization</FONT><BR>");
+
+vCapture($IF);
+
+$ret = mkNCE_Link();
+
+if ($ret != 0) {
+	vLog("*** NUT can not be initialized !! ***");
+	goto error;
+}
+else {
+	vLog("TN created the entry of TN's link-local address to Neighbor cache of NUT.");
+};
+
+$ret = mkNCE_Global();
+
+if ($ret != 0) {
+	vLog("*** NUT can not be initialized !! ***");
+	goto error;
+}
+else {
+	vLog("TN created the entry of TN's global address to Neighbor cache of NUT.");
+};
+
+#-----------------------------------------------------------------------
+# Test
+#-----------------------------------------------------------------------
+%pktdesc = (
+	echo_request	=> 'Send Echo Request to an offlink host',
+	dst_unreach	=> 'Receive Destination Unreachable (No Route)'
+);
+
+vLogHTML("<FONT SIZE=\"+1\">Test</FONT><BR>");
+
+vSend($IF, echo_request);
+
+%ret = vRecv($IF, 5, 0, 0, dst_unreach);
+
+if ($ret{status} != 0) {
+	vLog("TN can not receive ICMPv6 error message from NUT");
+	goto error;
+}
+elsif ($ret{recvFrame} eq 'dst_unreach') {
+	vLog("TN can receive ICMPv6 error message from NUT");
+	vLog("OK");
+	exit($V6evalTool::exitPass);
+}
+else {
+	vLog("TN receive unexpected packets from NUT");
+	goto error;
+};
+
+error:
+
+vLog("FAIL");
+exit($V6evalTool::exitFail);
+
+
+#----------------------------------------------------------------------
+
+__END__
+
+=head1 NAME
+
+	Dst_Unreach_0_Global.seq - check ICMPv6 Destination 
+	Unreachable code 0 
+
+=head1 TARGET
+
+	Router
+
+=head1 SYNOPSIS
+
+	Dst_Unreach_0_Global.seq [-tooloption ...] -p 
+	Dst_Unreach_0_Global.def
+
+=head1 INITIALIZATION
+
+	When test starts, states of Neighbor Cache Entry for TN's 
+	addresses are reachable.
+
+=head1 TEST PROCEDURE
+
+	This test verifies that NUT sends valid ICMPv6 Destination 
+	Unreachable (code 0) in response to a packet which can not 
+	be delivered to destination address because NUT have no route.
+	And this test verifies that the message processing rule ,
+
+	If the message is a response to a message sent to one of the
+	node's unicast addresses, the Source Address of the reply must
+	be that same address.
+	
+
+	TN			NUT
+
+	---------------------------
+
+	1.
+	 === Echo Request  ===>
+		src address : TN global address
+		dst address : offlink address
+	2.
+	<< JUDGMENT >>
+
+	 <=== ICMPv6 Destination Unreachable ===
+		Code is 0
+
+=head1 JUDGMENT
+
+	<< PASS >>
+		NUT send ICMPv6 Destination Unreachable.
+		
+
+	<< FAIL >>	
+		NUT do not send ICMPv6 Destination Unreachable.
+
+
+=head1 SEE ALSO
+
+	  perldoc V6evalTool
+
+=cut
